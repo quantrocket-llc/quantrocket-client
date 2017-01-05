@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
-setup(name='quantrocket',
+setup(name='quantrocket-client',
     version='0.1',
     description='QuantRocket client',
+    long_description='Visit https://www.quantrocket.com for more details',
     url='https://www.quantrocket.com',
     author='QuantRocket',
     author_email='support@quantrocket.com',
     license='Apache-2.0',
-    packages=['quantrocket'],
+    packages=find_packages(),
     install_requires=[
         'requests',
         "six"
