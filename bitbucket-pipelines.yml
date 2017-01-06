@@ -4,7 +4,7 @@ pipelines:
     default:
         - step:
             script:
-                - pip install -U tox
+                - pip install -U tox wheel
                 - tox -e py35
                 - echo $(pwd)
                 - ./deploy.bash
@@ -12,7 +12,7 @@ pipelines:
         '*':
             - step:
                 script:
-                    - pip install -U tox
+                    - pip install -U tox wheel
                     - tox -e py35
                     - echo $(pwd)
                     - ./deploy.bash
