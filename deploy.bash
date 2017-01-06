@@ -12,4 +12,5 @@ username=$PYPI_USERNAME
 password=$PYPI_PASSWORD
 EOF
 
+python setup.py register
 python setup.py sdist bdist_wheel upload
