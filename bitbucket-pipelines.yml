@@ -6,6 +6,7 @@ pipelines:
             script:
                 - pip install -U tox
                 - tox -e py35
+                - env
     branches:
         master:
             - step:
@@ -13,10 +14,12 @@ pipelines:
                 script:
                     - pip install -U tox
                     - tox -e py27
+                    - env
     tags:
         '*':
             - step:
                 script:
                     - pip install -U tox wheel
                     - tox -e py35
+                    - env
                     - ./deploy.bash
