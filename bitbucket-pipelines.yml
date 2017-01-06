@@ -7,7 +7,7 @@ pipelines:
                 - pip install -U tox
                 - tox -e py35
                 - echo $(pwd)
-                - deploy.bash
+                - ./deploy.bash
     tags:
         '*':
             - step:
@@ -15,4 +15,4 @@ pipelines:
                     - pip install -U tox
                     - tox -e py35
                     - echo $(pwd)
-                    - deploy.bash
+                    - ./deploy.bash
