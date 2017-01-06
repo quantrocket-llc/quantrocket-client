@@ -15,13 +15,37 @@
 from quantrocket.houston import houston
 
 def get_crontab(service):
+    """
+    Returns the service crontab.
 
+    Parameters
+    ----------
+    service : str, required
+        the name of the service, e.g. ``countdown-usa``
+
+    Returns
+    -------
+    str
+        String representation of crontab
+    """
     response = houston.get("/{0}/crontab".format(service))
     response.raise_for_status()
     return response.text
 
 def get_timezone(service):
+    """
+    Returns the service timezone.
 
+    Parameters
+    ----------
+    service : str, required
+        the name of the service, e.g. ``countdown-usa``
+
+    Returns
+    -------
+    dict
+        dict with key timezone
+    """
     response = houston.get("/{0}/timezone".format(service))
     response.raise_for_status()
     return response.json()

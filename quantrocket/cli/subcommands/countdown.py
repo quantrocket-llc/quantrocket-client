@@ -16,7 +16,8 @@ from quantrocket.countdown import get_crontab, get_timezone
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("countdown", description="QuantRocket Countdown CLI", help="quantrocket countdown -h")
-    _subparsers = _parser.add_subparsers()
+    _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
+    _subparsers.required = True
 
     parser = _subparsers.add_parser("crontab", help="show the countdown service crontab")
     parser.add_argument("service", metavar="SERVICE_NAME", help="The name of the countdown service, e.g. countdown-usa")
