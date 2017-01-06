@@ -26,7 +26,7 @@ FLIGHTLOG_PATH = "/flightlog/handler"
 
 LOG_RECORD_TYPE_BOUNDARY = "||||q5%XfK4#||||"
 
-class ImpatientHttpHandler(logging.handlers.HTTPHandler):
+class _ImpatientHttpHandler(logging.handlers.HTTPHandler):
     """
     An HttpHandler that sets a short timeout (instead of the default no
     timeout), as well as serializing the record attribute types so they can
@@ -44,15 +44,23 @@ class ImpatientHttpHandler(logging.handlers.HTTPHandler):
     def emit(self, record):
         orig_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(3)
-        super(ImpatientHttpHandler, self).emit(record)
+        super(_ImpatientHttpHandler, self).emit(record)
         socket.setdefaulttimeout(orig_timeout)
 
 def FlightlogHandler(background=None):
     """
-    Returns a log handler that logs to flightlog. If background = True,
-    configures a queue-based handler which sends messages to flightlog in a
-    background thread. Otherwise, returns an http handler that runs
-    synchronously.
+    Returns a log handler that logs to flightlog.
+
+    Parameters
+    ----------
+    background : bool
+        If True, causes logging to happen in a background thread so that logging
+        doesn't block. Background logging requires Python 3.2 or higher,
+        and defaults to True for supported versions and False otherwise.
+
+    Returns
+    -------
+    `logging.handlers.QueueHandler` or `quantrocket.flightlog._ImpatientHttpHandler`
 
     Modified from https://docs.python.org/3/howto/logging-cookbook.html#dealing-with-handlers-that-block
     """
@@ -73,10 +81,10 @@ def FlightlogHandler(background=None):
             raise NotImplementedError("Logging to Flightlog using Basic Auth requires Python 3")
 
     if six.PY2:
-        http_handler = ImpatientHttpHandler(
+        http_handler = _ImpatientHttpHandler(
             parsed.netloc, FLIGHTLOG_PATH, method="POST")
     else:
-        http_handler = ImpatientHttpHandler(
+        http_handler = _ImpatientHttpHandler(
             parsed.netloc, FLIGHTLOG_PATH, method="POST", secure=secure, credentials=credentials)
 
     if six.PY2 or sys.version_info.minor < 2:
