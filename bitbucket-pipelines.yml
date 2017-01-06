@@ -6,7 +6,7 @@ pipelines:
             script:
                 - pip install -U tox
                 - tox -e py35
-                - pwd
+                - echo $(pwd)
                 - deploy.bash
     tags:
         '*':
@@ -14,4 +14,5 @@ pipelines:
                 script:
                     - pip install -U tox
                     - tox -e py35
+                    - echo $(pwd)
                     - deploy.bash
