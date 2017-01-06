@@ -74,6 +74,8 @@ def FlightlogHandler(background=None):
     else:
         credentials = None
 
+    path = os.environ.get("FLIGHTLOG_PATH") or FLIGHTLOG_PATH
+
     if six.PY2:
         if secure:
             raise NotImplementedError("Logging to Flightlog over HTTPS requires Python 3")
@@ -82,10 +84,10 @@ def FlightlogHandler(background=None):
 
     if six.PY2:
         http_handler = _ImpatientHttpHandler(
-            parsed.netloc, FLIGHTLOG_PATH, method="POST")
+            parsed.netloc, path, method="POST")
     else:
         http_handler = _ImpatientHttpHandler(
-            parsed.netloc, FLIGHTLOG_PATH, method="POST", secure=secure, credentials=credentials)
+            parsed.netloc, path, method="POST", secure=secure, credentials=credentials)
 
     if six.PY2 or sys.version_info.minor < 2:
         if background:
