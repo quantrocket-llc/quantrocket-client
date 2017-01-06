@@ -6,7 +6,6 @@ pipelines:
             script:
                 - pip install -U tox wheel
                 - tox -e py35
-                - ./deploy.bash
     tags:
         '*':
             - step:
