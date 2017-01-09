@@ -15,7 +15,7 @@
 from setuptools import setup, find_packages
 
 setup(name='quantrocket-client',
-    version='0.2.1',
+    version='0.2.2',
     description='QuantRocket client',
     long_description='Visit https://www.quantrocket.com for more details',
     url='https://www.quantrocket.com',
