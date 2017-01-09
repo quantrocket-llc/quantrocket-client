@@ -27,9 +27,9 @@ class Houston(requests.Session):
 
     @property
     def base_url(self):
-        if "HOUSTON_BASE_URL" not in os.environ:
-            raise ImproperlyConfigured("HOUSTON_BASE_URL is not set")
-        return os.environ["HOUSTON_BASE_URL"]
+        if "HOUSTON_URL" not in os.environ:
+            raise ImproperlyConfigured("HOUSTON_URL is not set")
+        return os.environ["HOUSTON_URL"]
 
     def request(self, method, url, *args, **kwargs):
         if url.startswith('/'):
