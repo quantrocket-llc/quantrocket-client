@@ -55,6 +55,7 @@ def main():
     args = parser.parse_args()
     args = vars(args)
     args.pop("command")
+    args.pop("subcommand", None)
     func = args.pop("func")
     try:
         result = func(**args)
