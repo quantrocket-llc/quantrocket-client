@@ -64,9 +64,9 @@ def FlightlogHandler(background=None):
 
     Modified from https://docs.python.org/3/howto/logging-cookbook.html#dealing-with-handlers-that-block
     """
-    base_url = os.environ.get("HOUSTON_BASE_URL", None)
+    base_url = os.environ.get("HOUSTON_URL", None)
     if not base_url:
-        raise ImproperlyConfigured("HOUSTON_BASE_URL is not set")
+        raise ImproperlyConfigured("HOUSTON_URL is not set")
     parsed = urllib.parse.urlparse(base_url)
     secure = parsed.scheme == "https"
     if "HOUSTON_USERNAME" in os.environ and "HOUSTON_PASSWORD" in os.environ:
