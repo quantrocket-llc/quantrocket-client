@@ -1,0 +1,2 @@
+include versioneer.py
+include quantrocket/_version.py

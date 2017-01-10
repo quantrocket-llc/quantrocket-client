@@ -13,9 +13,11 @@
 # limitations under the License.
 
 from setuptools import setup, find_packages
+import versioneer
 
 setup(name='quantrocket-client',
-    version='0.2.2',
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     description='QuantRocket client',
     long_description='Visit https://www.quantrocket.com for more details',
     url='https://www.quantrocket.com',
