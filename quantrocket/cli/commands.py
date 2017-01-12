@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# PYTHON_ARGCOMPLETE_OK
 #
 # Copyright 2017 QuantRocket - All Rights Reserved
 #
@@ -52,6 +53,13 @@ def main():
     subparsers = parser.add_subparsers(title="commands", dest="command", help="for command-specific help type:")
     subparsers.required = True
     add_subcommands(subparsers)
+    if sys.stdin.isatty():
+        try:
+            import argcomplete
+        except ImportError:
+            pass
+        else:
+            argcomplete.autocomplete(parser)
     args = parser.parse_args()
     args = vars(args)
     args.pop("command")
