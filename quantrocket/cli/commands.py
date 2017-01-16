@@ -48,11 +48,15 @@ def handle_error(msg):
     for l in msg.split("\n"):
         logger.error(l)
 
-def main():
+def get_parser():
     parser = argparse.ArgumentParser(description="QuantRocket CLI")
     subparsers = parser.add_subparsers(title="commands", dest="command", help="for command-specific help type:")
     subparsers.required = True
     add_subcommands(subparsers)
+    return parser
+
+def main():
+    parser = get_parser()
     if sys.stdin.isatty():
         try:
             import argcomplete
