@@ -21,6 +21,7 @@ import sys
 import os
 from six.moves import queue, urllib
 from .exceptions import ImproperlyConfigured
+from .houston import Houston
 
 FLIGHTLOG_PATH = "/flightlog/handler"
 
@@ -105,3 +106,65 @@ def FlightlogHandler(background=None):
         return queue_handler
     else:
         return http_handler
+
+def _log_message(msg, logger_name=None, level="INFO"):
+    """
+    Logs a single message to Flightlog. Intended for CLI usage. Calling this
+    function multiple times within the same process will configure duplicate
+    handlers and result in duplicate messages.
+    """
+    logger = logging.getLogger(logger_name)
+    levelnum = logging.getLevelName(level.upper())
+    try:
+        int(levelnum)
+    except ValueError:
+        raise ValueError("level must be one of DEBUG, INFO, WARNING, ERROR, CRITICAL")
+
+    handler = FlightlogHandler(background=False)
+    logger.addHandler(handler)
+    logger.setLevel(levelnum)
+    logger.log(levelnum, msg)
+
+def stream_logs(detail=False, hist=None, color=True):
+    """
+    Streams application logs, `tail -f` style.
+
+    Parameters
+    ----------
+    detail : bool
+        if True, show detailed logs from logspout, otherwise show log messages
+        from flightlog only (default False)
+
+    hist : int, optional
+        number of log lines to show right away (ignored if showing detailed logs)
+
+    color : bool
+        colorize the logs
+
+    Yields
+    -------
+    str
+        each log line as it arrives
+    """
+    params = {}
+    if detail:
+        path = "/logspout/logs"
+        if not color:
+            params["colors"] = "off"
+    else:
+        path = "/flightlog/logs"
+        if hist:
+            params['hist'] = hist
+        if not color:
+            params["nocolor"] = "true"
+
+    houston = Houston()
+    try:
+        response = houston.get(path, stream=True, params=params)
+        for line in response.iter_lines():
+            if six.PY3:
+                line = line.decode("utf-8")
+            yield line
+    except KeyboardInterrupt:
+        houston.close()
+        return

@@ -17,6 +17,27 @@ import requests
 from .exceptions import ImproperlyConfigured
 
 class Houston(requests.Session):
+    """
+    Subclass of `requests.Session` that provides an interface to the houston
+    API gateway. Reads HOUSTON_URL (and Basic Auth credentials if applicable)
+    from environment variables and applies them to each request. Simply provide
+    the path, starting with /, for example:
+
+    >>> response = houston.get("/countdown/crontab")
+
+    Since each instance of Houston is a session, you can improve performance
+    by using a single session for all requests. The module provides an instance
+    of `Houston`, named `houston`.
+
+    Use the same session as other requests:
+
+    >>> from quantrocket.houston import houston
+
+    Use a new session:
+
+    >>> from quantrocket.houston import Houston
+    >>> houston = Houston()
+    """
 
     DEFAULT_TIMEOUT = 5
 
@@ -35,7 +56,8 @@ class Houston(requests.Session):
         if url.startswith('/'):
             url = self.base_url + url
         timeout = kwargs.get("timeout", None)
-        if timeout is None:
+        stream = kwargs.get("stream", None)
+        if timeout is None and not stream:
             kwargs["timeout"] = self.DEFAULT_TIMEOUT
         return super(Houston, self).request(method, url, *args, **kwargs)
 
