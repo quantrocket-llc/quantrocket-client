@@ -27,7 +27,7 @@ def add_subparser(subparsers):
     parser.set_defaults(func=stream(stream_logs))
 
     parser = _subparsers.add_parser("log", help="log a message")
-    parser.add_argument("msg", help="the message to be logged")
+    parser.add_argument("msg", nargs="?", default="-", help="the message to be logged")
     parser.add_argument("-l", "--level", default="INFO", choices=("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"),
                             help="the log level for the message")
     parser.add_argument("-n", "--name", dest="logger_name", default="quantrocket.cli", help="the logger name")
