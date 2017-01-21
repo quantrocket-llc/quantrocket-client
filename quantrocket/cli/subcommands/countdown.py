@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from quantrocket.countdown import get_crontab, get_timezone
-
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("countdown", description="QuantRocket Countdown CLI", help="quantrocket countdown -h")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
@@ -21,8 +19,8 @@ def add_subparser(subparsers):
 
     parser = _subparsers.add_parser("crontab", help="show the countdown service crontab")
     parser.add_argument("service", metavar="SERVICE_NAME", help="The name of the countdown service, e.g. countdown-usa")
-    parser.set_defaults(func=get_crontab)
+    parser.set_defaults(func="quantrocket.countdown.get_crontab")
 
     parser = _subparsers.add_parser("timezone", help="show the countdown service timezone")
     parser.add_argument("service", metavar="SERVICE_NAME", help="The name of the countdown service, e.g. countdown-usa")
-    parser.set_defaults(func=get_timezone)
+    parser.set_defaults(func="quantrocket.countdown.get_timezone")
