@@ -15,26 +15,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os.path
-import subprocess
+# to make argcomplete perky, limit imports to the minimum here and in
+# subcommand modules
 import sys
 import argparse
-import traceback
 import pkgutil
 from . import subcommands
+
+def import_func(path):
+    '''
+    Imports and returns a function or class from a dot separated path.
+    '''
+    parts = path.split('.')
+    module_path = parts[:-1]
+    func_name = parts[-1]
+
+    module = __import__('.'.join(module_path), fromlist=module_path[:-1])
+    func = getattr(module, func_name)
+    return func
 
 def add_subcommands(subparsers):
     """
     Adds subparsers for each of the service modules in the subcommands package.
     """
     for _, service, _ in pkgutil.iter_modules(subcommands.__path__):
-        module_path = "quantrocket.cli.subcommands.{0}".format(service)
-        module = __import__(module_path, fromlist="quantrocket.cli.subcommands")
-        func = getattr(module, "add_subparser")
+        func = import_func("quantrocket.cli.subcommands.{0}.add_subparser".format(service))
         func(subparsers)
 
 def handle_error(msg):
     import logging
+    import subprocess
+    import os.path
     from ..flightlog import FlightlogHandler
     servicename_path = "/opt/conda/bin/servicename"
     if os.path.exists(servicename_path):
@@ -45,7 +56,7 @@ def handle_error(msg):
     handler = FlightlogHandler(background=False)
     logger.addHandler(handler)
     logger.error("Error running {0}".format(" ".join(sys.argv)))
-    for l in msg.split("\n"):
+    for l in msg.splitlines():
         logger.error(l)
 
 def get_parser():
@@ -68,11 +79,13 @@ def main():
     args = vars(args)
     args.pop("command")
     args.pop("subcommand", None)
-    func = args.pop("func")
+    func_name = args.pop("func")
+    func = import_func(func_name)
     try:
         result = func(**args)
     except:
         if not sys.stdin.isatty():
+            import traceback
             msg = traceback.format_exc()
             handle_error(msg)
         raise
