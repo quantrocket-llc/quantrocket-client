@@ -123,7 +123,10 @@ def _log_message(msg, logger_name=None, level="INFO"):
     handler = FlightlogHandler(background=False)
     logger.addHandler(handler)
     logger.setLevel(levelnum)
-    logger.log(levelnum, msg)
+    if msg == "-":
+        msg = sys.stdin.read()
+    for line in msg.splitlines():
+        logger.log(levelnum, line)
 
 def stream_logs(detail=False, hist=None, color=True):
     """
