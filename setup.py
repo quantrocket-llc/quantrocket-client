@@ -27,7 +27,9 @@ setup(name='quantrocket-client',
     packages=find_packages(),
     install_requires=[
         'requests',
-        "six"
+        "six",
+        "dateutil",
+        "pandas",
     ],
     entry_points = {
         'console_scripts': ['quantrocket=quantrocket.cli.commands:main'],

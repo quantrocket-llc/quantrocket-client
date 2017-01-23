@@ -15,7 +15,7 @@
 from quantrocket.cli.utils.stream import stream
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("flightlog", description="QuantRocket Flightlog CLI", help="quantrocket flightlog -h")
+    _parser = subparsers.add_parser("flightlog", description="QuantRocket logging service CLI", help="quantrocket flightlog -h")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 

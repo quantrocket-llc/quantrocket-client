@@ -12,11 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-def add_subparser(subparsers):
-    _parser = subparsers.add_parser("launchpad", description="QuantRocket IB Gateway service CLI", help="quantrocket launchpad -h")
-    _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
-    _subparsers.required = True
+import dateutil.parser
 
-    parser = _subparsers.add_parser("start", help="start the IB gateway")
-    parser.add_argument("service", metavar="SERVICE_NAME", help="The name of the IB Gateway service, e.g. ibg1")
-    parser.set_defaults(func=None)
+def parse_date(datestr):
+    return dateutil.parser.parse(datestr).date()
