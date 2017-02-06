@@ -28,7 +28,7 @@ setup(name='quantrocket-client',
     install_requires=[
         'requests',
         "six",
-        "dateutil",
+        "python-dateutil",
         "pandas",
     ],
     entry_points = {
