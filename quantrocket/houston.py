@@ -64,3 +64,16 @@ class Houston(requests.Session):
 # Instantiate houston so that all callers can share a TCP connection (for
 # performance's sake)
 houston = Houston()
+
+def ping():
+    """
+    Pings houston.
+
+    Returns
+    -------
+    json
+        reply from houston
+    """
+    response = houston.get("/ping")
+    response.raise_for_status()
+    return response.json()
