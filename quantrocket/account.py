@@ -13,12 +13,12 @@
 # limitations under the License.
 
 from quantrocket.houston import houston
-from quantrocket.constants.capital import ACCOUNT_FIELDS
+from quantrocket.constants.account import ACCOUNT_FIELDS
 
 def get_balance(nlv=None, cushion=None, fields=None, accounts=None,
-                         below_cushion=None, save=False, gateways=None):
+                below_cushion=None, save=False, gateways=None):
     """
-    Returns a snapshot of current capital balance info.
+    Returns a snapshot of current account balance info.
 
     Parameters
     ----------
@@ -45,7 +45,7 @@ def get_balance(nlv=None, cushion=None, fields=None, accounts=None,
         only return accounts where the cushion is below this level (e.g. 0.05)
 
     save : bool
-        save a snapshot of capital balance info to the capital database
+        save a snapshot of account balance info to the account database
 
     gateways : list, optional
         only query these IB Gateway services (identified by service name)
@@ -55,7 +55,7 @@ def get_balance(nlv=None, cushion=None, fields=None, accounts=None,
     DataFrame
     """
     raise NotImplementedError("This service is not yet available")
-    response = houston.get("/capital/balance")
+    response = houston.get("/account/balance")
     response.raise_for_status()
 
     # Require pandas, or warn if missing?
@@ -73,7 +73,7 @@ def get_balance(nlv=None, cushion=None, fields=None, accounts=None,
 def get_balance_history(start_date=None, end_date=None, nlv=None, fields=None,
                         accounts=None, latest=False):
     """
-    Returns historical capital balance snapshots from the capital database.
+    Returns historical account balance snapshots from the account database.
 
     Parameters
     ----------
@@ -107,6 +107,53 @@ def get_balance_history(start_date=None, end_date=None, nlv=None, fields=None,
     DataFrame
     """
     raise NotImplementedError("This service is not yet available")
-    response = houston.get("/capital/balance/history")
+    response = houston.get("/account/balance/history")
     response.raise_for_status()
     return response.json()
+
+def get_account_id(nickname):
+    """
+    Returns account ID by nickname.
+
+    Parameters
+    ----------
+    nickname : str
+        the nickname associated with the account
+
+    Returns
+    -------
+    str
+        account ID
+
+    """
+    raise NotImplementedError("This service is not yet available")
+
+def get_account_nickname():
+    """
+    Returns account nickname(s).
+
+    Returns
+    -------
+    DataFrame
+
+    """
+    raise NotImplementedError("This service is not yet available")
+
+def set_account_nickname(account, nickname):
+    """
+    Sets account nickname.
+
+    Parameters
+    ----------
+    account : str, required
+        the account ID, e.g. U123456
+
+    nickname : str, required
+        the nickname (letters, numbers, hyphens, and underscores only)
+
+    Returns
+    -------
+    None
+
+    """
+    raise NotImplementedError("This service is not yet available")
