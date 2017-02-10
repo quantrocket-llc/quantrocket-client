@@ -16,7 +16,7 @@ from ..utils.parse import parse_date
 from quantrocket.constants.account import ACCOUNT_FIELDS
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("account", description="QuantRocket account CLI [COMING SOON]", help="quantrocket account -h [COMING SOON]")
+    _parser = subparsers.add_parser("account", description="QuantRocket account CLI", help="quantrocket account -h")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
