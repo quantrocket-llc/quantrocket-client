@@ -17,6 +17,21 @@ def add_subparser(subparsers):
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
-    parser = _subparsers.add_parser("start", help="start the IB gateway")
-    parser.add_argument("service", metavar="SERVICE_NAME", help="The name of the IB Gateway service, e.g. ibg1")
-    parser.set_defaults(func=None)
+    parser = _subparsers.add_parser("ls", help="list statuses and permissions of IB Gateway services")
+    parser.add_argument("-e", "--exchanges", metavar="EXCHANGE", nargs="*", help="limit to IB Gateway services with market data permission for these exchanges")
+    parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT"], help="limit to IB Gateway services with market data permission for these securitiy types (useful for disambiguating permissions for exchanges that trade multiple asset classes)")
+    parser.add_argument("-s", "--status", choices=["running", "stopped", "error"], help="limit to IB Gateway services in this status")
+    parser.add_argument("-g", "--gateways", metavar="SERVICE_NAME", nargs="*", help="limit to these IB Gateway services")
+    parser.set_defaults(func="quantrocket.launchpad.list_gateways")
+
+    parser = _subparsers.add_parser("start", help="start one or more IB Gateway services")
+    parser.add_argument("-e", "--exchanges", metavar="EXCHANGE", nargs="*", help="limit to IB Gateway services with market data permission for these exchanges")
+    parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT"], help="limit to IB Gateway services with market data permission for these securitiy types (useful for disambiguating permissions for exchanges that trade multiple asset classes)")
+    parser.add_argument("-g", "--gateways", metavar="SERVICE_NAME", nargs="*", help="limit to these IB Gateway services")
+    parser.set_defaults(func="quantrocket.launchpad.start_gateways")
+
+    parser = _subparsers.add_parser("stop", help="stop one or more IB Gateway service")
+    parser.add_argument("-e", "--exchanges", metavar="EXCHANGE", nargs="*", help="limit to IB Gateway services with market data permission for these exchanges")
+    parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT"], help="limit to IB Gateway services with market data permission for these securitiy types (useful for disambiguating permissions for exchanges that trade multiple asset classes)")
+    parser.add_argument("-g", "--gateways", metavar="SERVICE_NAME", nargs="*", help="limit to these IB Gateway services")
+    parser.set_defaults(func="quantrocket.launchpad.stop_gateways")
