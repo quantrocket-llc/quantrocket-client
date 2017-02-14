@@ -14,9 +14,15 @@
 
 from quantrocket.houston import houston
 
+def _load_or_show_crontab(service, filename=None):
+    if filename:
+        return load_crontab(service, filename)
+    else:
+        return get_crontab(service)
+
 def get_crontab(service):
     """
-    Returns the service crontab.
+    Returns the current crontab.
 
     Parameters
     ----------
@@ -26,11 +32,32 @@ def get_crontab(service):
     Returns
     -------
     str
-        String representation of crontab
+        string representation of crontab
     """
     response = houston.get("/{0}/crontab".format(service))
     response.raise_for_status()
     return response.text
+
+def load_crontab(service, filename):
+    """
+    Uploads a new crontab.
+
+    Parameters
+    ----------
+    service : str, required
+        the name of the service, e.g. ``countdown-usa``
+    filename : str, optional
+        the crontab file to upload to the countdown service
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    with open(filename) as file:
+        response = houston.put("/{0}/crontab".format(service), data=file.read())
+    response.raise_for_status()
+    return response.json()
 
 def get_timezone(service):
     """
