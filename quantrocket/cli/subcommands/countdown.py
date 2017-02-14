@@ -17,9 +17,10 @@ def add_subparser(subparsers):
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
-    parser = _subparsers.add_parser("crontab", help="show the countdown service crontab")
-    parser.add_argument("service", metavar="SERVICE_NAME", help="The name of the countdown service, e.g. countdown-usa")
-    parser.set_defaults(func="quantrocket.countdown.get_crontab")
+    parser = _subparsers.add_parser("crontab", help="upload a new crontab, or return the current crontab")
+    parser.add_argument("service", metavar="SERVICE_NAME", help="the name of the countdown service, e.g. countdown-usa")
+    parser.add_argument("-f", "--filename", metavar="FILENAME", help="the crontab file to upload (if omitted, return the current crontab)")
+    parser.set_defaults(func="quantrocket.countdown._load_or_show_crontab")
 
     parser = _subparsers.add_parser("timezone", help="show the countdown service timezone")
     parser.add_argument("service", metavar="SERVICE_NAME", help="The name of the countdown service, e.g. countdown-usa")
