@@ -17,7 +17,7 @@ def add_subparser(subparsers):
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
-    parser = _subparsers.add_parser("ls", help="list databases")
+    parser = _subparsers.add_parser("list", help="list databases")
     parser.add_argument("service", nargs="?", metavar="SERVICE", help="only list databases for this service")
     parser.set_defaults(func="quantrocket.db.list_databases")
 
@@ -26,7 +26,7 @@ def add_subparser(subparsers):
     parser.add_argument("database", nargs="?",  metavar="DATABASE", help="the name of the database (if service has multiple)")
     parser.set_defaults(func="quantrocket.db.download_database")
 
-    parser = _subparsers.add_parser("s3", help="list Amazon S3 database backups")
+    parser = _subparsers.add_parser("s3list", help="list Amazon S3 database backups")
     parser.add_argument("service", metavar="SERVICE", help="only list database backups for this service")
     parser.add_argument("databases", nargs="*", metavar="DATABASE", help="only list database backups for these databases")
     parser.set_defaults(func="quantrocket.db.s3_list_databases")
