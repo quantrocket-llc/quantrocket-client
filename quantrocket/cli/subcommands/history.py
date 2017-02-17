@@ -17,6 +17,18 @@ def add_subparser(subparsers):
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
+    parser = _subparsers.add_parser("get", help="query price history from the named database(s)")
+    parser.add_argument("databases", metavar="DB", nargs="+", help="the database key(s), for example 'canada'")
+    parser.add_argument("-s", "--start-date", dest="start_date", metavar="DATE", help="limit to price history on or after this date")
+    parser.add_argument("-e", "--end-date", dest="end_date", metavar="DATE", help="limit to price history on or before this date")
+    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
+    parser.add_argument("-y", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
+    parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
+    parser.add_argument("--exclude-symbols", nargs="*", metavar="SYMBOL", help="exclude these symbols")
+    parser.add_argument("-f", "--fields", nargs="*", metavar="FIELD", help="limit to these fields")
+    parser.add_argument("-t", "--times", metavar="HH:MM:SS", help="limit to these times")
+    parser.set_defaults(func="quantrocket.history.get_history")
+
     parser = _subparsers.add_parser("download", help="download historical market data for the named database(s)")
     parser.add_argument("databases", metavar="DB", nargs="+", help="the database key(s), for example 'canada'")
     parser.add_argument("-p", "--priority", action="store_true", help="use the priority queue (default is to use the standard queue)")
