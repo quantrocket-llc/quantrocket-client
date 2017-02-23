@@ -45,6 +45,7 @@ def add_subparser(subparsers):
     parser = _subparsers.add_parser("adjust", help="adjust prices for dividends in the named database(s)")
     parser.add_argument("databases", metavar="DB", nargs="+", help="the database key(s), for example 'canada'")
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
+    parser.add_argument("-c", "--on-cluster", dest="on_cluster", choices=["skip", "adjust"], help="whether to adjust price history if a cluster is present, or skip and log a warning")
     parser.set_defaults(func="quantrocket.history.dividend_adjust")
 
     parser = _subparsers.add_parser("config", help="show the current configuration")
