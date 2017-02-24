@@ -112,6 +112,7 @@ def add_subparser(subparsers):
     parser.add_argument("--sectors", nargs="*", metavar="SECTOR", help="limit to these sectors")
     parser.add_argument("--industries", nargs="*", metavar="INDUSTRY", help="limit to these industries")
     parser.add_argument("--categories", nargs="*", metavar="CATEGORY", help="limit to these categories")
+    parser.add_argument("--exclude-delisted", action="store_true", dest="exclude_delisted", help="exclude delisted securities (default is to include them if they meet the criteria)")
     parser.add_argument("-f", "--input-file", metavar="FILENAME", help="create the group from the con_ids in this file")
     parser.add_argument("-a", "--append", action="store_true", help="append to group if group already exists")
     parser.set_defaults(func="quantrocket.master.create_group")
