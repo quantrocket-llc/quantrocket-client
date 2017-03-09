@@ -46,7 +46,7 @@ def load_crontab(service, filename):
     ----------
     service : str, required
         the name of the service, e.g. ``countdown-usa``
-    filename : str, optional
+    filename : str, required
         the crontab file to upload to the countdown service
 
     Returns
