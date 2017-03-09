@@ -14,7 +14,7 @@
 
 from quantrocket.houston import houston
 
-def list_gateways(exchanges=None, sec_type=None, status=None, gateways=None):
+def list_gateway_statuses(exchanges=None, sec_type=None, status=None, gateways=None):
     """
     Lists statuses and permissions of IB Gateway services.
 
@@ -79,3 +79,41 @@ def stop_gateways(exchanges=None, sec_type=None, gateways=None):
     dict of stopped gateways, statuses, and permissions
     """
     raise NotImplementedError("This service is not yet available")
+
+def load_config(filename):
+    """
+    Uploads a new config.
+
+    Parameters
+    ----------
+    filename : str, required
+        the config file to upload to the launchpad service
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    with open(filename) as file:
+        response = houston.put("/launchpad/config", data=file.read())
+    response.raise_for_status()
+    return response.json()
+
+def get_config():
+    """
+    Returns the current config.
+
+    Returns
+    -------
+    dict
+        config
+    """
+    response = houston.get("/launchpad/config")
+    response.raise_for_status()
+    return response.text
+
+def _load_or_show_config(filename=None):
+    if filename:
+        return load_config(filename)
+    else:
+        return get_config()
