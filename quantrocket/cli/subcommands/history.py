@@ -27,6 +27,7 @@ def add_subparser(subparsers):
     parser.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
     parser.add_argument("-f", "--fields", nargs="*", metavar="FIELD", help="limit to these fields")
     parser.add_argument("-t", "--times", metavar="HH:MM:SS", help="limit to these times")
+    parser.add_argument("-c", "--continuous", choices=["concat", "adjust"], metavar="METHOD", help="join futures underlyings into continuous contracts, using the specified joining method ('concat' or 'adjust')")
     parser.set_defaults(func="quantrocket.history.get_history")
 
     parser = _subparsers.add_parser("download", help="download historical market data for the named database(s)")

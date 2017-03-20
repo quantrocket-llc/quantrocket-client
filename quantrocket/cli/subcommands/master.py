@@ -17,7 +17,7 @@ def add_subparser(subparsers):
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
-    parser = _subparsers.add_parser("download", help="Download security details from IB into securities master database")
+    parser = _subparsers.add_parser("download", help="download security details from IB into securities master database")
     parser.add_argument("-e", "--exchange", required=True, metavar="EXCHANGE", help="the exchange code")
     parser.add_argument("-t", "--sec-type", dest="sec_type", default="STK", required=True, choices=["STK", "FUT", "CASH"], help="the security type")
     parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
@@ -26,7 +26,7 @@ def add_subparser(subparsers):
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
     parser.set_defaults(func="quantrocket.master.download_securities")
 
-    parser = _subparsers.add_parser("marketdata", help="Load a snapshot of market data (e.g. liquidity) into securities master database to assist with group creation")
+    parser = _subparsers.add_parser("marketdata", help="load a snapshot of market data (e.g. liquidity) into securities master database to assist with group creation")
     parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code")
     parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT", "CASH"], help="limit to this security type")
     parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
@@ -38,7 +38,7 @@ def add_subparser(subparsers):
     parser.add_argument("--categories", nargs="*", metavar="CATEGORY", help="limit to these categories")
     parser.set_defaults(func="quantrocket.master.load_marketdata")
 
-    parser = _subparsers.add_parser("describe", help="View statistics about securities")
+    parser = _subparsers.add_parser("describe", help="view statistics about securities")
     parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code")
     parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT", "CASH"], help="limit to this security type")
     parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
@@ -50,7 +50,7 @@ def add_subparser(subparsers):
     parser.add_argument("--categories", nargs="*", metavar="CATEGORY", help="limit to these categories")
     parser.set_defaults(func="quantrocket.master.describe_securities")
 
-    parser = _subparsers.add_parser("get", help="Query security details from the securities master database")
+    parser = _subparsers.add_parser("get", help="query security details from the securities master database")
     parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code")
     parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT", "CASH"], help="limit to this security type")
     parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
@@ -64,9 +64,10 @@ def add_subparser(subparsers):
     parser.add_argument("--industries", nargs="*", metavar="INDUSTRY", help="limit to these industries")
     parser.add_argument("--categories", nargs="*", metavar="CATEGORY", help="limit to these categories")
     parser.add_argument("--delisted", action="store_true", default=False, help="include delisted securities")
+    parser.add_argument("-f", "--frontmonth", action="store_true", default=False, help="limit to frontmonth contracts (applies to futures only)")
     parser.set_defaults(func="quantrocket.master.get_securities")
 
-    parser = _subparsers.add_parser("diff", help="Flag security details that have changed since the time they were loaded")
+    parser = _subparsers.add_parser("diff", help="flag security details that have changed since the time they were loaded")
     parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="limit to this exchange")
     parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT", "CASH"], help="limit to this security type")
     parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
@@ -81,7 +82,7 @@ def add_subparser(subparsers):
     parser.add_argument("--delist-exchanges", metavar="EXCHANGE", nargs="*", help="auto-delist securities that associated with these exchanges")
     parser.set_defaults(func="quantrocket.master.diff_securities")
 
-    parser = _subparsers.add_parser("export", help="Export security details from the securities master database")
+    parser = _subparsers.add_parser("export", help="export security details from the securities master database")
     parser.add_argument("filename", metavar="OUTFILE", help="the filename to save the export to")
     parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code")
     parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT", "CASH"], help="limit to this security type")
@@ -99,7 +100,7 @@ def add_subparser(subparsers):
     parser.add_argument("--tws", dest="tws", action="store_true", help="Format output for TWS import")
     parser.set_defaults(func="quantrocket.master.export_securities")
 
-    parser = _subparsers.add_parser("group", help="Create a group of securities meeting certain criteria")
+    parser = _subparsers.add_parser("group", help="create a group of securities meeting certain criteria")
     parser.add_argument("name", metavar="GROUP_NAME", help="the name to assign to the group")
     parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="limit to this exchange")
     parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT", "CASH"], help="limit to this security type")
@@ -117,11 +118,20 @@ def add_subparser(subparsers):
     parser.add_argument("-a", "--append", action="store_true", help="append to group if group already exists")
     parser.set_defaults(func="quantrocket.master.create_group")
 
-    parser = _subparsers.add_parser("rmgroup", help="Remove a security group")
+    parser = _subparsers.add_parser("rmgroup", help="remove a security group")
     parser.add_argument("group", help="the group name")
     parser.set_defaults(func="quantrocket.master.delete_group")
 
-    parser = _subparsers.add_parser("delist", help="Delist a security by con_id or symbol+exchange")
+    parser = _subparsers.add_parser("frontmonth", help="return the frontmonth contract for a futures underlying, as of now or over a date range")
+    parser.add_argument("symbol", help="the underlying's symbol (e.g. ES)")
+    parser.add_argument("exchange", help="the exchange where the contract trades (e.g. GLOBEX)")
+    parser.add_argument("-c", "--currency", metavar="CURRENCY", help="the contract's currency, if necessary to disambiguate")
+    parser.add_argument("-m", "--multiplier", metavar="MULTIPLIER", help="the contract's multiplier, if necessary to disambiguate")
+    parser.add_argument("-s", "--start-date", metavar="YYYY-MM-DD", help="return the frontmonth conid for each date on or after this date")
+    parser.add_argument("-e", "--end-date", metavar="YYYY-MM-DD", help="return the frontmonth conid for each date on or before this date")
+    parser.set_defaults(func="quantrocket.master.get_frontmonth")
+
+    parser = _subparsers.add_parser("delist", help="delist a security by con_id or symbol+exchange")
     parser.add_argument("-c", "--conid", type=int, help="the conid of the security to delist")
     parser.add_argument("-s", "--symbol", help="the symbol to be delisted")
     parser.add_argument("-e", "--exchange", help="the exchange of the symbol to be delisted")
