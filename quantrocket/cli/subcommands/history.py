@@ -19,8 +19,8 @@ def add_subparser(subparsers):
 
     parser = _subparsers.add_parser("get", help="query price history from the named database(s)")
     parser.add_argument("databases", metavar="DB", nargs="+", help="the database key(s), for example 'canada'")
-    parser.add_argument("-s", "--start-date", dest="start_date", metavar="DATE", help="limit to price history on or after this date")
-    parser.add_argument("-e", "--end-date", dest="end_date", metavar="DATE", help="limit to price history on or before this date")
+    parser.add_argument("-s", "--start-date", dest="start_date", metavar="YYYY-MM-DD", help="limit to price history on or after this date")
+    parser.add_argument("-e", "--end-date", dest="end_date", metavar="YYYY-MM-DD", help="limit to price history on or before this date")
     parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
     parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
@@ -34,6 +34,11 @@ def add_subparser(subparsers):
     parser.add_argument("-p", "--priority", action="store_true", help="use the priority queue (default is to use the standard queue)")
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
     parser.set_defaults(func="quantrocket.history.download")
+
+    parser = _subparsers.add_parser("load", help="load historical market data from a file into the named database")
+    parser.add_argument("database", metavar="DB", help="the database key, for example 'canada'")
+    parser.add_argument("filename", help="JSON file containing price data (can also be passed on stdin)")
+    parser.set_defaults(func="quantrocket.history.load_from_file")
 
     parser = _subparsers.add_parser("status", help="show info about pending and running downloads")
     parser.set_defaults(func="quantrocket.history.get_status")

@@ -25,6 +25,7 @@ def add_subparser(subparsers):
     parser.add_argument("-f", "--fields", nargs="*", metavar="FIELD", help="limit to these fields")
     parser.add_argument("-w", "--window", metavar="HH:MM:SS", help="limit to this historical window (use Pandas timedelta string)")
     parser.add_argument("-s", "--snapshot", action="store_true", help="return a snapshot of the latest quotes")
+    parser.add_argument("--save", metavar="DB", help="save the quotes asynchronously to the named database after returning them")
     parser.set_defaults(func="quantrocket.realtime.get_quotes")
 
     parser = _subparsers.add_parser("add", help="add securities to the realtime data stream")
