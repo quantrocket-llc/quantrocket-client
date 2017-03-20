@@ -16,7 +16,7 @@ from quantrocket.houston import houston
 from quantrocket.constants.account import ACCOUNT_FIELDS
 
 def get_balance(nlv=None, cushion=None, fields=None, accounts=None,
-                below_cushion=None, save=False, gateways=None):
+                below_cushion=None, save=False):
     """
     Returns a snapshot of current account balance info.
 
@@ -46,9 +46,6 @@ def get_balance(nlv=None, cushion=None, fields=None, accounts=None,
 
     save : bool
         save a snapshot of account balance info to the account database
-
-    gateways : list, optional
-        only query these IB Gateway services (identified by service name)
 
     Returns
     -------
@@ -111,49 +108,20 @@ def get_balance_history(start_date=None, end_date=None, nlv=None, fields=None,
     response.raise_for_status()
     return response.json()
 
-def get_account_id(nickname):
+def get_portfolio(accounts=None):
     """
-    Returns account ID by nickname.
+    Returns current portfolio.
 
     Parameters
     ----------
-    nickname : str
-        the nickname associated with the account
-
-    Returns
-    -------
-    str
-        account ID
-
-    """
-    raise NotImplementedError("This service is not yet available")
-
-def get_account_nickname():
-    """
-    Returns account nickname(s).
+    accounts : list, optional
+        limit to these accounts (default all connected accounts);
+        account IDs or nicknames can be provided
 
     Returns
     -------
     DataFrame
-
     """
     raise NotImplementedError("This service is not yet available")
-
-def set_account_nickname(account, nickname):
-    """
-    Sets account nickname.
-
-    Parameters
-    ----------
-    account : str, required
-        the account ID, e.g. U123456
-
-    nickname : str, required
-        the nickname (letters, numbers, hyphens, and underscores only)
-
-    Returns
-    -------
-    None
-
-    """
-    raise NotImplementedError("This service is not yet available")
+    response = houston.get("/account/portfolio")
+    response.raise_for_status()
