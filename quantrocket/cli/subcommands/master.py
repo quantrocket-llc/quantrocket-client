@@ -136,3 +136,8 @@ def add_subparser(subparsers):
     parser.add_argument("-s", "--symbol", help="the symbol to be delisted")
     parser.add_argument("-e", "--exchange", help="the exchange of the symbol to be delisted")
     parser.set_defaults(func="quantrocket.master.delist")
+
+    parser = _subparsers.add_parser("lots", help="load lot sizes from a file")
+    parser.add_argument("filename", metavar="FILE", help="CSV file with columns 'lot_size' and either 'conid' or 'symbol' (and optionally 'exchange' and/or 'currency' for disambiguation)")
+    parser.add_argument("-g", "--groups", metavar="GROUP", help="only try to match to securities in these groups (to prevent false matches in case of symbol ambiguity)")
+    parser.set_defaults(func="quantrocket.master.load_lots")
