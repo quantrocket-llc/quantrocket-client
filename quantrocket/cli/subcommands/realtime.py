@@ -26,6 +26,7 @@ def add_subparser(subparsers):
     parser.add_argument("-w", "--window", metavar="HH:MM:SS", help="limit to this historical window (use Pandas timedelta string)")
     parser.add_argument("-s", "--snapshot", action="store_true", help="return a snapshot of the latest quotes")
     parser.add_argument("--save", metavar="DB", help="save the quotes asynchronously to the named database after returning them")
+    parser.add_argument("--disable-backmonth-filter", action="store_true", help="don't filter out back month contracts (default is to filter out everything except front month)")
     parser.set_defaults(func="quantrocket.realtime.get_quotes")
 
     parser = _subparsers.add_parser("add", help="add securities to the realtime data stream")
@@ -34,6 +35,7 @@ def add_subparser(subparsers):
     parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
     parser.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
     parser.add_argument("-c", "--cancel-in", metavar="HH:MM:SS", help="automatically cancel the securities after this much time (use Pandas timedelta string)")
+    parser.add_argument("--disable-backmonth-filter", action="store_true", help="don't filter out back month contracts (default is to filter out everything except front month)")
     parser.set_defaults(func="quantrocket.realtime.stream_securities")
 
     parser = _subparsers.add_parser("cancel", help="remove securities from the realtime data stream")
