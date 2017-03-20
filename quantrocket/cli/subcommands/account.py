@@ -45,7 +45,18 @@ def add_subparser(subparsers):
     parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
     parser.set_defaults(func="quantrocket.account.get_portfolio")
 
-    parser = _subparsers.add_parser("set-nickname", help="Set account nickname")
-    parser.add_argument("account", help="the account ID, e.g. U123456")
-    parser.add_argument("nickname", help="the nickname (letters, numbers, hyphens, and underscores only)")
-    parser.set_defaults(func="quantrocket.account.set_account_nickname")
+    parser = _subparsers.add_parser("default", help="view or set the default account")
+    parser.add_argument("account", nargs="?", metavar="ACCOUNT", help="set this account as the default (omit to view current default account)")
+    parser.set_defaults(func="quantrocket.account._get_or_set_default_account")
+
+    parser = _subparsers.add_parser("fx", help="fetch base currency exchange rates from Google and optionally save to account database")
+    parser.add_argument("-c", "--currencies", nargs="*", metavar="CURRENCY", help="limit to these currencies (default all IB-tradeable currencies)")
+    parser.add_argument("-s", "--save", action="store_true", help="save exhange rates to the account database")
+    parser.set_defaults(func="quantrocket.account.get_exchange_rates")
+
+    parser = _subparsers.add_parser("fxhistory", help="return historical exchange rates from the account database")
+    parser.add_argument("-c", "--currencies", nargs="*", metavar="CURRENCY", help="limit to these currencies (default all IB-tradeable currencies)")
+    parser.add_argument("-s", "--start-date", metavar="YYYY-MM-DD", help="limit to history on or after this date")
+    parser.add_argument("-e", "--end-date", metavar="YYYY-MM-DD", help="limit to history on or before this date")
+    parser.add_argument("-l", "--latest", action="store_true", help="only show the latest exchange rate in the date range")
+    parser.set_defaults(func="quantrocket.account.get_exchange_rate_history")
