@@ -1,11 +1,11 @@
-image: python:3.5
+image: python:3.6
 
 pipelines:
     default:
         - step:
             script:
                 - pip install -U tox
-                - tox -e py35
+                - tox -e py36
     branches:
         master:
             - step:
@@ -18,5 +18,5 @@ pipelines:
             - step:
                 script:
                     - pip install -U tox wheel
-                    - tox -e py35
+                    - tox -e py36
                     - ./deploy.bash
