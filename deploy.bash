@@ -18,4 +18,4 @@ python setup.py register
 python setup.py sdist bdist_wheel upload
 
 # Rebuild quantrocker/cli Docker image with latest client
-curl https://registry.hub.docker.com/u/quantrocket/cli/trigger/5f686645-bdd6-46f3-b90a-76d3a15a6526/
+curl -X POST https://registry.hub.docker.com/u/quantrocket/cli/trigger/5f686645-bdd6-46f3-b90a-76d3a15a6526/
