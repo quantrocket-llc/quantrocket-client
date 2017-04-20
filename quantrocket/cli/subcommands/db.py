@@ -22,43 +22,44 @@ def add_subparser(subparsers):
 
     parser = _subparsers.add_parser("list", help="list databases")
     parser.add_argument("service", nargs="?", metavar="SERVICE", help="only list databases for this service")
-    parser.set_defaults(func="quantrocket.db.list_databases")
+    parser.set_defaults(func="quantrocket.db._cli_list_databases")
 
     parser = _subparsers.add_parser(
-        "get", help="download a database from the db service", epilog=textwrap.dedent("""\
+        "get", help="download a database from the db service and write to a local file", epilog=textwrap.dedent("""\
         Example:
             Download a database called quantrocket.history.nyse.sqlite:
 
                 quantrocket db get quantrocket.history.nyse.sqlite"""),
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("database", metavar="DATABASE", help="the filename of the database (as returned by the list command)")
+    parser.add_argument("outfile", metavar="OUTFILE", help="filename to write the database to")
     parser.set_defaults(func="quantrocket.db.download_database")
 
     parser = _subparsers.add_parser(
-        "s3push", help="backup database(s) to Amazon S3", epilog=textwrap.dedent("""\
+        "s3push", help="push database(s) to Amazon S3", epilog=textwrap.dedent("""\
         Example:
             Push a database called quantrocket.history.nyse.sqlite:
 
                 quantrocket db s3push history nyse"""),
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("service", metavar="SERVICE", help="only backup databases for this service (specify 'all' to backup all services)")
-    parser.add_argument("codes", nargs="*", metavar="DATABASE_CODE", help="only backup databases identified by these codes (omit to backup all databases for service)")
-    parser.set_defaults(func="quantrocket.db.s3_push_databases")
+    parser.add_argument("service", metavar="SERVICE", help="only push databases for this service (specify 'all' to push all services)")
+    parser.add_argument("codes", nargs="*", metavar="DATABASE_CODE", help="only push databases identified by these codes (omit to push all databases for service)")
+    parser.set_defaults(func="quantrocket.db._cli_s3_push_databases")
 
     parser = _subparsers.add_parser(
-        "s3pull", help="restore database(s) from Amazon S3 to the db service",
+        "s3pull", help="pull database(s) from Amazon S3 to the db service",
         epilog=textwrap.dedent("""\
         Example:
             Pull a database stored on S3 as quantrocket.history.nyse.sqlite.gz:
 
                 quantrocket db s3pull history nyse"""),
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("service", metavar="SERVICE", help="only restore databases for this service (specify 'all' to restore all services)")
-    parser.add_argument("code", nargs="*", metavar="DATABASE_CODE", help="only restore databases identified by these codes (omit to restore all databases for service)")
+    parser.add_argument("service", metavar="SERVICE", help="only pull databases for this service (specify 'all' to pull all services)")
+    parser.add_argument("codes", nargs="*", metavar="DATABASE_CODE", help="only pull databases identified by these codes (omit to pull all databases for service)")
     parser.add_argument("-f", "--force", action="store_true", default=False, help="overwrite existing database if one exists (default is to fail if one exists)")
-    parser.set_defaults(func="quantrocket.db.s3_pullases")
+    parser.set_defaults(func="quantrocket.db._cli_s3_pull_databases")
 
     parser = _subparsers.add_parser("optimize", help="optimize database file(s) to improve performance")
     parser.add_argument("service", metavar="SERVICE", help="only optimize databases for this service (specify 'all' to optimize all services)")
-    parser.add_argument("code", nargs="*", metavar="DATABASE_CODE", help="only optimize databases identified by these codes (omit to optimize all databases for service)")
-    parser.set_defaults(func="quantrocket.db.optimize_databases")
+    parser.add_argument("codes", nargs="*", metavar="DATABASE_CODE", help="only optimize databases identified by these codes (omit to optimize all databases for service)")
+    parser.set_defaults(func="quantrocket.db._cli_optimize_databases")

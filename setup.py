@@ -30,6 +30,7 @@ setup(name='quantrocket-client',
         "six",
         "python-dateutil",
         "pandas",
+        "pyyaml",
     ],
     entry_points = {
         'console_scripts': ['quantrocket=quantrocket.cli.commands:main'],
