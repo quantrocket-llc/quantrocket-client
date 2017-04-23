@@ -22,6 +22,7 @@ import os
 from six.moves import queue, urllib
 from .exceptions import ImproperlyConfigured
 from .houston import Houston
+from quantrocket.cli.utils.stream import stream
 
 FLIGHTLOG_PATH = "/flightlog/handler"
 
@@ -172,3 +173,6 @@ def stream_logs(detail=False, hist=None, color=True):
     except KeyboardInterrupt:
         houston.close()
         return
+
+def _cli_stream_logs(*args, **kwargs):
+    return stream(stream_logs)(*args, **kwargs)

@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from quantrocket.cli.utils.stream import stream
-
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("flightlog", description="QuantRocket logging service CLI", help="quantrocket flightlog -h")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
@@ -23,7 +21,7 @@ def add_subparser(subparsers):
     parser.add_argument("-d", "--detail", action="store_true", help="show detailed logs from logspout, otherwise show log messages from flightlog only")
     parser.add_argument("--hist", type=int, metavar="NUM_LINES", help="number of log lines to show right away (ignored if showing detailed logs)")
     parser.add_argument("--nocolor", action="store_false", dest="color", help="don't colorize the logs")
-    parser.set_defaults(func=stream("quantrocket.flightlog.stream_logs"))
+    parser.set_defaults(func="quantrocket.flightlog._cli_stream_logs")
 
     parser = _subparsers.add_parser("log", help="log a message")
     parser.add_argument("msg", nargs="?", default="-", help="the message to be logged")
