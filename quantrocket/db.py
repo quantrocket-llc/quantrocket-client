@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import yaml
 from quantrocket.houston import houston
+from quantrocket.cli.utils.output import json_to_cli
 
 def list_databases(service=None):
     """
@@ -37,7 +37,7 @@ def list_databases(service=None):
     return response.json()
 
 def _cli_list_databases(*args, **kwargs):
-    return "\n".join(list_databases(*args, **kwargs))
+    return json_to_cli(list_databases, *args, **kwargs)
 
 def download_database(database, outfile):
     """
@@ -85,8 +85,7 @@ def s3_push_databases(service, codes=None):
     return response.json()
 
 def _cli_s3_push_databases(*args, **kwargs):
-    json_response = s3_push_databases(*args, **kwargs)
-    return yaml.dump(json_response, default_flow_style=False)
+    return json_to_cli(s3_push_databases, *args, **kwargs)
 
 def s3_pull_databases(service, codes=None, force=False):
     """
@@ -117,8 +116,7 @@ def s3_pull_databases(service, codes=None, force=False):
     return response.json()
 
 def _cli_s3_pull_databases(*args, **kwargs):
-    json_response = s3_pull_databases(*args, **kwargs)
-    return yaml.dump(json_response, default_flow_style=False)
+    return json_to_cli(s3_pull_databases, *args, **kwargs)
 
 def optimize_databases(service, codes=None):
     """
@@ -144,5 +142,4 @@ def optimize_databases(service, codes=None):
     return response.json()
 
 def _cli_optimize_databases(*args, **kwargs):
-    json_response = optimize_databases(*args, **kwargs)
-    return yaml.dump(json_response, default_flow_style=False)
+    return json_to_cli(optimize_databases, *args, **kwargs)
