@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from quantrocket.houston import houston
+from quantrocket.cli.utils.output import json_to_cli
 
 def _load_or_show_crontab(service, filename=None):
     if filename:
@@ -56,8 +57,7 @@ def load_crontab(service, filename):
     """
     with open(filename) as file:
         response = houston.put("/{0}/crontab".format(service), data=file.read())
-    response.raise_for_status()
-    return response.json()
+    return houston.json_if_possible(response)
 
 def get_timezone(service):
     """
@@ -74,5 +74,7 @@ def get_timezone(service):
         dict with key timezone
     """
     response = houston.get("/{0}/timezone".format(service))
-    response.raise_for_status()
-    return response.json()
+    return houston.json_if_possible(response)
+
+def _cli_get_timezone(*args, **kwargs):
+    return json_to_cli(get_timezone, *args, **kwargs)
