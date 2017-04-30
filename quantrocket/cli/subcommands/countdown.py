@@ -24,4 +24,4 @@ def add_subparser(subparsers):
 
     parser = _subparsers.add_parser("timezone", help="show the countdown service timezone")
     parser.add_argument("service", metavar="SERVICE_NAME", help="The name of the countdown service, e.g. countdown-usa")
-    parser.set_defaults(func="quantrocket.countdown.get_timezone")
+    parser.set_defaults(func="quantrocket.countdown._cli_get_timezone")

@@ -33,8 +33,7 @@ def list_databases(service=None):
     if service:
         params["service"] = service
     response = houston.get("/db/list", params=params)
-    response.raise_for_status()
-    return response.json()
+    return houston.json_if_possible(response)
 
 def _cli_list_databases(*args, **kwargs):
     return json_to_cli(list_databases, *args, **kwargs)
@@ -81,8 +80,7 @@ def s3_push_databases(service, codes=None):
     if codes:
         data["codes"] = codes
     response = houston.put("/db/s3/{0}".format(service), data=data)
-    response.raise_for_status()
-    return response.json()
+    return houston.json_if_possible(response)
 
 def _cli_s3_push_databases(*args, **kwargs):
     return json_to_cli(s3_push_databases, *args, **kwargs)
@@ -112,8 +110,7 @@ def s3_pull_databases(service, codes=None, force=False):
     if force:
         params["force"] = force
     response = houston.get("/db/s3/{0}".format(service), params=params)
-    response.raise_for_status()
-    return response.json()
+    return houston.json_if_possible(response)
 
 def _cli_s3_pull_databases(*args, **kwargs):
     return json_to_cli(s3_pull_databases, *args, **kwargs)
@@ -138,8 +135,7 @@ def optimize_databases(service, codes=None):
     if codes:
         data["codes"] = codes
     response = houston.post("/db/optimizations/{0}".format(service), data=data)
-    response.raise_for_status()
-    return response.json()
+    return houston.json_if_possible(response)
 
 def _cli_optimize_databases(*args, **kwargs):
     return json_to_cli(optimize_databases, *args, **kwargs)
