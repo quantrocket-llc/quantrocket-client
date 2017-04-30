@@ -61,6 +61,20 @@ class Houston(requests.Session):
             kwargs["timeout"] = self.DEFAULT_TIMEOUT
         return super(Houston, self).request(method, url, *args, **kwargs)
 
+    @staticmethod
+    def json_if_possible(response):
+        """
+        Returns json if possible, otherwise raises status error if there is
+        one. (If houston replies with json, we prefer returning json even for
+        status codes >= 400, but if there's no json we want to raise the
+        status error.)
+        """
+        try:
+            return response.json()
+        except:
+            response.raise_for_status()
+            return response.json()
+
 # Instantiate houston so that all callers can share a TCP connection (for
 # performance's sake)
 houston = Houston()

@@ -13,14 +13,15 @@
 # limitations under the License.
 
 from quantrocket.houston import houston
+from quantrocket.cli.utils.output import json_to_cli
 
 def list_gateway_statuses(exchanges=None, sec_type=None, status=None, gateways=None):
     """
-    Lists statuses and permissions of IB Gateway services.
+    Query statuses of IB Gateway services.
 
     Parameters
     ----------
-    exchanges : list, optional
+    exchanges : list of str, optional
         limit to IB Gateway services with market data permission for these exchanges
 
     sec_type : str, optional
@@ -29,56 +30,102 @@ def list_gateway_statuses(exchanges=None, sec_type=None, status=None, gateways=N
     status : str, optional
         limit to IB Gateway services in this status. Possible choices: running, stopped, error
 
-    gateways : list, optional
+    gateways : list of str, optional
         limit to these IB Gateway services
 
     Returns
     -------
-    dict of gateways, statuses, and permissions
+    dict of gateway:status (if status arg not provided), or list of gateways (if status arg provided)
     """
-    raise NotImplementedError("This service is not yet available")
+    params = {}
+    if sec_type:
+        params["sec_type"] = sec_type
+    if exchanges:
+        params["exchanges"] = exchanges
+    if gateways:
+        params["gateways"] = gateways
+    if status:
+        params["status"] = status
 
-def start_gateways(exchanges=None, sec_type=None, gateways=None):
+    response = houston.get("/launchpad/gateways/", params=params)
+    return houston.json_if_possible(response)
+
+def _cli_list_gateway_statuses(*args, **kwargs):
+    return json_to_cli(list_gateway_statuses, *args, **kwargs)
+
+def start_gateways(exchanges=None, sec_type=None, gateways=None, wait=False):
     """
     Starts one or more IB Gateway services.
 
     Parameters
     ----------
-    exchanges : list, optional
+    exchanges : list of str, optional
         limit to IB Gateway services with market data permission for these exchanges
 
     sec_type : str, optional
         limit to IB Gateway services with market data permission for these securitiy types (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT
 
-    gateways : list, optional
+    gateways : list of str, optional
         limit to these IB Gateway services
+
+    wait: bool
+        wait for the IB Gateway services to start before returning (default is to start the gateways asynchronously)
 
     Returns
     -------
-    dict of started gateways, statuses, and permissions
+    dict
+        status message
     """
-    raise NotImplementedError("This service is not yet available")
+    params = {"wait": wait}
+    if sec_type:
+        params["sec_type"] = sec_type
+    if exchanges:
+        params["exchanges"] = exchanges
+    if gateways:
+        params["gateways"] = gateways
 
-def stop_gateways(exchanges=None, sec_type=None, gateways=None):
+    response = houston.post("/launchpad/gateways/", params=params, timeout=45)
+    return houston.json_if_possible(response)
+
+def _cli_start_gateways(*args, **kwargs):
+    return json_to_cli(start_gateways, *args, **kwargs)
+
+def stop_gateways(exchanges=None, sec_type=None, gateways=None, wait=False):
     """
     Stops one or more IB Gateway services.
 
     Parameters
     ----------
-    exchanges : list, optional
+    exchanges : list of str, optional
         limit to IB Gateway services with market data permission for these exchanges
 
     sec_type : str, optional
         limit to IB Gateway services with market data permission for these securitiy types (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT
 
-    gateways : list, optional
+    gateways : list of str, optional
         limit to these IB Gateway services
+
+    wait: bool
+        wait for the IB Gateway services to stop before returning (default is to stop the gateways asynchronously)
 
     Returns
     -------
-    dict of stopped gateways, statuses, and permissions
+    dict
+        status message
     """
-    raise NotImplementedError("This service is not yet available")
+    params = {"wait": wait}
+    if sec_type:
+        params["sec_type"] = sec_type
+    if exchanges:
+        params["exchanges"] = exchanges
+    if gateways:
+        params["gateways"] = gateways
+
+    response = houston.delete("/launchpad/gateways/", params=params, timeout=45)
+    return houston.json_if_possible(response)
+
+def _cli_stop_gateways(*args, **kwargs):
+    return json_to_cli(stop_gateways, *args, **kwargs)
 
 def load_config(filename):
     """
@@ -95,9 +142,8 @@ def load_config(filename):
         status message
     """
     with open(filename) as file:
-        response = houston.put("/launchpad/config", data=file.read())
-    response.raise_for_status()
-    return response.json()
+        response = houston.put("/launchpad/config/", data=file.read())
+    return response.text()
 
 def get_config():
     """
@@ -108,12 +154,12 @@ def get_config():
     dict
         config
     """
-    response = houston.get("/launchpad/config")
+    response = houston.get("/launchpad/config/")
     response.raise_for_status()
     return response.text
 
-def _load_or_show_config(filename=None):
+def _cli_load_or_show_config(filename=None):
     if filename:
         return load_config(filename)
     else:
-        return get_config()
+        return json_to_cli(get_config)
