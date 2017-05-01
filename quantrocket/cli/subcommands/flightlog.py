@@ -12,18 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("flightlog", description="QuantRocket logging service CLI", help="quantrocket flightlog -h")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
-    parser = _subparsers.add_parser("stream", help="stream application logs, `tail -f` style")
+    examples = """
+Examples:
+Stream application logs:
+
+    quantrocket flightlog stream
+
+Stream detailed logs:
+
+    quantrocket flightlog stream --detail
+    """
+    parser = _subparsers.add_parser(
+        "stream", help="stream application logs, `tail -f` style", epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-d", "--detail", action="store_true", help="show detailed logs from logspout, otherwise show log messages from flightlog only")
     parser.add_argument("--hist", type=int, metavar="NUM_LINES", help="number of log lines to show right away (ignored if showing detailed logs)")
     parser.add_argument("--nocolor", action="store_false", dest="color", help="don't colorize the logs")
     parser.set_defaults(func="quantrocket.flightlog._cli_stream_logs")
 
-    parser = _subparsers.add_parser("log", help="log a message")
+    examples = """
+Examples:
+Log a message under the name "myapp":
+
+    quantrocket flightlog log "this is a test" --name myapp --level INFO
+
+Log the output from another command:
+
+    quantrocket account balance --below-cushion 0.02 | quantrocket flightlog log --name quantrocket.account --level CRITICAL
+    """
+    parser = _subparsers.add_parser(
+        "log", help="log a message", epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("msg", nargs="?", default="-", help="the message to be logged")
     parser.add_argument("-l", "--level", default="INFO", choices=("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"),
                             help="the log level for the message")
