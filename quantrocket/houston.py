@@ -73,6 +73,9 @@ class Houston(requests.Session):
             return response.json()
         except:
             response.raise_for_status()
+            # It's possible to get a 204 empty response, so handle that case here
+            if not response.content:
+                return {}
             return response.json()
 
 # Instantiate houston so that all callers can share a TCP connection (for
