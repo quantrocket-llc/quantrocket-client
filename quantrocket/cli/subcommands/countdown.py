@@ -12,14 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("countdown", description="QuantRocket cron service CLI", help="quantrocket countdown -h")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
-    parser = _subparsers.add_parser("crontab", help="upload a new crontab, or return the current crontab")
+    examples = """
+Examples:
+Upload a new crontab to a service called countdown-australia (replaces current crontab):
+
+    quantrocket countdown crontab countdown-australia mycron.crontab
+
+Show current crontab for a service called countdown-australia:
+
+    quantrocket countdown crontab countdown-australia
+    """
+    parser = _subparsers.add_parser(
+        "crontab", help="upload a new crontab, or return the current crontab", epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("service", metavar="SERVICE_NAME", help="the name of the countdown service, e.g. countdown-usa")
-    parser.add_argument("-f", "--filename", metavar="FILENAME", help="the crontab file to upload (if omitted, return the current crontab)")
+    parser.add_argument("filename", nargs="?", metavar="FILENAME", help="the crontab file to upload (if omitted, return the current crontab)")
     parser.set_defaults(func="quantrocket.countdown._load_or_show_crontab")
 
     parser = _subparsers.add_parser("timezone", help="show the countdown service timezone")
