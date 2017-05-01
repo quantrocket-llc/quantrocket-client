@@ -24,7 +24,7 @@ from .exceptions import ImproperlyConfigured
 from .houston import Houston
 from quantrocket.cli.utils.stream import stream
 
-FLIGHTLOG_PATH = "/flightlog/handler"
+FLIGHTLOG_PATH = "/flightlog/handler/"
 
 LOG_RECORD_TYPE_BOUNDARY = "||||q5%XfK4#||||"
 
@@ -157,7 +157,7 @@ def stream_logs(detail=False, hist=None, color=True):
         if not color:
             params["colors"] = "off"
     else:
-        path = "/flightlog/logs"
+        path = "/flightlog/logs/"
         if hist:
             params['hist'] = hist
         if not color:

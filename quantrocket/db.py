@@ -32,7 +32,7 @@ def list_databases(service=None):
     params = {}
     if service:
         params["service"] = service
-    response = houston.get("/db/list", params=params)
+    response = houston.get("/db/list/", params=params)
     return houston.json_if_possible(response)
 
 def _cli_list_databases(*args, **kwargs):
@@ -53,7 +53,7 @@ def download_database(database, outfile):
     -------
     None
     """
-    response = houston.get("/db/downloads/{0}".format(database), stream=True)
+    response = houston.get("/db/downloads/{0}/".format(database), stream=True)
     response.raise_for_status()
     with open(outfile, "wb") as f:
         for chunk in response.iter_content(chunk_size=1024):
@@ -79,7 +79,7 @@ def s3_push_databases(service, codes=None):
     data = {}
     if codes:
         data["codes"] = codes
-    response = houston.put("/db/s3/{0}".format(service), data=data)
+    response = houston.put("/db/s3/{0}/".format(service), data=data)
     return houston.json_if_possible(response)
 
 def _cli_s3_push_databases(*args, **kwargs):
@@ -109,7 +109,7 @@ def s3_pull_databases(service, codes=None, force=False):
         params["codes"] = codes
     if force:
         params["force"] = force
-    response = houston.get("/db/s3/{0}".format(service), params=params)
+    response = houston.get("/db/s3/{0}/".format(service), params=params)
     return houston.json_if_possible(response)
 
 def _cli_s3_pull_databases(*args, **kwargs):
@@ -134,7 +134,7 @@ def optimize_databases(service, codes=None):
     data = {}
     if codes:
         data["codes"] = codes
-    response = houston.post("/db/optimizations/{0}".format(service), data=data)
+    response = houston.post("/db/optimizations/{0}/".format(service), data=data)
     return houston.json_if_possible(response)
 
 def _cli_optimize_databases(*args, **kwargs):
