@@ -15,7 +15,8 @@
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 
-def list_gateway_statuses(exchanges=None, sec_type=None, status=None, gateways=None):
+def list_gateway_statuses(exchanges=None, sec_type=None, research_vendors=None, status=None,
+                          gateways=None):
     """
     Query statuses of IB Gateway services.
 
@@ -25,7 +26,10 @@ def list_gateway_statuses(exchanges=None, sec_type=None, status=None, gateways=N
         limit to IB Gateway services with market data permission for these exchanges
 
     sec_type : str, optional
-        limit to IB Gateway services with market data permission for these securitiy types (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT
+        limit to IB Gateway services with market data permission for this securitiy type (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT
+
+    research_vendors : list of str, optional
+        limit to IB Gateway services with permission for these research vendors (choices: reuters, wsh)
 
     status : str, optional
         limit to IB Gateway services in this status. Possible choices: running, stopped, error
@@ -42,6 +46,8 @@ def list_gateway_statuses(exchanges=None, sec_type=None, status=None, gateways=N
         params["sec_type"] = sec_type
     if exchanges:
         params["exchanges"] = exchanges
+    if research_vendors:
+        params["research_vendors"] = research_vendors
     if gateways:
         params["gateways"] = gateways
     if status:
@@ -53,7 +59,7 @@ def list_gateway_statuses(exchanges=None, sec_type=None, status=None, gateways=N
 def _cli_list_gateway_statuses(*args, **kwargs):
     return json_to_cli(list_gateway_statuses, *args, **kwargs)
 
-def start_gateways(exchanges=None, sec_type=None, gateways=None, wait=False):
+def start_gateways(exchanges=None, sec_type=None, research_vendors=None, gateways=None, wait=False):
     """
     Starts one or more IB Gateway services.
 
@@ -63,7 +69,10 @@ def start_gateways(exchanges=None, sec_type=None, gateways=None, wait=False):
         limit to IB Gateway services with market data permission for these exchanges
 
     sec_type : str, optional
-        limit to IB Gateway services with market data permission for these securitiy types (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT
+        limit to IB Gateway services with market data permission for this securitiy type (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT
+
+    research_vendors : list of str, optional
+        limit to IB Gateway services with permission for these research vendors (choices: reuters, wsh)
 
     gateways : list of str, optional
         limit to these IB Gateway services
@@ -81,6 +90,8 @@ def start_gateways(exchanges=None, sec_type=None, gateways=None, wait=False):
         params["sec_type"] = sec_type
     if exchanges:
         params["exchanges"] = exchanges
+    if research_vendors:
+        params["research_vendors"] = research_vendors
     if gateways:
         params["gateways"] = gateways
 
@@ -90,7 +101,7 @@ def start_gateways(exchanges=None, sec_type=None, gateways=None, wait=False):
 def _cli_start_gateways(*args, **kwargs):
     return json_to_cli(start_gateways, *args, **kwargs)
 
-def stop_gateways(exchanges=None, sec_type=None, gateways=None, wait=False):
+def stop_gateways(exchanges=None, sec_type=None, research_vendors=None, gateways=None, wait=False):
     """
     Stops one or more IB Gateway services.
 
@@ -100,7 +111,10 @@ def stop_gateways(exchanges=None, sec_type=None, gateways=None, wait=False):
         limit to IB Gateway services with market data permission for these exchanges
 
     sec_type : str, optional
-        limit to IB Gateway services with market data permission for these securitiy types (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT
+        limit to IB Gateway services with market data permission for this securitiy type (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT
+
+    research_vendors : list of str, optional
+        limit to IB Gateway services with permission for these research vendors (choices: reuters, wsh)
 
     gateways : list of str, optional
         limit to these IB Gateway services
@@ -118,6 +132,8 @@ def stop_gateways(exchanges=None, sec_type=None, gateways=None, wait=False):
         params["sec_type"] = sec_type
     if exchanges:
         params["exchanges"] = exchanges
+    if research_vendors:
+        params["research_vendors"] = research_vendors
     if gateways:
         params["gateways"] = gateways
 
@@ -143,7 +159,7 @@ def load_config(filename):
     """
     with open(filename) as file:
         response = houston.put("/launchpad/config/", data=file.read())
-    return response.text()
+    return houston.json_if_possible(response)
 
 def get_config():
     """
@@ -152,14 +168,13 @@ def get_config():
     Returns
     -------
     dict
-        config
+        the config as a dict
     """
     response = houston.get("/launchpad/config/")
-    response.raise_for_status()
-    return response.text
+    return houston.json_if_possible(response)
 
 def _cli_load_or_show_config(filename=None):
     if filename:
-        return load_config(filename)
+        return json_to_cli(load_config, filename)
     else:
         return json_to_cli(get_config)
