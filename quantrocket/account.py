@@ -54,17 +54,6 @@ def get_balance(nlv=None, cushion=None, fields=None, accounts=None,
     raise NotImplementedError("This service is not yet available")
     response = houston.get("/account/balance")
     response.raise_for_status()
-
-    # Require pandas, or warn if missing?
-    try:
-        import pandas as pd
-    except ImportError:
-        # Use a packaged stub of pandas that can load and repr a dataframe? Probably not...
-        # Or print JSON with a warning?
-        pass
-    else:
-        raise NotImplementedError()
-
     return response.text
 
 def get_balance_history(start_date=None, end_date=None, nlv=None, fields=None,

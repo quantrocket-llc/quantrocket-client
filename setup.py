@@ -26,10 +26,9 @@ setup(name='quantrocket-client',
     license='Apache-2.0',
     packages=find_packages(),
     install_requires=[
-        'requests',
+        "requests",
         "six",
         "python-dateutil",
-        "pandas",
         "pyyaml",
     ],
     entry_points = {
