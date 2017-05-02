@@ -53,7 +53,7 @@ def list_gateway_statuses(exchanges=None, sec_type=None, research_vendors=None, 
     if status:
         params["status"] = status
 
-    response = houston.get("/launchpad/gateways/", params=params)
+    response = houston.get("/launchpad/gateways", params=params)
     return houston.json_if_possible(response)
 
 def _cli_list_gateway_statuses(*args, **kwargs):
@@ -95,7 +95,7 @@ def start_gateways(exchanges=None, sec_type=None, research_vendors=None, gateway
     if gateways:
         params["gateways"] = gateways
 
-    response = houston.post("/launchpad/gateways/", params=params, timeout=45)
+    response = houston.post("/launchpad/gateways", params=params, timeout=45)
     return houston.json_if_possible(response)
 
 def _cli_start_gateways(*args, **kwargs):
@@ -137,7 +137,7 @@ def stop_gateways(exchanges=None, sec_type=None, research_vendors=None, gateways
     if gateways:
         params["gateways"] = gateways
 
-    response = houston.delete("/launchpad/gateways/", params=params, timeout=45)
+    response = houston.delete("/launchpad/gateways", params=params, timeout=45)
     return houston.json_if_possible(response)
 
 def _cli_stop_gateways(*args, **kwargs):
@@ -158,7 +158,7 @@ def load_config(filename):
         status message
     """
     with open(filename) as file:
-        response = houston.put("/launchpad/config/", data=file.read())
+        response = houston.put("/launchpad/config", data=file.read())
     return houston.json_if_possible(response)
 
 def get_config():
@@ -170,7 +170,7 @@ def get_config():
     dict
         the config as a dict
     """
-    response = houston.get("/launchpad/config/")
+    response = houston.get("/launchpad/config")
     return houston.json_if_possible(response)
 
 def _cli_load_or_show_config(filename=None):
