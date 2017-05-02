@@ -26,7 +26,7 @@ def list_gateway_statuses(exchanges=None, sec_type=None, research_vendors=None, 
         limit to IB Gateway services with market data permission for these exchanges
 
     sec_type : str, optional
-        limit to IB Gateway services with market data permission for this securitiy type (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT
+        limit to IB Gateway services with market data permission for this securitiy type (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT, CASH, OPT
 
     research_vendors : list of str, optional
         limit to IB Gateway services with permission for these research vendors (choices: reuters, wsh)
@@ -69,7 +69,7 @@ def start_gateways(exchanges=None, sec_type=None, research_vendors=None, gateway
         limit to IB Gateway services with market data permission for these exchanges
 
     sec_type : str, optional
-        limit to IB Gateway services with market data permission for this securitiy type (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT
+        limit to IB Gateway services with market data permission for this securitiy type (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT, CASH, OPT
 
     research_vendors : list of str, optional
         limit to IB Gateway services with permission for these research vendors (choices: reuters, wsh)
@@ -111,7 +111,7 @@ def stop_gateways(exchanges=None, sec_type=None, research_vendors=None, gateways
         limit to IB Gateway services with market data permission for these exchanges
 
     sec_type : str, optional
-        limit to IB Gateway services with market data permission for this securitiy type (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT
+        limit to IB Gateway services with market data permission for this securitiy type (useful for disambiguating permissions for exchanges that trade multiple asset classes). Possible choices: STK, FUT, CASH, OPT
 
     research_vendors : list of str, optional
         limit to IB Gateway services with permission for these research vendors (choices: reuters, wsh)
