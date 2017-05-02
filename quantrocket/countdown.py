@@ -35,7 +35,7 @@ def get_crontab(service):
     str
         string representation of crontab
     """
-    response = houston.get("/{0}/crontab/".format(service))
+    response = houston.get("/{0}/crontab".format(service))
     response.raise_for_status()
     return response.text
 
@@ -56,7 +56,7 @@ def load_crontab(service, filename):
         status message
     """
     with open(filename) as file:
-        response = houston.put("/{0}/crontab/".format(service), data=file.read())
+        response = houston.put("/{0}/crontab".format(service), data=file.read())
     return houston.json_if_possible(response)
 
 def get_timezone(service):
@@ -73,7 +73,7 @@ def get_timezone(service):
     dict
         dict with key timezone
     """
-    response = houston.get("/{0}/timezone/".format(service))
+    response = houston.get("/{0}/timezone".format(service))
     return houston.json_if_possible(response)
 
 def _cli_get_timezone(*args, **kwargs):
