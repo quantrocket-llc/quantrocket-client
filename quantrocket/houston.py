@@ -15,6 +15,7 @@
 import os
 import requests
 from .exceptions import ImproperlyConfigured
+from quantrocket.cli.utils.output import json_to_cli
 
 class Houston(requests.Session):
     """
@@ -92,5 +93,7 @@ def ping():
         reply from houston
     """
     response = houston.get("/ping")
-    response.raise_for_status()
-    return response.json()
+    return houston.json_if_possible(response)
+
+def _cli_ping():
+    return json_to_cli(ping)
