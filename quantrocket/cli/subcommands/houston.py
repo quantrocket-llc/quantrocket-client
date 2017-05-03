@@ -18,4 +18,4 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     parser = _subparsers.add_parser("ping", help="pings houston")
-    parser.set_defaults(func="quantrocket.houston.ping")
+    parser.set_defaults(func="quantrocket.houston._cli_ping")
