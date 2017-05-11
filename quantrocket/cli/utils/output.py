@@ -14,6 +14,7 @@
 
 import os
 import yaml
+import json
 
 def json_to_cli(func, *args, **kwargs):
     """
@@ -32,10 +33,10 @@ def json_to_cli(func, *args, **kwargs):
     simplify_list = kwargs.pop("simplify_list", True)
     json_response = func(*args, **kwargs)
     if os.environ.get("QUANTROCKET_CLI_OUTPUT_FORMAT", "").lower() == "json":
-        return json_response
+        return json.dumps(json_response)
     if not json_response:
         return
     if simplify_list and isinstance(json_response, list) and not any([
         isinstance(item, (dict, list, tuple, set)) for item in json_response]):
         return "\n".join(json_response)
-    return yaml.dump(json_response, default_flow_style=False).strip()
+    return yaml.safe_dump(json_response, default_flow_style=False).strip()
