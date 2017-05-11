@@ -27,7 +27,7 @@ def add_subparser(subparsers):
 Example:
 Download a database called quantrocket.history.nyse.sqlite:
 
-    quantrocket db get quantrocket.history.nyse.sqlite
+    quantrocket db get quantrocket.history.nyse.sqlite /path/to/localdir/quantrocket.history.nyse.sqlite
     """
     parser = _subparsers.add_parser(
         "get", help="download a database from the db service and write to a local file", epilog=examples,
