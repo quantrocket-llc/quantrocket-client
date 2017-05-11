@@ -40,7 +40,7 @@ class Houston(requests.Session):
     >>> houston = Houston()
     """
 
-    DEFAULT_TIMEOUT = 5
+    DEFAULT_TIMEOUT = 15
 
     def __init__(self):
         super(Houston, self).__init__()

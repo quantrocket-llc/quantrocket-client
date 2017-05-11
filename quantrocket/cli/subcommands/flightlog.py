@@ -39,6 +39,23 @@ Stream detailed logs:
 
     examples = """
 Examples:
+Download application logs:
+
+    quantrocket flightlog get /path/to/localdir/app.log
+
+Download detailed logs:
+
+    quantrocket flightlog get --detail /path/to/localdir/system.log
+    """
+    parser = _subparsers.add_parser(
+        "get", help="download the logfile", epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("outfile", metavar="OUTFILE", help="filename to write the logfile to")
+    parser.add_argument("-d", "--detail", action="store_true", help="download detailed logs from logspout, otherwise download log messages from flightlog only")
+    parser.set_defaults(func="quantrocket.flightlog.download_logfile")
+
+    examples = """
+Examples:
 Log a message under the name "myapp":
 
     quantrocket flightlog log "this is a test" --name myapp --level INFO

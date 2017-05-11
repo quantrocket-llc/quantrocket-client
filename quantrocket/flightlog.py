@@ -21,7 +21,7 @@ import sys
 import os
 from six.moves import queue, urllib
 from .exceptions import ImproperlyConfigured
-from .houston import Houston
+from .houston import Houston, houston
 from quantrocket.cli.utils.stream import stream
 
 FLIGHTLOG_PATH = "/flightlog/handler"
@@ -157,7 +157,7 @@ def stream_logs(detail=False, hist=None, color=True):
         if not color:
             params["colors"] = "off"
     else:
-        path = "/flightlog/logs"
+        path = "/flightlog/stream/logs"
         if hist:
             params['hist'] = hist
         if not color:
@@ -176,3 +176,34 @@ def stream_logs(detail=False, hist=None, color=True):
 
 def _cli_stream_logs(*args, **kwargs):
     return stream(stream_logs)(*args, **kwargs)
+
+def download_logfile(outfile, detail=False):
+    """
+    Downloads the logfile.
+
+    Parameters
+    ----------
+    outfile: str, required
+        filename to write the logfile to
+    detail : bool
+        if True, show detailed logs from logspout, otherwise show log messages
+        from flightlog only (default False)
+
+    Returns
+    -------
+    None
+    """
+    if detail:
+        logtype = "system"
+    else:
+        logtype = "app"
+
+    response = houston.get("/flightlog/logfile/{0}".format(logtype), stream=True)
+
+    if response.status_code != 200:
+        return houston.json_if_possible(response)
+
+    with open(outfile, "wb") as f:
+        for chunk in response.iter_content(chunk_size=1024):
+            if chunk:
+                f.write(chunk)
