@@ -15,7 +15,7 @@
 from quantrocket.cli.utils.parse import parse_dict
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("cosmonaut", description="QuantRocket Cosmonaut CLI", help="quantrocket cosmonaut -h")
+    _parser = subparsers.add_parser("moonshot", description="QuantRocket Moonshot CLI", help="quantrocket moonshot -h")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
@@ -27,7 +27,7 @@ def add_subparser(subparsers):
     parser.add_argument("-a", "--account", help="use the latest NLV of this account for modeling commissions, liquidity constraints, etc.")
     parser.add_argument("-p", "--params", nargs="*", type=parse_dict, metavar="PARAM:VALUE", help="strategy params to set on the fly")
     parser.add_argument("-w", "--raw", action="store_true", help="return raw performance data instead of a performance tearsheet")
-    parser.set_defaults(func="quantrocket.cosmonaut.backtest")
+    parser.set_defaults(func="quantrocket.moonshot.backtest")
 
     parser = _subparsers.add_parser("paramscan", help="run a parameter scan for one or more strategies")
     parser.add_argument("start_date", metavar="YYYY-MM-DD", help="start date")
@@ -43,7 +43,7 @@ def add_subparser(subparsers):
     parser.add_argument("-a", "--account", help="use the latest NLV of this account for modeling commissions, liquidity constraints, etc.")
     parser.add_argument("--params", nargs="*", type=parse_dict, metavar="PARAM:VALUE", help="strategy params to set on the fly (distinct from the params to be scanned)")
     parser.add_argument("-w", "--raw", action="store_true", help="return raw performance data instead of a performance tearsheet")
-    parser.set_defaults(func="quantrocket.cosmonaut.scan_parameters")
+    parser.set_defaults(func="quantrocket.moonshot.scan_parameters")
 
     parser = _subparsers.add_parser("walkforward", help="run walkforward analysis for one or more strategies")
     parser.add_argument("start_date", metavar="YYYY-MM-DD", help="start date")
@@ -59,7 +59,7 @@ def add_subparser(subparsers):
     parser.add_argument("-a", "--account", help="use the latest NLV of this account for modeling commissions, liquidity constraints, etc.")
     parser.add_argument("--params", nargs="*", type=parse_dict, metavar="PARAM:VALUE", help="strategy params to set on the fly (distinct from the params to be scanned)")
     parser.add_argument("-w", "--raw", action="store_true", help="return raw performance data instead of a performance tearsheet")
-    parser.set_defaults(func="quantrocket.cosmonaut.walkforward")
+    parser.set_defaults(func="quantrocket.moonshot.walkforward")
 
     parser = _subparsers.add_parser("params", help="view params for one or more strategies")
     parser.add_argument("codes", nargs="+", metavar="CODE", help="the strategies to include")
@@ -70,7 +70,7 @@ def add_subparser(subparsers):
     where the param is defined (default no class grouping). (Use "parent" to group by category
     and "child" to show where param would need to be edited.)""")
     parser.add_argument("-s", "--groupsort", action="store_true", help="sort by origin class (requires -g/--group-by-class), otherwise sort by param name")
-    parser.set_defaults(func="quantrocket.cosmonaut.get_params")
+    parser.set_defaults(func="quantrocket.moonshot.get_params")
 
     parser = _subparsers.add_parser("trade", help="run one or more strategies and generate orders")
     parser.add_argument("strategies", nargs="*", metavar="CODE", help="one or more strategies to trade")
@@ -79,7 +79,7 @@ def add_subparser(subparsers):
     parser.add_argument("-f", "--quotes-func", metavar="PATH", help="dot-separated path of a function through which the quotes should be passed before appending them to price history")
     parser.add_argument("-s", "--save-quotes", metavar="DB", help="instruct the realtime service to save the realtime quotes to this price history database")
     parser.add_argument("-r", "--review-date", metavar="YYYY-MM-DD", help="generate trades as if it were this date")
-    parser.set_defaults(func="quantrocket.cosmonaut.trade")
+    parser.set_defaults(func="quantrocket.moonshot.trade")
 
     parser = _subparsers.add_parser("shortfall", help="compare live and simulated results")
     parser.add_argument("start_date", metavar="YYYY-MM-DD", help="start date")
@@ -89,4 +89,4 @@ def add_subparser(subparsers):
     parser.add_argument("-a", "--account", help="the account to compare shortfall for (if not provided, the default account registered with the account service will be used)")
     parser.add_argument("-p", "--params", nargs="*", type=parse_dict, metavar="PARAM:VALUE", help="strategy params to set on the fly")
     parser.add_argument("-w", "--raw", action="store_true", help="return raw performance data instead of a performance tearsheet")
-    parser.set_defaults(func="quantrocket.cosmonaut.get_implementation_shortfall")
+    parser.set_defaults(func="quantrocket.moonshot.get_implementation_shortfall")

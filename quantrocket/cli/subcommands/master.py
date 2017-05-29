@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("master", description="QuantRocket securities master CLI", help="quantrocket master -h")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
@@ -19,7 +21,10 @@ def add_subparser(subparsers):
 
     parser = _subparsers.add_parser("download", help="download security details from IB into securities master database")
     parser.add_argument("-e", "--exchange", required=True, metavar="EXCHANGE", help="the exchange code")
-    parser.add_argument("-t", "--sec-type", dest="sec_type", default="STK", required=True, choices=["STK", "FUT", "CASH"], help="the security type")
+    parser.add_argument(
+        "-t", "--sec-type", dest="sec_type", default="STK", required=True,
+        choices=["STK", "ETF", "FUT", "CASH", "IND", "FOP", "OPT", "BAG", "WAR", "BOND", "CMDTY", "FUND"],
+        help="the security type")
     parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
     parser.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
     parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
@@ -130,6 +135,22 @@ def add_subparser(subparsers):
     parser.add_argument("-s", "--start-date", metavar="YYYY-MM-DD", help="return the frontmonth conid for each date on or after this date")
     parser.add_argument("-e", "--end-date", metavar="YYYY-MM-DD", help="return the frontmonth conid for each date on or before this date")
     parser.set_defaults(func="quantrocket.master.get_frontmonth")
+
+    examples = """
+Examples:
+Upload a new rollover config (replaces current config):
+
+    quantrocket master rollrules myrolloverrules.yml
+
+Show current rollover config:
+
+    quantrocket master rollrules
+    """
+    parser = _subparsers.add_parser(
+        "rollrules", help="upload a new rollover rules config, or return the current rollover rules", epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("filename", nargs="?", metavar="FILENAME", help="the rollover rules config file to upload (if omitted, return the current config)")
+    parser.set_defaults(func="quantrocket.master._cli_load_or_show_rollrules")
 
     parser = _subparsers.add_parser("delist", help="delist a security by con_id or symbol+exchange")
     parser.add_argument("-c", "--conid", type=int, help="the conid of the security to delist")
