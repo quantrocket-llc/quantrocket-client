@@ -19,12 +19,33 @@ def add_subparser(subparsers):
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
+
+    examples = """
+Examples:
+List all exchanges:
+
+    quantrocket master exchanges
+
+List stock exchanges in North America:
+
+    quantrocket master exchanges --regions north_america --sec-types STK
+    """
+    parser = _subparsers.add_parser(
+        "exchanges", help="list exchanges by security type and country as found on the IB website", epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-r", "--regions", nargs="*", choices=["north_america", "europe", "asia", "global"],
+        metavar="REGION", help="limit to these regions")
+    parser.add_argument(
+        "-s", "--sec-types", nargs="*",
+        choices=["STK", "ETF", "FUT", "CASH", "IND", "OPT", "WAR"], metavar="SEC_TYPE", help="limit to these security types")
+    parser.set_defaults(func="quantrocket.master._cli_list_exchanges")
+
     parser = _subparsers.add_parser("download", help="download security details from IB into securities master database")
     parser.add_argument("-e", "--exchange", required=True, metavar="EXCHANGE", help="the exchange code")
     parser.add_argument(
         "-t", "--sec-type", dest="sec_type", default="STK", required=True,
-        choices=["STK", "ETF", "FUT", "CASH", "IND", "FOP", "OPT", "BAG", "WAR", "BOND", "CMDTY", "FUND"],
-        help="the security type")
+        choices=["STK", "ETF", "FUT", "CASH", "IND", "OPT", "WAR"], help="the security type")
     parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
     parser.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
     parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
