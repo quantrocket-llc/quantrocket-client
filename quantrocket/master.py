@@ -25,7 +25,7 @@ def list_exchanges(regions=None, sec_types=None):
         limit to these regions. Possible choices: north_america, europe, asia, global
 
     sec_types : list of str, optional
-        limit to these securitiy types. Possible choices: STK, ETF, FUT, CASH, IND, OPT, WAR
+        limit to these securitiy types. Possible choices: STK, ETF, FUT, CASH, IND
 
     Returns
     -------
@@ -43,3 +43,58 @@ def list_exchanges(regions=None, sec_types=None):
 def _cli_list_exchanges(*args, **kwargs):
     return json_to_cli(list_exchanges, *args, **kwargs)
 
+def download_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
+                        groups=None, conids=None):
+    """
+    Download securities listings from IB into securities master database, either by exchange or by groups/conids.
+
+
+    Specify an exchange (optionally filtering by security type, currency, and/or symbol) to fetch
+    listings from the IB website and download associated contract details from the IB API. Or, specify groups
+    or conids to download details from the IB API, bypassing the website.
+
+    Parameters
+    ----------
+    exchange : str
+        the exchange code to download listings for (required unless providing groups or conids)
+
+    sec_types : list of str, optional
+        limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND
+
+    currencies : list of str, optional
+        limit to these currencies
+
+    symbols : list of str, optional
+        limit to these symbols
+
+    groups : list of str, optional
+        limit to these groups
+
+    conids : list of int, optional
+        limit to these conids
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    if exchange:
+        params["exchange"] = exchange
+    if sec_types:
+        params["sec_types"] = sec_types
+    if currencies:
+        params["currencies"] = currencies
+    if symbols:
+        params["symbols"] = symbols
+    if groups:
+        params["groups"] = groups
+    if conids:
+        params["conids"] = conids
+
+    response = houston.post("/master/listings", params=params)
+    return houston.json_if_possible(response)
+
+def _cli_download_listings(*args, **kwargs):
+    return json_to_cli(download_listings, *args, **kwargs)

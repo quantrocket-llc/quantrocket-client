@@ -38,19 +38,43 @@ List stock exchanges in North America:
         metavar="REGION", help="limit to these regions")
     parser.add_argument(
         "-s", "--sec-types", nargs="*",
-        choices=["STK", "ETF", "FUT", "CASH", "IND", "OPT", "WAR"], metavar="SEC_TYPE", help="limit to these security types")
+        choices=["STK", "ETF", "FUT", "CASH", "IND"], metavar="SEC_TYPE", help="limit to these security types")
     parser.set_defaults(func="quantrocket.master._cli_list_exchanges")
 
-    parser = _subparsers.add_parser("download", help="download security details from IB into securities master database")
-    parser.add_argument("-e", "--exchange", required=True, metavar="EXCHANGE", help="the exchange code")
+    examples = """
+Specify an exchange (optionally filtering by security type, currency, and/or symbol) to fetch
+listings from the IB website and download associated contract details from the IB API. Or, specify groups
+or conids to download details from the IB API, bypassing the website.
+
+Examples:
+Download all Toronto Stock Exchange stocks listings:
+
+    quantrocket master listings --exchange TSE --sec-types STK
+
+Download all NYSE ARCA ETF listings:
+
+    quantrocket master listings --exchange ARCA --sec-types ETF
+
+Download specific symbols from Nasdaq (ISLAND):
+
+    quantrocket master listings --exchange ISLAND --symbols AAPL GOOG NFLX
+
+Re-download contract details for an existing securities group called "japan-fin":
+
+    quantrocket master listings --groups "japan-fin"
+    """
+    parser = _subparsers.add_parser(
+        "listings", help="download securities listings from IB into securities master database, either by exchange or by groups/conids", epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code to download listings for (required unless providing groups or conids)")
     parser.add_argument(
-        "-t", "--sec-type", dest="sec_type", default="STK", required=True,
-        choices=["STK", "ETF", "FUT", "CASH", "IND", "OPT", "WAR"], help="the security type")
-    parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
+        "-t", "--sec-types", nargs="*", metavar="SEC_TYPE",
+        choices=["STK", "ETF", "FUT", "CASH", "IND"], help="limit to these security types")
+    parser.add_argument("-c", "--currencies", nargs="*", metavar="CURRENCY", help="limit to these currencies")
     parser.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
     parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.set_defaults(func="quantrocket.master.download_securities")
+    parser.set_defaults(func="quantrocket.master._cli_download_listings")
 
     parser = _subparsers.add_parser("marketdata", help="load a snapshot of market data (e.g. liquidity) into securities master database to assist with group creation")
     parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code")
