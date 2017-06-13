@@ -105,20 +105,41 @@ Re-download contract details for an existing securities group called "japan-fin"
     parser.add_argument("-f", "--frontmonth", action="store_true", default=False, help="limit to frontmonth contracts (applies to futures only)")
     parser.set_defaults(func="quantrocket.master.get_securities")
 
-    parser = _subparsers.add_parser("diff", help="flag security details that have changed since the time they were loaded")
-    parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="limit to this exchange")
-    parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT", "CASH"], help="limit to this security type")
-    parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
+    examples = """
+Examples:
+Get a diff for all securities in a group called "italy-stk":
+
+    quantrocket master diff --groups "italy-stk"
+
+Get a diff for all securities in a group called "italy-stk", looking only for sector or
+industry changes:
+
+    quantrocket master diff --groups "italy-stk" --fields Sector Industry
+
+Get a diff for specific securities by conid:
+
+    quantrocket master diff --conids 123456 234567
+
+Get a diff for all securities in a group called "italy-stk" and log the results, if any,
+to flightlog:
+
+    quantrocket master diff --groups "italy-stk" | quantrocket flightlog log --loglevel WARNING --name "quantrocket.master"
+
+Get a diff for all securities in a group called "nasdaq-sml" and auto-delist any symbols that
+are no longer available from IB or that are now associated with the PINK exchange:
+
+    quantrocket master diff --groups "nasdaq-sml" --delist-missing --delist-exchanges PINK
+    """
+    parser = _subparsers.add_parser(
+        "diff", help="flag security details that have changed in IB's system since the time "
+        "they were last loaded into the securities master database", epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("--sectors", nargs="*", metavar="SECTOR", help="limit to these sectors")
-    parser.add_argument("--industries", nargs="*", metavar="INDUSTRY", help="limit to these industries")
-    parser.add_argument("--categories", nargs="*", metavar="CATEGORY", help="limit to these categories")
-    parser.add_argument("-f", "--fields", nargs="*", metavar="FIELD", help="only diff against these fields")
+    parser.add_argument("-f", "--fields", nargs="*", metavar="FIELD", help="only diff these fields")
     parser.add_argument("--delist-missing", action="store_true", default=False, help="auto-delist securities that are no longer available from IB")
-    parser.add_argument("--delist-exchanges", metavar="EXCHANGE", nargs="*", help="auto-delist securities that associated with these exchanges")
-    parser.set_defaults(func="quantrocket.master.diff_securities")
+    parser.add_argument("--delist-exchanges", metavar="EXCHANGE", nargs="*", help="auto-delist securities that are associated with these exchanges")
+    parser.set_defaults(func="quantrocket.master._cli_diff_securities")
 
     parser = _subparsers.add_parser("export", help="export security details from the securities master database")
     parser.add_argument("filename", metavar="OUTFILE", help="the filename to save the export to")
