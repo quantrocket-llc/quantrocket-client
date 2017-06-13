@@ -98,3 +98,51 @@ def download_listings(exchange=None, sec_types=None, currencies=None, symbols=No
 
 def _cli_download_listings(*args, **kwargs):
     return json_to_cli(download_listings, *args, **kwargs)
+
+def diff_securities(groups=None, conids=None, fields=None, delist_missing=False,
+                    delist_exchanges=None):
+    """
+    Flag security details that have changed in IB's system since the time they were last loaded
+    into the securities master database.
+
+    Parameters
+    ----------
+    groups : list of str, optional
+        limit to these groups
+
+    conids : list of int, optional
+        limit to these conids
+
+    fields : list of str, optional
+        only diff these fields
+
+    delist_missing : bool
+        auto-delist securities that are no longer available from IB
+
+    delist_exchanges : list of str, optional
+        auto-delist securities that are associated with these exchanges
+
+    Returns
+    -------
+    dict
+        dict of conids and fields that have changed
+
+    """
+    params = {}
+    if groups:
+        params["groups"] = groups
+    if conids:
+        params["conids"] = conids
+    if fields:
+        params["fields"] = fields
+    if delist_missing:
+        params["delist_missing"] = delist_missing
+    if delist_exchanges:
+        params["delist_exchanges"] = delist_exchanges
+
+    # runs synchronously so use a high timeout
+    response = houston.get("/master/diff", params=params, timeout=60*60)
+    return houston.json_if_possible(response)
+
+def _cli_diff_securities(*args, **kwargs):
+    return json_to_cli(diff_securities, *args, **kwargs)
