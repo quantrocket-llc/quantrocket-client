@@ -76,18 +76,6 @@ Re-download contract details for an existing securities group called "japan-fin"
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
     parser.set_defaults(func="quantrocket.master._cli_download_listings")
 
-    parser = _subparsers.add_parser("marketdata", help="load a snapshot of market data (e.g. liquidity) into securities master database to assist with group creation")
-    parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code")
-    parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT", "CASH"], help="limit to this security type")
-    parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("--sectors", nargs="*", metavar="SECTOR", help="limit to these sectors")
-    parser.add_argument("--industries", nargs="*", metavar="INDUSTRY", help="limit to these industries")
-    parser.add_argument("--categories", nargs="*", metavar="CATEGORY", help="limit to these categories")
-    parser.set_defaults(func="quantrocket.master.load_marketdata")
-
     parser = _subparsers.add_parser("describe", help="view statistics about securities")
     parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code")
     parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT", "CASH"], help="limit to this security type")
