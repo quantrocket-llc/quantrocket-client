@@ -153,7 +153,7 @@ def download_securities_file(filepath_or_buffer, output="csv", exchanges=None, s
                              currencies=None, groups=None, symbols=None, conids=None,
                              exclude_groups=None, exclude_conids=None,
                              sectors=None, industries=None, categories=None,
-                             delisted=False, frontmonth=False):
+                             delisted=False):
     """
     Query security details from the securities master database and download to file.
 
@@ -201,13 +201,12 @@ def download_securities_file(filepath_or_buffer, output="csv", exchanges=None, s
     delisted : bool
         include delisted securities (default False)
 
-    frontmonth : bool
-        limit to frontmonth contracts (applies to futures only, default False)
-
     Returns
     -------
     None
 
+    Examples
+    --------
     You can use StringIO to load the CSV into pandas.
 
     >>> f = io.StringIO()
@@ -239,8 +238,8 @@ def download_securities_file(filepath_or_buffer, output="csv", exchanges=None, s
         params["categories"] = categories
     if delisted:
         params["delisted"] = delisted
-    if frontmonth:
-        params["frontmonth"] = frontmonth
+
+    output = output or "csv"
 
     if output not in ("csv", "json"):
         raise ValueError("Invalid ouput: {0}".format(output))
@@ -265,7 +264,7 @@ def get_conids(exchanges=None, sec_types=None, currencies=None,
                groups=None, symbols=None, conids=None,
                exclude_groups=None, exclude_conids=None,
                sectors=None, industries=None, categories=None,
-               delisted=False, frontmonth=False):
+               delisted=False):
     """
     Query conids from the securities master database.
 
@@ -307,9 +306,6 @@ def get_conids(exchanges=None, sec_types=None, currencies=None,
     delisted : bool
         include delisted securities (default False)
 
-    frontmonth : bool
-        limit to frontmonth contracts (applies to futures only, default False)
-
     Returns
     -------
     list
@@ -341,8 +337,6 @@ def get_conids(exchanges=None, sec_types=None, currencies=None,
         params["categories"] = categories
     if delisted:
         params["delisted"] = delisted
-    if frontmonth:
-        params["frontmonth"] = frontmonth
 
     response = houston.get("/master/securities/conids", params=params)
     return houston.json_if_possible(response)
