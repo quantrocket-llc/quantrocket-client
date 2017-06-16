@@ -93,21 +93,20 @@ Re-pull contract details for an existing securities group called "japan-fin":
 
     examples = """
 Examples:
-Download a CSV of all securities in a group called "mexi-fut":
+Download a CSV of all securities in a group called "mexi-fut" to a file called mexi.csv:
 
-    quantrocket master get mexi.csv --groups "mexi-fut"
+    quantrocket master get --groups "mexi-fut" -f mexi.csv
 
-Download a CSV of all ARCA ETFs:
+Download a CSV of all ARCA ETFs to a file called arca.csv:
 
-    quantrocket master get arca.csv --exchanges ARCA --sec-types ETF
-
+    quantrocket master get --exchanges ARCA --sec-types ETF -f arca.csv
     """
     parser = _subparsers.add_parser(
         "get", help="query security details from the securities master database and download to file", epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter, parents=[query_parent_parser])
-    parser.add_argument("filepath_or_buffer", metavar="FILENAME", help="filename to write the data to")
-    formats = parser.add_argument_group("formatting options")
-    formats.add_argument("-j", "--json", action="store_const", const="json", dest="output", help="format output as JSON (default is CSV)")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument("-f", "--outfile", metavar="OUTFILE", dest="filepath_or_buffer", help="filename to write the data to (default is stdout)")
+    outputs.add_argument("-j", "--json", action="store_const", const="json", dest="output", help="format output as JSON (default is CSV)")
     parser.set_defaults(func="quantrocket.master.download_securities_file")
 
     examples = """

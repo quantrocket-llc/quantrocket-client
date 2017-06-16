@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import six
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
@@ -149,7 +150,7 @@ def diff_securities(groups=None, conids=None, fields=None, delist_missing=False,
 def _cli_diff_securities(*args, **kwargs):
     return json_to_cli(diff_securities, *args, **kwargs)
 
-def download_securities_file(filepath_or_buffer, output="csv", exchanges=None, sec_types=None,
+def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=None, sec_types=None,
                              currencies=None, groups=None, symbols=None, conids=None,
                              exclude_groups=None, exclude_conids=None,
                              sectors=None, industries=None, categories=None,
@@ -159,8 +160,8 @@ def download_securities_file(filepath_or_buffer, output="csv", exchanges=None, s
 
     Parameters
     ----------
-    filepath_or_buffer : str or file-like object, required
-        filepath to write the data to, or file-like object
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
 
     output : str
         output format (json or csv, default is csv)
@@ -245,6 +246,8 @@ def download_securities_file(filepath_or_buffer, output="csv", exchanges=None, s
         raise ValueError("Invalid ouput: {0}".format(output))
 
     response = houston.get("/master/securities.{0}".format(output), params=params)
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
 
     if hasattr(filepath_or_buffer, "write"):
         mode = getattr(filepath_or_buffer, "mode", "w")
