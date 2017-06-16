@@ -43,30 +43,30 @@ List stock exchanges in North America:
 
     examples = """
 Specify an exchange (optionally filtering by security type, currency, and/or symbol) to fetch
-listings from the IB website and download associated contract details from the IB API. Or, specify groups
-or conids to download details from the IB API, bypassing the website.
+listings from the IB website and pull associated contract details from the IB API. Or, specify groups
+or conids to pull details from the IB API, bypassing the website.
 
 Examples:
-Download all Toronto Stock Exchange stocks listings:
+Pull all Toronto Stock Exchange stocks listings:
 
     quantrocket master listings --exchange TSE --sec-types STK
 
-Download all NYSE ARCA ETF listings:
+Pull all NYSE ARCA ETF listings:
 
     quantrocket master listings --exchange ARCA --sec-types ETF
 
-Download specific symbols from Nasdaq (ISLAND):
+Pull specific symbols from Nasdaq (ISLAND):
 
     quantrocket master listings --exchange ISLAND --symbols AAPL GOOG NFLX
 
-Re-download contract details for an existing securities group called "japan-fin":
+Re-pull contract details for an existing securities group called "japan-fin":
 
     quantrocket master listings --groups "japan-fin"
     """
     parser = _subparsers.add_parser(
-        "listings", help="download securities listings from IB into securities master database, either by exchange or by groups/conids", epilog=examples,
+        "listings", help="pull securities listings from IB into securities master database, either by exchange or by groups/conids", epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code to download listings for (required unless providing groups or conids)")
+    parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code to pull listings for (required unless providing groups or conids)")
     parser.add_argument(
         "-t", "--sec-types", nargs="*", metavar="SEC_TYPE",
         choices=["STK", "ETF", "FUT", "CASH", "IND"], help="limit to these security types")
@@ -74,36 +74,57 @@ Re-download contract details for an existing securities group called "japan-fin"
     parser.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
     parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.set_defaults(func="quantrocket.master._cli_download_listings")
+    parser.set_defaults(func="quantrocket.master._cli_pull_listings")
 
-    parser = _subparsers.add_parser("describe", help="view statistics about securities")
-    parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code")
-    parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT", "CASH"], help="limit to this security type")
-    parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("--sectors", nargs="*", metavar="SECTOR", help="limit to these sectors")
-    parser.add_argument("--industries", nargs="*", metavar="INDUSTRY", help="limit to these industries")
-    parser.add_argument("--categories", nargs="*", metavar="CATEGORY", help="limit to these categories")
-    parser.set_defaults(func="quantrocket.master.describe_securities")
+    query_parent_parser = argparse.ArgumentParser(add_help=False)
+    filters = query_parent_parser.add_argument_group("filtering options")
+    filters.add_argument("-e", "--exchanges", nargs="*", metavar="EXCHANGE", help="limit to these exchanges")
+    filters.add_argument("-t", "--sec-types", nargs="*", metavar="SEC_TYPE", choices=["STK", "ETF", "FUT", "CASH", "IND"], help="limit to these security types")
+    filters.add_argument("-c", "--currencies", nargs="*", metavar="CURRENCY", help="limit to these currencies")
+    filters.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
+    filters.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
+    filters.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
+    filters.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
+    filters.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
+    filters.add_argument("--sectors", nargs="*", metavar="SECTOR", help="limit to these sectors")
+    filters.add_argument("--industries", nargs="*", metavar="INDUSTRY", help="limit to these industries")
+    filters.add_argument("--categories", nargs="*", metavar="CATEGORY", help="limit to these categories")
+    filters.add_argument("-d", "--delisted", action="store_true", default=False, help="include delisted securities")
+    filters.add_argument("-f", "--frontmonth", action="store_true", default=False, help="limit to frontmonth contracts (applies to futures only)")
 
-    parser = _subparsers.add_parser("get", help="query security details from the securities master database")
-    parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code")
-    parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT", "CASH"], help="limit to this security type")
-    parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
-    parser.add_argument("--exclude-symbols", nargs="*", metavar="SYMBOL", help="exclude these symbols")
-    parser.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
-    parser.add_argument("--sectors", nargs="*", metavar="SECTOR", help="limit to these sectors")
-    parser.add_argument("--industries", nargs="*", metavar="INDUSTRY", help="limit to these industries")
-    parser.add_argument("--categories", nargs="*", metavar="CATEGORY", help="limit to these categories")
-    parser.add_argument("--delisted", action="store_true", default=False, help="include delisted securities")
-    parser.add_argument("-f", "--frontmonth", action="store_true", default=False, help="limit to frontmonth contracts (applies to futures only)")
-    parser.set_defaults(func="quantrocket.master.get_securities")
+    examples = """
+Examples:
+Download a CSV of all securities in a group called "mexi-fut":
+
+    quantrocket master get mexi.csv --groups "mexi-fut"
+
+Download a CSV of all ARCA ETFs:
+
+    quantrocket master get arca.csv --exchanges ARCA --sec-types ETF
+
+    """
+    parser = _subparsers.add_parser(
+        "get", help="query security details from the securities master database and download to file", epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter, parents=[query_parent_parser])
+    parser.add_argument("filepath_or_buffer", metavar="FILENAME", help="filename to write the data to")
+    formats = parser.add_argument_group("formatting options")
+    formats.add_argument("-j", "--json", action="store_const", const="json", dest="output", default="csv", help="format output as JSON (default is CSV)")
+    parser.set_defaults(func="quantrocket.master.download_securities_file")
+
+    examples = """
+Examples:
+Get conids of all ARCA ETFs:
+
+    quantrocket master conids --exchanges ARCA --sec-types ETF
+
+Get conids of all consumer cyclicals trading on the Australian Stock Exchange:
+
+    quantrocket master conids --exchanges ASX --sectors "Consumer, Cyclical"
+    """
+    parser = _subparsers.add_parser(
+        "conids", help="query conids from the securities master database", epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter, parents=[query_parent_parser])
+    parser.set_defaults(func="quantrocket.master._cli_get_conids")
 
     examples = """
 Examples:
@@ -140,24 +161,6 @@ are no longer available from IB or that are now associated with the PINK exchang
     parser.add_argument("--delist-missing", action="store_true", default=False, help="auto-delist securities that are no longer available from IB")
     parser.add_argument("--delist-exchanges", metavar="EXCHANGE", nargs="*", help="auto-delist securities that are associated with these exchanges")
     parser.set_defaults(func="quantrocket.master._cli_diff_securities")
-
-    parser = _subparsers.add_parser("export", help="export security details from the securities master database")
-    parser.add_argument("filename", metavar="OUTFILE", help="the filename to save the export to")
-    parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code")
-    parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT", "CASH"], help="limit to this security type")
-    parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("-n", "--min-liq", metavar="DOLLAR_VOLUME", type=int, help="limit to symbols where 90-day price X volume is greater than or equal to this number")
-    parser.add_argument("-x", "--max-liq", metavar="DOLLAR_VOLUME", type=int, help="limit to symbols where 90-day price X volume is less than or equal to this number")
-    parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
-    parser.add_argument("--exclude-symbols", nargs="*", metavar="SYMBOL", help="exclude these symbols")
-    parser.add_argument("--sectors", nargs="*", metavar="SECTOR", help="limit to these sectors")
-    parser.add_argument("--industries", nargs="*", metavar="INDUSTRY", help="limit to these industries")
-    parser.add_argument("--categories", nargs="*", metavar="CATEGORY", help="limit to these categories")
-    parser.add_argument("--tws", dest="tws", action="store_true", help="Format output for TWS import")
-    parser.set_defaults(func="quantrocket.master.export_securities")
 
     parser = _subparsers.add_parser("group", help="create a group of securities meeting certain criteria")
     parser.add_argument("name", metavar="GROUP_NAME", help="the name to assign to the group")

@@ -38,5 +38,5 @@ def json_to_cli(func, *args, **kwargs):
         return
     if simplify_list and isinstance(json_response, list) and not any([
         isinstance(item, (dict, list, tuple, set)) for item in json_response]):
-        return "\n".join(json_response)
+        return "\n".join([str(item) for item in json_response])
     return yaml.safe_dump(json_response, default_flow_style=False).strip()

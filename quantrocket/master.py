@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
+from quantrocket.cli.utils.stream import stream
 
 def list_exchanges(regions=None, sec_types=None):
     """
@@ -43,20 +45,20 @@ def list_exchanges(regions=None, sec_types=None):
 def _cli_list_exchanges(*args, **kwargs):
     return json_to_cli(list_exchanges, *args, **kwargs)
 
-def download_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
+def pull_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
                         groups=None, conids=None):
     """
-    Download securities listings from IB into securities master database, either by exchange or by groups/conids.
+    Pull securities listings from IB into securities master database, either by exchange or by groups/conids.
 
 
     Specify an exchange (optionally filtering by security type, currency, and/or symbol) to fetch
-    listings from the IB website and download associated contract details from the IB API. Or, specify groups
-    or conids to download details from the IB API, bypassing the website.
+    listings from the IB website and pull associated contract details from the IB API. Or, specify groups
+    or conids to pull details from the IB API, bypassing the website.
 
     Parameters
     ----------
     exchange : str
-        the exchange code to download listings for (required unless providing groups or conids)
+        the exchange code to pull listings for (required unless providing groups or conids)
 
     sec_types : list of str, optional
         limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND
@@ -96,8 +98,8 @@ def download_listings(exchange=None, sec_types=None, currencies=None, symbols=No
     response = houston.post("/master/listings", params=params)
     return houston.json_if_possible(response)
 
-def _cli_download_listings(*args, **kwargs):
-    return json_to_cli(download_listings, *args, **kwargs)
+def _cli_pull_listings(*args, **kwargs):
+    return json_to_cli(pull_listings, *args, **kwargs)
 
 def diff_securities(groups=None, conids=None, fields=None, delist_missing=False,
                     delist_exchanges=None):
@@ -146,3 +148,204 @@ def diff_securities(groups=None, conids=None, fields=None, delist_missing=False,
 
 def _cli_diff_securities(*args, **kwargs):
     return json_to_cli(diff_securities, *args, **kwargs)
+
+def download_securities_file(filepath_or_buffer, output="csv", exchanges=None, sec_types=None,
+                             currencies=None, groups=None, symbols=None, conids=None,
+                             exclude_groups=None, exclude_conids=None,
+                             sectors=None, industries=None, categories=None,
+                             delisted=False, frontmonth=False):
+    """
+    Query security details from the securities master database and download to file.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object, required
+        filepath to write the data to, or file-like object
+
+    output : str
+        output format (json or csv, default is csv)
+
+    exchanges : list of str, optional
+        limit to these exchanges
+
+    sec_types : list of str, optional
+        limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND
+
+    currencies : list of str, optional
+        limit to these currencies
+
+    groups : list of str, optional
+        limit to these groups
+
+    symbols : list of str, optional
+        limit to these symbols
+
+    conids : list of int, optional
+        limit to these conids
+
+    exclude_groups : list of str, optional
+        exclude these groups
+
+    exclude_conids : list of int, optional
+        exclude these conids
+
+    sectors : list of str, optional
+        limit to these sectors
+
+    industries : list of str, optional
+        limit to these industries
+
+    categories : list of str, optional
+        limit to these categories
+
+    delisted : bool
+        include delisted securities (default False)
+
+    frontmonth : bool
+        limit to frontmonth contracts (applies to futures only, default False)
+
+    Returns
+    -------
+    None
+
+    You can use StringIO to load the CSV into pandas.
+
+    >>> f = io.StringIO()
+    >>> download_securities_file(f, groups=["my-group"])
+    >>> securities = pd.read_csv(f)
+    """
+    params = {}
+    if exchanges:
+        params["exchanges"] = exchanges
+    if sec_types:
+        params["sec_types"] = sec_types
+    if currencies:
+        params["currencies"] = currencies
+    if groups:
+        params["groups"] = groups
+    if symbols:
+        params["symbols"] = symbols
+    if conids:
+        params["conids"] = conids
+    if exclude_groups:
+        params["exclude_groups"] = exclude_groups
+    if exclude_conids:
+        params["exclude_conids"] = exclude_conids
+    if sectors:
+        params["sectors"] = sectors
+    if industries:
+        params["industries"] = industries
+    if categories:
+        params["categories"] = categories
+    if delisted:
+        params["delisted"] = delisted
+    if frontmonth:
+        params["frontmonth"] = frontmonth
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/master/securities.{0}".format(output), params=params)
+
+    if hasattr(filepath_or_buffer, "write"):
+        mode = getattr(filepath_or_buffer, "mode", "w")
+        for chunk in response.iter_content(chunk_size=1024):
+            if chunk:
+                if "b" not in mode and six.PY3:
+                    chunk = chunk.decode("utf-8")
+                filepath_or_buffer.write(chunk)
+        filepath_or_buffer.seek(0)
+    else:
+        with open(filepath_or_buffer, "wb") as f:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
+
+def get_conids(exchanges=None, sec_types=None, currencies=None,
+               groups=None, symbols=None, conids=None,
+               exclude_groups=None, exclude_conids=None,
+               sectors=None, industries=None, categories=None,
+               delisted=False, frontmonth=False):
+    """
+    Query conids from the securities master database.
+
+    Parameters
+    ----------
+    exchanges : list of str, optional
+        limit to these exchanges
+
+    sec_types : list of str, optional
+        limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND
+
+    currencies : list of str, optional
+        limit to these currencies
+
+    groups : list of str, optional
+        limit to these groups
+
+    symbols : list of str, optional
+        limit to these symbols
+
+    conids : list of int, optional
+        limit to these conids
+
+    exclude_groups : list of str, optional
+        exclude these groups
+
+    exclude_conids : list of int, optional
+        exclude these conids
+
+    sectors : list of str, optional
+        limit to these sectors
+
+    industries : list of str, optional
+        limit to these industries
+
+    categories : list of str, optional
+        limit to these categories
+
+    delisted : bool
+        include delisted securities (default False)
+
+    frontmonth : bool
+        limit to frontmonth contracts (applies to futures only, default False)
+
+    Returns
+    -------
+    list
+        list of conids
+
+    """
+    params = {}
+    if exchanges:
+        params["exchanges"] = exchanges
+    if sec_types:
+        params["sec_types"] = sec_types
+    if currencies:
+        params["currencies"] = currencies
+    if groups:
+        params["groups"] = groups
+    if symbols:
+        params["symbols"] = symbols
+    if conids:
+        params["conids"] = conids
+    if exclude_groups:
+        params["exclude_groups"] = exclude_groups
+    if exclude_conids:
+        params["exclude_conids"] = exclude_conids
+    if sectors:
+        params["sectors"] = sectors
+    if industries:
+        params["industries"] = industries
+    if categories:
+        params["categories"] = categories
+    if delisted:
+        params["delisted"] = delisted
+    if frontmonth:
+        params["frontmonth"] = frontmonth
+
+    response = houston.get("/master/securities/conids", params=params)
+    return houston.json_if_possible(response)
+
+def _cli_get_conids(*args, **kwargs):
+    return json_to_cli(get_conids, *args, **kwargs)
