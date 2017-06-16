@@ -90,7 +90,6 @@ Re-pull contract details for an existing securities group called "japan-fin":
     filters.add_argument("--industries", nargs="*", metavar="INDUSTRY", help="limit to these industries")
     filters.add_argument("--categories", nargs="*", metavar="CATEGORY", help="limit to these categories")
     filters.add_argument("-d", "--delisted", action="store_true", default=False, help="include delisted securities")
-    filters.add_argument("-f", "--frontmonth", action="store_true", default=False, help="limit to frontmonth contracts (applies to futures only)")
 
     examples = """
 Examples:
@@ -108,7 +107,7 @@ Download a CSV of all ARCA ETFs:
         formatter_class=argparse.RawDescriptionHelpFormatter, parents=[query_parent_parser])
     parser.add_argument("filepath_or_buffer", metavar="FILENAME", help="filename to write the data to")
     formats = parser.add_argument_group("formatting options")
-    formats.add_argument("-j", "--json", action="store_const", const="json", dest="output", default="csv", help="format output as JSON (default is CSV)")
+    formats.add_argument("-j", "--json", action="store_const", const="json", dest="output", help="format output as JSON (default is CSV)")
     parser.set_defaults(func="quantrocket.master.download_securities_file")
 
     examples = """
