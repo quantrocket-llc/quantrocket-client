@@ -43,7 +43,7 @@ List stock exchanges in North America:
 
     examples = """
 Specify an exchange (optionally filtering by security type, currency, and/or symbol) to fetch
-listings from the IB website and pull associated contract details from the IB API. Or, specify groups
+listings from the IB website and pull associated contract details from the IB API. Or, specify universes
 or conids to pull details from the IB API, bypassing the website.
 
 Examples:
@@ -59,20 +59,20 @@ Pull specific symbols from Nasdaq (ISLAND):
 
     quantrocket master listings --exchange ISLAND --symbols AAPL GOOG NFLX
 
-Re-pull contract details for an existing securities group called "japan-fin":
+Re-pull contract details for an existing universe called "japan-fin":
 
-    quantrocket master listings --groups "japan-fin"
+    quantrocket master listings --universes "japan-fin"
     """
     parser = _subparsers.add_parser(
-        "listings", help="pull securities listings from IB into securities master database, either by exchange or by groups/conids", epilog=examples,
+        "listings", help="pull securities listings from IB into securities master database, either by exchange or by universes/conids", epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code to pull listings for (required unless providing groups or conids)")
+    parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code to pull listings for (required unless providing universes or conids)")
     parser.add_argument(
         "-t", "--sec-types", nargs="*", metavar="SEC_TYPE",
         choices=["STK", "ETF", "FUT", "CASH", "IND"], help="limit to these security types")
     parser.add_argument("-c", "--currencies", nargs="*", metavar="CURRENCY", help="limit to these currencies")
     parser.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
+    parser.add_argument("-u", "--universes", nargs="*", metavar="UNIVERSE", help="limit to these universes")
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
     parser.set_defaults(func="quantrocket.master._cli_pull_listings")
 
@@ -81,10 +81,10 @@ Re-pull contract details for an existing securities group called "japan-fin":
     filters.add_argument("-e", "--exchanges", nargs="*", metavar="EXCHANGE", help="limit to these exchanges")
     filters.add_argument("-t", "--sec-types", nargs="*", metavar="SEC_TYPE", choices=["STK", "ETF", "FUT", "CASH", "IND"], help="limit to these security types")
     filters.add_argument("-c", "--currencies", nargs="*", metavar="CURRENCY", help="limit to these currencies")
-    filters.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
+    filters.add_argument("-u", "--universes", nargs="*", metavar="UNIVERSE", help="limit to these universes")
     filters.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
     filters.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    filters.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
+    filters.add_argument("--exclude-universes", nargs="*", metavar="UNIVERSE", help="exclude these universes")
     filters.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
     filters.add_argument("--sectors", nargs="*", metavar="SECTOR", help="limit to these sectors")
     filters.add_argument("--industries", nargs="*", metavar="INDUSTRY", help="limit to these industries")
@@ -93,13 +93,13 @@ Re-pull contract details for an existing securities group called "japan-fin":
 
     examples = """
 Examples:
-Download a CSV of all securities in a group called "mexi-fut" to a file called mexi.csv:
+Download a CSV of all securities in a universe called "mexi-fut" to a file called mexi.csv:
 
-    quantrocket master get --groups "mexi-fut" -f mexi.csv
+    quantrocket master get --universes "mexi-fut" -f mexi.csv
 
-Download a CSV of all ARCA ETFs to a file called arca.csv:
+Download a CSV of all ARCA ETFs and use it to create a universe called "arca-etf":
 
-    quantrocket master get --exchanges ARCA --sec-types ETF -f arca.csv
+    quantrocket master get --exchanges ARCA --sec-types ETF | quantrocket master universe "arca-etf" --infile -
     """
     parser = _subparsers.add_parser(
         "get", help="query security details from the securities master database and download to file", epilog=examples,
@@ -126,61 +126,53 @@ Get conids of all consumer cyclicals trading on the Australian Stock Exchange:
 
     examples = """
 Examples:
-Get a diff for all securities in a group called "italy-stk":
+Get a diff for all securities in a universe called "italy-stk":
 
-    quantrocket master diff --groups "italy-stk"
+    quantrocket master diff --universes "italy-stk"
 
-Get a diff for all securities in a group called "italy-stk", looking only for sector or
+Get a diff for all securities in a universe called "italy-stk", looking only for sector or
 industry changes:
 
-    quantrocket master diff --groups "italy-stk" --fields Sector Industry
+    quantrocket master diff -u "italy-stk" --fields Sector Industry
 
 Get a diff for specific securities by conid:
 
     quantrocket master diff --conids 123456 234567
 
-Get a diff for all securities in a group called "italy-stk" and log the results, if any,
+Get a diff for all securities in a universe called "italy-stk" and log the results, if any,
 to flightlog:
 
-    quantrocket master diff --groups "italy-stk" | quantrocket flightlog log --loglevel WARNING --name "quantrocket.master"
+    quantrocket master diff -u "italy-stk" | quantrocket flightlog log --loglevel WARNING --name "quantrocket.master"
 
-Get a diff for all securities in a group called "nasdaq-sml" and auto-delist any symbols that
+Get a diff for all securities in a universe called "nasdaq-sml" and auto-delist any symbols that
 are no longer available from IB or that are now associated with the PINK exchange:
 
-    quantrocket master diff --groups "nasdaq-sml" --delist-missing --delist-exchanges PINK
+    quantrocket master diff -u "nasdaq-sml" --delist-missing --delist-exchanges PINK
     """
     parser = _subparsers.add_parser(
         "diff", help="flag security details that have changed in IB's system since the time "
         "they were last loaded into the securities master database", epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
+    parser.add_argument("-u", "--universes", nargs="*", metavar="UNIVERSE", help="limit to these universes")
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
     parser.add_argument("-f", "--fields", nargs="*", metavar="FIELD", help="only diff these fields")
     parser.add_argument("--delist-missing", action="store_true", default=False, help="auto-delist securities that are no longer available from IB")
     parser.add_argument("--delist-exchanges", metavar="EXCHANGE", nargs="*", help="auto-delist securities that are associated with these exchanges")
     parser.set_defaults(func="quantrocket.master._cli_diff_securities")
 
-    parser = _subparsers.add_parser("group", help="create a group of securities meeting certain criteria")
-    parser.add_argument("name", metavar="GROUP_NAME", help="the name to assign to the group")
-    parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="limit to this exchange")
-    parser.add_argument("-t", "--sec-type", dest="sec_type", choices=["STK", "FUT", "CASH"], help="limit to this security type")
-    parser.add_argument("-c", "--currency", metavar="CURRENCY", help="limit to this currency")
-    parser.add_argument("-n", "--min-liq", metavar="DOLLAR_VOLUME", type=int, help="limit to symbols where 90-day price X volume is greater than or equal to this number")
-    parser.add_argument("-x", "--max-liq", metavar="DOLLAR_VOLUME", type=int, help="limit to symbols where 90-day price X volume is less than or equal to this number")
-    parser.add_argument("--from-groups", nargs="*", metavar="GROUP", help="limit to symbols from these existing groups")
-    parser.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("--sectors", nargs="*", metavar="SECTOR", help="limit to these sectors")
-    parser.add_argument("--industries", nargs="*", metavar="INDUSTRY", help="limit to these industries")
-    parser.add_argument("--categories", nargs="*", metavar="CATEGORY", help="limit to these categories")
+    parser = _subparsers.add_parser("universe", help="create a universe of securities meeting certain criteria")
+    parser.add_argument("code", metavar="CODE", help="the code to assign to the universe")
+    parser.add_argument("--from-universes", nargs="*", metavar="UNIVERSE", help="limit to securities from these existing universes")
     parser.add_argument("--exclude-delisted", action="store_true", dest="exclude_delisted", help="exclude delisted securities (default is to include them if they meet the criteria)")
-    parser.add_argument("-f", "--input-file", metavar="FILENAME", help="create the group from the con_ids in this file")
-    parser.add_argument("-a", "--append", action="store_true", help="append to group if group already exists")
-    parser.set_defaults(func="quantrocket.master.create_group")
+    parser.add_argument("-f", "--infile", metavar="INFILE", help="create the universe from the con_ids in this file (specify '-' to read file from stdin)")
+    on_conflict_group = parser.add_mutually_exclusive_group()
+    on_conflict_group.add_argument("-a", "--append", action="store_true", help="append to universe if universe already exists")
+    on_conflict_group.add_argument("-r", "--replace", action="store_true", help="replace universe if universe already exists")
+    parser.set_defaults(func="quantrocket.master._cli_create_universe")
 
-    parser = _subparsers.add_parser("rmgroup", help="remove a security group")
-    parser.add_argument("group", help="the group name")
-    parser.set_defaults(func="quantrocket.master.delete_group")
+    parser = _subparsers.add_parser("delete-universe", help="delete a universe")
+    parser.add_argument("code", help="the universe code")
+    parser.set_defaults(func="quantrocket.master._cli_delete_universe")
 
     parser = _subparsers.add_parser("frontmonth", help="return the frontmonth contract for a futures underlying, as of now or over a date range")
     parser.add_argument("symbol", help="the underlying's symbol (e.g. ES)")
@@ -215,5 +207,5 @@ Show current rollover config:
 
     parser = _subparsers.add_parser("lots", help="load lot sizes from a file")
     parser.add_argument("filename", metavar="FILE", help="CSV file with columns 'lot_size' and either 'conid' or 'symbol' (and optionally 'exchange' and/or 'currency' for disambiguation)")
-    parser.add_argument("-g", "--groups", metavar="GROUP", help="only try to match to securities in these groups (to prevent false matches in case of symbol ambiguity)")
+    parser.add_argument("-u", "--universes", metavar="UNIVERSE", help="only try to match to securities in these universes (to prevent false matches in case of symbol ambiguity)")
     parser.set_defaults(func="quantrocket.master.load_lots")
