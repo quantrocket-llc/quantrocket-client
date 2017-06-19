@@ -47,19 +47,19 @@ def _cli_list_exchanges(*args, **kwargs):
     return json_to_cli(list_exchanges, *args, **kwargs)
 
 def pull_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
-                        groups=None, conids=None):
+                        universes=None, conids=None):
     """
-    Pull securities listings from IB into securities master database, either by exchange or by groups/conids.
+    Pull securities listings from IB into securities master database, either by exchange or by universes/conids.
 
 
     Specify an exchange (optionally filtering by security type, currency, and/or symbol) to fetch
-    listings from the IB website and pull associated contract details from the IB API. Or, specify groups
+    listings from the IB website and pull associated contract details from the IB API. Or, specify universes
     or conids to pull details from the IB API, bypassing the website.
 
     Parameters
     ----------
     exchange : str
-        the exchange code to pull listings for (required unless providing groups or conids)
+        the exchange code to pull listings for (required unless providing universes or conids)
 
     sec_types : list of str, optional
         limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND
@@ -70,8 +70,8 @@ def pull_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
     symbols : list of str, optional
         limit to these symbols
 
-    groups : list of str, optional
-        limit to these groups
+    universes : list of str, optional
+        limit to these universes
 
     conids : list of int, optional
         limit to these conids
@@ -91,8 +91,8 @@ def pull_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
         params["currencies"] = currencies
     if symbols:
         params["symbols"] = symbols
-    if groups:
-        params["groups"] = groups
+    if universes:
+        params["universes"] = universes
     if conids:
         params["conids"] = conids
 
@@ -102,7 +102,7 @@ def pull_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
 def _cli_pull_listings(*args, **kwargs):
     return json_to_cli(pull_listings, *args, **kwargs)
 
-def diff_securities(groups=None, conids=None, fields=None, delist_missing=False,
+def diff_securities(universes=None, conids=None, fields=None, delist_missing=False,
                     delist_exchanges=None):
     """
     Flag security details that have changed in IB's system since the time they were last loaded
@@ -110,8 +110,8 @@ def diff_securities(groups=None, conids=None, fields=None, delist_missing=False,
 
     Parameters
     ----------
-    groups : list of str, optional
-        limit to these groups
+    universes : list of str, optional
+        limit to these universes
 
     conids : list of int, optional
         limit to these conids
@@ -132,8 +132,8 @@ def diff_securities(groups=None, conids=None, fields=None, delist_missing=False,
 
     """
     params = {}
-    if groups:
-        params["groups"] = groups
+    if universes:
+        params["universes"] = universes
     if conids:
         params["conids"] = conids
     if fields:
@@ -151,8 +151,8 @@ def _cli_diff_securities(*args, **kwargs):
     return json_to_cli(diff_securities, *args, **kwargs)
 
 def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=None, sec_types=None,
-                             currencies=None, groups=None, symbols=None, conids=None,
-                             exclude_groups=None, exclude_conids=None,
+                             currencies=None, universes=None, symbols=None, conids=None,
+                             exclude_universes=None, exclude_conids=None,
                              sectors=None, industries=None, categories=None,
                              delisted=False):
     """
@@ -175,8 +175,8 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
     currencies : list of str, optional
         limit to these currencies
 
-    groups : list of str, optional
-        limit to these groups
+    universes : list of str, optional
+        limit to these universes
 
     symbols : list of str, optional
         limit to these symbols
@@ -184,8 +184,8 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
     conids : list of int, optional
         limit to these conids
 
-    exclude_groups : list of str, optional
-        exclude these groups
+    exclude_universes : list of str, optional
+        exclude these universes
 
     exclude_conids : list of int, optional
         exclude these conids
@@ -211,7 +211,7 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
     You can use StringIO to load the CSV into pandas.
 
     >>> f = io.StringIO()
-    >>> download_securities_file(f, groups=["my-group"])
+    >>> download_securities_file(f, universes=["my-universe"])
     >>> securities = pd.read_csv(f)
     """
     params = {}
@@ -221,14 +221,14 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
         params["sec_types"] = sec_types
     if currencies:
         params["currencies"] = currencies
-    if groups:
-        params["groups"] = groups
+    if universes:
+        params["universes"] = universes
     if symbols:
         params["symbols"] = symbols
     if conids:
         params["conids"] = conids
-    if exclude_groups:
-        params["exclude_groups"] = exclude_groups
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
     if exclude_conids:
         params["exclude_conids"] = exclude_conids
     if sectors:
@@ -264,8 +264,8 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
                     f.write(chunk)
 
 def get_conids(exchanges=None, sec_types=None, currencies=None,
-               groups=None, symbols=None, conids=None,
-               exclude_groups=None, exclude_conids=None,
+               universes=None, symbols=None, conids=None,
+               exclude_universes=None, exclude_conids=None,
                sectors=None, industries=None, categories=None,
                delisted=False):
     """
@@ -282,8 +282,8 @@ def get_conids(exchanges=None, sec_types=None, currencies=None,
     currencies : list of str, optional
         limit to these currencies
 
-    groups : list of str, optional
-        limit to these groups
+    universes : list of str, optional
+        limit to these universes
 
     symbols : list of str, optional
         limit to these symbols
@@ -291,8 +291,8 @@ def get_conids(exchanges=None, sec_types=None, currencies=None,
     conids : list of int, optional
         limit to these conids
 
-    exclude_groups : list of str, optional
-        exclude these groups
+    exclude_universes : list of str, optional
+        exclude these universes
 
     exclude_conids : list of int, optional
         exclude these conids
@@ -322,14 +322,14 @@ def get_conids(exchanges=None, sec_types=None, currencies=None,
         params["sec_types"] = sec_types
     if currencies:
         params["currencies"] = currencies
-    if groups:
-        params["groups"] = groups
+    if universes:
+        params["universes"] = universes
     if symbols:
         params["symbols"] = symbols
     if conids:
         params["conids"] = conids
-    if exclude_groups:
-        params["exclude_groups"] = exclude_groups
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
     if exclude_conids:
         params["exclude_conids"] = exclude_conids
     if sectors:
