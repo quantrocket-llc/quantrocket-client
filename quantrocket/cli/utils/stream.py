@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
+
 def stream(func):
     """
     Decorator that returns a function which prints the chunks returned by the
@@ -23,3 +25,12 @@ def stream(func):
             print(chunk)
 
     return wrapper
+
+def to_bytes(f):
+    """
+    Yields the file line-by-line, converting str to bytes.
+    """
+    for line in f:
+        if six.PY3 and isinstance(line, six.string_types):
+            line = line.encode("utf-8")
+        yield line

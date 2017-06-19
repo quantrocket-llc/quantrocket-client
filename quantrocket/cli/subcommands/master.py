@@ -31,14 +31,22 @@ List stock exchanges in North America:
     quantrocket master exchanges --regions north_america --sec-types STK
     """
     parser = _subparsers.add_parser(
-        "exchanges", help="list exchanges by security type and country as found on the IB website", epilog=examples,
+        "exchanges",
+        help="list exchanges by security type and country as found on the IB website",
+        epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "-r", "--regions", nargs="*", choices=["north_america", "europe", "asia", "global"],
-        metavar="REGION", help="limit to these regions")
+        "-r", "--regions",
+        nargs="*",
+        choices=["north_america", "europe", "asia", "global"],
+        metavar="REGION",
+        help="limit to these regions")
     parser.add_argument(
-        "-s", "--sec-types", nargs="*",
-        choices=["STK", "ETF", "FUT", "CASH", "IND"], metavar="SEC_TYPE", help="limit to these security types")
+        "-s", "--sec-types",
+        nargs="*",
+        choices=["STK", "ETF", "FUT", "CASH", "IND"],
+        metavar="SEC_TYPE",
+        help="limit to these security types")
     parser.set_defaults(func="quantrocket.master._cli_list_exchanges")
 
     examples = """
@@ -64,32 +72,107 @@ Re-pull contract details for an existing universe called "japan-fin":
     quantrocket master listings --universes "japan-fin"
     """
     parser = _subparsers.add_parser(
-        "listings", help="pull securities listings from IB into securities master database, either by exchange or by universes/conids", epilog=examples,
+        "listings",
+        help="pull securities listings from IB into securities master database, either by "
+        "exchange or by universes/conids",
+        epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("-e", "--exchange", metavar="EXCHANGE", help="the exchange code to pull listings for (required unless providing universes or conids)")
     parser.add_argument(
-        "-t", "--sec-types", nargs="*", metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "IND"], help="limit to these security types")
-    parser.add_argument("-c", "--currencies", nargs="*", metavar="CURRENCY", help="limit to these currencies")
-    parser.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
-    parser.add_argument("-u", "--universes", nargs="*", metavar="UNIVERSE", help="limit to these universes")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
+        "-e", "--exchange",
+        metavar="EXCHANGE",
+        help="the exchange code to pull listings for (required unless providing universes "
+        "or conids)")
+    parser.add_argument(
+        "-t", "--sec-types",
+        nargs="*",
+        metavar="SEC_TYPE",
+        choices=["STK", "ETF", "FUT", "CASH", "IND"],
+        help="limit to these security types")
+    parser.add_argument(
+        "-c", "--currencies",
+        nargs="*",
+        metavar="CURRENCY",
+        help="limit to these currencies")
+    parser.add_argument(
+        "-s", "--symbols",
+        nargs="*",
+        metavar="SYMBOL",
+        help="limit to these symbols")
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    parser.add_argument(
+        "-i", "--conids",
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
     parser.set_defaults(func="quantrocket.master._cli_pull_listings")
 
     query_parent_parser = argparse.ArgumentParser(add_help=False)
     filters = query_parent_parser.add_argument_group("filtering options")
-    filters.add_argument("-e", "--exchanges", nargs="*", metavar="EXCHANGE", help="limit to these exchanges")
-    filters.add_argument("-t", "--sec-types", nargs="*", metavar="SEC_TYPE", choices=["STK", "ETF", "FUT", "CASH", "IND"], help="limit to these security types")
-    filters.add_argument("-c", "--currencies", nargs="*", metavar="CURRENCY", help="limit to these currencies")
-    filters.add_argument("-u", "--universes", nargs="*", metavar="UNIVERSE", help="limit to these universes")
-    filters.add_argument("-s", "--symbols", nargs="*", metavar="SYMBOL", help="limit to these symbols")
-    filters.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    filters.add_argument("--exclude-universes", nargs="*", metavar="UNIVERSE", help="exclude these universes")
-    filters.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
-    filters.add_argument("--sectors", nargs="*", metavar="SECTOR", help="limit to these sectors")
-    filters.add_argument("--industries", nargs="*", metavar="INDUSTRY", help="limit to these industries")
-    filters.add_argument("--categories", nargs="*", metavar="CATEGORY", help="limit to these categories")
-    filters.add_argument("-d", "--delisted", action="store_true", default=False, help="include delisted securities")
+    filters.add_argument(
+        "-e", "--exchanges",
+        nargs="*",
+        metavar="EXCHANGE",
+        help="limit to these exchanges")
+    filters.add_argument(
+        "-t", "--sec-types",
+        nargs="*",
+        metavar="SEC_TYPE",
+        choices=["STK", "ETF", "FUT", "CASH", "IND"],
+        help="limit to these security types")
+    filters.add_argument(
+        "-c", "--currencies",
+        nargs="*",
+        metavar="CURRENCY",
+        help="limit to these currencies")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-s", "--symbols",
+        nargs="*",
+        metavar="SYMBOL",
+        help="limit to these symbols")
+    filters.add_argument(
+        "-i", "--conids",
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-conids",
+        nargs="*",
+        metavar="CONID",
+        help="exclude these conids")
+    filters.add_argument(
+        "--sectors",
+        nargs="*",
+        metavar="SECTOR",
+        help="limit to these sectors")
+    filters.add_argument(
+        "--industries",
+        nargs="*",
+        metavar="INDUSTRY",
+        help="limit to these industries")
+    filters.add_argument(
+        "--categories",
+        nargs="*",
+        metavar="CATEGORY",
+        help="limit to these categories")
+    filters.add_argument(
+        "-d", "--delisted",
+        action="store_true",
+        default=False,
+        help="include delisted securities")
 
     examples = """
 Examples:
@@ -102,11 +185,22 @@ Download a CSV of all ARCA ETFs and use it to create a universe called "arca-etf
     quantrocket master get --exchanges ARCA --sec-types ETF | quantrocket master universe "arca-etf" --infile -
     """
     parser = _subparsers.add_parser(
-        "get", help="query security details from the securities master database and download to file", epilog=examples,
+        "get",
+        help="query security details from the securities master database and download to file",
+        epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter, parents=[query_parent_parser])
     outputs = parser.add_argument_group("output options")
-    outputs.add_argument("-f", "--outfile", metavar="OUTFILE", dest="filepath_or_buffer", help="filename to write the data to (default is stdout)")
-    outputs.add_argument("-j", "--json", action="store_const", const="json", dest="output", help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    outputs.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
     parser.set_defaults(func="quantrocket.master.download_securities_file")
 
     examples = """
@@ -120,8 +214,11 @@ Get conids of all consumer cyclicals trading on the Australian Stock Exchange:
     quantrocket master conids --exchanges ASX --sectors "Consumer, Cyclical"
     """
     parser = _subparsers.add_parser(
-        "conids", help="query conids from the securities master database", epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter, parents=[query_parent_parser])
+        "conids",
+        help="query conids from the securities master database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        parents=[query_parent_parser])
     parser.set_defaults(func="quantrocket.master._cli_get_conids")
 
     examples = """
@@ -150,28 +247,109 @@ are no longer available from IB or that are now associated with the PINK exchang
     quantrocket master diff -u "nasdaq-sml" --delist-missing --delist-exchanges PINK
     """
     parser = _subparsers.add_parser(
-        "diff", help="flag security details that have changed in IB's system since the time "
-        "they were last loaded into the securities master database", epilog=examples,
+        "diff",
+        help="flag security details that have changed in IB's system since the time "
+        "they were last loaded into the securities master database",
+        epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("-u", "--universes", nargs="*", metavar="UNIVERSE", help="limit to these universes")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("-f", "--fields", nargs="*", metavar="FIELD", help="only diff these fields")
-    parser.add_argument("--delist-missing", action="store_true", default=False, help="auto-delist securities that are no longer available from IB")
-    parser.add_argument("--delist-exchanges", metavar="EXCHANGE", nargs="*", help="auto-delist securities that are associated with these exchanges")
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    parser.add_argument(
+        "-i", "--conids",
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    parser.add_argument(
+        "-f", "--fields",
+        nargs="*",
+        metavar="FIELD",
+        help="only diff these fields")
+    parser.add_argument(
+        "--delist-missing",
+        action="store_true",
+        default=False,
+        help="auto-delist securities that are no longer available from IB")
+    parser.add_argument(
+        "--delist-exchanges",
+        metavar="EXCHANGE",
+        nargs="*",
+        help="auto-delist securities that are associated with these exchanges")
     parser.set_defaults(func="quantrocket.master._cli_diff_securities")
 
-    parser = _subparsers.add_parser("universe", help="create a universe of securities meeting certain criteria")
-    parser.add_argument("code", metavar="CODE", help="the code to assign to the universe")
-    parser.add_argument("--from-universes", nargs="*", metavar="UNIVERSE", help="limit to securities from these existing universes")
-    parser.add_argument("--exclude-delisted", action="store_true", dest="exclude_delisted", help="exclude delisted securities (default is to include them if they meet the criteria)")
-    parser.add_argument("-f", "--infile", metavar="INFILE", help="create the universe from the con_ids in this file (specify '-' to read file from stdin)")
+    examples = """
+Examples:
+Download a CSV of Italian stocks then upload it to create a universe called "italy-stk":
+
+    quantrocket master get --exchanges BVME --sec-types STK -f italy.csv
+    quantrocket master universe "italy-stk" -f italy.csv
+
+In one line, download a CSV of all ARCA ETFs and append to a universe called "arca-etf":
+
+    quantrocket master get --exchanges ARCA --sec-types ETF | quantrocket master universe "arca-etf" --append --infile -
+
+Create a universe consisting of several existing universes:
+
+    quantrocket master universe "asx" --from-universes "asx-sml" "asx-mid" "asx-lrg"
+
+Copy a universe but exclude delisted securities:
+
+    quantrocket master universe "hong-kong-active" --from-universes "hong-kong" --exclude-delisted
+    """
+    parser = _subparsers.add_parser(
+        "universe",
+        help="create a universe of securities",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the code to assign to the universe (lowercase alphanumerics and hyphens only)")
+    parser.add_argument(
+        "-f", "--infile",
+        metavar="INFILE",
+        help="create the universe from the conids in this file (specify '-' to read file "
+        "from stdin)")
+    parser.add_argument(
+        "--from-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="create the universe from these existing universes")
+    parser.add_argument(
+        "--exclude-delisted",
+        action="store_true",
+        dest="exclude_delisted",
+        help="exclude delisted securities that would otherwise be included (default is to "
+        "include them)")
     on_conflict_group = parser.add_mutually_exclusive_group()
-    on_conflict_group.add_argument("-a", "--append", action="store_true", help="append to universe if universe already exists")
-    on_conflict_group.add_argument("-r", "--replace", action="store_true", help="replace universe if universe already exists")
+    on_conflict_group.add_argument(
+        "-a", "--append",
+        action="store_true",
+        help="append to universe if universe already exists")
+    on_conflict_group.add_argument(
+        "-r", "--replace",
+        action="store_true",
+        help="replace universe if universe already exists")
     parser.set_defaults(func="quantrocket.master._cli_create_universe")
 
-    parser = _subparsers.add_parser("delete-universe", help="delete a universe")
-    parser.add_argument("code", help="the universe code")
+    examples = """
+Examples:
+Delete the universe called "italy-stk" (the listings details of the member securities won't
+be deleted, only their grouping as a universe):
+
+    quantrocket master delete-universe "italy-stk"
+    """
+    parser = _subparsers.add_parser(
+        "delete-universe",
+        help="delete a universe (the listings details of the member securities won't "
+        "be deleted, only their grouping as a universe)",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        help="the universe code")
     parser.set_defaults(func="quantrocket.master._cli_delete_universe")
 
     parser = _subparsers.add_parser("frontmonth", help="return the frontmonth contract for a futures underlying, as of now or over a date range")
@@ -194,9 +372,15 @@ Show current rollover config:
     quantrocket master rollrules
     """
     parser = _subparsers.add_parser(
-        "rollrules", help="upload a new rollover rules config, or return the current rollover rules", epilog=examples,
+        "rollrules",
+        help="upload a new rollover rules config, or return the current rollover rules",
+        epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("filename", nargs="?", metavar="FILENAME", help="the rollover rules config file to upload (if omitted, return the current config)")
+    parser.add_argument(
+        "filename",
+        nargs="?",
+        metavar="FILENAME",
+        help="the rollover rules config file to upload (if omitted, return the current config)")
     parser.set_defaults(func="quantrocket.master._cli_load_or_show_rollrules")
 
     parser = _subparsers.add_parser("delist", help="delist a security by con_id or symbol+exchange")

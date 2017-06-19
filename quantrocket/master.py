@@ -16,7 +16,7 @@ import sys
 import six
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
-from quantrocket.cli.utils.stream import stream
+from quantrocket.cli.utils.stream import stream, to_bytes
 
 def list_exchanges(regions=None, sec_types=None):
     """
@@ -256,7 +256,8 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
                 if "b" not in mode and six.PY3:
                     chunk = chunk.decode("utf-8")
                 filepath_or_buffer.write(chunk)
-        filepath_or_buffer.seek(0)
+        if filepath_or_buffer.seekable():
+            filepath_or_buffer.seek(0)
     else:
         with open(filepath_or_buffer, "wb") as f:
             for chunk in response.iter_content(chunk_size=1024):
@@ -346,3 +347,87 @@ def get_conids(exchanges=None, sec_types=None, currencies=None,
 
 def _cli_get_conids(*args, **kwargs):
     return json_to_cli(get_conids, *args, **kwargs)
+
+def create_universe(code, infile=None, from_universes=None,
+                    exclude_delisted=False, append=False, replace=False):
+    """
+    Create a universe of securities.
+
+    Parameters
+    ----------
+    code : str, required
+        the code to assign to the universe
+
+    infile : str, optional
+        create the universe from the conids in this file (specify '-' to read file from stdin)
+
+    from_universes : list of str, optional
+        create the universe from these existing universes
+
+    exclude_delisted : bool
+        exclude delisted securities that would otherwise be included (default is not to exclude them)
+
+    append : bool
+        append to universe if universe already exists (default False)
+
+    replace : bool
+        replace universe if universe already exists (default False)
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    if append and replace:
+        raise ValueError("append and replace are mutually exclusive")
+
+    params = {}
+    if from_universes:
+        params["from_universes"] = from_universes
+    if exclude_delisted:
+        params["exclude_delisted"] = exclude_delisted
+    if replace:
+        params["replace"] = replace
+
+    url = "/master/universes/{0}".format(code)
+
+    if append:
+        method = "PATCH"
+    else:
+        method = "PUT"
+
+    if infile == "-":
+        response = houston.request(method, url, params=params, data=to_bytes(sys.stdin))
+
+    elif infile:
+        with open(infile, "rb") as f:
+            response = houston.request(method, url, params=params, data=f)
+    else:
+        response = houston.request(method, url, params=params)
+
+    return houston.json_if_possible(response)
+
+def _cli_create_universe(*args, **kwargs):
+    return json_to_cli(create_universe, *args, **kwargs)
+
+def delete_universe(code):
+    """
+    Delete a universe. (The listings details of the member securities won't be deleted,
+    only their grouping as a universe).
+
+    Parameters
+    ----------
+    code : str, required
+        the universe code
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    response = houston.delete("/master/universes/{0}".format(code))
+    return houston.json_if_possible(response)
+
+def _cli_delete_universe(*args, **kwargs):
+    return json_to_cli(delete_universe, *args, **kwargs)
