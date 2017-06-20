@@ -178,11 +178,15 @@ Re-pull contract details for an existing universe called "japan-fin":
 Examples:
 Download a CSV of all securities in a universe called "mexi-fut" to a file called mexi.csv:
 
-    quantrocket master get --universes "mexi-fut" -f mexi.csv
+    quantrocket master get --universes "mexi-fut" -o mexi.csv
 
 Download a CSV of all ARCA ETFs and use it to create a universe called "arca-etf":
 
     quantrocket master get --exchanges ARCA --sec-types ETF | quantrocket master universe "arca-etf" --infile -
+
+Pretty print the exchange and currency for all listings of AAPL:
+
+    quantrocket master get --symbols AAPL --fields PrimaryExch Currency --pretty
     """
     parser = _subparsers.add_parser(
         "get",
@@ -191,17 +195,29 @@ Download a CSV of all ARCA ETFs and use it to create a universe called "arca-etf
         formatter_class=argparse.RawDescriptionHelpFormatter, parents=[query_parent_parser])
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
-        "-f", "--outfile",
+        "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
         help="filename to write the data to (default is stdout)")
-    outputs.add_argument(
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
         "-j", "--json",
         action="store_const",
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
-    parser.set_defaults(func="quantrocket.master.download_securities_file")
+    output_format_group.add_argument(
+        "-p", "--pretty",
+        action="store_const",
+        const="txt",
+        dest="output",
+        help="format output in human-readable format (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields")
+    parser.set_defaults(func="quantrocket.master._cli_download_securities_file")
 
     examples = """
 Examples:

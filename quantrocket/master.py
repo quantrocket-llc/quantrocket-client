@@ -154,7 +154,7 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
                              currencies=None, universes=None, symbols=None, conids=None,
                              exclude_universes=None, exclude_conids=None,
                              sectors=None, industries=None, categories=None,
-                             delisted=False):
+                             delisted=False, fields=None):
     """
     Query security details from the securities master database and download to file.
 
@@ -164,7 +164,7 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
         filepath to write the data to, or file-like object (defaults to stdout)
 
     output : str
-        output format (json or csv, default is csv)
+        output format (json, csv, txt, default is csv)
 
     exchanges : list of str, optional
         limit to these exchanges
@@ -201,6 +201,9 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
 
     delisted : bool
         include delisted securities (default False)
+
+    fields : list of str, optional
+        only return these fields
 
     Returns
     -------
@@ -239,13 +242,18 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
         params["categories"] = categories
     if delisted:
         params["delisted"] = delisted
+    if fields:
+        params["fields"] = fields
 
     output = output or "csv"
 
-    if output not in ("csv", "json"):
+    if output not in ("csv", "json", "txt"):
         raise ValueError("Invalid ouput: {0}".format(output))
 
     response = houston.get("/master/securities.{0}".format(output), params=params)
+
+    if response.status_code == 400:
+        return response.json()
 
     filepath_or_buffer = filepath_or_buffer or sys.stdout
 
@@ -263,6 +271,9 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
             for chunk in response.iter_content(chunk_size=1024):
                 if chunk:
                     f.write(chunk)
+
+def _cli_download_securities_file(*args, **kwargs):
+    return json_to_cli(download_securities_file, *args, **kwargs)
 
 def get_conids(exchanges=None, sec_types=None, currencies=None,
                universes=None, symbols=None, conids=None,
