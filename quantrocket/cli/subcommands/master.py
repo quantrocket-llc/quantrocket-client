@@ -105,6 +105,7 @@ Re-pull contract details for an existing universe called "japan-fin":
         help="limit to these universes")
     parser.add_argument(
         "-i", "--conids",
+        type=int,
         nargs="*",
         metavar="CONID",
         help="limit to these conids")
@@ -140,6 +141,7 @@ Re-pull contract details for an existing universe called "japan-fin":
         help="limit to these symbols")
     filters.add_argument(
         "-i", "--conids",
+        type=int,
         nargs="*",
         metavar="CONID",
         help="limit to these conids")
@@ -150,6 +152,7 @@ Re-pull contract details for an existing universe called "japan-fin":
         help="exclude these universes")
     filters.add_argument(
         "--exclude-conids",
+        type=int,
         nargs="*",
         metavar="CONID",
         help="exclude these conids")
@@ -274,6 +277,7 @@ are no longer available from IB or that are now associated with the PINK exchang
         help="limit to these universes")
     parser.add_argument(
         "-i", "--conids",
+        type=int,
         nargs="*",
         metavar="CONID",
         help="limit to these conids")
@@ -417,11 +421,43 @@ Show current rollover config:
         help="the rollover rules config file to upload (if omitted, return the current config)")
     parser.set_defaults(func="quantrocket.master._cli_load_or_show_rollrules")
 
-    parser = _subparsers.add_parser("delist", help="delist a security by con_id or symbol+exchange")
-    parser.add_argument("-c", "--conid", type=int, help="the conid of the security to delist")
-    parser.add_argument("-s", "--symbol", help="the symbol to be delisted")
-    parser.add_argument("-e", "--exchange", help="the exchange of the symbol to be delisted")
-    parser.set_defaults(func="quantrocket.master.delist")
+    examples = """
+The security can be specified by conid or a combination of other parameters (for
+example, symbol + exchange). As a precaution, the request will fail if the parameters
+match more than one security.
+
+Examples:
+Delist a security by conid:
+
+    quantrocket master delist -i 123456
+
+Delist a security by symbol + exchange:
+
+    quantrocket master delist -s ABC -e NYSE
+    """
+    parser = _subparsers.add_parser(
+        "delist",
+        help="mark a security as delisted",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-i", "--conid",
+        type=int,
+        help="the conid of the security to be delisted")
+    parser.add_argument(
+        "-s", "--symbol",
+        help="the symbol to be delisted (if conid not provided)")
+    parser.add_argument(
+        "-e", "--exchange",
+        help="the exchange of the security to be delisted (if needed to disambiguate)")
+    parser.add_argument(
+        "-c", "--currency",
+        help="the currency of the security to be delisted (if needed to disambiguate)")
+    parser.add_argument(
+        "-t", "--sec-type",
+        choices=["STK", "ETF", "FUT", "CASH", "IND"],
+        help="the security type of the security to be delisted (if needed to disambiguate)")
+    parser.set_defaults(func="quantrocket.master._cli_delist_security")
 
     parser = _subparsers.add_parser("lots", help="load lot sizes from a file")
     parser.add_argument("filename", metavar="FILE", help="CSV file with columns 'lot_size' and either 'conid' or 'symbol' (and optionally 'exchange' and/or 'currency' for disambiguation)")

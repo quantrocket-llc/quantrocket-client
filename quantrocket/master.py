@@ -466,3 +466,52 @@ def list_universes():
 
 def _cli_list_universes(*args, **kwargs):
     return json_to_cli(list_universes, *args, **kwargs)
+
+def delist_security(conid=None, symbol=None, exchange=None, currency=None, sec_type=None):
+    """
+    Mark a security as delisted.
+
+    The security can be specified by conid or a combination of other parameters (for
+    example, symbol + exchange). As a precaution, the request will fail if the parameters
+    match more than one security.
+
+    Parameters
+    ----------
+    conid : int, optional
+        the conid of the security to be delisted
+
+    symbol : str, optional
+        the symbol to be delisted (if conid not provided)
+
+    exchange : str, optional
+        the exchange of the security to be delisted (if needed to disambiguate)
+
+    currency : str, optional
+        the currency of the security to be delisted (if needed to disambiguate)
+
+    sec_type : str, optional
+        the security type of the security to be delisted (if needed to disambiguate). Possible
+        choices: STK, ETF, FUT, CASH, IND
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    params = {}
+    if conid:
+        params["conids"] = conid
+    if symbol:
+        params["symbols"] = symbol
+    if exchange:
+        params["exchanges"] = exchange
+    if currency:
+        params["currencies"] = currency
+    if sec_type:
+        params["sec_types"] = sec_type
+
+    response = houston.delete("/master/securities", params=params)
+    return houston.json_if_possible(response)
+
+def _cli_delist_security(*args, **kwargs):
+    return json_to_cli(delist_security, *args, **kwargs)
