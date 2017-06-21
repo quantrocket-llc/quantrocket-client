@@ -103,10 +103,13 @@ def _cli_pull_listings(*args, **kwargs):
     return json_to_cli(pull_listings, *args, **kwargs)
 
 def diff_securities(universes=None, conids=None, fields=None, delist_missing=False,
-                    delist_exchanges=None):
+                    delist_exchanges=None, async=False):
     """
-    Flag security details that have changed in IB's system since the time they were last loaded
-    into the securities master database.
+    Flag security details that have changed in IB's system since the time they
+    were last loaded into the securities master database.
+
+    Can be run synchronously or asynchronously (async recommended if diffing more
+    than a handful of securities).
 
     Parameters
     ----------
@@ -125,10 +128,14 @@ def diff_securities(universes=None, conids=None, fields=None, delist_missing=Fal
     delist_exchanges : list of str, optional
         auto-delist securities that are associated with these exchanges
 
+    async : bool
+        run the diff asynchronously and log the results, if any, to flightlog
+        (otherwise run synchronously and return the diff)
+
     Returns
     -------
     dict
-        dict of conids and fields that have changed
+        dict of conids and fields that have changed, or status message (if async)
 
     """
     params = {}
@@ -142,9 +149,11 @@ def diff_securities(universes=None, conids=None, fields=None, delist_missing=Fal
         params["delist_missing"] = delist_missing
     if delist_exchanges:
         params["delist_exchanges"] = delist_exchanges
+    if async:
+        params["async"] = async
 
     # runs synchronously so use a high timeout
-    response = houston.get("/master/diff", params=params, timeout=60*60)
+    response = houston.get("/master/diff", params=params, timeout=None if async else 60*60*10)
     return houston.json_if_possible(response)
 
 def _cli_diff_securities(*args, **kwargs):
