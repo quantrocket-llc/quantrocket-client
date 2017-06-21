@@ -297,6 +297,19 @@ are no longer available from IB or that are now associated with the PINK exchang
 
     examples = """
 Examples:
+List all universes and their size:
+
+    quantrocket master list-universes
+    """
+    parser = _subparsers.add_parser(
+        "list-universes",
+        help="list universes and their size",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.set_defaults(func="quantrocket.master._cli_list_universes")
+
+    examples = """
+Examples:
 Download a CSV of Italian stocks then upload it to create a universe called "italy-stk":
 
     quantrocket master get --exchanges BVME --sec-types STK -f italy.csv

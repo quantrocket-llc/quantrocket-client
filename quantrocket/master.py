@@ -367,7 +367,7 @@ def create_universe(code, infile=None, from_universes=None,
     Parameters
     ----------
     code : str, required
-        the code to assign to the universe
+        the code to assign to the universe (lowercase alphanumerics and hyphens only)
 
     infile : str, optional
         create the universe from the conids in this file (specify '-' to read file from stdin)
@@ -442,3 +442,18 @@ def delete_universe(code):
 
 def _cli_delete_universe(*args, **kwargs):
     return json_to_cli(delete_universe, *args, **kwargs)
+
+def list_universes():
+    """
+    List universes and their size.
+
+    Returns
+    -------
+    dict
+        dict of universe:size
+    """
+    response = houston.get("/master/universes")
+    return houston.json_if_possible(response)
+
+def _cli_list_universes(*args, **kwargs):
+    return json_to_cli(list_universes, *args, **kwargs)
