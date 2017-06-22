@@ -418,7 +418,7 @@ Show current rollover config:
         "filename",
         nargs="?",
         metavar="FILENAME",
-        help="the rollover rules config file to upload (if omitted, return the current config)")
+        help="the rollover rules YAML config file to upload (if omitted, return the current config)")
     parser.set_defaults(func="quantrocket.master._cli_load_or_show_rollrules")
 
     examples = """

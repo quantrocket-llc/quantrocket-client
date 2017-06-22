@@ -515,3 +515,39 @@ def delist_security(conid=None, symbol=None, exchange=None, currency=None, sec_t
 
 def _cli_delist_security(*args, **kwargs):
     return json_to_cli(delist_security, *args, **kwargs)
+
+def load_rollrules_config(filename):
+    """
+    Upload a new rollover rules config.
+
+    Parameters
+    ----------
+    filename : str, required
+        the rollover rules YAML config file to upload
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    with open(filename) as file:
+        response = houston.put("/master/config/rollover", data=file.read())
+    return houston.json_if_possible(response)
+
+def get_rollrules_config():
+    """
+    Returns the current rollover rules config.
+
+    Returns
+    -------
+    dict
+        the config as a dict
+    """
+    response = houston.get("/master/config/rollover")
+    return houston.json_if_possible(response)
+
+def _cli_load_or_show_rollrules(filename=None):
+    if filename:
+        return json_to_cli(load_rollrules_config, filename)
+    else:
+        return json_to_cli(get_rollrules_config)
