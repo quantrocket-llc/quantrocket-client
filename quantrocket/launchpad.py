@@ -95,7 +95,7 @@ def start_gateways(exchanges=None, sec_type=None, research_vendors=None, gateway
     if gateways:
         params["gateways"] = gateways
 
-    response = houston.post("/launchpad/gateways", params=params, timeout=60)
+    response = houston.post("/launchpad/gateways", params=params, timeout=90)
     return houston.json_if_possible(response)
 
 def _cli_start_gateways(*args, **kwargs):
