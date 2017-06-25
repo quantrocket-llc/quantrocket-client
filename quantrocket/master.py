@@ -163,7 +163,7 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
                              currencies=None, universes=None, symbols=None, conids=None,
                              exclude_universes=None, exclude_conids=None,
                              sectors=None, industries=None, categories=None,
-                             delisted=False, fields=None):
+                             delisted=False, frontmonth=False, fields=None):
     """
     Query security details from the securities master database and download to file.
 
@@ -211,6 +211,9 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
     delisted : bool
         include delisted securities (default False)
 
+    frontmonth : bool
+        exclude backmonth and expired futures contracts (default False)
+
     fields : list of str, optional
         only return these fields
 
@@ -251,6 +254,8 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
         params["categories"] = categories
     if delisted:
         params["delisted"] = delisted
+    if frontmonth:
+        params["frontmonth"] = frontmonth
     if fields:
         params["fields"] = fields
 
@@ -288,7 +293,7 @@ def get_conids(exchanges=None, sec_types=None, currencies=None,
                universes=None, symbols=None, conids=None,
                exclude_universes=None, exclude_conids=None,
                sectors=None, industries=None, categories=None,
-               delisted=False):
+               delisted=False, frontmonth=False):
     """
     Query conids from the securities master database.
 
@@ -330,6 +335,9 @@ def get_conids(exchanges=None, sec_types=None, currencies=None,
     delisted : bool
         include delisted securities (default False)
 
+    frontmonth : bool
+        exclude backmonth and expired futures contracts (default False)
+
     Returns
     -------
     list
@@ -361,6 +369,8 @@ def get_conids(exchanges=None, sec_types=None, currencies=None,
         params["categories"] = categories
     if delisted:
         params["delisted"] = delisted
+    if frontmonth:
+        params["frontmonth"] = frontmonth
 
     response = houston.get("/master/securities/conids", params=params)
     return houston.json_if_possible(response)
