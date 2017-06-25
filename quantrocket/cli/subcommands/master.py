@@ -176,6 +176,11 @@ Re-pull contract details for an existing universe called "japan-fin":
         action="store_true",
         default=False,
         help="include delisted securities")
+    filters.add_argument(
+        "-m", "--frontmonth",
+        action="store_true",
+        default=False,
+        help="exclude backmonth and expired futures contracts")
 
     examples = """
 Examples:
@@ -389,15 +394,6 @@ be deleted, only their grouping as a universe):
         "code",
         help="the universe code")
     parser.set_defaults(func="quantrocket.master._cli_delete_universe")
-
-    parser = _subparsers.add_parser("frontmonth", help="return the frontmonth contract for a futures underlying, as of now or over a date range")
-    parser.add_argument("symbol", help="the underlying's symbol (e.g. ES)")
-    parser.add_argument("exchange", help="the exchange where the contract trades (e.g. GLOBEX)")
-    parser.add_argument("-c", "--currency", metavar="CURRENCY", help="the contract's currency, if necessary to disambiguate")
-    parser.add_argument("-m", "--multiplier", metavar="MULTIPLIER", help="the contract's multiplier, if necessary to disambiguate")
-    parser.add_argument("-s", "--start-date", metavar="YYYY-MM-DD", help="return the frontmonth conid for each date on or after this date")
-    parser.add_argument("-e", "--end-date", metavar="YYYY-MM-DD", help="return the frontmonth conid for each date on or before this date")
-    parser.set_defaults(func="quantrocket.master.get_frontmonth")
 
     examples = """
 Examples:
