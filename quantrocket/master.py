@@ -269,6 +269,8 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
     if response.status_code == 400:
         return response.json()
 
+    response.raise_for_status()
+
     filepath_or_buffer = filepath_or_buffer or sys.stdout
 
     if hasattr(filepath_or_buffer, "write"):
