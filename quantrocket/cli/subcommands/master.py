@@ -111,8 +111,26 @@ Re-pull contract details for an existing universe called "japan-fin":
         help="limit to these conids")
     parser.set_defaults(func="quantrocket.master._cli_pull_listings")
 
-    query_parent_parser = argparse.ArgumentParser(add_help=False)
-    filters = query_parent_parser.add_argument_group("filtering options")
+    examples = """
+Examples:
+Download a CSV of all securities in a universe called "mexi-fut" to a file called mexi.csv:
+
+    quantrocket master get --universes "mexi-fut" -o mexi.csv
+
+Download a CSV of all ARCA ETFs and use it to create a universe called "arca-etf":
+
+    quantrocket master get --exchanges ARCA --sec-types ETF | quantrocket master universe "arca-etf" --infile -
+
+Pretty print the exchange and currency for all listings of AAPL:
+
+    quantrocket master get --symbols AAPL --fields PrimaryExch Currency --pretty
+    """
+    parser = _subparsers.add_parser(
+        "get",
+        help="query security details from the securities master database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-e", "--exchanges",
         nargs="*",
@@ -181,26 +199,6 @@ Re-pull contract details for an existing universe called "japan-fin":
         action="store_true",
         default=False,
         help="exclude backmonth and expired futures contracts")
-
-    examples = """
-Examples:
-Download a CSV of all securities in a universe called "mexi-fut" to a file called mexi.csv:
-
-    quantrocket master get --universes "mexi-fut" -o mexi.csv
-
-Download a CSV of all ARCA ETFs and use it to create a universe called "arca-etf":
-
-    quantrocket master get --exchanges ARCA --sec-types ETF | quantrocket master universe "arca-etf" --infile -
-
-Pretty print the exchange and currency for all listings of AAPL:
-
-    quantrocket master get --symbols AAPL --fields PrimaryExch Currency --pretty
-    """
-    parser = _subparsers.add_parser(
-        "get",
-        help="query security details from the securities master database and download to file",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter, parents=[query_parent_parser])
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
@@ -226,24 +224,6 @@ Pretty print the exchange and currency for all listings of AAPL:
         nargs="*",
         help="only return these fields")
     parser.set_defaults(func="quantrocket.master._cli_download_securities_file")
-
-    examples = """
-Examples:
-Get conids of all ARCA ETFs:
-
-    quantrocket master conids --exchanges ARCA --sec-types ETF
-
-Get conids of all consumer cyclicals trading on the Australian Stock Exchange:
-
-    quantrocket master conids --exchanges ASX --sectors "Consumer, Cyclical"
-    """
-    parser = _subparsers.add_parser(
-        "conids",
-        help="query conids from the securities master database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        parents=[query_parent_parser])
-    parser.set_defaults(func="quantrocket.master._cli_get_conids")
 
     examples = """
 Diff can be run synchronously or asynchronously (async recommended if diffing more than a
