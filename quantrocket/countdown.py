@@ -17,9 +17,10 @@ from quantrocket.cli.utils.output import json_to_cli
 
 def _load_or_show_crontab(service, filename=None):
     if filename:
-        return load_crontab(service, filename)
+        return json_to_cli(load_crontab, service, filename)
     else:
-        return get_crontab(service)
+        exit_code = 0
+        return get_crontab(service), exit_code
 
 def get_crontab(service):
     """
@@ -36,7 +37,7 @@ def get_crontab(service):
         string representation of crontab
     """
     response = houston.get("/{0}/crontab".format(service))
-    response.raise_for_status()
+    houston.raise_for_status_with_json(response)
     return response.text
 
 def load_crontab(service, filename):
@@ -57,7 +58,8 @@ def load_crontab(service, filename):
     """
     with open(filename) as file:
         response = houston.put("/{0}/crontab".format(service), data=file.read())
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def get_timezone(service):
     """
@@ -74,7 +76,8 @@ def get_timezone(service):
         dict with key timezone
     """
     response = houston.get("/{0}/timezone".format(service))
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def _cli_get_timezone(*args, **kwargs):
     return json_to_cli(get_timezone, *args, **kwargs)

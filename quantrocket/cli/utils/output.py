@@ -15,6 +15,7 @@
 import os
 import yaml
 import json
+import requests
 
 def json_to_cli(func, *args, **kwargs):
     """
@@ -30,13 +31,19 @@ def json_to_cli(func, *args, **kwargs):
 
     - YAML will be returned.
     """
+    exit_code = 0
     simplify_list = kwargs.pop("simplify_list", True)
-    json_response = func(*args, **kwargs)
-    if os.environ.get("QUANTROCKET_CLI_OUTPUT_FORMAT", "").lower() == "json":
-        return json.dumps(json_response)
+    try:
+        json_response = func(*args, **kwargs)
+    except requests.exceptions.HTTPError as e:
+        # use json response from service, if available
+        json_response = getattr(e, "json_response", {"status": "error", "msg": repr(e)})
+        exit_code = 1
     if not json_response:
-        return
+        return None, exit_code
+    if os.environ.get("QUANTROCKET_CLI_OUTPUT_FORMAT", "").lower() == "json":
+        return json.dumps(json_response), exit_code
     if simplify_list and isinstance(json_response, list) and not any([
         isinstance(item, (dict, list, tuple, set)) for item in json_response]):
-        return "\n".join([str(item) for item in json_response])
-    return yaml.safe_dump(json_response, default_flow_style=False).strip()
+        return "\n".join([str(item) for item in json_response]), exit_code
+    return yaml.safe_dump(json_response, default_flow_style=False).strip(), exit_code

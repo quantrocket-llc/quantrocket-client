@@ -16,7 +16,7 @@ import sys
 import six
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
-from quantrocket.cli.utils.stream import stream, to_bytes
+from quantrocket.cli.utils.stream import to_bytes
 
 def list_exchanges(regions=None, sec_types=None):
     """
@@ -41,7 +41,8 @@ def list_exchanges(regions=None, sec_types=None):
         params["regions"] = regions
 
     response = houston.get("/master/exchanges", params=params)
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def _cli_list_exchanges(*args, **kwargs):
     return json_to_cli(list_exchanges, *args, **kwargs)
@@ -97,7 +98,8 @@ def pull_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
         params["conids"] = conids
 
     response = houston.post("/master/listings", params=params)
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def _cli_pull_listings(*args, **kwargs):
     return json_to_cli(pull_listings, *args, **kwargs)
@@ -154,7 +156,8 @@ def diff_securities(universes=None, conids=None, fields=None, delist_missing=Fal
 
     # runs synchronously so use a high timeout
     response = houston.get("/master/diff", params=params, timeout=None if async else 60*60*10)
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def _cli_diff_securities(*args, **kwargs):
     return json_to_cli(diff_securities, *args, **kwargs)
@@ -266,10 +269,7 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
 
     response = houston.get("/master/securities.{0}".format(output), params=params)
 
-    if response.status_code == 400:
-        return response.json()
-
-    response.raise_for_status()
+    houston.raise_for_status_with_json(response)
 
     filepath_or_buffer = filepath_or_buffer or sys.stdout
 
@@ -349,7 +349,8 @@ def create_universe(code, infile=None, from_universes=None,
     else:
         response = houston.request(method, url, params=params)
 
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def _cli_create_universe(*args, **kwargs):
     return json_to_cli(create_universe, *args, **kwargs)
@@ -370,7 +371,8 @@ def delete_universe(code):
         status message
     """
     response = houston.delete("/master/universes/{0}".format(code))
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def _cli_delete_universe(*args, **kwargs):
     return json_to_cli(delete_universe, *args, **kwargs)
@@ -385,7 +387,8 @@ def list_universes():
         dict of universe:size
     """
     response = houston.get("/master/universes")
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def _cli_list_universes(*args, **kwargs):
     return json_to_cli(list_universes, *args, **kwargs)
@@ -434,7 +437,8 @@ def delist_security(conid=None, symbol=None, exchange=None, currency=None, sec_t
         params["sec_types"] = sec_type
 
     response = houston.delete("/master/securities", params=params)
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def _cli_delist_security(*args, **kwargs):
     return json_to_cli(delist_security, *args, **kwargs)
@@ -455,7 +459,8 @@ def load_rollrules_config(filename):
     """
     with open(filename) as file:
         response = houston.put("/master/config/rollover", data=file.read())
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def get_rollrules_config():
     """
@@ -467,7 +472,11 @@ def get_rollrules_config():
         the config as a dict
     """
     response = houston.get("/master/config/rollover")
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    # It's possible to get a 204 empty response
+    if not response.content:
+        return {}
+    return response.json()
 
 def _cli_load_or_show_rollrules(filename=None):
     if filename:

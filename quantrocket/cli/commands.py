@@ -82,7 +82,7 @@ def main():
     func_name = args.pop("func")
     func = import_func(func_name)
     try:
-        result = func(**args)
+        result, exit_code = func(**args)
     except:
         if not sys.stdin.isatty():
             import traceback
@@ -92,6 +92,7 @@ def main():
     else:
         if result:
             print(result)
+        return exit_code
 
 if __name__ == '__main__':
     sys.exit(main())

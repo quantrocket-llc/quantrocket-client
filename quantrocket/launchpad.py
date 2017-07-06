@@ -54,7 +54,8 @@ def list_gateway_statuses(exchanges=None, sec_type=None, research_vendors=None, 
         params["status"] = status
 
     response = houston.get("/launchpad/gateways", params=params)
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def _cli_list_gateway_statuses(*args, **kwargs):
     return json_to_cli(list_gateway_statuses, *args, **kwargs)
@@ -96,7 +97,8 @@ def start_gateways(exchanges=None, sec_type=None, research_vendors=None, gateway
         params["gateways"] = gateways
 
     response = houston.post("/launchpad/gateways", params=params, timeout=120)
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def _cli_start_gateways(*args, **kwargs):
     return json_to_cli(start_gateways, *args, **kwargs)
@@ -138,7 +140,8 @@ def stop_gateways(exchanges=None, sec_type=None, research_vendors=None, gateways
         params["gateways"] = gateways
 
     response = houston.delete("/launchpad/gateways", params=params, timeout=45)
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def _cli_stop_gateways(*args, **kwargs):
     return json_to_cli(stop_gateways, *args, **kwargs)
@@ -159,7 +162,8 @@ def load_config(filename):
     """
     with open(filename) as file:
         response = houston.put("/launchpad/config", data=file.read())
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def get_config():
     """
@@ -171,7 +175,11 @@ def get_config():
         the config as a dict
     """
     response = houston.get("/launchpad/config")
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    # It's possible to get a 204 empty response
+    if not response.content:
+        return {}
+    return response.json()
 
 def _cli_load_or_show_config(filename=None):
     if filename:

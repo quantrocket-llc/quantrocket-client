@@ -34,7 +34,7 @@ Download a database called quantrocket.history.nyse.sqlite:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("database", metavar="DATABASE", help="the filename of the database (as returned by the list command)")
     parser.add_argument("outfile", metavar="OUTFILE", help="filename to write the database to")
-    parser.set_defaults(func="quantrocket.db.download_database")
+    parser.set_defaults(func="quantrocket.db._cli_download_database")
 
     examples = """
 Examples:
