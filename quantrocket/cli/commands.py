@@ -18,6 +18,7 @@
 # to make argcomplete perky, limit imports to the minimum here and in
 # subcommand modules
 import sys
+import six
 import argparse
 import pkgutil
 from . import subcommands
@@ -56,6 +57,8 @@ def handle_error(msg):
     handler = FlightlogHandler(background=False)
     logger.addHandler(handler)
     logger.error("Error running {0}".format(" ".join(sys.argv)))
+    if not isinstance(msg, six.string_types):
+        msg = repr(msg)
     for l in msg.splitlines():
         logger.error(l)
 
@@ -91,7 +94,14 @@ def main():
         raise
     else:
         if result:
-            print(result)
+            # nonzero exit codes for non-interactive commands should be
+            # logged
+            if exit_code > 0 and not sys.stdin.isatty():
+                handle_error(result)
+            # otherwise print
+            else:
+                print(result)
+
         return exit_code
 
 if __name__ == '__main__':

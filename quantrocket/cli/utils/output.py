@@ -37,7 +37,7 @@ def json_to_cli(func, *args, **kwargs):
         json_response = func(*args, **kwargs)
     except requests.exceptions.HTTPError as e:
         # use json response from service, if available
-        json_response = getattr(e, "json_response", {"status": "error", "msg": repr(e)})
+        json_response = getattr(e, "json_response", {}) or {"status": "error", "msg": repr(e)}
         exit_code = 1
     if not json_response:
         return None, exit_code
