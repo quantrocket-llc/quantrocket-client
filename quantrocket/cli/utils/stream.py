@@ -14,7 +14,7 @@
 
 import six
 
-def stream(func):
+def print_stream(func):
     """
     Decorator that returns a function which prints the chunks returned by the
     wrapped func.

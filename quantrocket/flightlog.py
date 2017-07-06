@@ -22,7 +22,8 @@ import os
 from six.moves import queue, urllib
 from .exceptions import ImproperlyConfigured
 from .houston import Houston, houston
-from quantrocket.cli.utils.stream import stream
+from quantrocket.cli.utils.stream import print_stream
+from quantrocket.cli.utils.output import json_to_cli
 
 FLIGHTLOG_PATH = "/flightlog/handler"
 
@@ -108,7 +109,7 @@ def FlightlogHandler(background=None):
     else:
         return http_handler
 
-def _log_message(msg, logger_name=None, level="INFO"):
+def _cli_log_message(msg, logger_name=None, level="INFO"):
     """
     Logs a single message to Flightlog. Intended for CLI usage. Calling this
     function multiple times within the same process will configure duplicate
@@ -129,6 +130,9 @@ def _log_message(msg, logger_name=None, level="INFO"):
     for line in msg.splitlines():
         if line:
             logger.log(levelnum, line)
+
+    exit_code = 0
+    return None, exit_code
 
 def stream_logs(detail=False, hist=None, color=True):
     """
@@ -164,8 +168,9 @@ def stream_logs(detail=False, hist=None, color=True):
             params["nocolor"] = "true"
 
     houston = Houston()
+    response = houston.get(path, stream=True, params=params)
+    houston.raise_for_status_with_json(response)
     try:
-        response = houston.get(path, stream=True, params=params)
         for line in response.iter_lines():
             if six.PY3:
                 line = line.decode("utf-8")
@@ -175,7 +180,8 @@ def stream_logs(detail=False, hist=None, color=True):
         return
 
 def _cli_stream_logs(*args, **kwargs):
-    return stream(stream_logs)(*args, **kwargs)
+    wrapped = print_stream(stream_logs)
+    return json_to_cli(wrapped, *args, **kwargs)
 
 def download_logfile(outfile, detail=False):
     """
@@ -199,11 +205,15 @@ def download_logfile(outfile, detail=False):
         logtype = "app"
 
     response = houston.get("/flightlog/logfile/{0}".format(logtype), stream=True)
+    houston.raise_for_status_with_json(response)
 
-    if response.status_code != 200:
-        return houston.json_if_possible(response)
+    if response.status_code == 204:
+        return response.json()
 
     with open(outfile, "wb") as f:
         for chunk in response.iter_content(chunk_size=1024):
             if chunk:
                 f.write(chunk)
+
+def _cli_download_logfile(*args, **kwargs):
+    return json_to_cli(download_logfile, *args, **kwargs)

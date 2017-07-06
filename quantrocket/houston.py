@@ -63,21 +63,19 @@ class Houston(requests.Session):
         return super(Houston, self).request(method, url, *args, **kwargs)
 
     @staticmethod
-    def json_if_possible(response):
+    def raise_for_status_with_json(response):
         """
-        Returns json if possible, otherwise raises status error if there is
-        one. (If houston replies with json, we prefer returning json even for
-        status codes >= 400, but if there's no json we want to raise the
-        status error.)
+        Raises 400/500 error codes, attaching a json response to the
+        exception, if possible.
         """
         try:
-            return response.json()
-        except:
             response.raise_for_status()
-            # It's possible to get a 204 empty response, so handle that case here
-            if not response.content:
-                return {}
-            return response.json()
+        except requests.exceptions.HTTPError as e:
+            try:
+                e.json_response = response.json()
+            except:
+                e.json_response = {}
+            raise e
 
 # Instantiate houston so that all callers can share a TCP connection (for
 # performance's sake)
@@ -93,7 +91,8 @@ def ping():
         reply from houston
     """
     response = houston.get("/ping")
-    return houston.json_if_possible(response)
+    houston.raise_for_status_with_json(response)
+    return response.json()
 
 def _cli_ping():
     return json_to_cli(ping)

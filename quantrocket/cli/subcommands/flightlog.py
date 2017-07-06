@@ -52,7 +52,7 @@ Download detailed logs:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("outfile", metavar="OUTFILE", help="filename to write the logfile to")
     parser.add_argument("-d", "--detail", action="store_true", help="download detailed logs from logspout, otherwise download log messages from flightlog only")
-    parser.set_defaults(func="quantrocket.flightlog.download_logfile")
+    parser.set_defaults(func="quantrocket.flightlog._cli_download_logfile")
 
     examples = """
 Examples:
@@ -71,4 +71,4 @@ Log the output from another command:
     parser.add_argument("-l", "--level", default="INFO", choices=("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"),
                             help="the log level for the message")
     parser.add_argument("-n", "--name", dest="logger_name", default="quantrocket.cli", help="the logger name")
-    parser.set_defaults(func="quantrocket.flightlog._log_message")
+    parser.set_defaults(func="quantrocket.flightlog._cli_log_message")
