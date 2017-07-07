@@ -62,7 +62,7 @@ def _cli_list_gateway_statuses(*args, **kwargs):
 
 def start_gateways(exchanges=None, sec_type=None, research_vendors=None, gateways=None, wait=False):
     """
-    Starts one or more IB Gateway services.
+    Start one or more IB Gateway services.
 
     Parameters
     ----------
@@ -105,7 +105,7 @@ def _cli_start_gateways(*args, **kwargs):
 
 def stop_gateways(exchanges=None, sec_type=None, research_vendors=None, gateways=None, wait=False):
     """
-    Stops one or more IB Gateway services.
+    Stop one or more IB Gateway services.
 
     Parameters
     ----------

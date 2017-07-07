@@ -24,7 +24,7 @@ def _load_or_show_crontab(service, filename=None):
 
 def get_crontab(service):
     """
-    Returns the current crontab.
+    Return the current crontab.
 
     Parameters
     ----------
@@ -42,7 +42,7 @@ def get_crontab(service):
 
 def load_crontab(service, filename):
     """
-    Uploads a new crontab.
+    Upload a new crontab.
 
     Parameters
     ----------
@@ -63,7 +63,7 @@ def load_crontab(service, filename):
 
 def get_timezone(service):
     """
-    Returns the service timezone.
+    Return the service timezone.
 
     Parameters
     ----------
