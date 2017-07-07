@@ -105,13 +105,13 @@ def _cli_pull_listings(*args, **kwargs):
     return json_to_cli(pull_listings, *args, **kwargs)
 
 def diff_securities(universes=None, conids=None, fields=None, delist_missing=False,
-                    delist_exchanges=None, async=False):
+                    delist_exchanges=None, wait=False):
     """
     Flag security details that have changed in IB's system since the time they
     were last loaded into the securities master database.
 
-    Can be run synchronously or asynchronously (async recommended if diffing more
-    than a handful of securities).
+    Diff can be run synchronously or asynchronously (asynchronous is the default
+    and is recommended if diffing more than a handful of securities).
 
     Parameters
     ----------
@@ -130,14 +130,14 @@ def diff_securities(universes=None, conids=None, fields=None, delist_missing=Fal
     delist_exchanges : list of str, optional
         auto-delist securities that are associated with these exchanges
 
-    async : bool
-        run the diff asynchronously and log the results, if any, to flightlog
-        (otherwise run synchronously and return the diff)
+    wait : bool
+        run the diff synchronously and return the diff (otherwise run
+        asynchronously and log the results, if any, to flightlog)
 
     Returns
     -------
     dict
-        dict of conids and fields that have changed, or status message (if async)
+        dict of conids and fields that have changed (if wait), or status message
 
     """
     params = {}
@@ -151,11 +151,11 @@ def diff_securities(universes=None, conids=None, fields=None, delist_missing=Fal
         params["delist_missing"] = delist_missing
     if delist_exchanges:
         params["delist_exchanges"] = delist_exchanges
-    if async:
-        params["async"] = async
+    if wait:
+        params["wait"] = wait
 
     # runs synchronously so use a high timeout
-    response = houston.get("/master/diff", params=params, timeout=None if async else 60*60*10)
+    response = houston.get("/master/diff", params=params, timeout=60*60*10 if wait else None)
     houston.raise_for_status_with_json(response)
     return response.json()
 

@@ -226,28 +226,28 @@ Pretty print the exchange and currency for all listings of AAPL:
     parser.set_defaults(func="quantrocket.master._cli_download_securities_file")
 
     examples = """
-Diff can be run synchronously or asynchronously (async recommended if diffing more than a
-handful of securities).
+Diff can be run synchronously or asynchronously (asynchronous is the default and is recommended
+if diffing more than a handful of securities).
 
 Examples:
-Synchronously get a diff for specific securities by conid:
-
-    quantrocket master diff --conids 123456 234567
-
-Asynchronously get a diff for all securities in a universe called "italy-stk" and log the results, if any,
+Asynchronously generate a diff for all securities in a universe called "italy-stk" and log the results, if any,
 to flightlog:
 
-    quantrocket master diff -u "italy-stk" --async
+    quantrocket master diff -u "italy-stk"
 
-Asynchronously get a diff for all securities in a universe called "italy-stk", looking only for sector or
+Asynchronously generate a diff for all securities in a universe called "italy-stk", looking only for sector or
 industry changes:
 
-    quantrocket master diff -u "italy-stk" --fields Sector Industry --async
+    quantrocket master diff -u "italy-stk" --fields Sector Industry
 
-Asynchronously get a diff for all securities in a universe called "nasdaq-sml" and auto-delist any symbols that
+Synchronously get a diff for specific securities by conid:
+
+    quantrocket master diff --conids 123456 234567 --wait
+
+Asynchronously generate a diff for all securities in a universe called "nasdaq-sml" and auto-delist any symbols that
 are no longer available from IB or that are now associated with the PINK exchange:
 
-    quantrocket master diff -u "nasdaq-sml" --delist-missing --delist-exchanges PINK --async
+    quantrocket master diff -u "nasdaq-sml" --delist-missing --delist-exchanges PINK
     """
     parser = _subparsers.add_parser(
         "diff",
@@ -282,11 +282,11 @@ are no longer available from IB or that are now associated with the PINK exchang
         nargs="*",
         help="auto-delist securities that are associated with these exchanges")
     parser.add_argument(
-        "-a", "--async",
+        "-w", "--wait",
         action="store_true",
         default=False,
-        help="run the diff asynchronously and log the results, if any, to flightlog "
-        "(otherwise run synchronously and return the diff)")
+        help="run the diff synchronously and return the diff (otherwise run "
+        "asynchronously and log the results, if any, to flightlog")
     parser.set_defaults(func="quantrocket.master._cli_diff_securities")
 
     examples = """
