@@ -65,7 +65,17 @@ def FlightlogHandler(background=None):
     -------
     `logging.handlers.QueueHandler` or `quantrocket.flightlog._ImpatientHttpHandler`
 
-    Modified from https://docs.python.org/3/howto/logging-cookbook.html#dealing-with-handlers-that-block
+    Examples
+    --------
+    Log a message using the FlightlogHandler:
+
+    >>> import logging
+    >>> from quantrocket.flightlog import FlightlogHandler
+    >>> logger = logging.getLogger('myapp')
+    >>> logger.setLevel(logging.DEBUG)
+    >>> handler = FlightlogHandler()
+    >>> logger.addHandler(handler)
+    >>> logger.info('my app just opened a position')
     """
     base_url = os.environ.get("HOUSTON_URL", None)
     if not base_url:
