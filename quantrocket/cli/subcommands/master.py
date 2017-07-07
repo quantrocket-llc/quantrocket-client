@@ -21,7 +21,10 @@ def add_subparser(subparsers):
 
 
     examples = """
+List exchanges by security type and country as found on the IB website.
+
 Examples:
+
 List all exchanges:
 
     quantrocket master exchanges
@@ -50,11 +53,16 @@ List stock exchanges in North America:
     parser.set_defaults(func="quantrocket.master._cli_list_exchanges")
 
     examples = """
-Specify an exchange (optionally filtering by security type, currency, and/or symbol) to fetch
-listings from the IB website and pull associated contract details from the IB API. Or, specify universes
-or conids to pull details from the IB API, bypassing the website.
+Pull securities listings from IB into securities master database, either by
+exchange or by universes/conids.
+
+Specify an exchange (optionally filtering by security type, currency, and/or
+symbol) to fetch listings from the IB website and pull associated contract
+details from the IB API. Or, specify universes or conids to pull details from
+the IB API, bypassing the website.
 
 Examples:
+
 Pull all Toronto Stock Exchange stocks listings:
 
     quantrocket master listings --exchange TSE --sec-types STK
@@ -112,12 +120,18 @@ Re-pull contract details for an existing universe called "japan-fin":
     parser.set_defaults(func="quantrocket.master._cli_pull_listings")
 
     examples = """
+Query security details from the securities master database and download to
+file.
+
 Examples:
-Download a CSV of all securities in a universe called "mexi-fut" to a file called mexi.csv:
+
+Download a CSV of all securities in a universe called "mexi-fut" to a file
+called mexi.csv:
 
     quantrocket master get --universes "mexi-fut" -o mexi.csv
 
-Download a CSV of all ARCA ETFs and use it to create a universe called "arca-etf":
+Download a CSV of all ARCA ETFs and use it to create a universe called
+"arca-etf":
 
     quantrocket master get --exchanges ARCA --sec-types ETF | quantrocket master universe "arca-etf" --infile -
 
@@ -226,17 +240,21 @@ Pretty print the exchange and currency for all listings of AAPL:
     parser.set_defaults(func="quantrocket.master._cli_download_securities_file")
 
     examples = """
-Diff can be run synchronously or asynchronously (asynchronous is the default and is recommended
-if diffing more than a handful of securities).
+Flag security details that have changed in IB's system since the time they
+were last loaded into the securities master database.
+
+Diff can be run synchronously or asynchronously (asynchronous is the default
+and is recommended if diffing more than a handful of securities).
 
 Examples:
-Asynchronously generate a diff for all securities in a universe called "italy-stk" and log the results, if any,
-to flightlog:
+
+Asynchronously generate a diff for all securities in a universe called
+"italy-stk" and log the results, if any, to flightlog:
 
     quantrocket master diff -u "italy-stk"
 
-Asynchronously generate a diff for all securities in a universe called "italy-stk", looking only for sector or
-industry changes:
+Asynchronously generate a diff for all securities in a universe called
+"italy-stk", looking only for sector or industry changes:
 
     quantrocket master diff -u "italy-stk" --fields Sector Industry
 
@@ -244,8 +262,9 @@ Synchronously get a diff for specific securities by conid:
 
     quantrocket master diff --conids 123456 234567 --wait
 
-Asynchronously generate a diff for all securities in a universe called "nasdaq-sml" and auto-delist any symbols that
-are no longer available from IB or that are now associated with the PINK exchange:
+Asynchronously generate a diff for all securities in a universe called
+"nasdaq-sml" and auto-delist any symbols that are no longer available from IB
+or that are now associated with the PINK exchange:
 
     quantrocket master diff -u "nasdaq-sml" --delist-missing --delist-exchanges PINK
     """
@@ -290,7 +309,10 @@ are no longer available from IB or that are now associated with the PINK exchang
     parser.set_defaults(func="quantrocket.master._cli_diff_securities")
 
     examples = """
+List universes and their size.
+
 Examples:
+
 List all universes and their size:
 
     quantrocket master list-universes
@@ -303,13 +325,18 @@ List all universes and their size:
     parser.set_defaults(func="quantrocket.master._cli_list_universes")
 
     examples = """
+Create a universe of securities.
+
 Examples:
-Download a CSV of Italian stocks then upload it to create a universe called "italy-stk":
+
+Download a CSV of Italian stocks then upload it to create a universe called
+"italy-stk":
 
     quantrocket master get --exchanges BVME --sec-types STK -f italy.csv
     quantrocket master universe "italy-stk" -f italy.csv
 
-In one line, download a CSV of all ARCA ETFs and append to a universe called "arca-etf":
+In one line, download a CSV of all ARCA ETFs and append to a universe called
+"arca-etf":
 
     quantrocket master get --exchanges ARCA --sec-types ETF | quantrocket master universe "arca-etf" --append --infile -
 
@@ -358,9 +385,13 @@ Copy a universe but exclude delisted securities:
     parser.set_defaults(func="quantrocket.master._cli_create_universe")
 
     examples = """
+Delete a universe. (The listings details of the member securities won't be
+deleted, only their grouping as a universe).
+
 Examples:
-Delete the universe called "italy-stk" (the listings details of the member securities won't
-be deleted, only their grouping as a universe):
+
+Delete the universe called "italy-stk" (the listings details of the member
+securities won't be deleted, only their grouping as a universe):
 
     quantrocket master delete-universe "italy-stk"
     """
@@ -376,7 +407,10 @@ be deleted, only their grouping as a universe):
     parser.set_defaults(func="quantrocket.master._cli_delete_universe")
 
     examples = """
+Upload a new rollover rules config, or return the current rollover rules.
+
 Examples:
+
 Upload a new rollover config (replaces current config):
 
     quantrocket master rollrules myrolloverrules.yml
@@ -398,11 +432,14 @@ Show current rollover config:
     parser.set_defaults(func="quantrocket.master._cli_load_or_show_rollrules")
 
     examples = """
-The security can be specified by conid or a combination of other parameters (for
-example, symbol + exchange). As a precaution, the request will fail if the parameters
-match more than one security.
+Mark a security as delisted.
+
+The security can be specified by conid or a combination of other parameters
+(for example, symbol + exchange). As a precaution, the request will fail if
+the parameters match more than one security.
 
 Examples:
+
 Delist a security by conid:
 
     quantrocket master delist -i 123456

@@ -17,7 +17,7 @@ from quantrocket.cli.utils.output import json_to_cli
 
 def list_databases(service=None):
     """
-    Lists databases.
+    List databases.
 
     Parameters
     ----------
@@ -41,7 +41,7 @@ def _cli_list_databases(*args, **kwargs):
 
 def download_database(database, outfile):
     """
-    Downloads a database from the db service and writes to a local file.
+    Download a database from the db service and write to a local file.
 
     Parameters
     ----------
@@ -66,7 +66,7 @@ def _cli_download_database(*args, **kwargs):
 
 def s3_push_databases(service, codes=None):
     """
-    Pushes database(s) to Amazon S3.
+    Push database(s) to Amazon S3.
 
     Parameters
     ----------
@@ -92,7 +92,7 @@ def _cli_s3_push_databases(*args, **kwargs):
 
 def s3_pull_databases(service, codes=None, force=False):
     """
-    Pulls database(s) from Amazon S3 to the db service.
+    Pull database(s) from Amazon S3 to the db service.
 
     Parameters
     ----------
@@ -123,7 +123,7 @@ def _cli_s3_pull_databases(*args, **kwargs):
 
 def optimize_databases(service, codes=None):
     """
-    Optimizes database file(s) to improve performance.
+    Optimize database file(s) to improve performance.
 
     Parameters
     ----------

@@ -111,7 +111,7 @@ def FlightlogHandler(background=None):
 
 def _cli_log_message(msg, logger_name=None, level="INFO"):
     """
-    Logs a single message to Flightlog. Intended for CLI usage. Calling this
+    Log a single message to Flightlog. Intended for CLI usage. Calling this
     function multiple times within the same process will configure duplicate
     handlers and result in duplicate messages.
     """
@@ -136,7 +136,7 @@ def _cli_log_message(msg, logger_name=None, level="INFO"):
 
 def stream_logs(detail=False, hist=None, color=True):
     """
-    Streams application logs, `tail -f` style.
+    Stream application logs, `tail -f` style.
 
     Parameters
     ----------
@@ -185,12 +185,13 @@ def _cli_stream_logs(*args, **kwargs):
 
 def download_logfile(outfile, detail=False):
     """
-    Downloads the logfile.
+    Download the logfile.
 
     Parameters
     ----------
     outfile: str, required
         filename to write the logfile to
+
     detail : bool
         if True, show detailed logs from logspout, otherwise show log messages
         from flightlog only (default False)
