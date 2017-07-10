@@ -17,6 +17,7 @@ import six
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
+from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
 def list_exchanges(regions=None, sec_types=None):
     """
@@ -273,25 +274,12 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
 
     filepath_or_buffer = filepath_or_buffer or sys.stdout
 
-    if hasattr(filepath_or_buffer, "write"):
-        mode = getattr(filepath_or_buffer, "mode", "w")
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                if "b" not in mode and six.PY3:
-                    chunk = chunk.decode("utf-8")
-                filepath_or_buffer.write(chunk)
-        if filepath_or_buffer.seekable():
-            filepath_or_buffer.seek(0)
-    else:
-        with open(filepath_or_buffer, "wb") as f:
-            for chunk in response.iter_content(chunk_size=1024):
-                if chunk:
-                    f.write(chunk)
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
 def _cli_download_securities_file(*args, **kwargs):
     return json_to_cli(download_securities_file, *args, **kwargs)
 
-def create_universe(code, infile=None, from_universes=None,
+def create_universe(code, infilepath_or_buffer=None, from_universes=None,
                     exclude_delisted=False, append=False, replace=False):
     """
     Create a universe of securities.
@@ -301,7 +289,7 @@ def create_universe(code, infile=None, from_universes=None,
     code : str, required
         the code to assign to the universe (lowercase alphanumerics and hyphens only)
 
-    infile : str, optional
+    infilepath_or_buffer : str or file-like object, optional
         create the universe from the conids in this file (specify '-' to read file from stdin)
 
     from_universes : list of str, optional
@@ -340,11 +328,14 @@ def create_universe(code, infile=None, from_universes=None,
     else:
         method = "PUT"
 
-    if infile == "-":
+    if infilepath_or_buffer == "-":
         response = houston.request(method, url, params=params, data=to_bytes(sys.stdin))
 
-    elif infile:
-        with open(infile, "rb") as f:
+    elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
+        response = houston.request(method, url, params=params, data=to_bytes(infilepath_or_buffer))
+
+    elif infilepath_or_buffer:
+        with open(infilepath_or_buffer, "rb") as f:
             response = houston.request(method, url, params=params, data=f)
     else:
         response = houston.request(method, url, params=params)

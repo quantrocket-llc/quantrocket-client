@@ -360,6 +360,7 @@ Copy a universe but exclude delisted securities:
     parser.add_argument(
         "-f", "--infile",
         metavar="INFILE",
+        dest="infilepath_or_buffer",
         help="create the universe from the conids in this file (specify '-' to read file "
         "from stdin)")
     parser.add_argument(
