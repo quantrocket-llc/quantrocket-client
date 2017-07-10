@@ -96,7 +96,7 @@ def main():
         if result:
             # nonzero exit codes for non-interactive commands should be
             # logged
-            if exit_code > 0 and not sys.stdin.isatty():
+            if exit_code > 0 and not sys.stdin.isatty() and not sys.stdout.isatty():
                 handle_error(result)
             # otherwise print
             else:
