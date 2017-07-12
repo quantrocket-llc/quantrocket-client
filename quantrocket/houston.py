@@ -73,6 +73,7 @@ class Houston(requests.Session):
         except requests.exceptions.HTTPError as e:
             try:
                 e.json_response = response.json()
+                e.args = e.args + (e.json_response,)
             except:
                 e.json_response = {}
             raise e
