@@ -55,7 +55,7 @@ def add_subparser(subparsers):
     parser.add_argument("-v", "--vals1", metavar="VALUE", nargs="+", help="parameter values to test")
     parser.add_argument("-f", "--func1", metavar="PATH", help="dot-separated path of a function with which to transform the test values")
     parser.add_argument("--rolling", action="store_true", help="use a rolling window to calculate performance (default is to use an expanding window)")
-    parser.add_argument("-r", "--rankby", choices=["cagr", "sharpe"], help="rank each period's performance by sharpe, cagr, or a blend of both (default blend)")
+    parser.add_argument("-r", "--rankby", choices=["cagr", "sharpe"], help="rank each period's performance by 'sharpe', 'cagr', or a 'blend' of both (default blend)")
     parser.add_argument("-a", "--account", help="use the latest NLV of this account for modeling commissions, liquidity constraints, etc.")
     parser.add_argument("--params", nargs="*", type=parse_dict, metavar="PARAM:VALUE", help="strategy params to set on the fly (distinct from the params to be scanned)")
     parser.add_argument("-w", "--raw", action="store_true", help="return raw performance data instead of a performance tearsheet")

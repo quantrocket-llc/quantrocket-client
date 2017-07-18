@@ -35,7 +35,7 @@ def add_subparser(subparsers):
     parser.add_argument("-e", "--end-date", metavar="YYYY-MM-DD", help="limit to closings on or before this date")
     parser.add_argument("-a", "--after", metavar="TIMEDELTA", help="limit to closings on or after this many days/hours/etc in the past (use Pandas timedelta string, e.g. 7d)")
     parser.add_argument("-b", "--before", metavar="TIMEDELTA", help="limit to closings on or before this many days/hours/etc in the future (use Pandas timedelta string, e.g. 7d)")
-    parser.add_argument("-t", "--types", choices=["full", "half"], help="limit to these closing types")
+    parser.add_argument("-t", "--types", choices=["full", "half"], metavar="TYPE", help="limit to these closing types. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.calendar.get_closings")
 
     parser = _subparsers.add_parser("load", help="load exchange closings from file")

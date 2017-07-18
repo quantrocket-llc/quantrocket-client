@@ -43,13 +43,13 @@ List stock exchanges in North America:
         nargs="*",
         choices=["north_america", "europe", "asia", "global"],
         metavar="REGION",
-        help="limit to these regions")
+        help="limit to these regions. Possible choices: %(choices)s")
     parser.add_argument(
         "-s", "--sec-types",
         nargs="*",
         choices=["STK", "ETF", "FUT", "CASH", "IND"],
         metavar="SEC_TYPE",
-        help="limit to these security types")
+        help="limit to these security types. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.master._cli_list_exchanges")
 
     examples = """
@@ -95,7 +95,7 @@ Re-pull contract details for an existing universe called "japan-fin":
         nargs="*",
         metavar="SEC_TYPE",
         choices=["STK", "ETF", "FUT", "CASH", "IND"],
-        help="limit to these security types")
+        help="limit to these security types. Possible choices: %(choices)s")
     parser.add_argument(
         "-c", "--currencies",
         nargs="*",
@@ -155,7 +155,7 @@ Pretty print the exchange and currency for all listings of AAPL:
         nargs="*",
         metavar="SEC_TYPE",
         choices=["STK", "ETF", "FUT", "CASH", "IND"],
-        help="limit to these security types")
+        help="limit to these security types. Possible choices: %(choices)s")
     filters.add_argument(
         "-c", "--currencies",
         nargs="*",
@@ -468,6 +468,7 @@ Delist a security by symbol + exchange:
         help="the currency of the security to be delisted (if needed to disambiguate)")
     parser.add_argument(
         "-t", "--sec-type",
+        metavar="SEC_TYPE",
         choices=["STK", "ETF", "FUT", "CASH", "IND"],
-        help="the security type of the security to be delisted (if needed to disambiguate)")
+        help="the security type of the security to be delisted (if needed to disambiguate). Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.master._cli_delist_security")

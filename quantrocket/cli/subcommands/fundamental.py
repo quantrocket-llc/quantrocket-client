@@ -18,7 +18,7 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     parser = _subparsers.add_parser("reuters", help="download Reuters fundamental data from IB")
-    parser.add_argument("-r", "--reports", nargs="*", choices=["summary", "statements", "estimates"], metavar="REPORT", help="download these reports")
+    parser.add_argument("-r", "--reports", nargs="*", choices=["summary", "statements", "estimates"], metavar="REPORT", help="download these reports. Possible choices: %(choices)s")
     parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
     parser.add_argument("-w", "--webhook", metavar="URL", help="post to this webhook when the downloads are complete")
@@ -87,7 +87,7 @@ def add_subparser(subparsers):
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
     parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
     parser.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
-    parser.add_argument("--period-type", dest="period_type", nargs="*", choices=["A", "Q"], help="filter by period type")
+    parser.add_argument("--period-type", dest="period_type", metavar="TYPE", nargs="*", choices=["A", "Q"], help="filter by period type. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.fundamental.get_estimates")
 
     parser = _subparsers.add_parser("actuals", help="query actuals from the analyst estimates database")
@@ -98,5 +98,5 @@ def add_subparser(subparsers):
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
     parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
     parser.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
-    parser.add_argument("--period-type", dest="period_type", nargs="*", choices=["A", "Q"], help="filter by period type")
+    parser.add_argument("--period-type", dest="period_type", nargs="*", metavar="TYPE", choices=["A", "Q"], help="filter by period type. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.fundamental.get_actuals")
