@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import sys
-import six
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes

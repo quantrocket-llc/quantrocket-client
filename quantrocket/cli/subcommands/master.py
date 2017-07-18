@@ -71,9 +71,9 @@ Pull all NYSE ARCA ETF listings:
 
     quantrocket master listings --exchange ARCA --sec-types ETF
 
-Pull specific symbols from Nasdaq (ISLAND):
+Pull specific symbols from Nasdaq:
 
-    quantrocket master listings --exchange ISLAND --symbols AAPL GOOG NFLX
+    quantrocket master listings --exchange NASDAQ --symbols AAPL GOOG NFLX
 
 Re-pull contract details for an existing universe called "japan-fin":
 
@@ -371,7 +371,6 @@ Copy a universe but exclude delisted securities:
     parser.add_argument(
         "--exclude-delisted",
         action="store_true",
-        dest="exclude_delisted",
         help="exclude delisted securities that would otherwise be included (default is to "
         "include them)")
     on_conflict_group = parser.add_mutually_exclusive_group()
