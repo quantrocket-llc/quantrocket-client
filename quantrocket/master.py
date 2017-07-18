@@ -47,20 +47,20 @@ def list_exchanges(regions=None, sec_types=None):
 def _cli_list_exchanges(*args, **kwargs):
     return json_to_cli(list_exchanges, *args, **kwargs)
 
-def pull_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
+def fetch_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
                         universes=None, conids=None):
     """
-    Pull securities listings from IB into securities master database, either by exchange or by universes/conids.
+    Fetch securities listings from IB into securities master database, either by exchange or by universes/conids.
 
 
     Specify an exchange (optionally filtering by security type, currency, and/or symbol) to fetch
-    listings from the IB website and pull associated contract details from the IB API. Or, specify universes
-    or conids to pull details from the IB API, bypassing the website.
+    listings from the IB website and fetch associated contract details from the IB API. Or, specify universes
+    or conids to fetch details from the IB API, bypassing the website.
 
     Parameters
     ----------
     exchange : str
-        the exchange code to pull listings for (required unless providing universes or conids)
+        the exchange code to fetch listings for (required unless providing universes or conids)
 
     sec_types : list of str, optional
         limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND
@@ -101,8 +101,8 @@ def pull_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_pull_listings(*args, **kwargs):
-    return json_to_cli(pull_listings, *args, **kwargs)
+def _cli_fetch_listings(*args, **kwargs):
+    return json_to_cli(fetch_listings, *args, **kwargs)
 
 def diff_securities(universes=None, conids=None, fields=None, delist_missing=False,
                     delist_exchanges=None, wait=False):

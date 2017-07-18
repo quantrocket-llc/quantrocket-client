@@ -53,42 +53,42 @@ List stock exchanges in North America:
     parser.set_defaults(func="quantrocket.master._cli_list_exchanges")
 
     examples = """
-Pull securities listings from IB into securities master database, either by
+Fetch securities listings from IB into securities master database, either by
 exchange or by universes/conids.
 
 Specify an exchange (optionally filtering by security type, currency, and/or
-symbol) to fetch listings from the IB website and pull associated contract
-details from the IB API. Or, specify universes or conids to pull details from
+symbol) to fetch listings from the IB website and fetch associated contract
+details from the IB API. Or, specify universes or conids to fetch details from
 the IB API, bypassing the website.
 
 Examples:
 
-Pull all Toronto Stock Exchange stocks listings:
+Fetch all Toronto Stock Exchange stocks listings:
 
     quantrocket master listings --exchange TSE --sec-types STK
 
-Pull all NYSE ARCA ETF listings:
+Fetch all NYSE ARCA ETF listings:
 
     quantrocket master listings --exchange ARCA --sec-types ETF
 
-Pull specific symbols from Nasdaq:
+Fetch specific symbols from Nasdaq:
 
     quantrocket master listings --exchange NASDAQ --symbols AAPL GOOG NFLX
 
-Re-pull contract details for an existing universe called "japan-fin":
+Re-fetch contract details for an existing universe called "japan-fin":
 
     quantrocket master listings --universes "japan-fin"
     """
     parser = _subparsers.add_parser(
         "listings",
-        help="pull securities listings from IB into securities master database, either by "
+        help="fetch securities listings from IB into securities master database, either by "
         "exchange or by universes/conids",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-e", "--exchange",
         metavar="EXCHANGE",
-        help="the exchange code to pull listings for (required unless providing universes "
+        help="the exchange code to fetch listings for (required unless providing universes "
         "or conids)")
     parser.add_argument(
         "-t", "--sec-types",
@@ -117,7 +117,7 @@ Re-pull contract details for an existing universe called "japan-fin":
         nargs="*",
         metavar="CONID",
         help="limit to these conids")
-    parser.set_defaults(func="quantrocket.master._cli_pull_listings")
+    parser.set_defaults(func="quantrocket.master._cli_fetch_listings")
 
     examples = """
 Query security details from the securities master database and download to
