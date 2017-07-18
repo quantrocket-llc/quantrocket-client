@@ -108,8 +108,9 @@ Log the output from another command:
     parser.add_argument(
         "-l", "--level",
         default="INFO",
+        metavar="LEVEL",
         choices=("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"),
-        help="the log level for the message")
+        help="the log level for the message. Possible choices: %(choices)s")
     parser.add_argument(
         "-n", "--name",
         dest="logger_name",

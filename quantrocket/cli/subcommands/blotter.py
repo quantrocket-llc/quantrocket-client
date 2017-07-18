@@ -27,7 +27,7 @@ def add_subparser(subparsers):
     parser = _subparsers.add_parser("ordermany", help="place a batch of orders from file or stdin")
     parser.add_argument("filename", metavar="FILE", help="CSV file of orders (can also be passed on stdin)")
     parser.add_argument("-c", "--hold-child-orders-for", metavar="TIMEDELTA", help="hold child orders for up to this long (use Pandas timedelta string, e.g. 30m) and submit them as parent orders are filled (default is to submit parent and child orders together and let IB handle it)")
-    parser.add_argument("--completed-statuses", nargs="*", choices=["PendingCancel", "Cancelled", "Filled"], help="override which order statuses to treat as completed statuses")
+    parser.add_argument("--completed-statuses", nargs="*", metavar="STATUS", choices=["PendingCancel", "Cancelled", "Filled"], help="override which order statuses to treat as completed statuses. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.blotter.place_batch_orders")
 
     parser = _subparsers.add_parser("cancel", help="cancel an order by order ID, conid, or strategy")

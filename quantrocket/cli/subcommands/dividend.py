@@ -29,7 +29,7 @@ def add_subparser(subparsers):
     parser.set_defaults(func="quantrocket.dividends.get_dividends")
 
     parser = _subparsers.add_parser("download", help="download dividends from one or more vendors and optionally clean dividend clusters")
-    parser.add_argument("-v", "--vendors", nargs="*", choices=["reuters", "ib", "yahoo"], metavar="VENDOR", help="download dividends from these vendors")
+    parser.add_argument("-v", "--vendors", nargs="*", choices=["reuters", "ib", "yahoo"], metavar="VENDOR", help="download dividends from these vendors. Possible choices: %(choices)s")
     parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
     parser.add_argument("-s", "--start-date", dest="start_date", metavar="DATE", help="download dividends beginning with this ex date (applies to Yahoo only)")
@@ -78,5 +78,5 @@ def add_subparser(subparsers):
     parser.add_argument("-a", "--exdate-after", dest="exdate_after", metavar="DATE", help="limit to dividends falling on or after this ex date")
     parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
     parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("-v", "--vendors", nargs="*", choices=["reuters", "ib", "yahoo"], metavar="VENDOR", help="limit to these vendors")
+    parser.add_argument("-v", "--vendors", nargs="*", choices=["reuters", "ib", "yahoo"], metavar="VENDOR", help="limit to these vendors. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.dividend.purge_stale_dividends")

@@ -46,21 +46,22 @@ data and Reuters research (multiple search criteria are ANDed together)
     parser.add_argument(
         "-t", "--sec-type",
         dest="sec_type",
-        choices=["STK", "FUT", "CASH", "OPT"],
+        metavar="SEC_TYPE",
+        choices=["STK", "FUT", "CASH", "OPT", "IND"],
         help="limit to IB Gateway services with market data permission for this securitiy "
         "type (useful for disambiguating permissions for exchanges that trade multiple asset "
-        "classes)")
+        "classes). Possible choices: %(choices)s")
     parser.add_argument(
         "-r", "--research",
         metavar="VENDOR",
         dest="research_vendors",
         nargs="*",
         choices=["reuters", "wsh"],
-        help="limit to IB Gateway services with permission for these research vendors")
+        help="limit to IB Gateway services with permission for these research vendors. Possible choices: %(choices)s")
     parser.add_argument(
         "-s", "--status",
         choices=["running", "stopped", "error"],
-        help="limit to IB Gateway services in this status")
+        help="limit to IB Gateway services in this status. Possible choices: %(choices)s")
     parser.add_argument(
         "-g", "--gateways",
         metavar="SERVICE_NAME",
@@ -102,17 +103,18 @@ Restart all gateways:
     parser.add_argument(
         "-t", "--sec-type",
         dest="sec_type",
-        choices=["STK", "FUT", "CASH", "OPT"],
+        metavar="SEC_TYPE",
+        choices=["STK", "FUT", "CASH", "OPT", "IND"],
         help="limit to IB Gateway services with market data permission for this securitiy "
         "type (useful for disambiguating permissions for exchanges that trade multiple asset "
-        "classes)")
+        "classes). Possible choices: %(choices)s")
     parser.add_argument(
         "-r", "--research",
         metavar="VENDOR",
         dest="research_vendors",
         nargs="*",
         choices=["reuters", "wsh"],
-        help="limit to IB Gateway services with permission for these research vendors")
+        help="limit to IB Gateway services with permission for these research vendors. Possible choices: %(choices)s")
     parser.add_argument(
         "-g", "--gateways",
         metavar="SERVICE_NAME",
@@ -156,17 +158,18 @@ Stop gateways with Japan stock permissions:
     parser.add_argument(
         "-t", "--sec-type",
         dest="sec_type",
-        choices=["STK", "FUT", "CASH", "OPT"],
+        metavar="SEC_TYPE",
+        choices=["STK", "FUT", "CASH", "OPT", "IND"],
         help="limit to IB Gateway services with market data permission for this securitiy "
         "type (useful for disambiguating permissions for exchanges that trade multiple asset "
-        "classes)")
+        "classes). Possible choices: %(choices)s")
     parser.add_argument(
         "-r", "--research",
         metavar="VENDOR",
         dest="research_vendors",
         nargs="*",
         choices=["reuters", "wsh"],
-        help="limit to IB Gateway services with permission for these research vendors")
+        help="limit to IB Gateway services with permission for these research vendors. Possible choices: %(choices)s")
     parser.add_argument(
         "-g", "--gateways",
         metavar="SERVICE_NAME",
