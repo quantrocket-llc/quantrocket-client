@@ -132,6 +132,111 @@ market data for Australian stocks from the realtime service:
         help="the path to a YAML config file defining the historical data requirements")
     parser.set_defaults(func="quantrocket.history._cli_create_db")
 
+    examples = """
+Fetch historical market data from IB and save it to a history database. The request is queued
+and the data is fetched asynchronously.
+
+Examples:
+
+Fetch historical data for 3 history databases of Japanese stocks:
+
+    quantrocket history fetch 'jpn-lrg-1d' 'jpn-mid-1d' 'jpn-sml-1d'
+
+Fetch historical data for a database of US futures, using the priority queue to jump
+in front of other queued requests:
+
+    quantrocket history fetch 'globex-10m' --priority
+    """
+    parser = _subparsers.add_parser(
+        "fetch",
+        help="fetch historical market data from IB and save it to a history database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "codes",
+        metavar="CODE",
+        nargs="+",
+        help="the database code(s) to fetch data for")
+    parser.add_argument(
+        "-p", "--priority",
+        action="store_true",
+        help="use the priority queue (default is to use the standard queue)")
+    parser.add_argument(
+        "-i", "--conids",
+        nargs="*",
+        metavar="CONID",
+        help="fetch history for these conids (overrides config)")
+    parser.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="fetch history back to this start date (overrides config)")
+    parser.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="fetch history up to this end date (overrides config)")
+    parser.set_defaults(func="quantrocket.history._cli_fetch_history")
+
+    examples = """
+Get the current queue of historical data requests.
+
+Examples:
+
+    quantrocket history queue
+    """
+    parser = _subparsers.add_parser(
+        "queue",
+        help="get the current queue of historical data requests",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.set_defaults(func="quantrocket.history._cli_get_history_queue")
+
+    examples = """
+Cancel running or pending historical data requests.
+
+Examples:
+
+Cancel all queued requests for a database called 'jpn-lrg-1d':
+
+    quantrocket history cancel 'jpn-lrg-1d'
+
+Cancel queued requests for a database called 'jpn-lrg-1d', but only in the standard queue:
+
+    quantrocket history cancel 'jpn-lrg-1d' --queues standard
+    """
+    parser = _subparsers.add_parser(
+        "cancel",
+        help="cancel running or pending historical data requests",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "codes",
+        metavar="CODE",
+        nargs="+",
+        help="the database code(s) to cancel requests for")
+    parser.add_argument(
+        "-q", "--queues",
+        metavar="QUEUE",
+        choices=["standard", "priority"],
+        help="only cancel requests in these queues. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.history._cli_cancel_history_requests")
+
+    parser = _subparsers.add_parser(
+        "load",
+        help="load historical market data from a file into a history database")
+    parser.add_argument(
+        "code",
+        help="the database code into which to load the data")
+    parser.add_argument(
+        "filename",
+        help="JSON file containing price data (can also be passed on stdin)")
+    parser.set_defaults(func="quantrocket.history.load_from_file")
+
+    parser = _subparsers.add_parser("adjust", help="adjust prices for dividends in a history database")
+    parser.add_argument("databases", metavar="DB", nargs="+", help="the database key(s), for example 'canada'")
+    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
+    parser.add_argument("-c", "--on-cluster", dest="on_cluster", choices=["skip", "adjust"], help="whether to adjust price history if a cluster is present, or skip and log a warning")
+    parser.set_defaults(func="quantrocket.history.dividend_adjust")
+
     parser = _subparsers.add_parser("query", help="query historical market data from one or more history databases")
     parser.add_argument("databases", metavar="DB", nargs="+", help="the database key(s), for example 'canada'")
     parser.add_argument("-s", "--start-date", dest="start_date", metavar="YYYY-MM-DD", help="limit to price history on or after this date")
@@ -144,30 +249,6 @@ market data for Australian stocks from the realtime service:
     parser.add_argument("-t", "--times", metavar="HH:MM:SS", help="limit to these times")
     parser.add_argument("-c", "--continuous", choices=["concat", "adjust"], metavar="METHOD", help="join futures underlyings into continuous contracts, using the specified joining method ('concat' or 'adjust')")
     parser.set_defaults(func="quantrocket.history.get_history")
-
-    parser = _subparsers.add_parser("fetch", help="fetch historical market data from a vendor into a history database")
-    parser.add_argument("databases", metavar="DB", nargs="+", help="the database key(s), for example 'canada'")
-    parser.add_argument("-p", "--priority", action="store_true", help="use the priority queue (default is to use the standard queue)")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="fetch history for these conids, overriding config")
-    parser.set_defaults(func="quantrocket.history._cli_fetch_history")
-
-    parser = _subparsers.add_parser("load", help="load historical market data from a file into a history database")
-    parser.add_argument("database", metavar="DB", help="the database key, for example 'canada'")
-    parser.add_argument("filename", help="JSON file containing price data (can also be passed on stdin)")
-    parser.set_defaults(func="quantrocket.history.load_from_file")
-
-    parser = _subparsers.add_parser("status", help="show info about pending and running historical market data retrievals")
-    parser.set_defaults(func="quantrocket.history.get_status")
-
-    parser = _subparsers.add_parser("cancel", help="cancel a running or pending historical market data retrieval")
-    parser.add_argument("database", metavar="DB", help="the database key, for example 'canada'")
-    parser.set_defaults(func="quantrocket.history.cancel_download")
-
-    parser = _subparsers.add_parser("adjust", help="adjust prices for dividends in a history database")
-    parser.add_argument("databases", metavar="DB", nargs="+", help="the database key(s), for example 'canada'")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("-c", "--on-cluster", dest="on_cluster", choices=["skip", "adjust"], help="whether to adjust price history if a cluster is present, or skip and log a warning")
-    parser.set_defaults(func="quantrocket.history.dividend_adjust")
 
     examples = """
 Return the configuration for a history database.

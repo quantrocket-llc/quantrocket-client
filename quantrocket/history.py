@@ -175,3 +175,97 @@ def drop_db(code, confirm_by_typing_db_code_again=None):
 
 def _cli_drop_db(*args, **kwargs):
     return json_to_cli(drop_db, *args, **kwargs)
+
+def fetch_history(codes, priority=False, conids=None, start_date=None, end_date=None):
+    """
+    Fetch historical market data from IB and save it to a history database. The request is
+    queued and the data is fetched asynchronously.
+
+    Parameters
+    ----------
+    codes : list of str, required
+        the database code(s) to fetch data for
+
+    priority : bool
+        use the priority queue (default is to use the standard queue)
+
+    conids : list of int, optional
+        fetch history for these conids (overrides config)
+
+    start_date : str (YYYY-MM-DD), optional
+        fetch history back to this start date (overrides config)
+
+    end_date : str (YYYY-MM-DD), optional
+        fetch history up to this end date (overrides config)
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    if codes:
+        params["codes"] = codes
+    if priority:
+        params["priority"] = priority
+    if conids:
+        params["conids"] = conids
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    response = houston.post("/history/queue", params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_fetch_history(*args, **kwargs):
+    return json_to_cli(fetch_history, *args, **kwargs)
+
+def get_history_queue():
+    """
+    Get the current queue of historical data requests.
+
+    Returns
+    -------
+    dict
+        standard and priority queues
+
+    """
+    response = houston.get("/history/queue")
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_get_history_queue(*args, **kwargs):
+    return json_to_cli(get_history_queue, *args, **kwargs)
+
+def cancel_history_requests(codes, queues=None):
+    """
+    Cancel running or pending historical data requests.
+
+    Parameters
+    ----------
+    codes : list of str, required
+        the database code(s) to cancel requests for
+
+    queues : list of str, optional
+        only cancel requests in these queues. Possible choices: standard, priority
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    if codes:
+        params["codes"] = codes
+    if queues:
+        params["queues"] = queues
+    response = houston.delete("/history/queue", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_cancel_history_requests(*args, **kwargs):
+    return json_to_cli(cancel_history_requests, *args, **kwargs)
