@@ -137,7 +137,7 @@ Download a CSV of all ARCA ETFs and use it to create a universe called
 
 Pretty print the exchange and currency for all listings of AAPL:
 
-    quantrocket master get --symbols AAPL --fields PrimaryExch Currency --pretty
+    quantrocket master get --symbols AAPL --fields PrimaryExchange Currency --pretty
     """
     parser = _subparsers.add_parser(
         "get",
