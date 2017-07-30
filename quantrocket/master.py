@@ -104,6 +104,37 @@ def fetch_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
 def _cli_fetch_listings(*args, **kwargs):
     return json_to_cli(fetch_listings, *args, **kwargs)
 
+def fetch_option_chains(universes=None, conids=None):
+    """
+    Fetch option chains for underlying securities.
+
+    Parameters
+    ----------
+    universes : list of str, optional
+        limit to these universes
+
+    conids : list of int, optional
+        limit to these conids
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    if universes:
+        params["universes"] = universes
+    if conids:
+        params["conids"] = conids
+
+    response = houston.post("/master/options", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_fetch_option_chains(*args, **kwargs):
+    return json_to_cli(fetch_option_chains, *args, **kwargs)
+
 def diff_securities(universes=None, conids=None, fields=None, delist_missing=False,
                     delist_exchanges=None, wait=False):
     """
@@ -182,7 +213,7 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
         limit to these exchanges
 
     sec_types : list of str, optional
-        limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND
+        limit to these security types. Possible choices: STK, ETF, FUT, CASH, OPT, IND
 
     currencies : list of str, optional
         limit to these currencies

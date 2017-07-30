@@ -120,6 +120,33 @@ Re-fetch contract details for an existing universe called "japan-fin":
     parser.set_defaults(func="quantrocket.master._cli_fetch_listings")
 
     examples = """
+Fetch option chains for underlying securities.
+
+Examples:
+
+Fetch option chains for a universe of stocks called "nyse-stk":
+
+    quantrocket master options -u "nyse-stk"
+    """
+    parser = _subparsers.add_parser(
+        "options",
+        help="fetch option chains for underlying securities",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    parser.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    parser.set_defaults(func="quantrocket.master._cli_fetch_option_chains")
+
+    examples = """
 Query security details from the securities master database and download to
 file.
 
@@ -154,7 +181,7 @@ Pretty print the exchange and currency for all listings of AAPL:
         "-t", "--sec-types",
         nargs="*",
         metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "IND"],
+        choices=["STK", "ETF", "FUT", "CASH", "OPT", "IND"],
         help="limit to these security types. Possible choices: %(choices)s")
     filters.add_argument(
         "-c", "--currencies",
