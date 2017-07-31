@@ -63,7 +63,7 @@ the IB API, bypassing the website.
 
 Examples:
 
-Fetch all Toronto Stock Exchange stocks listings:
+Fetch all Toronto Stock Exchange stock listings:
 
     quantrocket master listings --exchange TSE --sec-types STK
 
@@ -122,9 +122,20 @@ Re-fetch contract details for an existing universe called "japan-fin":
     examples = """
 Fetch option chains for underlying securities.
 
+Note: option chains often consist of hundreds, sometimes thousands of options
+per underlying security. Be aware that requesting option chains for large
+universes of underlying securities, such as all stocks on the NYSE, can take
+numerous hours to complete, add hundreds of thousands of rows to the
+securities master database, increase the database file size by several
+hundred megabytes, and potentially add latency to database queries.
+
 Examples:
 
-Fetch option chains for a universe of stocks called "nyse-stk":
+Fetch option chains for several underlying securities:
+
+    quantrocket master options --conids 8314 208813720 107113386
+
+Fetch option chains for a large universe of stocks called "nyse-stk" (see note above):
 
     quantrocket master options -u "nyse-stk"
     """
@@ -137,13 +148,13 @@ Fetch option chains for a universe of stocks called "nyse-stk":
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="fetch options for these universes of underlying securities")
     parser.add_argument(
         "-i", "--conids",
         type=int,
         nargs="*",
         metavar="CONID",
-        help="limit to these conids")
+        help="fetch options for these underlying conids")
     parser.set_defaults(func="quantrocket.master._cli_fetch_option_chains")
 
     examples = """

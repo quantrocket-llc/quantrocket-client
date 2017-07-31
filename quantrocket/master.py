@@ -108,19 +108,26 @@ def fetch_option_chains(universes=None, conids=None):
     """
     Fetch option chains for underlying securities.
 
+    Note: option chains often consist of hundreds, sometimes thousands of
+    options per underlying security. Be aware that requesting option chains
+    for large universes of underlying securities, such as all stocks on the
+    NYSE, can take numerous hours to complete, add hundreds of thousands of
+    rows to the securities master database, increase the database file size
+    by several hundred megabytes, and potentially add latency to database
+    queries.
+
     Parameters
     ----------
     universes : list of str, optional
-        limit to these universes
+        fetch options for these universes of underlying securities
 
     conids : list of int, optional
-        limit to these conids
+        fetch options for these underlying conids
 
     Returns
     -------
     dict
         status message
-
     """
     params = {}
     if universes:
