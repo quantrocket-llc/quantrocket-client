@@ -45,7 +45,7 @@ List stock exchanges in North America:
         metavar="REGION",
         help="limit to these regions. Possible choices: %(choices)s")
     parser.add_argument(
-        "-s", "--sec-types",
+        "-t", "--sec-types",
         nargs="*",
         choices=["STK", "ETF", "FUT", "CASH", "IND"],
         metavar="SEC_TYPE",
@@ -192,7 +192,7 @@ Pretty print the exchange and currency for all listings of AAPL:
         "-t", "--sec-types",
         nargs="*",
         metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "OPT", "IND"],
+        choices=["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP"],
         help="limit to these security types. Possible choices: %(choices)s")
     filters.add_argument(
         "-c", "--currencies",

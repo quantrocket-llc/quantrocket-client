@@ -220,7 +220,7 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
         limit to these exchanges
 
     sec_types : list of str, optional
-        limit to these security types. Possible choices: STK, ETF, FUT, CASH, OPT, IND
+        limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND, OPT, FOP
 
     currencies : list of str, optional
         limit to these currencies
