@@ -104,7 +104,7 @@ def fetch_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
 def _cli_fetch_listings(*args, **kwargs):
     return json_to_cli(fetch_listings, *args, **kwargs)
 
-def fetch_option_chains(universes=None, conids=None):
+def fetch_option_chains(universes=None, conids=None, infilepath_or_buffer=None):
     """
     Fetch option chains for underlying securities.
 
@@ -124,6 +124,9 @@ def fetch_option_chains(universes=None, conids=None):
     conids : list of int, optional
         fetch options for these underlying conids
 
+    infilepath_or_buffer : str or file-like object, optional
+        fetch options chains for the conids in this file (specify '-' to read file from stdin)
+
     Returns
     -------
     dict
@@ -135,15 +138,26 @@ def fetch_option_chains(universes=None, conids=None):
     if conids:
         params["conids"] = conids
 
-    response = houston.post("/master/options", params=params)
+    if infilepath_or_buffer == "-":
+        response = houston.post("/master/options", params=params, data=to_bytes(sys.stdin))
+
+    elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
+        response = houston.post("/master/options", params=params, data=to_bytes(infilepath_or_buffer))
+
+    elif infilepath_or_buffer:
+        with open(infilepath_or_buffer, "rb") as f:
+            response = houston.post("/master/options", params=params, data=f)
+    else:
+        response = houston.post("/master/options", params=params)
+
     houston.raise_for_status_with_json(response)
     return response.json()
 
 def _cli_fetch_option_chains(*args, **kwargs):
     return json_to_cli(fetch_option_chains, *args, **kwargs)
 
-def diff_securities(universes=None, conids=None, fields=None, delist_missing=False,
-                    delist_exchanges=None, wait=False):
+def diff_securities(universes=None, conids=None, infilepath_or_buffer=None,
+                    fields=None, delist_missing=False, delist_exchanges=None, wait=False):
     """
     Flag security details that have changed in IB's system since the time they
     were last loaded into the securities master database.
@@ -158,6 +172,9 @@ def diff_securities(universes=None, conids=None, fields=None, delist_missing=Fal
 
     conids : list of int, optional
         limit to these conids
+
+    infilepath_or_buffer : str or file-like object, optional
+        limit to the conids in this file (specify '-' to read file from stdin)
 
     fields : list of str, optional
         only diff these fields
@@ -192,8 +209,20 @@ def diff_securities(universes=None, conids=None, fields=None, delist_missing=Fal
     if wait:
         params["wait"] = wait
 
-    # runs synchronously so use a high timeout
-    response = houston.get("/master/diff", params=params, timeout=60*60*10 if wait else None)
+    # if run synchronously use a high timeout
+    timeout = 60*60*10 if wait else None
+    if infilepath_or_buffer == "-":
+        response = houston.get("/master/diff", params=params, data=to_bytes(sys.stdin), timeout=timeout)
+
+    elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
+        response = houston.get("/master/diff", params=params, data=to_bytes(infilepath_or_buffer), timeout=timeout)
+
+    elif infilepath_or_buffer:
+        with open(infilepath_or_buffer, "rb") as f:
+            response = houston.get("/master/diff", params=params, data=f, timeout=timeout)
+    else:
+        response = houston.get("/master/diff", params=params, timeout=timeout)
+
     houston.raise_for_status_with_json(response)
     return response.json()
 

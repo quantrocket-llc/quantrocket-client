@@ -135,6 +135,10 @@ Fetch option chains for several underlying securities:
 
     quantrocket master options --conids 8314 208813720 107113386
 
+Fetch option chains for NQ futures:
+
+    quantrocket master get -e GLOBEX -s NQ -t FUT | quantrocket master options -f -
+
 Fetch option chains for a large universe of stocks called "nyse-stk" (see note above):
 
     quantrocket master options -u "nyse-stk"
@@ -155,6 +159,12 @@ Fetch option chains for a large universe of stocks called "nyse-stk" (see note a
         nargs="*",
         metavar="CONID",
         help="fetch options for these underlying conids")
+    parser.add_argument(
+        "-f", "--infile",
+        metavar="INFILE",
+        dest="infilepath_or_buffer",
+        help="fetch options chains for the conids in this file (specify '-' to read "
+        "file from stdin)")
     parser.set_defaults(func="quantrocket.master._cli_fetch_option_chains")
 
     examples = """
@@ -300,6 +310,10 @@ Synchronously get a diff for specific securities by conid:
 
     quantrocket master diff --conids 123456 234567 --wait
 
+Synchronously get a diff for specific securities without knowing their conids:
+
+    quantrocket master get -e NASDAQ -t STK -s AAPL FB GOOG | quantrocket master diff --wait --infile -
+
 Asynchronously generate a diff for all securities in a universe called
 "nasdaq-sml" and auto-delist any symbols that are no longer available from IB
 or that are now associated with the PINK exchange:
@@ -323,6 +337,11 @@ or that are now associated with the PINK exchange:
         nargs="*",
         metavar="CONID",
         help="limit to these conids")
+    parser.add_argument(
+        "-n", "--infile",
+        metavar="INFILE",
+        dest="infilepath_or_buffer",
+        help="limit to the conids in this file (specify '-' to read file from stdin)")
     parser.add_argument(
         "-f", "--fields",
         nargs="*",
