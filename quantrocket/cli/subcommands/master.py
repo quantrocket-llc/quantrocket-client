@@ -163,7 +163,7 @@ Fetch option chains for a large universe of stocks called "nyse-stk" (see note a
         "-f", "--infile",
         metavar="INFILE",
         dest="infilepath_or_buffer",
-        help="fetch options chains for the conids in this file (specify '-' to read "
+        help="fetch options for the conids in this file (specify '-' to read "
         "file from stdin)")
     parser.set_defaults(func="quantrocket.master._cli_fetch_option_chains")
 

@@ -29,12 +29,13 @@ Examples:
 
 Create an end-of-day database called "arca-etf-eod" for a universe called "arca-etf":
 
-    quantrocket history create-db 'arca-etf-eod' --universes 'arca-etf' --bar-size '1 day' --start-date 2010-01-01
+    quantrocket history create-db 'arca-etf-eod' --universes 'arca-etf' --bar-size '1 day'
 
 Create a similar end-of-day database, but fetch primary exchange prices instead of
-consolidated prices, and adjust prices for dividends:
+consolidated prices, adjust prices for dividends (=ADJUSTED_LAST), and use an explicit
+start date:
 
-    quantrocket history create-db 'arca-etf-eod' -u 'arca-etf' -z '1 day' --primary-exchange --dividend-adjust -s 2010-01-01
+    quantrocket history create-db 'arca-etf-eod' -u 'arca-etf' -z '1 day' --primary-exchange --bar-type 'ADJUSTED_LAST' -s 2010-01-01
 
 Create a database of 1-minute bars showing the midpoint for a universe of forex pairs:
 
@@ -94,6 +95,7 @@ market data for Australian stocks from the realtime service:
         "-t", "--bar-type",
         metavar="BAR_TYPE",
         choices=["TRADES",
+                 "ADJUSTED_LAST",
                  "MIDPOINT",
                  "BID",
                  "ASK",
@@ -116,10 +118,6 @@ market data for Australian stocks from the realtime service:
         nargs="*",
         metavar="HH:MM:SS",
         help="limit to these times")
-    parser.add_argument(
-        "-d", "--dividend-adjust",
-        action="store_true",
-        help="adjust for dividends")
     parser.add_argument(
         "-n", "--no-config",
         action="store_true",
@@ -230,12 +228,6 @@ Cancel queued requests for a database called 'jpn-lrg-1d', but only in the stand
         "filename",
         help="JSON file containing price data (can also be passed on stdin)")
     parser.set_defaults(func="quantrocket.history.load_from_file")
-
-    parser = _subparsers.add_parser("adjust", help="adjust prices for dividends in a history database")
-    parser.add_argument("databases", metavar="DB", nargs="+", help="the database key(s), for example 'canada'")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("-c", "--on-cluster", dest="on_cluster", choices=["skip", "adjust"], help="whether to adjust price history if a cluster is present, or skip and log a warning")
-    parser.set_defaults(func="quantrocket.history.dividend_adjust")
 
     parser = _subparsers.add_parser("query", help="query historical market data from one or more history databases")
     parser.add_argument("databases", metavar="DB", nargs="+", help="the database key(s), for example 'canada'")

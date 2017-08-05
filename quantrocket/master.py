@@ -125,7 +125,7 @@ def fetch_option_chains(universes=None, conids=None, infilepath_or_buffer=None):
         fetch options for these underlying conids
 
     infilepath_or_buffer : str or file-like object, optional
-        fetch options chains for the conids in this file (specify '-' to read file from stdin)
+        fetch options for the conids in this file (specify '-' to read file from stdin)
 
     Returns
     -------

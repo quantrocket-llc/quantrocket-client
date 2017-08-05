@@ -19,7 +19,7 @@ from quantrocket.cli.utils.stream import to_bytes
 
 def create_db(code, universes=None, start_date=None, end_date=None,
               vendor=None, bar_size=None, bar_type=None, outside_rth=False,
-              primary_exchange=False, times=None, dividend_adjust=False,
+              primary_exchange=False, times=None,
               no_config=False, config_filepath_or_buffer=None):
     """
     Create a new history database.
@@ -54,7 +54,15 @@ def create_db(code, universes=None, start_date=None, end_date=None,
 
     bar_type : str, optional
         the bar type to fetch (if not specified, defaults to MIDPOINT for forex and
-        TRADES for everything else)
+        TRADES for everything else). Possible choices:
+            "TRADES",
+            "ADJUSTED_LAST",
+            "MIDPOINT",
+            "BID",
+            "ASK",
+            "BID_ASK",
+            "HISTORICAL_VOLATILITY",
+            "OPTION_IMPLIED_VOLATILITY"
 
     outside_rth : bool
         include data from outside regular trading hours (default is to limit to regular
@@ -65,9 +73,6 @@ def create_db(code, universes=None, start_date=None, end_date=None,
 
     times : list of str (HH:MM:SS), optional
         limit to these times
-
-    dividend_adjust : bool
-        adjust for dividends
 
     no_config : bool
         create a database with no config (data can be loaded manually instead of fetched
@@ -101,8 +106,6 @@ def create_db(code, universes=None, start_date=None, end_date=None,
         params["primary_exchange"] = primary_exchange
     if times:
         params["times"] = times
-    if dividend_adjust:
-        params["dividend_adjust"] = dividend_adjust
     if no_config:
         params["no_config"] = True
 
