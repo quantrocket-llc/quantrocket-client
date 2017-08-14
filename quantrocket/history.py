@@ -19,7 +19,7 @@ from quantrocket.cli.utils.stream import to_bytes
 
 def create_db(code, universes=None, start_date=None, end_date=None,
               vendor=None, bar_size=None, bar_type=None, outside_rth=False,
-              primary_exchange=False, cont_fut=False, times=None,
+              primary_exchange=False, times=None,
               no_config=False, config_filepath_or_buffer=None):
     """
     Create a new history database.
@@ -71,10 +71,6 @@ def create_db(code, universes=None, start_date=None, end_date=None,
     primary_exchange : bool
         limit to data from the primary exchange (default False)
 
-    cont_fut : bool
-         store/return futures as continuous contracts (default is to store each futures
-         expiry separately)
-
     times : list of str (HH:MM:SS), optional
         limit to these times
 
@@ -108,8 +104,6 @@ def create_db(code, universes=None, start_date=None, end_date=None,
         params["outside_rth"] = outside_rth
     if primary_exchange:
         params["primary_exchange"] = primary_exchange
-    if cont_fut:
-        params["cont_fut"] = cont_fut
     if times:
         params["times"] = times
     if no_config:

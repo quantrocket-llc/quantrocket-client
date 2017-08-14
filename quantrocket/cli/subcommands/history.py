@@ -46,10 +46,6 @@ stocks in 2016:
 
     quantrocket history create-db 'tse-enr-929' -u 'tse-enr' -z '1 secs' --outside-rth --times 09:29:55 09:29:56 09:29:57 09:29:58 09:29:59 -s 2016-01-01 -e 2016-12-31
 
-Create a database of continuous futures contracts:
-
-    quantrocket history create-db 'emini-cont' -u 'emini' -z '1  day' --cont-fut
-
 Create a database which won't fetch any data but into which you will load shortable shares
 market data for Australian stocks from the realtime service:
 
@@ -117,11 +113,6 @@ market data for Australian stocks from the realtime service:
         "-p", "--primary-exchange",
         action="store_true",
         help="limit to data from the primary exchange")
-    parser.add_argument(
-        "-c", "--cont-fut",
-        action="store_true",
-        help="store/return futures as continuous contracts (default is to store each futures "
-        "expiry separately)")
     parser.add_argument(
         "--times",
         nargs="*",
