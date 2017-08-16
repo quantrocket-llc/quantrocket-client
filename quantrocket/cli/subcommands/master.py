@@ -285,7 +285,7 @@ Pretty print the exchange and currency for all listings of AAPL:
         metavar="FIELD",
         nargs="*",
         help="only return these fields")
-    parser.set_defaults(func="quantrocket.master._cli_download_securities_file")
+    parser.set_defaults(func="quantrocket.master._cli_download_master_file")
 
     examples = """
 Flag security details that have changed in IB's system since the time they

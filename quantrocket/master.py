@@ -229,11 +229,11 @@ def diff_securities(universes=None, conids=None, infilepath_or_buffer=None,
 def _cli_diff_securities(*args, **kwargs):
     return json_to_cli(diff_securities, *args, **kwargs)
 
-def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=None, sec_types=None,
-                             currencies=None, universes=None, symbols=None, conids=None,
-                             exclude_universes=None, exclude_conids=None,
-                             sectors=None, industries=None, categories=None,
-                             delisted=False, frontmonth=False, fields=None):
+def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, sec_types=None,
+                         currencies=None, universes=None, symbols=None, conids=None,
+                         exclude_universes=None, exclude_conids=None,
+                         sectors=None, industries=None, categories=None,
+                         delisted=False, frontmonth=False, fields=None):
     """
     Query security details from the securities master database and download to file.
 
@@ -296,7 +296,7 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
     You can use StringIO to load the CSV into pandas.
 
     >>> f = io.StringIO()
-    >>> download_securities_file(f, universes=["my-universe"])
+    >>> download_master_file(f, universes=["my-universe"])
     >>> securities = pd.read_csv(f)
     """
     params = {}
@@ -342,8 +342,8 @@ def download_securities_file(filepath_or_buffer=None, output="csv", exchanges=No
 
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
-def _cli_download_securities_file(*args, **kwargs):
-    return json_to_cli(download_securities_file, *args, **kwargs)
+def _cli_download_master_file(*args, **kwargs):
+    return json_to_cli(download_master_file, *args, **kwargs)
 
 def create_universe(code, infilepath_or_buffer=None, from_universes=None,
                     exclude_delisted=False, append=False, replace=False):
