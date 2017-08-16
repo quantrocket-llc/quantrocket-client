@@ -142,6 +142,8 @@ def fetch_option_chains(universes=None, conids=None, infilepath_or_buffer=None):
         response = houston.post("/master/options", params=params, data=to_bytes(sys.stdin))
 
     elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
+        if infilepath_or_buffer.seekable():
+            infilepath_or_buffer.seek(0)
         response = houston.post("/master/options", params=params, data=to_bytes(infilepath_or_buffer))
 
     elif infilepath_or_buffer:
@@ -215,6 +217,8 @@ def diff_securities(universes=None, conids=None, infilepath_or_buffer=None,
         response = houston.get("/master/diff", params=params, data=to_bytes(sys.stdin), timeout=timeout)
 
     elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
+        if infilepath_or_buffer.seekable():
+            infilepath_or_buffer.seek(0)
         response = houston.get("/master/diff", params=params, data=to_bytes(infilepath_or_buffer), timeout=timeout)
 
     elif infilepath_or_buffer:
@@ -398,6 +402,8 @@ def create_universe(code, infilepath_or_buffer=None, from_universes=None,
         response = houston.request(method, url, params=params, data=to_bytes(sys.stdin))
 
     elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
+        if infilepath_or_buffer.seekable():
+            infilepath_or_buffer.seek(0)
         response = houston.request(method, url, params=params, data=to_bytes(infilepath_or_buffer))
 
     elif infilepath_or_buffer:

@@ -229,18 +229,93 @@ Cancel queued requests for a database called 'jpn-lrg-1d', but only in the stand
         help="JSON file containing price data (can also be passed on stdin)")
     parser.set_defaults(func="quantrocket.history.load_from_file")
 
-    parser = _subparsers.add_parser("query", help="query historical market data from one or more history databases")
-    parser.add_argument("databases", metavar="DB", nargs="+", help="the database key(s), for example 'canada'")
-    parser.add_argument("-s", "--start-date", dest="start_date", metavar="YYYY-MM-DD", help="limit to price history on or after this date")
-    parser.add_argument("-e", "--end-date", dest="end_date", metavar="YYYY-MM-DD", help="limit to price history on or before this date")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
-    parser.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
-    parser.add_argument("-f", "--fields", nargs="*", metavar="FIELD", help="limit to these fields")
-    parser.add_argument("-t", "--times", metavar="HH:MM:SS", help="limit to these times")
-    parser.add_argument("-c", "--continuous", choices=["concat", "adjust"], metavar="METHOD", help="join futures underlyings into continuous contracts, using the specified joining method ('concat' or 'adjust')")
-    parser.set_defaults(func="quantrocket.history.get_history")
+
+    examples = """
+Query historical market data from a history database and download to file.
+
+Examples:
+
+Download a CSV of all historical market data since 2015 from a database called
+"arca-eod" to a file called arca.csv:
+
+    quantrocket history get arca-eod --start-date 2015-01-01 -o arca.csv
+    """
+    parser = _subparsers.add_parser(
+        "get",
+        help="query historical market data from a history database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the code of the database to query")
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to history on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to history on or before this date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="exclude these conids")
+    filters.add_argument(
+        "-t", "--times",
+        nargs="*",
+        metavar="HH:MM:SS",
+        help="limit to these times")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    output_format_group.add_argument(
+        "-p", "--pretty",
+        action="store_const",
+        const="txt",
+        dest="output",
+        help="format output in human-readable format (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields")
+    outputs.add_argument(
+        "-c", "--cont-fut",
+        choices=["concat", "adjust"],
+        metavar="METHOD",
+        help="stitch futures into continuous contracts using this method "
+        "(default is not to stitch together). Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.history._cli_download_history_file")
 
     examples = """
 Return the configuration for a history database.

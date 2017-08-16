@@ -16,6 +16,7 @@ import sys
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
+from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
 def create_db(code, universes=None, start_date=None, end_date=None,
               vendor=None, bar_size=None, bar_type=None, outside_rth=False,
@@ -272,3 +273,98 @@ def cancel_history_requests(codes, queues=None):
 
 def _cli_cancel_history_requests(*args, **kwargs):
     return json_to_cli(cancel_history_requests, *args, **kwargs)
+
+def download_history_file(code, filepath_or_buffer=None, output="csv",
+                          start_date=None, end_date=None,
+                          universes=None, conids=None,
+                          exclude_universes=None, exclude_conids=None,
+                          times=None, cont_fut=None, fields=None):
+    """
+    Query historical market data from a history database and download to file.
+
+    Parameters
+    ----------
+    code : str, required
+        the code of the database to query
+
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, txt, default is csv)
+
+    start_date : str (YYYY-MM-DD)
+        limit to history on or after this date
+
+    end_date : str (YYYY-MM-DD)
+        limit to history on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    conids : list of int, optional
+        limit to these conids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_conids : list of int, optional
+        exclude these conids
+
+    times: list of str (HH:MM:SS), optional
+        limit to these times
+
+    cont_fut : str
+        stitch futures into continuous contracts using this method (default is not
+        to stitch together). Possible choices: concat, adjust
+
+    fields : list of str, optional
+        only return these fields
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    You can use StringIO to load the CSV into pandas.
+
+    >>> f = io.StringIO()
+    >>> download_history_file("my-db", f)
+    >>> history = pd.read_csv(f, index_col=["AsOfDate","ConId"], parse_dates=["AsOfDate"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if conids:
+        params["conids"] = conids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_conids:
+        params["exclude_conids"] = exclude_conids
+    if times:
+        params["times"] = times
+    if cont_fut:
+        params["cont_fut"] = cont_fut
+    if fields:
+        params["fields"] = fields
+
+    output = output or "csv"
+
+    if output not in ("csv", "json", "txt"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/history/{0}.{1}".format(code, output), params=params)
+
+    houston.raise_for_status_with_json(response)
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_history_file(*args, **kwargs):
+    return json_to_cli(download_history_file, *args, **kwargs)
