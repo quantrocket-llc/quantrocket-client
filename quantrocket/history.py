@@ -368,3 +368,44 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
 
 def _cli_download_history_file(*args, **kwargs):
     return json_to_cli(download_history_file, *args, **kwargs)
+
+def load_history_from_file(code, infilepath_or_buffer):
+    """
+    Load market data from a CSV file into a history database.
+
+    Parameters
+    ----------
+    code : str, required
+        the database code to load into
+
+    infilepath_or_buffer : str or file-like object
+        CSV file containing market data (specify '-' to read file from stdin)
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    url = "/history/{0}.csv".format(code)
+
+    # Loading large amounts of data can take awhile
+    timeout = 60*10
+
+    if infilepath_or_buffer == "-":
+        response = houston.patch(url, data=to_bytes(sys.stdin), timeout=timeout)
+
+    elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
+        if infilepath_or_buffer.seekable():
+            infilepath_or_buffer.seek(0)
+        response = houston.patch(url, data=to_bytes(infilepath_or_buffer), timeout=timeout)
+
+    else:
+        with open(infilepath_or_buffer, "rb") as f:
+            response = houston.patch(url, data=f, timeout=timeout)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_load_history_from_file(*args, **kwargs):
+    return json_to_cli(load_history_from_file, *args, **kwargs)

@@ -218,17 +218,34 @@ Cancel queued requests for a database called 'jpn-lrg-1d', but only in the stand
         help="only cancel requests in these queues. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.history._cli_cancel_history_requests")
 
+    examples = """
+Load market data from a CSV file into a history database.
+
+Examples:
+
+Load market data from a CSV into a database called "lse-bid-ask":
+
+    quantrocket history load lse-bid-ask bidask.csv
+
+Copy a subset of market data from one history database to another.
+
+    quantrocket history get nyse-eod --universes nyse-sml | quantrocket history load nyse-sml-eod
+    """
     parser = _subparsers.add_parser(
         "load",
-        help="load historical market data from a file into a history database")
+        help="load market data from a CSV file into a history database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "code",
-        help="the database code into which to load the data")
+        help="the database code to load into")
     parser.add_argument(
-        "filename",
-        help="JSON file containing price data (can also be passed on stdin)")
-    parser.set_defaults(func="quantrocket.history.load_from_file")
-
+        "infilepath_or_buffer",
+        metavar="infile",
+        nargs="?",
+        default="-",
+        help="CSV file containing market data (omit to read file from stdin)")
+    parser.set_defaults(func="quantrocket.history._cli_load_history_from_file")
 
     examples = """
 Query historical market data from a history database and download to file.
