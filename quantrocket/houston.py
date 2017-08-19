@@ -60,6 +60,15 @@ class Houston(requests.Session):
         stream = kwargs.get("stream", None)
         if timeout is None and not stream:
             kwargs["timeout"] = self.DEFAULT_TIMEOUT
+
+        # Move conids from params to data if too long
+        conids = kwargs.get("params", {}).get("conids", None)
+        if conids and isinstance(conids, list) and len(conids) > 1:
+            data = kwargs.get("data", {})
+            data["conids"] = conids
+            kwargs["params"].pop("conids")
+            kwargs["data"] = data
+
         return super(Houston, self).request(method, url, *args, **kwargs)
 
     @staticmethod
