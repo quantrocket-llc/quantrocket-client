@@ -329,7 +329,7 @@ Download a CSV of all historical market data since 2015 from a database called
     outputs.add_argument(
         "-c", "--cont-fut",
         choices=["concat", "adjust"],
-        metavar="METHOD",
+        metavar="HOW",
         help="stitch futures into continuous contracts using this method "
         "(default is not to stitch together). Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.history._cli_download_history_file")
