@@ -146,7 +146,7 @@ def stop_gateways(exchanges=None, sec_type=None, research_vendors=None, gateways
 def _cli_stop_gateways(*args, **kwargs):
     return json_to_cli(stop_gateways, *args, **kwargs)
 
-def load_config(filename):
+def load_launchpad_config(filename):
     """
     Uploads a new config.
 
@@ -165,7 +165,7 @@ def load_config(filename):
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def get_config():
+def get_launchpad_config():
     """
     Returns the current config.
 
@@ -183,6 +183,6 @@ def get_config():
 
 def _cli_load_or_show_config(filename=None):
     if filename:
-        return json_to_cli(load_config, filename)
+        return json_to_cli(load_launchpad_config, filename)
     else:
-        return json_to_cli(get_config)
+        return json_to_cli(get_launchpad_config)
