@@ -64,7 +64,7 @@ class Houston(requests.Session):
         # Move conids from params to data if too long
         conids = kwargs.get("params", {}).get("conids", None)
         if conids and isinstance(conids, list) and len(conids) > 1:
-            data = kwargs.get("data", {})
+            data = kwargs.get("data", {}) or {}
             data["conids"] = conids
             kwargs["params"].pop("conids")
             kwargs["data"] = data
