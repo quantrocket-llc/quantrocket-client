@@ -30,7 +30,7 @@ def create_db(code, universes=None, start_date=None, end_date=None,
     code : str, required
         the code to assign to the database (lowercase alphanumerics and hyphens only)
 
-    universes : list of str, required unless loadable = True
+    universes : list of str
         include these universes
 
     start_date : str (YYYY-MM-DD), optional
@@ -40,30 +40,30 @@ def create_db(code, universes=None, start_date=None, end_date=None,
     end_date : str (YYYY-MM-DD), optional
         fetch history up to this end date (default is to fetch up to the present)
 
-    vendor : str, required unless loadable = True
+    vendor : str, optional
         the vendor to fetch data from (defaults to 'ib' which is currently the only
         supported vendor)
 
     bar_size : str, required for vendor ib
         the bar size to fetch. Possible choices:
-            "1 secs", "5 secs",	"10 secs", "15 secs", "30 secs",
-            "1 min", "2 mins", "3 mins", "5 mins", "10 mins", "15 mins", "20 mins", "30 mins",
-            "1 hour", "2 hours", "3 hours", "4 hours", "8 hours",
-            "1 day",
-            "1 week",
-            "1 month"
+        "1 secs", "5 secs",	"10 secs", "15 secs", "30 secs",
+        "1 min", "2 mins", "3 mins", "5 mins", "10 mins", "15 mins", "20 mins", "30 mins",
+        "1 hour", "2 hours", "3 hours", "4 hours", "8 hours",
+        "1 day",
+        "1 week",
+        "1 month"
 
     bar_type : str, optional
         the bar type to fetch (if not specified, defaults to MIDPOINT for forex and
         TRADES for everything else). Possible choices:
-            "TRADES",
-            "ADJUSTED_LAST",
-            "MIDPOINT",
-            "BID",
-            "ASK",
-            "BID_ASK",
-            "HISTORICAL_VOLATILITY",
-            "OPTION_IMPLIED_VOLATILITY"
+        "TRADES",
+        "ADJUSTED_LAST",
+        "MIDPOINT",
+        "BID",
+        "ASK",
+        "BID_ASK",
+        "HISTORICAL_VOLATILITY",
+        "OPTION_IMPLIED_VOLATILITY"
 
     outside_rth : bool
         include data from outside regular trading hours (default is to limit to regular
@@ -259,7 +259,7 @@ def cancel_history_requests(codes, queues=None):
     Returns
     -------
     dict
-        status message
+        standard and priority queues
 
     """
     params = {}
@@ -293,14 +293,14 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
     output : str
         output format (json, csv, txt, default is csv)
 
-    start_date : str (YYYY-MM-DD)
+    start_date : str (YYYY-MM-DD), optional
         limit to history on or after this date
 
-    end_date : str (YYYY-MM-DD)
+    end_date : str (YYYY-MM-DD), optional
         limit to history on or before this date
 
     universes : list of str, optional
-        limit to these universes
+        limit to these universes (default is to return all securities in database)
 
     conids : list of int, optional
         limit to these conids
