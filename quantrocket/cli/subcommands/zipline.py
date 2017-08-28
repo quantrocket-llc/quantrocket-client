@@ -22,15 +22,24 @@ def add_subparser(subparsers):
     examples = """
 Ingest a data bundle into Zipline for later backtesting.
 
+You can ingest 1-minute or 1-day history databases from QuantRocket, or you
+can ingest data using Zipline's built-in capabilities.
+
 Examples:
 
 Ingest a history database called "arca-etf-eod" into Zipline:
 
     quantrocket zipline ingest --history-db 'arca-etf-eod'
 
+Ingest a history database called "japan-banks" into Zipline and associate it with
+a custom Zipline calendar called "Tokyo" (must have already created and registered
+the custom calendar in your Zipline code):
+
+    quantrocket zipline ingest --history-db 'japan-banks' --calendar 'Tokyo'
+
 Ingest the quantopian-quandl bundle into Zipline:
 
-    quantrocket zipline ingest -b quantopian-quandl
+    quantrocket zipline ingest -b 'quantopian-quandl'
     """
     parser = _subparsers.add_parser(
         "ingest",
@@ -39,9 +48,13 @@ Ingest the quantopian-quandl bundle into Zipline:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-d", "--history-db",
-        dest="history_db",
         metavar="CODE",
         help="the code of a history db to ingest")
+    parser.add_argument(
+        "-c", "--calendar",
+        metavar="NAME",
+        help="the name of the calendar to use with this history db bundle (default is "
+        "NYSE). See Zipline docs for creating and registering a custom calendar.")
     parser.add_argument(
         "-b", "--bundle",
         metavar="BUNDLE-NAME",

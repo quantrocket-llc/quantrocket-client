@@ -85,14 +85,21 @@ def run_zipline_algorithm(algofile, data_frequency=None, capital_base=None,
 def _cli_run_zipline_algorithm(*args, **kwargs):
     return json_to_cli(run_zipline_algorithm, *args, **kwargs)
 
-def ingest_bundle(history_db=None, bundle=None, assets_versions=None):
+def ingest_bundle(history_db=None, calendar=None, bundle=None, assets_versions=None):
     """
     Ingest a data bundle into Zipline for later backtesting.
+
+    You can ingest 1-minute or 1-day history databases from QuantRocket, or you
+    can ingest data using Zipline's built-in capabilities.
 
     Parameters
     ----------
     history_db : str, optional
         the code of a history db to ingest
+
+    calendar : str, optional
+        the name of the calendar to use with this history db bundle (default is NYSE).
+        See Zipline docs for creating and registering a custom calendar.
 
     bundle : str, optional
         the data bundle to ingest (default is quantopian-quandl); don't provide
@@ -109,6 +116,8 @@ def ingest_bundle(history_db=None, bundle=None, assets_versions=None):
     params = {}
     if history_db:
         params["history_db"] = history_db
+    if calendar:
+        params["calendar"] = calendar
     if bundle:
         params["bundle"] = bundle
     if assets_versions:
