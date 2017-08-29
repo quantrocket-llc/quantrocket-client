@@ -116,17 +116,17 @@ Remove all but the last bundle called 'aus-1min':
     parser.set_defaults(func="quantrocket.zipline._cli_clean_bundles")
 
     examples = """
-Run a Zipline backtest and return a Pyfolio tearsheet or results pickle.
+Run a Zipline backtest and write the test results to a file.
 
 Examples:
 
-Run a backtest from a file called buy_aapl.py:
+Run a backtest from an algo file called etf_arb.py and save the pickle file:
 
-    quantrocket zipline run --bundle 'arca-etf-eod' --infile -
+    quantrocket zipline run --bundle 'arca-etf-eod' -f 'etf_arb.py' -s 2010-04-01 -e 2016-02-01 -o results.pkl
     """
     parser = _subparsers.add_parser(
         "run",
-        help="Run a Zipline backtest and return a Pyfolio tearsheet",
+        help="run a Zipline backtest and write the test results to a file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -165,11 +165,73 @@ Run a backtest from a file called buy_aapl.py:
         "-o", "--output",
         metavar="FILENAME",
         dest="filepath_or_buffer",
-        help="the location to write the Pyfolio tearsheet (or pickle file if --raw). "
-        "If this is '-' the perf will be written to stdout (default is -)")
-    parser.add_argument(
-        "--raw",
-        action="store_true",
-        help="return pickle file of results instead of Pyfolio tearsheet")
+        help="the location to write the output file (omit to write to stdout)")
     parser.set_defaults(func="quantrocket.zipline._cli_run_zipline_algorithm")
 
+    examples = """
+Create a pyfolio PDF tear sheet from a Zipline backtest result.
+
+Examples:
+
+Create a full pyfolio tear sheet from a Zipline pickle file:
+
+    quantrocket zipline tearsheet results.pkl -o results.pdf
+
+Create a simple pyfolio tear sheet:
+
+    quantrocket zipline tearsheet results.pkl -o results.pdf --simple
+
+Run a Zipline backtest and create a full pyfolio tear sheet without saving
+the pickle file:
+
+    quantrocket zipline run -f 'buy_aapl.py' -s 2010-04-01 -e 2016-02-01 | quantrocket zipline tearsheet -o buy_aapl.pdf
+    """
+    parser = _subparsers.add_parser(
+        "tearsheet",
+        help="create a pyfolio tear sheet from a Zipline backtest result",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "infilepath_or_buffer",
+        metavar="FILENAME",
+        nargs="?",
+        default="-",
+        help="the pickle file from a Zipline backtest (omit to read file from stdin)")
+    parser.add_argument(
+        "-o", "--output",
+        metavar="FILENAME",
+        required=True,
+        dest="outfilepath_or_buffer",
+        help="the location to write the pyfolio tear sheet")
+    parser.add_argument(
+        "-s", "--simple",
+        action="store_true",
+        help="create a simple tear sheet (default is to create a full tear sheet)"),
+    parser.add_argument(
+        "-l", "--live-start-date",
+        metavar="YYYY-MM-DD",
+        help="date when the strategy began live trading")
+    parser.add_argument(
+        "--slippage",
+        metavar="INT",
+        type=float,
+        help="basis points of slippage to apply to returns before generating tear sheet "
+        "stats and plots")
+    parser.add_argument(
+        "--hide-positions",
+        action="store_true",
+        help="don't output any symbol names"),
+    parser.add_argument(
+        "--bayesian",
+        action="store_true",
+        help="include a Bayesian tear sheet"),
+    parser.add_argument(
+        "--round-trips",
+        action="store_true",
+        help="include a round-trips tear sheet"),
+    parser.add_argument(
+        "--bootstrap",
+        action="store_true",
+        help="perform bootstrap analysis for the performance metrics (takes a few minutes "
+        "longer)")
+    parser.set_defaults(func="quantrocket.zipline._cli_create_tearsheet")

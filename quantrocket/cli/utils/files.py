@@ -13,12 +13,16 @@
 # limitations under the License.
 
 import six
+import sys
 
 def write_response_to_filepath_or_buffer(filepath_or_buffer, response):
     """
-    Writes the response content to the a filepath or buffer.
+    Writes the response content to the filepath or buffer.
     """
     if hasattr(filepath_or_buffer, "write"):
+        if six.PY3 and filepath_or_buffer is sys.stdout:
+            # Write bytes to stdout (https://stackoverflow.com/a/23932488)
+            filepath_or_buffer = filepath_or_buffer.buffer
         mode = getattr(filepath_or_buffer, "mode", "w")
         for chunk in response.iter_content(chunk_size=1024):
             if chunk:

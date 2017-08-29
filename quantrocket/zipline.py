@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sys
+import six
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
@@ -20,9 +21,9 @@ from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
 def run_zipline_algorithm(algofile, data_frequency=None, capital_base=None,
                           bundle=None, bundle_timestamp=None, start=None, end=None,
-                          filepath_or_buffer=None, raw=False):
+                          filepath_or_buffer=None):
     """
-    Run a Zipline backtest and return a Pyfolio tearsheet or results pickle.
+    Run a Zipline backtest and write the test results to a file.
 
     Parameters
     ----------
@@ -49,11 +50,7 @@ def run_zipline_algorithm(algofile, data_frequency=None, capital_base=None,
         the end date of the simulation
 
     filepath_or_buffer : str, optional
-        the location to write the Pyfolio tearsheet (or pickle file if raw=True).
-        If this is '-' the perf will be written to stdout (default is -)
-
-    raw : bool
-        return pickle file of results instead of Pyfolio tearsheet
+        the location to write the output file (omit to write to stdout)
 
     Returns
     -------
@@ -72,8 +69,6 @@ def run_zipline_algorithm(algofile, data_frequency=None, capital_base=None,
         params["start"] = start
     if end:
         params["end"] = end
-    if raw:
-        params["raw"] = raw
 
     response = houston.post("/zipline/backtests/{0}".format(algofile), params=params, timeout=60*60*3)
 
@@ -84,6 +79,88 @@ def run_zipline_algorithm(algofile, data_frequency=None, capital_base=None,
 
 def _cli_run_zipline_algorithm(*args, **kwargs):
     return json_to_cli(run_zipline_algorithm, *args, **kwargs)
+
+def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None, simple=None,
+                     live_start_date=None, slippage=None, hide_positions=None,
+                     bayesian=None, round_trips=None, bootstrap=None):
+    """
+    Create a pyfolio PDF tear sheet from a Zipline backtest result.
+
+    Parameters
+    ----------
+    infilepath_or_buffer : str, required
+        the pickle file from a Zipline backtest (specify '-' to read file from stdin)
+
+    outfilepath_or_buffer : str or file-like, optional
+        the location to write the pyfolio tear sheet (write to stdout if omitted)
+
+    simple : bool
+        create a simple tear sheet (default is to create a full tear sheet)
+
+    live_start_date : str (YYYY-MM-DD), optional
+        date when the strategy began live trading
+
+    slippage : int or float, optional
+        basis points of slippage to apply to returns before generating tear sheet
+        stats and plots
+
+    hide_positions : bool
+        don't output any symbol names
+
+    bayesian : bool
+        include a Bayesian tear sheet
+
+    round_trips : bool
+        include a round-trips tear sheet
+
+    bootstrap : bool
+        perform bootstrap analysis for the performance metrics (takes a few minutes
+        longer)
+
+    Returns
+    -------
+    None
+    """
+    params = {}
+    if simple:
+        params["simple"] = simple
+    if live_start_date:
+        params["live_start_date"] = live_start_date
+    if slippage:
+        params["slippage"] = slippage
+    if hide_positions:
+        params["hide_positions"] = hide_positions
+    if bayesian:
+        params["bayesian"] = bayesian
+    if round_trips:
+        params["round_trips"] = round_trips
+    if bootstrap:
+        params["bootstrap"] = bootstrap
+
+    url = "/zipline/tearsheets"
+    # Pyfolio can take a long time, particularly for Bayesian analysis
+    timeout = 60*60*5
+
+    if infilepath_or_buffer == "-":
+        infilepath_or_buffer = sys.stdin.buffer if six.PY3 else sys.stdin
+        response = houston.post(url, data=infilepath_or_buffer, params=params, timeout=timeout)
+
+    elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
+        if infilepath_or_buffer.seekable():
+            infilepath_or_buffer.seek(0)
+        response = houston.post(url, data=infilepath_or_buffer, params=params, timeout=timeout)
+
+    else:
+        with open(infilepath_or_buffer, "rb") as f:
+            response = houston.post(url, data=f, params=params, timeout=timeout)
+
+    houston.raise_for_status_with_json(response)
+
+    outfilepath_or_buffer = outfilepath_or_buffer or sys.stdout
+    write_response_to_filepath_or_buffer(outfilepath_or_buffer, response)
+
+def _cli_create_tearsheet(*args, **kwargs):
+    return json_to_cli(create_tearsheet, *args, **kwargs)
 
 def ingest_bundle(history_db=None, calendar=None, bundle=None, assets_versions=None):
     """
@@ -137,8 +214,8 @@ def list_bundles():
 
     Returns
     -------
-    list
-        data bundles
+    dict
+        data bundles and timestamps
     """
     response = houston.get("/zipline/bundles")
 
@@ -168,8 +245,8 @@ def clean_bundles(bundle=None, before=None, after=None, keep_last=None):
 
     Returns
     -------
-    dict
-        status message
+    list
+        bundles removed
     """
     params = {}
     if bundle:
