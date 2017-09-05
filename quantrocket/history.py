@@ -278,7 +278,7 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
                           start_date=None, end_date=None,
                           universes=None, conids=None,
                           exclude_universes=None, exclude_conids=None,
-                          times=None, cont_fut=None, fields=None):
+                          times=None, cont_fut=None, fields=None, tz_naive=False):
     """
     Query historical market data from a history database and download to file.
 
@@ -321,6 +321,10 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
     fields : list of str, optional
         only return these fields
 
+    tz_naive : bool
+        return timestamps without UTC offsets: 2018-02-01T10:00:00 (default is to
+        include UTC offsets: 2018-02-01T10:00:00-4000)
+
     Returns
     -------
     None
@@ -331,7 +335,7 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
 
     >>> f = io.StringIO()
     >>> download_history_file("my-db", f)
-    >>> history = pd.read_csv(f, index_col=["AsOfDate","ConId"], parse_dates=["AsOfDate"])
+    >>> history = pd.read_csv(f, parse_dates=["Date"])
     """
     params = {}
     if start_date:
@@ -352,6 +356,8 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
         params["cont_fut"] = cont_fut
     if fields:
         params["fields"] = fields
+    if tz_naive:
+        params["tz_naive"] = tz_naive
 
     output = output or "csv"
 
