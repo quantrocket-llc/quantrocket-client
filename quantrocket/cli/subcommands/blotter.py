@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from quantrocket.cli.utils.parse import parse_dict
-
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("blotter", description="QuantRocket blotter CLI", help="quantrocket blotter -h")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ..utils.parse import parse_date
 from quantrocket.constants.account import ACCOUNT_FIELDS
 
 def add_subparser(subparsers):
