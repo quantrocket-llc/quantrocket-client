@@ -67,7 +67,7 @@ def run_backtest(strategies, start_date=None, end_date=None, allocations=None,
     if params:
         _params["params"] = params
 
-    response = houston.post("/moonshot/backtests", params=params, timeout=60*60*24)
+    response = houston.post("/moonshot/backtests", params=_params, timeout=60*60*24)
 
     houston.raise_for_status_with_json(response)
 

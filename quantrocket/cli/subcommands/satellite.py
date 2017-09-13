@@ -26,7 +26,7 @@ Examples:
 
 Run a backtrader backtest and save the performance chart to file:
 
-    quantrocket satellite exec satellite-bt 'python /etc/opt/quantrocket/quickstart.py' --return-file '/tmp/backtrader-plot.pdf' --outfile 'backtrader-plot.pdf'
+    quantrocket satellite exec satellite-bt 'python /codeload/quickstart.py' --return-file '/tmp/backtrader-plot.pdf' --outfile 'backtrader-plot.pdf'
     """
     parser = _subparsers.add_parser(
         "exec",
