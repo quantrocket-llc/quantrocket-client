@@ -75,7 +75,7 @@ Backtest several HML (High Minus Low) strategies from 2005-2015:
         metavar="FILEPATH",
         dest="filepath_or_buffer",
         help="the location to write the results file (omit to write to stdout)")
-    parser.set_defaults(func="quantrocket.moonshot._cli_run_backtest")
+    parser.set_defaults(func="quantrocket.moonshot._cli_backtest")
 
     parser = _subparsers.add_parser("paramscan", help="run a parameter scan for one or more strategies")
     parser.add_argument("start_date", metavar="YYYY-MM-DD", help="start date")

@@ -17,7 +17,7 @@ from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
-def run_backtest(strategies, start_date=None, end_date=None, allocations=None,
+def backtest(strategies, start_date=None, end_date=None, allocations=None,
                  nlv=None, params=None, filepath_or_buffer=None):
     """
     Backtest one or more strategies and return a CSV of backtest results.
@@ -74,5 +74,5 @@ def run_backtest(strategies, start_date=None, end_date=None, allocations=None,
     filepath_or_buffer = filepath_or_buffer or sys.stdout
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
-def _cli_run_backtest(*args, **kwargs):
-    return json_to_cli(run_backtest, *args, **kwargs)
+def _cli_backtest(*args, **kwargs):
+    return json_to_cli(backtest, *args, **kwargs)
