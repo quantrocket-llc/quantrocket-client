@@ -71,6 +71,11 @@ Backtest several HML (High Minus Low) strategies from 2005-2015:
         help="one or more strategy params to set on the fly before backtesting "
         "(pass as 'param:value')")
     parser.add_argument(
+        "-r", "--raw",
+        action="store_true",
+        help="return a CSV of raw performance data (default is to return a PDF "
+        "performance tear sheet)")
+    parser.add_argument(
         "-o", "--outfile",
         metavar="FILEPATH",
         dest="filepath_or_buffer",
