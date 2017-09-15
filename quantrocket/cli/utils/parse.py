@@ -13,7 +13,9 @@
 # limitations under the License.
 
 def dict_str(value):
-    assert ":" in value
+    if ":" not in value:
+        raise ValueError("value {0} should have format key:value".format(value))
+    return value
 
 def dict_strs_to_dict(*dict_strs):
     """

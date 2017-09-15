@@ -61,8 +61,7 @@ CSV of results:
         metavar="CODE:FLOAT",
         nargs="*",
         help="the allocation for each strategy, passed as 'code:allocation' (default "
-        "allocation is 1.0 / number of strategies)"
-    )
+        "allocation is 1.0 / number of strategies)")
     parser.add_argument(
         "-n", "--nlv",
         nargs="*",
