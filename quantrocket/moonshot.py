@@ -16,11 +16,15 @@ import sys
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 
 def backtest(strategies, start_date=None, end_date=None, allocations=None,
                  nlv=None, params=None, details=None, raw=None, filepath_or_buffer=None):
     """
-    Backtest one or more strategies and return a CSV of backtest results.
+    Backtest one or more strategies and return the results.
+
+    By default returns a PDF tear sheet of performance charts but can also return a CSV of
+    backtest results.
 
     Parameters
     ----------
@@ -37,7 +41,7 @@ def backtest(strategies, start_date=None, end_date=None, allocations=None,
         a list of allocations corresponding to the list of strategies
         (must be the same length as strategies if provided)
 
-    nlv : list of str (CURRENCY:NLV), optional
+    nlv : dict of CURRENCY:NLV, optional
         the NLV (net liquidation value, i.e. account balance) to assume for
         the backtest, expressed in each currency represented in the backtest (pass
         as 'currency:nlv')
@@ -69,15 +73,15 @@ def backtest(strategies, start_date=None, end_date=None, allocations=None,
     if end_date:
         _params["end_date"] = end_date
     if allocations:
-        _params["allocations"] = allocations
+        _params["allocations"] = dict_to_dict_strs(allocations)
     if nlv:
-        _params["nlv"] = nlv
+        _params["nlv"] = dict_to_dict_strs(nlv)
     if details:
         _params["details"] = details
     if raw:
         _params["raw"] = raw
     if params:
-        _params["params"] = params
+        _params["params"] = dict_to_dict_strs(params)
 
     response = houston.post("/moonshot/backtests", params=_params, timeout=60*60*24)
 
@@ -87,4 +91,13 @@ def backtest(strategies, start_date=None, end_date=None, allocations=None,
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
 def _cli_backtest(*args, **kwargs):
+    allocations = kwargs.get("allocations", None)
+    if allocations:
+        kwargs["allocations"] = dict_strs_to_dict(*allocations)
+    nlv = kwargs.get("nlv", None)
+    if nlv:
+        kwargs["nlv"] = dict_strs_to_dict(*nlv)
+    params = kwargs.get("params", None)
+    if params:
+        kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(backtest, *args, **kwargs)

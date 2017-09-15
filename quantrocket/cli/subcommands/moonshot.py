@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+from quantrocket.cli.utils.parse import dict_str
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("moonshot", description="QuantRocket Moonshot CLI", help="quantrocket moonshot -h")
@@ -20,21 +21,25 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Backtest one or more strategies and return a CSV of backtest results.
+Backtest one or more strategies and return the results.
+
+By default returns a PDF tear sheet of performance charts but can also return a CSV of
+backtest results.
 
 Examples:
 
 Backtest a single strategy called demo, using all available history:
 
-    quantrocket moonshot backtest demo --nlv USD:100000
+    quantrocket moonshot backtest demo -o tearsheet.pdf
 
-Backtest several HML (High Minus Low) strategies from 2005-2015:
+Backtest several HML (High Minus Low) strategies from 2005-2015 and return a
+CSV of results:
 
-    quantrocket moonshot backtest hml-us hml-eur hml-asia -s 2005-01-01 -e 2015-12-31 --nlv USD:1000000 EUR:900000 JPY:110000000 -o hml_results.csv
+    quantrocket moonshot backtest hml-us hml-eur hml-asia -s 2005-01-01 -e 2015-12-31 --raw -o hml_results.csv
     """
     parser = _subparsers.add_parser(
         "backtest",
-        help="backtest one or more strategies and return a CSV of backtest results",
+        help="backtest one or more strategies and return the results",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -52,14 +57,16 @@ Backtest several HML (High Minus Low) strategies from 2005-2015:
         help="the backtest end date (default is to use all available history)")
     parser.add_argument(
         "-l", "--allocations",
-        type=float,
-        metavar="FLOAT",
+        type=dict_str,
+        metavar="CODE:FLOAT",
         nargs="*",
-        help="a list of allocations corresponding to the list of strategies "
-        "(must be the same length as strategies if provided)")
+        help="the allocation for each strategy, passed as 'code:allocation' (default "
+        "allocation is 1.0 / number of strategies)"
+    )
     parser.add_argument(
         "-n", "--nlv",
         nargs="*",
+        type=dict_str,
         metavar="CURRENCY:NLV",
         help="the NLV (net liquidation value, i.e. account balance) to assume for "
         "the backtest, expressed in each currency represented in the backtest (pass "
@@ -67,6 +74,7 @@ Backtest several HML (High Minus Low) strategies from 2005-2015:
     parser.add_argument(
         "-p", "--params",
         nargs="*",
+        type=dict_str,
         metavar="PARAM:VALUE",
         help="one or more strategy params to set on the fly before backtesting "
         "(pass as 'param:value')")
