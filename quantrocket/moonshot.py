@@ -18,7 +18,7 @@ from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
 def backtest(strategies, start_date=None, end_date=None, allocations=None,
-                 nlv=None, params=None, raw=None, filepath_or_buffer=None):
+                 nlv=None, params=None, details=None, raw=None, filepath_or_buffer=None):
     """
     Backtest one or more strategies and return a CSV of backtest results.
 
@@ -46,6 +46,10 @@ def backtest(strategies, start_date=None, end_date=None, allocations=None,
         one or more strategy params to set on the fly before backtesting
         (pass as 'param:value')
 
+    details : bool
+        return detailed results for all securities instead of aggregating to
+        strategy level (only supported for single-strategy backtests)
+
     raw : bool
         return a CSV of raw performance data (default is to return a PDF
         performance tear sheet)
@@ -68,6 +72,8 @@ def backtest(strategies, start_date=None, end_date=None, allocations=None,
         _params["allocations"] = allocations
     if nlv:
         _params["nlv"] = nlv
+    if details:
+        _params["details"] = details
     if raw:
         _params["raw"] = raw
     if params:

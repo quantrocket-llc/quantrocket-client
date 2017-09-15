@@ -71,6 +71,11 @@ Backtest several HML (High Minus Low) strategies from 2005-2015:
         help="one or more strategy params to set on the fly before backtesting "
         "(pass as 'param:value')")
     parser.add_argument(
+        "-d", "--details",
+        action="store_true",
+        help="return detailed results for all securities instead of aggregating to "
+        "strategy level (only supported for single-strategy backtests)")
+    parser.add_argument(
         "-r", "--raw",
         action="store_true",
         help="return a CSV of raw performance data (default is to return a PDF "
