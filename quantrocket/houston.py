@@ -85,6 +85,7 @@ class Houston(requests.Session):
                 e.args = e.args + (e.json_response,)
             except:
                 e.json_response = {}
+                e.args = e.args + ("please check the logs for more details",)
             raise e
 
 # Instantiate houston so that all callers can share a TCP connection (for
