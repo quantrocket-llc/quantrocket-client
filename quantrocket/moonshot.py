@@ -21,7 +21,7 @@ from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 def backtest(strategies, start_date=None, end_date=None, allocations=None,
                  nlv=None, params=None, details=None, raw=None, filepath_or_buffer=None):
     """
-    Backtest one or more strategies and return the results.
+    Backtest one or more strategies.
 
     By default returns a PDF tear sheet of performance charts but can also return a CSV of
     backtest results.

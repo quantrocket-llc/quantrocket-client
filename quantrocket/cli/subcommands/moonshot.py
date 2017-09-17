@@ -21,7 +21,7 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Backtest one or more strategies and return the results.
+Backtest one or more strategies.
 
 By default returns a PDF tear sheet of performance charts but can also return a CSV of
 backtest results.
@@ -39,7 +39,7 @@ CSV of results:
     """
     parser = _subparsers.add_parser(
         "backtest",
-        help="backtest one or more strategies and return the results",
+        help="backtest one or more strategies",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -47,22 +47,23 @@ CSV of results:
         nargs="+",
         metavar="CODE",
         help="one or more strategy codes")
-    parser.add_argument(
+    backtest_options = parser.add_argument_group("backtest options")
+    backtest_options.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
         help="the backtest start date (default is to use all available history)")
-    parser.add_argument(
+    backtest_options.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
         help="the backtest end date (default is to use all available history)")
-    parser.add_argument(
+    backtest_options.add_argument(
         "-l", "--allocations",
         type=dict_str,
         metavar="CODE:FLOAT",
         nargs="*",
         help="the allocation for each strategy, passed as 'code:allocation' (default "
         "allocation is 1.0 / number of strategies)")
-    parser.add_argument(
+    backtest_options.add_argument(
         "-n", "--nlv",
         nargs="*",
         type=dict_str,
@@ -70,24 +71,25 @@ CSV of results:
         help="the NLV (net liquidation value, i.e. account balance) to assume for "
         "the backtest, expressed in each currency represented in the backtest (pass "
         "as 'currency:nlv')")
-    parser.add_argument(
+    backtest_options.add_argument(
         "-p", "--params",
         nargs="*",
         type=dict_str,
         metavar="PARAM:VALUE",
         help="one or more strategy params to set on the fly before backtesting "
         "(pass as 'param:value')")
-    parser.add_argument(
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
         "-d", "--details",
         action="store_true",
         help="return detailed results for all securities instead of aggregating to "
         "strategy level (only supported for single-strategy backtests)")
-    parser.add_argument(
+    outputs.add_argument(
         "-r", "--raw",
         action="store_true",
         help="return a CSV of raw performance data (default is to return a PDF "
         "performance tear sheet)")
-    parser.add_argument(
+    outputs.add_argument(
         "-o", "--outfile",
         metavar="FILEPATH",
         dest="filepath_or_buffer",
