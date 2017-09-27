@@ -12,6 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+def list_or_int_or_float_or_str(value):
+    """
+    Parses the value as an int, else a float, else a string. If the value
+    contains commas, treats it as a list of ints or floats or strings. Also
+    handles None, True, and False.
+    """
+    if "," in value:
+        return [list_or_int_or_float_or_str(item) for item in value.split(",")]
+
+    special_vals = {
+        "None": None,
+        "True": True,
+        "False": False
+    }
+    if value in special_vals:
+        return special_vals[value]
+
+    try:
+        return int(value)
+    except ValueError:
+        try:
+            return float(value)
+        except ValueError:
+            return str(value)
+
 def dict_str(value):
     if ":" not in value:
         raise ValueError("value {0} should have format key:value".format(value))
