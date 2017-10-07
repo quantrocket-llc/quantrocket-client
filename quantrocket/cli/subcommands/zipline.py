@@ -31,11 +31,10 @@ Ingest a history database called "arca-etf-eod" into Zipline:
 
     quantrocket zipline ingest --history-db 'arca-etf-eod'
 
-Ingest a history database called "japan-banks" into Zipline and associate it with
-a custom Zipline calendar called "Tokyo" (must have already created and registered
-the custom calendar in your Zipline code):
+Ingest a history database called "lse-stk" into Zipline and associate it with
+the LSE calendar:
 
-    quantrocket zipline ingest --history-db 'japan-banks' --calendar 'Tokyo'
+    quantrocket zipline ingest --history-db 'lse-stk' --calendar 'LSE'
 
 Ingest the quantopian-quandl bundle into Zipline:
 
@@ -54,7 +53,7 @@ Ingest the quantopian-quandl bundle into Zipline:
         "-c", "--calendar",
         metavar="NAME",
         help="the name of the calendar to use with this history db bundle (default is "
-        "NYSE). See Zipline docs for creating and registering a custom calendar.")
+        "NYSE; provide an invalid calendar name to see available choices)")
     parser.add_argument(
         "-b", "--bundle",
         metavar="BUNDLE-NAME",
@@ -166,6 +165,11 @@ Run a backtest from an algo file called etf_arb.py and save the pickle file:
         metavar="FILENAME",
         dest="filepath_or_buffer",
         help="the location to write the output file (omit to write to stdout)")
+    parser.add_argument(
+        "--calendar",
+        metavar="CALENDAR",
+        help="the calendar you want to use e.g. LSE (default is to use the calendar "
+        "associated with the data bundle)")
     parser.set_defaults(func="quantrocket.zipline._cli_run_zipline_algorithm")
 
     examples = """

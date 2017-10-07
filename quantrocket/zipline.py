@@ -21,7 +21,7 @@ from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
 def run_zipline_algorithm(algofile, data_frequency=None, capital_base=None,
                           bundle=None, bundle_timestamp=None, start=None, end=None,
-                          filepath_or_buffer=None):
+                          filepath_or_buffer=None, calendar=None):
     """
     Run a Zipline backtest and write the test results to a file.
 
@@ -52,6 +52,9 @@ def run_zipline_algorithm(algofile, data_frequency=None, capital_base=None,
     filepath_or_buffer : str, optional
         the location to write the output file (omit to write to stdout)
 
+    calendar : str, optional
+        the calendar you want to use e.g. LSE. NYSE is the default.
+
     Returns
     -------
     None
@@ -69,6 +72,8 @@ def run_zipline_algorithm(algofile, data_frequency=None, capital_base=None,
         params["start"] = start
     if end:
         params["end"] = end
+    if calendar:
+        params["calendar"] = calendar
 
     response = houston.post("/zipline/backtests/{0}".format(algofile), params=params, timeout=60*60*3)
 
@@ -175,8 +180,8 @@ def ingest_bundle(history_db=None, calendar=None, bundle=None, assets_versions=N
         the code of a history db to ingest
 
     calendar : str, optional
-        the name of the calendar to use with this history db bundle (default is NYSE).
-        See Zipline docs for creating and registering a custom calendar.
+        the name of the calendar to use with this history db bundle (default is
+        NYSE; provide an invalid calendar name to see available choices)
 
     bundle : str, optional
         the data bundle to ingest (default is quantopian-quandl); don't provide
