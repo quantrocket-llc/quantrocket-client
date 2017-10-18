@@ -19,11 +19,14 @@ from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
-def run_zipline_algorithm(algofile, data_frequency=None, capital_base=None,
+def run_algorithm(algofile, data_frequency=None, capital_base=None,
                           bundle=None, bundle_timestamp=None, start=None, end=None,
                           filepath_or_buffer=None, calendar=None):
     """
-    Run a Zipline backtest and write the test results to a file.
+    Run a Zipline backtest and write the test results to a CSV file.
+
+    The CSV result file contains several DataFrames stacked into one: the Zipline performance
+    results, plus the extracted returns, transactions, and positions from those results.
 
     Parameters
     ----------
@@ -58,6 +61,37 @@ def run_zipline_algorithm(algofile, data_frequency=None, capital_base=None,
     Returns
     -------
     None
+
+    Examples
+    --------
+    Run a backtest and load the results into pandas.
+
+    >>> from quantrocket.zipline import run_algorithm
+    >>> import pandas as pd
+    >>> import io
+    >>> f = io.StringIO()
+    >>> run_algorithm("momentum_pipeline.py", bundle="my-bundle", start="2015-02-04", end="2015-12-31", filepath_or_buffer=f)
+    >>> results = pd.read_csv(f, index_col=["dataframe", "index", "column"])["value"]
+
+    To use the results with pyfolio, extract and massage the returns, positions, and
+    transactions:
+
+    >>> # Extract returns
+    >>> returns = results.loc["returns"].unstack()
+    >>> returns.index = pd.to_datetime(returns["dt"], utc=True).dt.tz_localize("UTC")
+    >>> returns = returns["returns"].astype(float)
+    >>> # Extract positions
+    >>> positions = results.loc["positions"].unstack()
+    >>> positions.index = pd.to_datetime(positions["dt"], utc=True).dt.tz_localize("UTC")
+    >>> positions = positions.drop("dt", axis=1).astype(float)
+    >>> # Extract transactions
+    >>> transactions = results.loc["transactions"].unstack()
+    >>> transactions.index = pd.to_datetime(transactions["dt"], utc=True).dt.tz_localize("UTC")
+    >>> transactions = transactions.drop("dt", axis=1).apply(pd.to_numeric, errors='ignore')
+
+    Ready for pyfolio:
+
+    >>> pf.create_full_tear_sheet(returns, positions=positions, transactions=transactions)
     """
     params = {}
     if data_frequency:
@@ -82,8 +116,8 @@ def run_zipline_algorithm(algofile, data_frequency=None, capital_base=None,
     filepath_or_buffer = filepath_or_buffer or sys.stdout
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
-def _cli_run_zipline_algorithm(*args, **kwargs):
-    return json_to_cli(run_zipline_algorithm, *args, **kwargs)
+def _cli_run_algorithm(*args, **kwargs):
+    return json_to_cli(run_algorithm, *args, **kwargs)
 
 def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None, simple=None,
                      live_start_date=None, slippage=None, hide_positions=None,
@@ -94,7 +128,7 @@ def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None, simple=No
     Parameters
     ----------
     infilepath_or_buffer : str, required
-        the pickle file from a Zipline backtest (specify '-' to read file from stdin)
+        the CSV file from a Zipline backtest (specify '-' to read file from stdin)
 
     outfilepath_or_buffer : str or file-like, optional
         the location to write the pyfolio tear sheet (write to stdout if omitted)

@@ -115,17 +115,20 @@ Remove all but the last bundle called 'aus-1min':
     parser.set_defaults(func="quantrocket.zipline._cli_clean_bundles")
 
     examples = """
-Run a Zipline backtest and write the test results to a file.
+Run a Zipline backtest and write the test results to a CSV file.
+
+The CSV result file contains several DataFrames stacked into one: the Zipline performance
+results, plus the extracted returns, transactions, and positions from those results.
 
 Examples:
 
-Run a backtest from an algo file called etf_arb.py and save the pickle file:
+Run a backtest from an algo file called etf_arb.py and save a CSV file of results:
 
-    quantrocket zipline run --bundle 'arca-etf-eod' -f 'etf_arb.py' -s 2010-04-01 -e 2016-02-01 -o results.pkl
+    quantrocket zipline run --bundle 'arca-etf-eod' -f 'etf_arb.py' -s 2010-04-01 -e 2016-02-01 -o results.csv
     """
     parser = _subparsers.add_parser(
         "run",
-        help="run a Zipline backtest and write the test results to a file",
+        help="run a Zipline backtest and write the test results to a CSV file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -170,23 +173,23 @@ Run a backtest from an algo file called etf_arb.py and save the pickle file:
         metavar="CALENDAR",
         help="the calendar you want to use e.g. LSE (default is to use the calendar "
         "associated with the data bundle)")
-    parser.set_defaults(func="quantrocket.zipline._cli_run_zipline_algorithm")
+    parser.set_defaults(func="quantrocket.zipline._cli_run_algorithm")
 
     examples = """
 Create a pyfolio PDF tear sheet from a Zipline backtest result.
 
 Examples:
 
-Create a full pyfolio tear sheet from a Zipline pickle file:
+Create a full pyfolio tear sheet from a Zipline CSV results file:
 
-    quantrocket zipline tearsheet results.pkl -o results.pdf
+    quantrocket zipline tearsheet results.csv -o results.pdf
 
 Create a simple pyfolio tear sheet:
 
-    quantrocket zipline tearsheet results.pkl -o results.pdf --simple
+    quantrocket zipline tearsheet results.csv -o results.pdf --simple
 
 Run a Zipline backtest and create a full pyfolio tear sheet without saving
-the pickle file:
+the CSV file:
 
     quantrocket zipline run -f 'buy_aapl.py' -s 2010-04-01 -e 2016-02-01 | quantrocket zipline tearsheet -o buy_aapl.pdf
     """
@@ -200,7 +203,7 @@ the pickle file:
         metavar="FILENAME",
         nargs="?",
         default="-",
-        help="the pickle file from a Zipline backtest (omit to read file from stdin)")
+        help="the CSV file from a Zipline backtest (omit to read file from stdin)")
     parser.add_argument(
         "-o", "--output",
         metavar="FILENAME",
