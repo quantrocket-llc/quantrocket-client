@@ -333,7 +333,7 @@ Download a CSV of all historical market data since 2015 from a database called
         "include UTC offsets: 2018-02-01T10:00:00-4000)")
     outputs.add_argument(
         "-c", "--cont-fut",
-        choices=["concat", "adjust"],
+        choices=["concat"],
         metavar="HOW",
         help="stitch futures into continuous contracts using this method "
         "(default is not to stitch together). Possible choices: %(choices)s")

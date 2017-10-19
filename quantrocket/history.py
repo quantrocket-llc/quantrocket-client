@@ -316,7 +316,7 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
 
     cont_fut : str
         stitch futures into continuous contracts using this method (default is not
-        to stitch together). Possible choices: concat, adjust
+        to stitch together). Possible choices: concat
 
     fields : list of str, optional
         only return these fields
