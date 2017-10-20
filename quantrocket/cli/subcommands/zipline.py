@@ -118,13 +118,18 @@ Remove all but the last bundle called 'aus-1min':
 Run a Zipline backtest and write the test results to a CSV file.
 
 The CSV result file contains several DataFrames stacked into one: the Zipline performance
-results, plus the extracted returns, transactions, and positions from those results.
+results, plus the extracted returns, transactions, positions, and benchmark returns from those
+results.
 
 Examples:
 
 Run a backtest from an algo file called etf_arb.py and save a CSV file of results:
 
     quantrocket zipline run --bundle 'arca-etf-eod' -f 'etf_arb.py' -s 2010-04-01 -e 2016-02-01 -o results.csv
+
+Run a backtest using the us_futures calendar:
+
+    quantrocket zipline run --bundle 'cl-rb-1day' -f 'futures_pairs_trading.py' --calendar us_futures -s 2015-04-01 -e 2016-02-01 -o results.csv
     """
     parser = _subparsers.add_parser(
         "run",

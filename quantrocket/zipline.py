@@ -26,7 +26,8 @@ def run_algorithm(algofile, data_frequency=None, capital_base=None,
     Run a Zipline backtest and write the test results to a CSV file.
 
     The CSV result file contains several DataFrames stacked into one: the Zipline performance
-    results, plus the extracted returns, transactions, and positions from those results.
+    results, plus the extracted returns, transactions, positions, and benchmark returns from those
+    results.
 
     Parameters
     ----------
@@ -40,8 +41,7 @@ def run_algorithm(algofile, data_frequency=None, capital_base=None,
         the starting capital for the simulation (default is 10000000.0)
 
     bundle : str, optional
-        the vendor to fetch data from (defaults to 'ib' which is currently the only
-        supported vendor)
+        the data bundle to use for the simulation (default is quantopian-quandl)
 
     bundle_timestamp : str, optional
         the date to lookup data on or before (default is <current-time>)
@@ -73,25 +73,29 @@ def run_algorithm(algofile, data_frequency=None, capital_base=None,
     >>> run_algorithm("momentum_pipeline.py", bundle="my-bundle", start="2015-02-04", end="2015-12-31", filepath_or_buffer=f)
     >>> results = pd.read_csv(f, index_col=["dataframe", "index", "column"])["value"]
 
-    To use the results with pyfolio, extract and massage the returns, positions, and
-    transactions:
+    To use the results with pyfolio, extract and massage the returns, positions,
+    transactions, and benchmark returns:
 
     >>> # Extract returns
     >>> returns = results.loc["returns"].unstack()
-    >>> returns.index = pd.to_datetime(returns["dt"], utc=True).dt.tz_localize("UTC")
+    >>> returns.index = returns.index.droplevel(0).tz_localize("UTC")
     >>> returns = returns["returns"].astype(float)
     >>> # Extract positions
     >>> positions = results.loc["positions"].unstack()
-    >>> positions.index = pd.to_datetime(positions["dt"], utc=True).dt.tz_localize("UTC")
-    >>> positions = positions.drop("dt", axis=1).astype(float)
+    >>> positions.index = positions.index.droplevel(0).tz_localize("UTC")
+    >>> positions = positions.astype(float)
     >>> # Extract transactions
     >>> transactions = results.loc["transactions"].unstack()
-    >>> transactions.index = pd.to_datetime(transactions["dt"], utc=True).dt.tz_localize("UTC")
-    >>> transactions = transactions.drop("dt", axis=1).apply(pd.to_numeric, errors='ignore')
+    >>> transactions.index = transactions.index.droplevel(0).tz_localize("UTC")
+    >>> transactions = transactions.apply(pd.to_numeric, errors='ignore')
+    >>> # Extract benchmark
+    >>> benchmark_returns = results.loc["benchmark"].unstack()
+    >>> benchmark_returns.index = benchmark_returns.index.droplevel(0).tz_localize("UTC")
+    >>> benchmark_returns = benchmark_returns["benchmark"].astype(float)
 
     Ready for pyfolio:
 
-    >>> pf.create_full_tear_sheet(returns, positions=positions, transactions=transactions)
+    >>> pf.create_full_tear_sheet(returns, positions=positions, transactions=transactions, benchmark_rets=benchmark_returns)
     """
     params = {}
     if data_frequency:
