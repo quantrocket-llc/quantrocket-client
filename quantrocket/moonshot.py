@@ -19,7 +19,7 @@ from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 
 def backtest(strategies, start_date=None, end_date=None, allocations=None,
-                 nlv=None, params=None, details=None, raw=None, filepath_or_buffer=None):
+                 nlv=None, params=None, details=None, csv=None, filepath_or_buffer=None):
     """
     Backtest one or more strategies.
 
@@ -54,8 +54,8 @@ def backtest(strategies, start_date=None, end_date=None, allocations=None,
         return detailed results for all securities instead of aggregating to
         strategy level (only supported for single-strategy backtests)
 
-    raw : bool
-        return a CSV of raw performance data (default is to return a PDF
+    csv : bool
+        return a CSV of performance data (default is to return a PDF
         performance tear sheet)
 
     filepath_or_buffer : str, optional
@@ -78,8 +78,8 @@ def backtest(strategies, start_date=None, end_date=None, allocations=None,
         _params["nlv"] = dict_to_dict_strs(nlv)
     if details:
         _params["details"] = details
-    if raw:
-        _params["raw"] = raw
+    if csv:
+        _params["csv"] = csv
     if params:
         _params["params"] = dict_to_dict_strs(params)
 
@@ -104,7 +104,7 @@ def _cli_backtest(*args, **kwargs):
 
 def scan_parameters(strategies, start_date=None, end_date=None,
                     param1=None, vals1=None, param2=None, vals2=None,
-                    allocations=None, nlv=None, params=None, raw=None,
+                    allocations=None, nlv=None, params=None, csv=None,
                     filepath_or_buffer=None):
     """
     Run a parameter scan for one or more strategies.
@@ -151,8 +151,8 @@ def scan_parameters(strategies, start_date=None, end_date=None,
         one or more strategy params to set on the fly before backtesting
         (pass as {param:value})
 
-    raw : bool
-        return a CSV of raw performance data (default is to return a PDF
+    csv : bool
+        return a CSV of performance data (default is to return a PDF
         tear sheet)
 
     filepath_or_buffer : str, optional
@@ -181,8 +181,8 @@ def scan_parameters(strategies, start_date=None, end_date=None,
         _params["allocations"] = dict_to_dict_strs(allocations)
     if nlv:
         _params["nlv"] = dict_to_dict_strs(nlv)
-    if raw:
-        _params["raw"] = raw
+    if csv:
+        _params["csv"] = csv
     if params:
         _params["params"] = dict_to_dict_strs(params)
 

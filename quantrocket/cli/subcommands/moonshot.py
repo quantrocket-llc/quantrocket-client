@@ -35,7 +35,7 @@ Backtest a single strategy called demo, using all available history:
 Backtest several HML (High Minus Low) strategies from 2005-2015 and return a
 CSV of results:
 
-    quantrocket moonshot backtest hml-us hml-eur hml-asia -s 2005-01-01 -e 2015-12-31 --raw -o hml_results.csv
+    quantrocket moonshot backtest hml-us hml-eur hml-asia -s 2005-01-01 -e 2015-12-31 --csv -o hml_results.csv
     """
     parser = _subparsers.add_parser(
         "backtest",
@@ -85,9 +85,9 @@ CSV of results:
         help="return detailed results for all securities instead of aggregating to "
         "strategy level (only supported for single-strategy backtests)")
     outputs.add_argument(
-        "-r", "--raw",
+        "--csv",
         action="store_true",
-        help="return a CSV of raw performance data (default is to return a PDF "
+        help="return a CSV of performance data (default is to return a PDF "
         "performance tear sheet)")
     outputs.add_argument(
         "-o", "--outfile",
@@ -183,9 +183,9 @@ Run a 2-D parameter scan for multiple strategies:
         "(pass as 'param:value')")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
-        "-r", "--raw",
+        "--csv",
         action="store_true",
-        help="return a CSV of raw results data (default is to return a PDF "
+        help="return a CSV of results data (default is to return a PDF "
         "tear sheet)")
     outputs.add_argument(
         "-o", "--outfile",
