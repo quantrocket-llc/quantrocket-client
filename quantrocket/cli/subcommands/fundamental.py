@@ -12,56 +12,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("fundamental", description="QuantRocket fundamental data CLI", help="quantrocket fundamental -h")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
-    parser = _subparsers.add_parser("reuters", help="download Reuters fundamental data from IB")
-    parser.add_argument("-r", "--reports", nargs="*", choices=["summary", "statements", "estimates"], metavar="REPORT", help="download these reports. Possible choices: %(choices)s")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("-w", "--webhook", metavar="URL", help="post to this webhook when the downloads are complete")
-    parser.set_defaults(func="quantrocket.fundamental.download_reuters_fundamentals")
+    examples = """
+Fetch Reuters fundamental data from IB and save to database.
 
-    parser = _subparsers.add_parser("wsh", help="download Wall Street Horizon calendar data from IB")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("-w", "--webhook", metavar="URL", help="post to this webhook when the downloads are complete")
-    parser.set_defaults(func="quantrocket.fundamental.download_wsh_calendar")
+Two report types are available:
 
-    parser = _subparsers.add_parser("eps", help="query EPS history from the Reuters summary database")
-    parser.add_argument("-s", "--start-date", dest="start_date", metavar="DATE", help="limit to on or after this date")
-    parser.add_argument("-e", "--end-date", dest="end_date", metavar="DATE", help="limit to on or before this date")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
-    parser.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
-    parser.add_argument("--report-type", nargs="*", dest="report_type", help="filter by report type")
-    parser.add_argument("--period", nargs="*", help="filter by period")
-    parser.set_defaults(func="quantrocket.fundamental.get_eps")
+- Financial statements: provides cash flow, balance sheet, income metrics
+- Estimates and actuals: provides analyst estimates and actuals for a variety
+of indicators
 
-    parser = _subparsers.add_parser("dividends", help="query dividend history from the Reuters summary database")
-    parser.add_argument("-s", "--start-date", dest="start_date", metavar="DATE", help="limit to on or after this date")
-    parser.add_argument("-e", "--end-date", dest="end_date", metavar="DATE", help="limit to on or before this date")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
-    parser.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
-    parser.add_argument("--report-type", nargs="*", dest="report_type", help="filter by report type")
-    parser.add_argument("--period", nargs="*", help="filter by period")
-    parser.set_defaults(func="quantrocket.fundamental.get_dividends")
+Examples:
 
-    parser = _subparsers.add_parser("revenue", help="query revenue history from the Reuters summary database")
-    parser.add_argument("-s", "--start-date", dest="start_date", metavar="DATE", help="limit to on or after this date")
-    parser.add_argument("-e", "--end-date", dest="end_date", metavar="DATE", help="limit to on or before this date")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
-    parser.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
-    parser.add_argument("--report-type", nargs="*", dest="report_type", help="filter by report type")
-    parser.add_argument("--period", nargs="*", help="filter by period")
-    parser.set_defaults(func="quantrocket.fundamental.get_revenue")
+Fetch all Reuters fundamental report types for a universe of Japanese banks:
+
+    quantrocket fundamental fetch-reuters --universes 'japan-bank'
+
+Fetch only the financial statements report for a particular security:
+
+    quantrocket fundamental fetch-reuters --conids 123456 --reports 'statements'
+    """
+    parser = _subparsers.add_parser(
+        "fetch-reuters",
+        help="fetch Reuters fundamental data from IB and save to database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-r", "--reports",
+        nargs="*",
+        choices=["statements", "estimates"],
+        metavar="REPORT_TYPE",
+        help="limit to these report types (default is to fetch all available). Possible "
+        "choices: %(choices)s")
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes (must provide universes, conids, or both)")
+    parser.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids (must provide universes, conids, or both)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_fundamentals")
+
+    #parser = _subparsers.add_parser("wsh", help="download Wall Street Horizon calendar data from IB")
+    #parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
+    #parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
+    #parser.set_defaults(func="quantrocket.fundamental.download_wsh_calendar")
 
     parser = _subparsers.add_parser("coa", help="query available Chart of Account (COA) codes from the Reuters statement database")
     parser.add_argument("-s", "--statement-type", dest="statement_type", nargs="*", help="filter by statement type")
