@@ -15,22 +15,14 @@
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 
-def fetch_reuters_fundamentals(reports=None, universes=None, conids=None):
+def fetch_reuters_statements(universes=None, conids=None):
     """
-    Fetch Reuters fundamental data from IB and save to database.
+    Fetch Reuters financial statements from IB and save to database.
 
-    Two report types are available:
-
-    - Financial statements: provides cash flow, balance sheet, income metrics
-    - Estimates and actuals: provides analyst estimates and actuals for a variety
-    of indicators
+    This data provides cash flow, balance sheet, and income metrics.
 
     Parameters
     ----------
-    reports : list of str, optional
-        limit to these report types (default is to fetch all available). Possible
-        choices: statements, estimates
-
     universes : list of str, optional
         limit to these universes (must provide universes, conids, or both)
 
@@ -44,16 +36,47 @@ def fetch_reuters_fundamentals(reports=None, universes=None, conids=None):
 
     """
     params = {}
-    if reports:
-        params["reports"] = reports
     if universes:
         params["universes"] = universes
     if conids:
         params["conids"] = conids
-    response = houston.post("/fundamental/queue/reuters", params=params)
+    response = houston.post("/fundamental/reuters/statements", params=params)
 
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_fetch_reuters_fundamentals(*args, **kwargs):
-    return json_to_cli(fetch_reuters_fundamentals, *args, **kwargs)
+def _cli_fetch_reuters_statements(*args, **kwargs):
+    return json_to_cli(fetch_reuters_statements, *args, **kwargs)
+
+def fetch_reuters_estimates(universes=None, conids=None):
+    """
+    Fetch Reuters estimates and actuals from IB and save to database.
+
+    This data provides analyst estimates and actuals for a variety of indicators.
+
+    Parameters
+    ----------
+    universes : list of str, optional
+        limit to these universes (must provide universes, conids, or both)
+
+    conids : list of int, optional
+        limit to these conids (must provide universes, conids, or both)
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    if universes:
+        params["universes"] = universes
+    if conids:
+        params["conids"] = conids
+    response = houston.post("/fundamental/reuters/estimates", params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_fetch_reuters_estimates(*args, **kwargs):
+    return json_to_cli(fetch_reuters_estimates, *args, **kwargs)

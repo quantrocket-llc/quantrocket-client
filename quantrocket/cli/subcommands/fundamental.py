@@ -20,36 +20,25 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Fetch Reuters fundamental data from IB and save to database.
+Fetch Reuters financial statements from IB and save to database.
 
-Two report types are available:
-
-- Financial statements: provides cash flow, balance sheet, income metrics
-- Estimates and actuals: provides analyst estimates and actuals for a variety
-of indicators
+This data provides cash flow, balance sheet, and income metrics.
 
 Examples:
 
-Fetch all Reuters fundamental report types for a universe of Japanese banks:
+Fetch Reuters financial statements for a universe of Japanese banks:
 
-    quantrocket fundamental fetch-reuters --universes 'japan-bank'
+    quantrocket fundamental fetch-statements --universes 'japan-bank'
 
-Fetch only the financial statements report for a particular security:
+Fetch Reuters financial statements for a particular security:
 
-    quantrocket fundamental fetch-reuters --conids 123456 --reports 'statements'
+    quantrocket fundamental fetch-statements --conids 123456
     """
     parser = _subparsers.add_parser(
-        "fetch-reuters",
-        help="fetch Reuters fundamental data from IB and save to database",
+        "fetch-statements",
+        help="fetch Reuters financial statements from IB and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-r", "--reports",
-        nargs="*",
-        choices=["statements", "estimates"],
-        metavar="REPORT_TYPE",
-        help="limit to these report types (default is to fetch all available). Possible "
-        "choices: %(choices)s")
     parser.add_argument(
         "-u", "--universes",
         nargs="*",
@@ -61,7 +50,40 @@ Fetch only the financial statements report for a particular security:
         nargs="*",
         metavar="CONID",
         help="limit to these conids (must provide universes, conids, or both)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_fundamentals")
+    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_statements")
+
+    examples = """
+Fetch Reuters estimates and actuals from IB and save to database.
+
+This data provides analyst estimates and actuals for a variety of indicators.
+
+Examples:
+
+Fetch Reuters estimates and actuals for a universe of Japanese banks:
+
+    quantrocket fundamental fetch-estimates --universes 'japan-bank'
+
+Fetch Reuters estimates and actuals for a particular security:
+
+    quantrocket fundamental fetch-estimates --conids 123456
+    """
+    parser = _subparsers.add_parser(
+        "fetch-estimates",
+        help="fetch Reuters estimates and actuals from IB and save to database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes (must provide universes, conids, or both)")
+    parser.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids (must provide universes, conids, or both)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_estimates")
 
     #parser = _subparsers.add_parser("wsh", help="download Wall Street Horizon calendar data from IB")
     #parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
