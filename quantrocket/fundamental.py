@@ -80,3 +80,32 @@ def fetch_reuters_estimates(universes=None, conids=None):
 
 def _cli_fetch_reuters_estimates(*args, **kwargs):
     return json_to_cli(fetch_reuters_estimates, *args, **kwargs)
+
+def list_coa_codes(statement_types=None):
+    """
+    Query Chart of Account (COA) codes from the Reuters financial statements
+    database.
+
+    Note: you must fetch Reuters financial statements into the database before
+    you can query COA codes.
+
+    Parameters
+    ----------
+    statement_types : list of str, optional
+        limit to these statement types. Possible choices: INC, BAL, CAS
+
+    Returns
+    -------
+    dict
+        COA codes and descriptions
+    """
+    params = {}
+    if statement_types:
+        params["statement_types"] = statement_types
+    response = houston.get("/fundamental/reuters/statements/coa", params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_list_coa_codes(*args, **kwargs):
+    return json_to_cli(list_coa_codes, *args, **kwargs)

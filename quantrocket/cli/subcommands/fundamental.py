@@ -90,9 +90,34 @@ Fetch Reuters estimates and actuals for a particular security:
     #parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
     #parser.set_defaults(func="quantrocket.fundamental.download_wsh_calendar")
 
-    parser = _subparsers.add_parser("coa", help="query available Chart of Account (COA) codes from the Reuters statement database")
-    parser.add_argument("-s", "--statement-type", dest="statement_type", nargs="*", help="filter by statement type")
-    parser.set_defaults(func="quantrocket.fundamental.get_coa_codes")
+    examples = """
+Query Chart of Account (COA) codes from the Reuters financial statements database.
+
+Note: you must fetch Reuters financial statements into the database before you can
+query COA codes.
+
+Examples:
+
+List all COA codes:
+
+    quantrocket fundamental coa
+
+List COA codes for balance sheets only:
+
+    quantrocket fundamental coa --statement-types BAL
+    """
+    parser = _subparsers.add_parser(
+        "coa",
+        help="query Chart of Account (COA) codes from the Reuters financial statements database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-s", "--statement-types",
+        nargs="*",
+        metavar="STATEMENT_TYPE",
+        choices=["INC", "BAL", "CAS"],
+        help="limit to these statement types. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.fundamental._cli_list_coa_codes")
 
     parser = _subparsers.add_parser("statements", help="query financial statements from the Reuters statement database")
     parser.add_argument("code", metavar="CODE", help="the Chart of Account (COA) code to query")
