@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
+from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
 def fetch_reuters_statements(universes=None, conids=None):
     """
@@ -109,3 +111,102 @@ def list_coa_codes(statement_types=None):
 
 def _cli_list_coa_codes(*args, **kwargs):
     return json_to_cli(list_coa_codes, *args, **kwargs)
+
+def download_reuters_statements(codes, filepath_or_buffer=None, output="csv",
+                                start_date=None, end_date=None,
+                                universes=None, conids=None,
+                                exclude_universes=None, exclude_conids=None,
+                                period_types=None, fields=None):
+    """
+    Query financial statements from the Reuters statements database and
+    download to file.
+
+    Parameters
+    ----------
+    codes : list of str, required
+        the Chart of Account (COA) code(s) to query
+
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, txt, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to statements on or after this source date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to statements on or before this source date
+
+    universes : list of str, optional
+        limit to these universes
+
+    conids : list of int, optional
+        limit to these conids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_conids : list of int, optional
+        exclude these conids
+
+    period_types : list of str, optional
+        limit to these period types. Possible choices: Interim, Annual
+
+    fields : list of str, optional
+        only return these fields
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query total revenue (COA code RTLR) for a universe of Australian stocks. You can use
+    StringIO to load the CSV into pandas.
+
+    >>> f = io.StringIO()
+    >>> download_reuters_statements(["RTLR"], f, universes=["asx-stk"])
+    >>> statements = pd.read_csv(f, parse_dates=["StatementDate", "SourceDate"])
+
+    Query net income (COA code NINC) for two securities (identified by conid), limiting to
+    annual reports:
+
+    >>> download_reuters_statements(["NINC"], f, conids=[123456, 234567], period_types=["Annual"])
+    """
+    params = {}
+    if codes:
+        params["codes"] = codes
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if conids:
+        params["conids"] = conids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_conids:
+        params["exclude_conids"] = exclude_conids
+    if period_types:
+        params["period_types"] = period_types
+    if fields:
+        params["fields"] = fields
+
+    output = output or "csv"
+
+    if output not in ("csv", "json", "txt"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/reuters/statements.{0}".format(output), params=params,
+                           timeout=60*5)
+
+    houston.raise_for_status_with_json(response)
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_reuters_statements(*args, **kwargs):
+    return json_to_cli(download_reuters_statements, *args, **kwargs)

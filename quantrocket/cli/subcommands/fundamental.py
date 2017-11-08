@@ -112,24 +112,100 @@ List COA codes for balance sheets only:
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "-s", "--statement-types",
+        "-t", "--statement-types",
         nargs="*",
         metavar="STATEMENT_TYPE",
         choices=["INC", "BAL", "CAS"],
         help="limit to these statement types. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.fundamental._cli_list_coa_codes")
 
-    parser = _subparsers.add_parser("statements", help="query financial statements from the Reuters statement database")
-    parser.add_argument("code", metavar="CODE", help="the Chart of Account (COA) code to query")
-    parser.add_argument("-s", "--start-date", dest="start_date", metavar="DATE", help="limit to on or after this available date")
-    parser.add_argument("-e", "--end-date", dest="end_date", metavar="DATE", help="limit to on or before this available date")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
-    parser.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
-    parser.add_argument("--period-type", dest="period_type", nargs="*", help="filter by period type")
-    parser.add_argument("--statement-type", dest="statement_type", nargs="*", help="filter by statement type")
-    parser.set_defaults(func="quantrocket.fundamental.get_statements")
+    examples = """
+Query financial statements from the Reuters statements database and
+download to file.
+
+Examples:
+
+Query total revenue (COA code RTLR) for a universe of Australian stocks:
+
+    quantrocket fundamental statements RTLR -u asx-stk -o rtlr.csv
+
+Query net income (COA code NINC) for two securities (identified by conid), limiting to
+annual reports:
+
+    quantrocket fundamental statements NINC -i 123456 234567 --period-types Annual -o ninc.csv
+    """
+    parser = _subparsers.add_parser(
+        "statements",
+        help="query financial statements from the Reuters statements database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "codes",
+        metavar="CODE",
+        nargs="+",
+        help="the Chart of Account (COA) code(s) to query")
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to statements on or after this source date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to statements on or before this source date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="exclude these conids")
+    filters.add_argument(
+        "-t", "--period-types",
+        nargs="*",
+        metavar="PERIOD_TYPE",
+        choices=["Interim", "Annual"],
+        help="limit to these period types. Possible choices: %(choices)s")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    output_format_group.add_argument(
+        "-p", "--pretty",
+        action="store_const",
+        const="txt",
+        dest="output",
+        help="format output in human-readable format (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_statements")
 
     parser = _subparsers.add_parser("estimates", help="query analyst estimates from the analyst estimates database")
     parser.add_argument("metric", metavar="METRIC", help="the metric code to query")
