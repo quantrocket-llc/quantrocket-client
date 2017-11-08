@@ -105,12 +105,20 @@ List all COA codes:
 List COA codes for balance sheets only:
 
     quantrocket fundamental coa --statement-types BAL
+
+List the description of a specific COA code:
+
+    quantrocket fundamental coa --codes TIAT
     """
     parser = _subparsers.add_parser(
         "coa",
         help="query Chart of Account (COA) codes from the Reuters financial statements database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-c", "--codes",
+        metavar="CODE",
+        help="limit to these Chart of Account (COA) codes")
     parser.add_argument(
         "-t", "--statement-types",
         nargs="*",
