@@ -131,16 +131,29 @@ List the description of a specific COA code:
 Query financial statements from the Reuters statements database and
 download to file.
 
+You can query one or more COA codes. Run `quantrocket fundamental coa` to see
+available codes.
+
+Annual or interim/quarterly reports are available. Annual is the default and
+provides deeper history.
+
+By default restatements are excluded, but they can optionally be included.
+
 Examples:
 
 Query total revenue (COA code RTLR) for a universe of Australian stocks:
 
-    quantrocket fundamental statements RTLR -u asx-stk -o rtlr.csv
+    quantrocket fundamental statements RTLR -u asx-stk -s 2014-01-01 -e 2017-01-01 -o rtlr.csv
 
-Query net income (COA code NINC) for two securities (identified by conid), limiting to
-annual reports:
+Query net income (COA code NINC) from interim/quarterly reports for two securities
+(identified by conid) and include restatements:
 
-    quantrocket fundamental statements NINC -i 123456 234567 --period-types Annual -o ninc.csv
+    quantrocket fundamental statements NINC -i 123456 234567 --interim --restatements -o ninc.csv
+
+Query common and preferred shares outstanding (COA codes QTCO and QTPO) and return a
+minimal set of fields (several required fields will always be returned)
+
+    quantrocket fundamental statements QTCO QTPO -u nyse-stk --fields Amount -o nyse_float.csv
     """
     parser = _subparsers.add_parser(
         "statements",
@@ -156,11 +169,15 @@ annual reports:
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to statements on or after this source date")
+        help="limit to statements on or after this date (based on the "
+        "fiscal period end date if including restatements, otherwise the "
+        "filing date)")
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to statements on or before this source date")
+        help="limit to statements on or before this date (based on the "
+        "fiscal period end date if including restatements, otherwise the "
+        "filing date)")
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
@@ -184,11 +201,14 @@ annual reports:
         metavar="CONID",
         help="exclude these conids")
     filters.add_argument(
-        "-t", "--period-types",
-        nargs="*",
-        metavar="PERIOD_TYPE",
-        choices=["Interim", "Annual"],
-        help="limit to these period types. Possible choices: %(choices)s")
+        "-q", "--interim",
+        action="store_true",
+        help="return interim/quarterly reports (default is to return annual reports, "
+        "which provide deeper history)")
+    filters.add_argument(
+        "-r", "--restatements",
+        action="store_true",
+        help="include restatements (default is to exclude them)")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",

@@ -121,10 +121,18 @@ def download_reuters_statements(codes, filepath_or_buffer=None, output="csv",
                                 start_date=None, end_date=None,
                                 universes=None, conids=None,
                                 exclude_universes=None, exclude_conids=None,
-                                period_types=None, fields=None):
+                                interim=False, restatements=False, fields=None):
     """
     Query financial statements from the Reuters statements database and
     download to file.
+
+    You can query one or more COA codes. Use the `list_coa_codes` function to see
+    available codes.
+
+    Annual or interim/quarterly reports are available. Annual is the default and
+    provides deeper history.
+
+    By default restatements are excluded, but they can optionally be included.
 
     Parameters
     ----------
@@ -138,10 +146,14 @@ def download_reuters_statements(codes, filepath_or_buffer=None, output="csv",
         output format (json, csv, txt, default is csv)
 
     start_date : str (YYYY-MM-DD), optional
-        limit to statements on or after this source date
+        limit to statements on or after this date (based on the
+        fiscal period end date if including restatements, otherwise the
+        filing date)
 
     end_date : str (YYYY-MM-DD), optional
-        limit to statements on or before this source date
+        limit to statements on or before this date (based on the
+        fiscal period end date if including restatements, otherwise the
+        filing date)
 
     universes : list of str, optional
         limit to these universes
@@ -155,8 +167,12 @@ def download_reuters_statements(codes, filepath_or_buffer=None, output="csv",
     exclude_conids : list of int, optional
         exclude these conids
 
-    period_types : list of str, optional
-        limit to these period types. Possible choices: Interim, Annual
+    interim : bool, optional
+        return interim/quarterly reports (default is to return annual reports,
+        which provide deeper history)
+
+    restatements : bool, optional
+        include restatements (default is to exclude them)
 
     fields : list of str, optional
         only return these fields
@@ -171,13 +187,22 @@ def download_reuters_statements(codes, filepath_or_buffer=None, output="csv",
     StringIO to load the CSV into pandas.
 
     >>> f = io.StringIO()
-    >>> download_reuters_statements(["RTLR"], f, universes=["asx-stk"])
-    >>> statements = pd.read_csv(f, parse_dates=["StatementDate", "SourceDate"])
+    >>> download_reuters_statements(["RTLR"], f, universes=["asx-stk"],
+                                    start_date="2014-01-01"
+                                    end_date="2017-01-01")
+    >>> statements = pd.read_csv(f, parse_dates=["StatementDate", "SourceDate", "FiscalPeriodEndDate"])
 
-    Query net income (COA code NINC) for two securities (identified by conid), limiting to
-    annual reports:
+    Query net income (COA code NINC) from interim/quarterly reports for two securities
+    (identified by conid) and include restatements:
 
-    >>> download_reuters_statements(["NINC"], f, conids=[123456, 234567], period_types=["Annual"])
+    >>> download_reuters_statements(["NINC"], f, conids=[123456, 234567],
+                                    interim=True, restatements=True)
+
+    Query common and preferred shares outstanding (COA codes QTCO and QTPO) and return a
+    minimal set of fields (several required fields will always be returned):
+
+    >>> download_reuters_statements(["QTCO", "QTPO"], f, universes=["nyse-stk"],
+                                    fields=["Amount"])
     """
     params = {}
     if codes:
@@ -194,8 +219,10 @@ def download_reuters_statements(codes, filepath_or_buffer=None, output="csv",
         params["exclude_universes"] = exclude_universes
     if exclude_conids:
         params["exclude_conids"] = exclude_conids
-    if period_types:
-        params["period_types"] = period_types
+    if interim:
+        params["interim"] = interim
+    if restatements:
+        params["restatements"] = restatements
     if fields:
         params["fields"] = fields
 
