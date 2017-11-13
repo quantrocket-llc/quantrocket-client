@@ -242,3 +242,100 @@ def download_reuters_statements(codes, filepath_or_buffer=None, output="csv",
 
 def _cli_download_reuters_statements(*args, **kwargs):
     return json_to_cli(download_reuters_statements, *args, **kwargs)
+
+def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
+                               start_date=None, end_date=None,
+                               universes=None, conids=None,
+                               exclude_universes=None, exclude_conids=None,
+                               period_types=None, fields=None):
+    """
+    Query estimates and actuals from the Reuters estimates database and
+    download to file.
+
+    Parameters
+    ----------
+    codes : list of str, required
+        the indicator code(s) to query
+
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, txt, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to estimates and actuals on or after this fiscal period end date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to estimates and actuals on or before this fiscal period end date
+
+    universes : list of str, optional
+        limit to these universes
+
+    conids : list of int, optional
+        limit to these conids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_conids : list of int, optional
+        exclude these conids
+
+    period_types : list of str, optional
+        limit to these fiscal period types. Possible choices: A, Q, S, where
+        A=Annual, Q=Quarterly, S=Semi-Annual
+
+    fields : list of str, optional
+        only return these fields
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query EPS estimates and actuals for a universe of Australian stocks. You can use
+    StringIO to load the CSV into pandas.
+
+    >>> f = io.StringIO()
+    >>> download_reuters_estimates(["EPS"], f, universes=["asx-stk"],
+                                    start_date="2014-01-01"
+                                    end_date="2017-01-01")
+    >>> estimates = pd.read_csv(f, parse_dates=["FiscalPeriodEndDate", "AnnounceDate"])
+    """
+    params = {}
+    if codes:
+        params["codes"] = codes
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if conids:
+        params["conids"] = conids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_conids:
+        params["exclude_conids"] = exclude_conids
+    if period_types:
+        params["period_types"] = period_types
+    if fields:
+        params["fields"] = fields
+
+    output = output or "csv"
+
+    if output not in ("csv", "json", "txt"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/reuters/estimates.{0}".format(output), params=params,
+                           timeout=60*5)
+
+    houston.raise_for_status_with_json(response)
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_reuters_estimates(*args, **kwargs):
+    return json_to_cli(download_reuters_estimates, *args, **kwargs)

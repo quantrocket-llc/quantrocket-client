@@ -235,24 +235,86 @@ minimal set of fields (several required fields will always be returned)
         help="only return these fields")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_statements")
 
-    parser = _subparsers.add_parser("estimates", help="query analyst estimates from the analyst estimates database")
-    parser.add_argument("metric", metavar="METRIC", help="the metric code to query")
-    parser.add_argument("-s", "--start-date", dest="start_date", metavar="DATE", help="limit to on or after this period end date")
-    parser.add_argument("-e", "--end-date", dest="end_date", metavar="DATE", help="limit to on or before this period end date")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
-    parser.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
-    parser.add_argument("--period-type", dest="period_type", metavar="TYPE", nargs="*", choices=["A", "Q"], help="filter by period type. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.fundamental.get_estimates")
+    examples = """
+Query estimates and actuals from the Reuters estimates database and
+download to file.
 
-    parser = _subparsers.add_parser("actuals", help="query actuals from the analyst estimates database")
-    parser.add_argument("metric", metavar="METRIC", help="the metric code to query")
-    parser.add_argument("-s", "--start-date", dest="start_date", metavar="DATE", help="limit to on or after this period end date")
-    parser.add_argument("-e", "--end-date", dest="end_date", metavar="DATE", help="limit to on or before this period end date")
-    parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("--exclude-groups", nargs="*", metavar="GROUP", help="exclude these groups")
-    parser.add_argument("--exclude-conids", nargs="*", metavar="CONID", help="exclude these conids")
-    parser.add_argument("--period-type", dest="period_type", nargs="*", metavar="TYPE", choices=["A", "Q"], help="filter by period type. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.fundamental.get_actuals")
+Examples:
+
+Query EPS estimates and actuals for a universe of Australian stocks:
+
+    quantrocket fundamental estimates EPS -u asx-stk -s 2014-01-01 -e 2017-01-01 -o eps_estimates.csv
+    """
+    parser = _subparsers.add_parser(
+        "estimates",
+        help="query estimates and actuals from the Reuters estimates database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "codes",
+        metavar="CODE",
+        nargs="+",
+        help="the indicator code(s) to query")
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to estimates and actuals on or after this fiscal period end date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to estimates and actuals on or before this fiscal period end date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="exclude these conids")
+    filters.add_argument(
+        "-t", "--period-types",
+        nargs="*",
+        choices=["A", "Q", "S"],
+        metavar="PERIOD_TYPE",
+        help="limit to these fiscal period types. Possible choices: %(choices)s, where "
+        "A=Annual, Q=Quarterly, S=Semi-Annual")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    output_format_group.add_argument(
+        "-p", "--pretty",
+        action="store_const",
+        const="txt",
+        dest="output",
+        help="format output in human-readable format (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_estimates")
