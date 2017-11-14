@@ -83,18 +83,22 @@ def fetch_reuters_estimates(universes=None, conids=None):
 def _cli_fetch_reuters_estimates(*args, **kwargs):
     return json_to_cli(fetch_reuters_estimates, *args, **kwargs)
 
-def list_coa_codes(codes=None, statement_types=None):
+def list_reuters_codes(codes=None, report_types=None, statement_types=None):
     """
-    Query Chart of Account (COA) codes from the Reuters financial statements
-    database.
+    List available Chart of Account (COA) codes from the Reuters financial statements database
+    and/or indicator codes from the Reuters estimates/actuals database
 
-    Note: you must fetch Reuters financial statements into the database before
-    you can query COA codes.
+    Note: you must fetch Reuters financial statements into the database before you can
+    list COA codes.
+
 
     Parameters
     ----------
     codes : list of str, optional
-        limit to these Chart of Account (COA) codes
+        limit to these Chart of Account (COA) or indicator codes
+
+    report_types : list of str, optional
+        limit to these report types. Possible choices: statements, estimates
 
     statement_types : list of str, optional
         limit to these statement types. Possible choices: INC, BAL, CAS
@@ -102,20 +106,22 @@ def list_coa_codes(codes=None, statement_types=None):
     Returns
     -------
     dict
-        COA codes and descriptions
+        codes and descriptions
     """
     params = {}
     if codes:
         params["codes"] = codes
+    if report_types:
+        params["report_types"] = report_types
     if statement_types:
         params["statement_types"] = statement_types
-    response = houston.get("/fundamental/reuters/statements/coa", params=params)
+    response = houston.get("/fundamental/reuters/codes", params=params)
 
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_list_coa_codes(*args, **kwargs):
-    return json_to_cli(list_coa_codes, *args, **kwargs)
+def _cli_list_reuters_codes(*args, **kwargs):
+    return json_to_cli(list_reuters_codes, *args, **kwargs)
 
 def download_reuters_statements(codes, filepath_or_buffer=None, output="csv",
                                 start_date=None, end_date=None,

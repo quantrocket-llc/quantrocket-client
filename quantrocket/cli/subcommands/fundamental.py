@@ -91,41 +91,50 @@ Fetch Reuters estimates and actuals for a particular security:
     #parser.set_defaults(func="quantrocket.fundamental.download_wsh_calendar")
 
     examples = """
-Query Chart of Account (COA) codes from the Reuters financial statements database.
+List available Chart of Account (COA) codes from the Reuters financial statements database
+and/or indicator codes from the Reuters estimates/actuals database
 
 Note: you must fetch Reuters financial statements into the database before you can
-query COA codes.
+list COA codes.
 
 Examples:
 
-List all COA codes:
+List all codes:
 
-    quantrocket fundamental coa
+    quantrocket fundamental codes
 
 List COA codes for balance sheets only:
 
-    quantrocket fundamental coa --statement-types BAL
+    quantrocket fundamental codes --report-types statements --statement-types BAL
 
 List the description of a specific COA code:
 
-    quantrocket fundamental coa --codes TIAT
+    quantrocket fundamental codes --codes TIAT
     """
     parser = _subparsers.add_parser(
-        "coa",
-        help="query Chart of Account (COA) codes from the Reuters financial statements database",
+        "codes",
+        help="list available Chart of Account (COA) codes from the Reuters financial "
+        "statements database and/or indicator codes from the Reuters estimates/actuals "
+        "database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-c", "--codes",
         metavar="CODE",
-        help="limit to these Chart of Account (COA) codes")
+        help="limit to these Chart of Account (COA) or indicator codes")
     parser.add_argument(
-        "-t", "--statement-types",
+        "-r", "--report-types",
+        nargs="*",
+        metavar="REPORT_TYPE",
+        choices=["statements", "estimates"],
+        help="limit to these report types. Possible choices: %(choices)s")
+    parser.add_argument(
+        "-s", "--statement-types",
         nargs="*",
         metavar="STATEMENT_TYPE",
         choices=["INC", "BAL", "CAS"],
         help="limit to these statement types. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.fundamental._cli_list_coa_codes")
+    parser.set_defaults(func="quantrocket.fundamental._cli_list_reuters_codes")
 
     examples = """
 Query financial statements from the Reuters statements database and
