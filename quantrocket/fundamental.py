@@ -132,7 +132,7 @@ def download_reuters_statements(codes, filepath_or_buffer=None, output="csv",
     Query financial statements from the Reuters statements database and
     download to file.
 
-    You can query one or more COA codes. Use the `list_coa_codes` function to see
+    You can query one or more COA codes. Use the `list_reuters_codes` function to see
     available codes.
 
     Annual or interim/quarterly reports are available. Annual is the default and
@@ -257,6 +257,9 @@ def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
     """
     Query estimates and actuals from the Reuters estimates database and
     download to file.
+
+    You can query one or more indicator codes. Use the `list_reuters_codes`
+    function to see available codes.
 
     Parameters
     ----------

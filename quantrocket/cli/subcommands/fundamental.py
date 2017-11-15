@@ -85,11 +85,6 @@ Fetch Reuters estimates and actuals for a particular security:
         help="limit to these conids (must provide universes, conids, or both)")
     parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_estimates")
 
-    #parser = _subparsers.add_parser("wsh", help="download Wall Street Horizon calendar data from IB")
-    #parser.add_argument("-g", "--groups", nargs="*", metavar="GROUP", help="limit to these groups")
-    #parser.add_argument("-i", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    #parser.set_defaults(func="quantrocket.fundamental.download_wsh_calendar")
-
     examples = """
 List available Chart of Account (COA) codes from the Reuters financial statements database
 and/or indicator codes from the Reuters estimates/actuals database
@@ -140,7 +135,7 @@ List the description of a specific COA code:
 Query financial statements from the Reuters statements database and
 download to file.
 
-You can query one or more COA codes. Run `quantrocket fundamental coa` to see
+You can query one or more COA codes. Run `quantrocket fundamental codes` to see
 available codes.
 
 Annual or interim/quarterly reports are available. Annual is the default and
@@ -247,6 +242,9 @@ minimal set of fields (several required fields will always be returned)
     examples = """
 Query estimates and actuals from the Reuters estimates database and
 download to file.
+
+You can query one or more indicator codes. Run `quantrocket fundamental codes` to see
+available codes.
 
 Examples:
 
