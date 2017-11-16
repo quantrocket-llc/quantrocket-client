@@ -17,7 +17,7 @@ from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
-def fetch_reuters_statements(universes=None, conids=None):
+def fetch_reuters_financials(universes=None, conids=None):
     """
     Fetch Reuters financial statements from IB and save to database.
 
@@ -42,13 +42,13 @@ def fetch_reuters_statements(universes=None, conids=None):
         params["universes"] = universes
     if conids:
         params["conids"] = conids
-    response = houston.post("/fundamental/reuters/statements", params=params)
+    response = houston.post("/fundamental/reuters/financials", params=params)
 
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_fetch_reuters_statements(*args, **kwargs):
-    return json_to_cli(fetch_reuters_statements, *args, **kwargs)
+def _cli_fetch_reuters_financials(*args, **kwargs):
+    return json_to_cli(fetch_reuters_financials, *args, **kwargs)
 
 def fetch_reuters_estimates(universes=None, conids=None):
     """
@@ -85,10 +85,10 @@ def _cli_fetch_reuters_estimates(*args, **kwargs):
 
 def list_reuters_codes(codes=None, report_types=None, statement_types=None):
     """
-    List available Chart of Account (COA) codes from the Reuters financial statements database
+    List available Chart of Account (COA) codes from the Reuters financials database
     and/or indicator codes from the Reuters estimates/actuals database
 
-    Note: you must fetch Reuters financial statements into the database before you can
+    Note: you must fetch Reuters financials into the database before you can
     list COA codes.
 
 
@@ -98,7 +98,7 @@ def list_reuters_codes(codes=None, report_types=None, statement_types=None):
         limit to these Chart of Account (COA) or indicator codes
 
     report_types : list of str, optional
-        limit to these report types. Possible choices: statements, estimates
+        limit to these report types. Possible choices: financials, estimates
 
     statement_types : list of str, optional
         limit to these statement types. Possible choices: INC, BAL, CAS
@@ -123,13 +123,13 @@ def list_reuters_codes(codes=None, report_types=None, statement_types=None):
 def _cli_list_reuters_codes(*args, **kwargs):
     return json_to_cli(list_reuters_codes, *args, **kwargs)
 
-def download_reuters_statements(codes, filepath_or_buffer=None, output="csv",
+def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
                                 start_date=None, end_date=None,
                                 universes=None, conids=None,
                                 exclude_universes=None, exclude_conids=None,
                                 interim=False, restatements=False, fields=None):
     """
-    Query financial statements from the Reuters statements database and
+    Query financial statements from the Reuters financials database and
     download to file.
 
     You can query one or more COA codes. Use the `list_reuters_codes` function to see
@@ -193,21 +193,21 @@ def download_reuters_statements(codes, filepath_or_buffer=None, output="csv",
     StringIO to load the CSV into pandas.
 
     >>> f = io.StringIO()
-    >>> download_reuters_statements(["RTLR"], f, universes=["asx-stk"],
+    >>> download_reuters_financials(["RTLR"], f, universes=["asx-stk"],
                                     start_date="2014-01-01"
                                     end_date="2017-01-01")
-    >>> statements = pd.read_csv(f, parse_dates=["StatementDate", "SourceDate", "FiscalPeriodEndDate"])
+    >>> financials = pd.read_csv(f, parse_dates=["StatementDate", "SourceDate", "FiscalPeriodEndDate"])
 
     Query net income (COA code NINC) from interim/quarterly reports for two securities
     (identified by conid) and include restatements:
 
-    >>> download_reuters_statements(["NINC"], f, conids=[123456, 234567],
+    >>> download_reuters_financials(["NINC"], f, conids=[123456, 234567],
                                     interim=True, restatements=True)
 
     Query common and preferred shares outstanding (COA codes QTCO and QTPO) and return a
     minimal set of fields (several required fields will always be returned):
 
-    >>> download_reuters_statements(["QTCO", "QTPO"], f, universes=["nyse-stk"],
+    >>> download_reuters_financials(["QTCO", "QTPO"], f, universes=["nyse-stk"],
                                     fields=["Amount"])
     """
     params = {}
@@ -237,7 +237,7 @@ def download_reuters_statements(codes, filepath_or_buffer=None, output="csv",
     if output not in ("csv", "json", "txt"):
         raise ValueError("Invalid ouput: {0}".format(output))
 
-    response = houston.get("/fundamental/reuters/statements.{0}".format(output), params=params,
+    response = houston.get("/fundamental/reuters/financials.{0}".format(output), params=params,
                            timeout=60*5)
 
     houston.raise_for_status_with_json(response)
@@ -246,8 +246,8 @@ def download_reuters_statements(codes, filepath_or_buffer=None, output="csv",
 
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
-def _cli_download_reuters_statements(*args, **kwargs):
-    return json_to_cli(download_reuters_statements, *args, **kwargs)
+def _cli_download_reuters_financials(*args, **kwargs):
+    return json_to_cli(download_reuters_financials, *args, **kwargs)
 
 def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
                                start_date=None, end_date=None,

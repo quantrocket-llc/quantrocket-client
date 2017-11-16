@@ -28,14 +28,14 @@ Examples:
 
 Fetch Reuters financial statements for a universe of Japanese banks:
 
-    quantrocket fundamental fetch-statements --universes 'japan-bank'
+    quantrocket fundamental fetch-financials --universes 'japan-bank'
 
 Fetch Reuters financial statements for a particular security:
 
-    quantrocket fundamental fetch-statements --conids 123456
+    quantrocket fundamental fetch-financials --conids 123456
     """
     parser = _subparsers.add_parser(
-        "fetch-statements",
+        "fetch-financials",
         help="fetch Reuters financial statements from IB and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -50,7 +50,7 @@ Fetch Reuters financial statements for a particular security:
         nargs="*",
         metavar="CONID",
         help="limit to these conids (must provide universes, conids, or both)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_statements")
+    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_financials")
 
     examples = """
 Fetch Reuters estimates and actuals from IB and save to database.
@@ -86,10 +86,10 @@ Fetch Reuters estimates and actuals for a particular security:
     parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_estimates")
 
     examples = """
-List available Chart of Account (COA) codes from the Reuters financial statements database
+List available Chart of Account (COA) codes from the Reuters financials database
 and/or indicator codes from the Reuters estimates/actuals database
 
-Note: you must fetch Reuters financial statements into the database before you can
+Note: you must fetch Reuters financials into the database before you can
 list COA codes.
 
 Examples:
@@ -100,7 +100,7 @@ List all codes:
 
 List COA codes for balance sheets only:
 
-    quantrocket fundamental codes --report-types statements --statement-types BAL
+    quantrocket fundamental codes --report-types financials --statement-types BAL
 
 List the description of a specific COA code:
 
@@ -108,8 +108,8 @@ List the description of a specific COA code:
     """
     parser = _subparsers.add_parser(
         "codes",
-        help="list available Chart of Account (COA) codes from the Reuters financial "
-        "statements database and/or indicator codes from the Reuters estimates/actuals "
+        help="list available Chart of Account (COA) codes from the Reuters financials "
+        "database and/or indicator codes from the Reuters estimates/actuals "
         "database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -121,7 +121,7 @@ List the description of a specific COA code:
         "-r", "--report-types",
         nargs="*",
         metavar="REPORT_TYPE",
-        choices=["statements", "estimates"],
+        choices=["financials", "estimates"],
         help="limit to these report types. Possible choices: %(choices)s")
     parser.add_argument(
         "-s", "--statement-types",
@@ -132,7 +132,7 @@ List the description of a specific COA code:
     parser.set_defaults(func="quantrocket.fundamental._cli_list_reuters_codes")
 
     examples = """
-Query financial statements from the Reuters statements database and
+Query financial statements from the Reuters financials database and
 download to file.
 
 You can query one or more COA codes. Run `quantrocket fundamental codes` to see
@@ -147,21 +147,21 @@ Examples:
 
 Query total revenue (COA code RTLR) for a universe of Australian stocks:
 
-    quantrocket fundamental statements RTLR -u asx-stk -s 2014-01-01 -e 2017-01-01 -o rtlr.csv
+    quantrocket fundamental financials RTLR -u asx-stk -s 2014-01-01 -e 2017-01-01 -o rtlr.csv
 
 Query net income (COA code NINC) from interim/quarterly reports for two securities
 (identified by conid) and include restatements:
 
-    quantrocket fundamental statements NINC -i 123456 234567 --interim --restatements -o ninc.csv
+    quantrocket fundamental financials NINC -i 123456 234567 --interim --restatements -o ninc.csv
 
 Query common and preferred shares outstanding (COA codes QTCO and QTPO) and return a
 minimal set of fields (several required fields will always be returned)
 
-    quantrocket fundamental statements QTCO QTPO -u nyse-stk --fields Amount -o nyse_float.csv
+    quantrocket fundamental financials QTCO QTPO -u nyse-stk --fields Amount -o nyse_float.csv
     """
     parser = _subparsers.add_parser(
-        "statements",
-        help="query financial statements from the Reuters statements database and download to file",
+        "financials",
+        help="query financial statements from the Reuters financials database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -237,7 +237,7 @@ minimal set of fields (several required fields will always be returned)
         metavar="FIELD",
         nargs="*",
         help="only return these fields")
-    parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_statements")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_financials")
 
     examples = """
 Query estimates and actuals from the Reuters estimates database and
