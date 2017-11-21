@@ -308,3 +308,89 @@ def clean_bundles(bundle=None, before=None, after=None, keep_last=None):
 
 def _cli_clean_bundles(*args, **kwargs):
     return json_to_cli(clean_bundles, *args, **kwargs)
+
+class ZiplineBacktestResult(object):
+    """
+    Convenience class for parsing a CSV result file from a Zipline backtest
+    into a variety of useful DataFrames, which can be passed to pyfolio or
+    inspected by the user.
+
+    Examples
+    --------
+    Run a Zipline backtest and parse the CSV results:
+
+    >>> f = io.StringIO()
+    >>> run_algorithm("momentum_pipeline.py",
+              bundle="etf-sampler-1d",
+              start="2015-02-04",
+              end="2015-12-31",
+              filepath_or_buffer=f)
+    >>> zipline_result = ZiplineBacktestResult.from_csv(f)
+
+    The ZiplineBacktestResult object contains returns, positions, transactions,
+    benchmark_returns, and the performance DataFrame.
+
+    >>> print(zipline_result.returns.head())
+    >>> print(zipline_result.positions.head())
+    >>> print(zipline_result.transactions.head())
+    >>> print(zipline_result.benchmark_returns.head())
+    >>> print(zipline_result.perf.head())
+
+    The outputs are ready to be passed to pyfolio:
+
+    >>> pf.create_full_tear_sheet(
+            zipline_result.returns,
+            positions=zipline_result.positions,
+            transactions=zipline_result.transactions,
+            benchmark_rets=zipline_result.benchmark_returns)
+    """
+
+    def __init__(self):
+        self.returns = None
+        self.positions = None
+        self.transactions = None
+        self.benchmark_returns = None
+        self.perf = None
+
+    @classmethod
+    def from_csv(cls, filepath_or_buffer):
+
+        # Import pandas lazily since it can take a moment to import
+        try:
+            import pandas as pd
+        except ImportError:
+            raise ImportError("pandas must be installed to use ZiplineBacktestResult")
+
+        zipline_result = cls()
+
+        results = pd.read_csv(
+            filepath_or_buffer,
+            parse_dates=["date"],
+            index_col=["dataframe", "index", "date", "column"])["value"]
+
+        # Extract returns
+        returns = results.loc["returns"].unstack()
+        returns.index = returns.index.droplevel(0).tz_localize("UTC")
+        zipline_result.returns = returns["returns"].astype(float)
+
+        # Extract positions
+        positions = results.loc["positions"].unstack()
+        positions.index = positions.index.droplevel(0).tz_localize("UTC")
+        zipline_result.positions = positions.astype(float)
+
+        # Extract transactions
+        transactions = results.loc["transactions"].unstack()
+        transactions.index = transactions.index.droplevel(0).tz_localize("UTC")
+        zipline_result.transactions = transactions.apply(pd.to_numeric, errors='ignore')
+
+        # Extract benchmark returns
+        benchmark_returns = results.loc["benchmark"].unstack()
+        benchmark_returns.index = benchmark_returns.index.droplevel(0).tz_localize("UTC")
+        zipline_result.benchmark_returns = benchmark_returns["benchmark"].astype(float)
+
+        # Extract performance dataframe
+        perf = results.loc["perf"].unstack()
+        perf.index = perf.index.droplevel(0).tz_localize("UTC")
+        zipline_result.perf = perf.apply(pd.to_numeric, errors='ignore')
+
+        return zipline_result
