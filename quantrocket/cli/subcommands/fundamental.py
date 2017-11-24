@@ -128,7 +128,8 @@ List the description of a specific COA code:
         nargs="*",
         metavar="STATEMENT_TYPE",
         choices=["INC", "BAL", "CAS"],
-        help="limit to these statement types. Possible choices: %(choices)s")
+        help="limit to these statement types. Only applies to financials, not estimates. "
+        "Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.fundamental._cli_list_reuters_codes")
 
     examples = """

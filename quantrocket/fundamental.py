@@ -101,7 +101,7 @@ def list_reuters_codes(codes=None, report_types=None, statement_types=None):
         limit to these report types. Possible choices: financials, estimates
 
     statement_types : list of str, optional
-        limit to these statement types. Possible choices: INC, BAL, CAS
+        limit to these statement types. Only applies to financials, not estimates. Possible choices: INC, BAL, CAS
 
     Returns
     -------
