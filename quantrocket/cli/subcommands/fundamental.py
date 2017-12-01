@@ -115,6 +115,7 @@ List the description of a specific COA code:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-c", "--codes",
+        nargs="*",
         metavar="CODE",
         help="limit to these Chart of Account (COA) or indicator codes")
     parser.add_argument(
