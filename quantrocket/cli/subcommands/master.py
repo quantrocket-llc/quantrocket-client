@@ -284,7 +284,8 @@ Pretty print the exchange and currency for all listings of AAPL:
         "-f", "--fields",
         metavar="FIELD",
         nargs="*",
-        help="only return these fields")
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
     parser.set_defaults(func="quantrocket.master._cli_download_master_file")
 
     examples = """

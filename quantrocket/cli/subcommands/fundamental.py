@@ -238,7 +238,8 @@ minimal set of fields (several required fields will always be returned)
         "-f", "--fields",
         metavar="FIELD",
         nargs="*",
-        help="only return these fields")
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_financials")
 
     examples = """
@@ -325,5 +326,6 @@ Query EPS estimates and actuals for a universe of Australian stocks:
         "-f", "--fields",
         metavar="FIELD",
         nargs="*",
-        help="only return these fields")
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_estimates")

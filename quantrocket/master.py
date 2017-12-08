@@ -289,7 +289,8 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         exclude backmonth and expired futures contracts (default False)
 
     fields : list of str, optional
-        only return these fields
+        only return these fields (pass ['?'] or any invalid fieldname to see
+        available fields)
 
     Returns
     -------

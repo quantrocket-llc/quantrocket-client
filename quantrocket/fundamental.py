@@ -181,7 +181,8 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
         include restatements (default is to exclude them)
 
     fields : list of str, optional
-        only return these fields
+        only return these fields (pass ['?'] or any invalid fieldname to see
+        available fields)
 
     Returns
     -------
@@ -295,7 +296,8 @@ def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
         A=Annual, Q=Quarterly, S=Semi-Annual
 
     fields : list of str, optional
-        only return these fields
+        only return these fields (pass ['?'] or any invalid fieldname to see
+        available fields)
 
     Returns
     -------

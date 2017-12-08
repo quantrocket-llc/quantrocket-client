@@ -319,7 +319,8 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
         to stitch together). Possible choices: concat
 
     fields : list of str, optional
-        only return these fields
+        only return these fields (pass ['?'] or any invalid fieldname to see
+        available fields)
 
     tz_naive : bool
         return timestamps without UTC offsets: 2018-02-01T10:00:00 (default is to
