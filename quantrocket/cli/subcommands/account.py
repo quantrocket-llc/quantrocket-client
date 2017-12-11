@@ -106,22 +106,64 @@ Query historical account balances over a date range:
         "database, which is updated every minute)")
     parser.set_defaults(func="quantrocket.account._cli_download_account_balances")
 
-    parser = _subparsers.add_parser("portfolio", help="get current account portfolio")
-    parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
-    parser.set_defaults(func="quantrocket.account.get_portfolio")
+    examples = """
+Query exchange rates for the base currency.
 
-    parser = _subparsers.add_parser("default", help="view or set the default account")
-    parser.add_argument("account", nargs="?", metavar="ACCOUNT", help="set this account as the default (omit to view current default account)")
-    parser.set_defaults(func="quantrocket.account._get_or_set_default_account")
+The exchange rates in the exchange rate database are sourced from the
+European Central Bank's reference rates, which are updated each day at 4 PM
+CET.
 
-    parser = _subparsers.add_parser("fx", help="fetch base currency exchange rates from Google and optionally save to account database")
-    parser.add_argument("-c", "--currencies", nargs="*", metavar="CURRENCY", help="limit to these currencies (default all IB-tradeable currencies)")
-    parser.add_argument("-s", "--save", action="store_true", help="save exhange rates to the account database")
-    parser.set_defaults(func="quantrocket.account.get_exchange_rates")
+Examples:
 
-    parser = _subparsers.add_parser("fxhistory", help="return historical exchange rates from the account database")
-    parser.add_argument("-c", "--currencies", nargs="*", metavar="CURRENCY", help="limit to these currencies (default all IB-tradeable currencies)")
-    parser.add_argument("-s", "--start-date", metavar="YYYY-MM-DD", help="limit to history on or after this date")
-    parser.add_argument("-e", "--end-date", metavar="YYYY-MM-DD", help="limit to history on or before this date")
-    parser.add_argument("-l", "--latest", action="store_true", help="only show the latest exchange rate in the date range")
-    parser.set_defaults(func="quantrocket.account.get_exchange_rate_history")
+Query the latest exchange rates.
+
+    quantrocket account rates --latest
+    """
+    parser = _subparsers.add_parser(
+        "rates",
+        help="query exchange rates for the base currency",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to exchange rates on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to exchange rates on or before this date")
+    filters.add_argument(
+        "-l", "--latest",
+        action="store_true",
+        help="return the latest exchange rates")
+    filters.add_argument(
+        "-b", "--base-currencies",
+        nargs="*",
+        metavar="CURRENCY",
+        help="limit to these base currencies")
+    filters.add_argument(
+        "-q", "--quote-currencies",
+        nargs="*",
+        metavar="CURRENCY",
+        help="limit to these quote currencies")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    output_format_group.add_argument(
+        "-p", "--pretty",
+        action="store_const",
+        const="txt",
+        dest="output",
+        help="format output in human-readable format (default is CSV)")
+    parser.set_defaults(func="quantrocket.account._cli_download_exchange_rates")
