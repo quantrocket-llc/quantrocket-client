@@ -21,7 +21,7 @@ from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 def download_account_balances(filepath_or_buffer=None, output="csv",
                               start_date=None, end_date=None,
                               latest=False, accounts=None, below=None,
-                              fields=None, no_cache=False):
+                              fields=None):
     """
     Query IB account balances.
 
@@ -53,10 +53,6 @@ def download_account_balances(filepath_or_buffer=None, output="csv",
         only return these fields (pass ['?'] or any invalid fieldname to see
         available fields)
 
-    no_cache : bool
-        fetch account balances directly from IB (default is to query the
-        database, which is updated every minute)
-
     Returns
     -------
     None
@@ -82,8 +78,6 @@ def download_account_balances(filepath_or_buffer=None, output="csv",
         params["below"] = dict_to_dict_strs(below)
     if fields:
         params["fields"] = fields
-    if no_cache:
-        params["no_cache"] = no_cache
 
     output = output or "csv"
 
