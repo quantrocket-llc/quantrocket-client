@@ -33,4 +33,9 @@ View the current license profile:
         help="return the current license profile",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "--force-refresh",
+        action="store_true",
+        help="refresh the license profile before returning it (default is to "
+        "return the cached profile, which is refreshed every few minutes)")
     parser.set_defaults(func="quantrocket.license._cli_get_license_profile")

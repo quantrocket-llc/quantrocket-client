@@ -15,18 +15,28 @@
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 
-def get_license_profile():
+def get_license_profile(force_refresh=False):
     """
     Return the current license profile.
+
+    Parameters
+    ----------
+    force_refresh : bool
+        refresh the license profile before returning it (default is to
+        return the cached profile, which is refreshed every few minutes)
 
     Returns
     -------
     dict
         license profile
     """
-    response = houston.get("/license-service/license")
+    params = {}
+    if force_refresh:
+        params["force_refresh"] = force_refresh
+
+    response = houston.get("/license-service/license", params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_get_license_profile():
-    return json_to_cli(get_license_profile)
+def _cli_get_license_profile(*args, **kwargs):
+    return json_to_cli(get_license_profile, *args, **kwargs)
