@@ -17,5 +17,5 @@ EOF
 python setup.py register
 python setup.py sdist bdist_wheel upload
 
-# Rebuild quantrocker/cli Docker image with latest client
-curl -X POST https://registry.hub.docker.com/u/quantrocket/cli/trigger/5f686645-bdd6-46f3-b90a-76d3a15a6526/
+# Rebuild quantrocker/jupyter Docker image with latest client
+curl -X POST https://registry.hub.docker.com/u/quantrocket/jupyter/trigger/41f6af9a-16bd-47c7-a088-71076407a7cc/
