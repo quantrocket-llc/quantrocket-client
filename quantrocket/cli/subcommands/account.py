@@ -99,6 +99,11 @@ Query historical account balances over a date range:
         nargs="*",
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields)")
+    parser.add_argument(
+        "--force-refresh",
+        action="store_true",
+        help="refresh account balances from IB (default is to query the "
+        "database, which is refreshed every minute)")
     parser.set_defaults(func="quantrocket.account._cli_download_account_balances")
 
     examples = """
