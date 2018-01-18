@@ -133,7 +133,7 @@ def download_exchange_rates(filepath_or_buffer=None, output="csv",
         limit to exchange rates on or before this date
 
     latest : bool
-        rreturn the latest exchange rates
+        return the latest exchange rates
 
     base_currencies : list of str, optional
         limit to these base currencies

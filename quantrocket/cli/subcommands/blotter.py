@@ -1,4 +1,4 @@
-# Copyright 2017 QuantRocket - All Rights Reserved
+# Copyright 2018 QuantRocket - All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,74 +12,180 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+from quantrocket.cli.utils.parse import dict_str
+
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("blotter", description="QuantRocket blotter CLI", help="quantrocket blotter -h")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
-    parser = _subparsers.add_parser("order", help="place an order and return an order ID")
-    parser.add_argument("conid", metavar="CONID", help="the contract ID")
-    parser.add_argument("order", nargs="+", metavar="FIELD:VALUE", help="order details as JSON or as multiple key-value pairs (e.g. orderType:MKT tif:DAY)")
-    parser.set_defaults(func="quantrocket.blotter.place_order")
+    examples = """
+Place one or more orders.
 
-    parser = _subparsers.add_parser("ordermany", help="place a batch of orders from file or stdin")
-    parser.add_argument("filename", metavar="FILE", help="CSV file of orders (can also be passed on stdin)")
-    parser.add_argument("-c", "--hold-child-orders-for", metavar="TIMEDELTA", help="hold child orders for up to this long (use Pandas timedelta string, e.g. 30m) and submit them as parent orders are filled (default is to submit parent and child orders together and let IB handle it)")
-    parser.add_argument("--completed-statuses", nargs="*", metavar="STATUS", choices=["PendingCancel", "Cancelled", "Filled"], help="override which order statuses to treat as completed statuses. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.blotter.place_batch_orders")
+Returns a list of order IDs, which can be used to cancel the orders or check
+their status.
 
-    parser = _subparsers.add_parser("cancel", help="cancel an order by order ID, conid, or strategy")
-    parser.add_argument("-o", "--order-id", metavar="ORDERID", help="cancel this order ID")
-    parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies")
-    parser.add_argument("-c", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.set_defaults(func="quantrocket.blotter.cancel_order")
+Examples:
 
-    parser = _subparsers.add_parser("status", help="check an order status")
-    parser.add_argument("order_id", metavar="ORDER_ID", help="the order ID")
-    parser.set_defaults(func="quantrocket.blotter.get_order_status")
+Place orders from a CSV file.
 
-    parser = _subparsers.add_parser("active", help="list active orders")
-    parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies (= order refs)")
-    parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
-    parser.add_argument("--diff-positions", action="store_true", help="only show orders which don't match up to an existing position")
-    parser.set_defaults(func="quantrocket.blotter.get_active_orders")
+    quantrocket blotter order -f orders.csv
 
-    parser = _subparsers.add_parser("monitor", help="start monitoring order statuses and executions in real time")
-    parser.set_defaults(func="quantrocket.blotter.monitor")
+Place orders from a JSON file.
 
-    parser = _subparsers.add_parser("unmonitor", help="stop monitoring order statuses and executions")
-    parser.set_defaults(func="quantrocket.blotter.unmonitor")
+    quantrocket blotter order -f orders.json
 
-    parser = _subparsers.add_parser("download", help="download execution details for the current day")
-    parser.set_defaults(func="quantrocket.blotter.download_executions")
+Place an order by specifying the order parameters on the command line:
 
-    parser = _subparsers.add_parser("match", help="generate round-trip trades by matching executions")
-    parser.set_defaults(func="quantrocket.blotter.match_trades")
+    quantrocket blotter order --params ConId:123456 Action:BUY Quantity:100 OrderType:MKT Tif:Day Account:DU12345 OrderRef:my-strategy
+    """
+    parser = _subparsers.add_parser(
+        "order",
+        help="place one or more orders",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    source_group = parser.add_mutually_exclusive_group()
+    source_group.add_argument(
+        "-f", "--infile",
+        metavar="INFILE",
+        dest="infilepath_or_buffer",
+        help="place orders from this CSV or JSON file (specify '-' to read file "
+            "from stdin)")
+    source_group.add_argument(
+        "-p", "--params",
+        nargs="*",
+        type=dict_str,
+        metavar="PARAM:VALUE",
+        help="order details as multiple key-value pairs (pass as 'param:value', for "
+        "example OrderType:MKT)")
+    parser.set_defaults(func="quantrocket.blotter._cli_place_orders")
 
-    parser = _subparsers.add_parser("positions", help="get current positions from the blotter database")
-    parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies")
-    parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
-    parser.add_argument("--diff-orders", action="store_true", help="only show positions which don't match up to one or more existing orders")
-    parser.set_defaults(func="quantrocket.blotter.get_positions")
+    examples = """
+Cancel one or more orders by order ID, conid, or strategy (order ref).
 
-    parser = _subparsers.add_parser("rollover", help="generate orders to rollover futures contracts based on rollover rules")
-    parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies")
-    parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
-    parser.add_argument("-r", "--rules", nargs="*", metavar="KEY:VALUE", help="rollover rules as multiple key-value pairs in relativedelta format (e.g. days=-8) (omit to use rollover rules defined in master service)")
-    parser.set_defaults(func="quantrocket.blotter.rollover_positions")
+Examples:
 
-    parser = _subparsers.add_parser("close", help="generate orders to close positions")
-    parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies")
-    parser.add_argument("-c", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
-    parser.add_argument("-o", "--order", nargs="+", metavar="FIELD:VALUE", help="order details as JSON or as multiple key-value pairs (e.g. orderType:MKT tif:DAY)")
-    parser.add_argument("--oca", dest="oca_suffix", metavar="SUFFIX", help="create OCA group containing client ID, order ID, and this suffix (run this command multiple times with this option to create OCA orders)")
-    parser.set_defaults(func="quantrocket.blotter.close_positions")
+Cancel orders by order ID:
 
-    parser = _subparsers.add_parser("pnl", help="query live trading results from the blotter database")
-    parser.add_argument("start_date", metavar="YYYY-MM-DD", help="start date")
-    parser.add_argument("end_date", nargs="?", metavar="YYYY-MM-DD", help="end date (optional)")
-    parser.add_argument("-s", "--strategies", nargs="+", metavar="CODE", help="one or more strategies to show performance for")
-    parser.add_argument("-a", "--account", help="the account to show performance for (if not provided, the default account registered with the account service will be used)")
-    parser.add_argument("-w", "--raw", action="store_true", help="return raw performance data instead of a performance tearsheet")
-    parser.set_defaults(func="quantrocket.blotter.get_pnl")
+    quantrocket blotter cancel -o DU12345:7002:45 DU12345:7002:46
+
+Cancel orders by conid:
+
+    quantrocket blotter cancel -i 123456
+
+Cancel orders by strategy (order ref):
+
+    quantrocket blotter cancel -s my-strategy
+
+Cancel all open orders:
+
+    quantrocket blotter cancel --all
+    """
+    parser = _subparsers.add_parser(
+        "cancel",
+        help="cancel one or more orders by order ID, conid, or strategy (order ref)",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-o", "--order-ids",
+        metavar="ORDERID",
+        nargs="*",
+        help="cancel these order IDs")
+    parser.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="cancel orders for these conids")
+    parser.add_argument(
+        "-s", "--strategies",
+        nargs="*",
+        metavar="CODE",
+        help="cancel orders for these strategy codes")
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        default=False,
+        dest="cancel_all",
+        help="cancel all open orders")
+    parser.set_defaults(func="quantrocket.blotter._cli_cancel_orders")
+
+    examples = """
+List order status for one or more orders by order ID, conid, or strategy (order ref).
+
+Examples:
+
+List order status by order ID:
+
+    quantrocket blotter status -o DU12345:7002:45 DU12345:7002:46
+
+List order status by conid:
+
+    quantrocket blotter status -i 123456
+
+List order status by strategy (order ref):
+
+    quantrocket blotter status -s my-strategy
+
+List order status for all open orders:
+
+    quantrocket blotter status
+    """
+    parser = _subparsers.add_parser(
+        "status",
+        help="List order status for one or more orders by order ID, conid, or "
+        "strategy (order ref)",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-o", "--order-ids",
+        metavar="ORDERID",
+        nargs="*",
+        help="limit to these order IDs")
+    parser.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to orders for these conids")
+    parser.add_argument(
+        "-s", "--strategies",
+        nargs="*",
+        metavar="CODE",
+        help="limit to orders for these strategy codes")
+    parser.set_defaults(func="quantrocket.blotter._cli_list_order_statuses")
+
+    #parser = _subparsers.add_parser("active", help="list active orders")
+    #parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies (= order refs)")
+    #parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
+    #parser.add_argument("--diff-positions", action="store_true", help="only show orders which don't match up to an existing position")
+    #parser.set_defaults(func="quantrocket.blotter.get_active_orders")
+
+    #parser = _subparsers.add_parser("positions", help="get current positions from the blotter database")
+    #parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies")
+    #parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
+    #parser.add_argument("--diff-orders", action="store_true", help="only show positions which don't match up to one or more existing orders")
+    #parser.set_defaults(func="quantrocket.blotter.get_positions")
+
+    #parser = _subparsers.add_parser("rollover", help="generate orders to rollover futures contracts based on rollover rules")
+    #parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies")
+    #parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
+    #parser.add_argument("-r", "--rules", nargs="*", metavar="KEY:VALUE", help="rollover rules as multiple key-value pairs in relativedelta format (e.g. days=-8) (omit to use rollover rules defined in master service)")
+    #parser.set_defaults(func="quantrocket.blotter.rollover_positions")
+
+    #parser = _subparsers.add_parser("close", help="generate orders to close positions")
+    #parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies")
+    #parser.add_argument("-c", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
+    #parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
+    #parser.add_argument("-o", "--order", nargs="+", metavar="FIELD:VALUE", help="order details as JSON or as multiple key-value pairs (e.g. orderType:MKT tif:DAY)")
+    #parser.add_argument("--oca", dest="oca_suffix", metavar="SUFFIX", help="create OCA group containing client ID, order ID, and this suffix (run this command multiple times with this option to create OCA orders)")
+    #parser.set_defaults(func="quantrocket.blotter.close_positions")
+
+    #parser = _subparsers.add_parser("pnl", help="query live trading results from the blotter database")
+    #parser.add_argument("start_date", metavar="YYYY-MM-DD", help="start date")
+    #parser.add_argument("end_date", nargs="?", metavar="YYYY-MM-DD", help="end date (optional)")
+    #parser.add_argument("-s", "--strategies", nargs="+", metavar="CODE", help="one or more strategies to show performance for")
+    #parser.add_argument("-a", "--account", help="the account to show performance for (if not provided, the default account registered with the account service will be used)")
+    #parser.add_argument("-w", "--raw", action="store_true", help="return raw performance data instead of a performance tearsheet")
+    #parser.set_defaults(func="quantrocket.blotter.get_pnl")
