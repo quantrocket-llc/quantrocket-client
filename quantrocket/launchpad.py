@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import webbrowser
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 
@@ -186,3 +187,27 @@ def _cli_load_or_show_config(filename=None):
         return json_to_cli(load_launchpad_config, filename)
     else:
         return json_to_cli(get_launchpad_config)
+
+def open_ibg_gui(gateways=None):
+    """
+    Access the IB Gateway GUI in a web browser.
+
+    Note: IB Gateway must already be running.
+
+    Parameters
+    ----------
+    gateways : list of str, optional
+        limit to these IB Gateway services (default all IB Gateway services)
+
+    Returns
+    -------
+    None
+    """
+    if not gateways:
+        gateways = sorted(list_gateway_statuses())
+    for gateway in gateways:
+        url = "{0}/{1}/vnc".format(houston.base_url, gateway)
+        webbrowser.open(url)
+
+def _cli_open_ibg_gui(*args, **kwargs):
+    return json_to_cli(open_ibg_gui, *args, **kwargs)

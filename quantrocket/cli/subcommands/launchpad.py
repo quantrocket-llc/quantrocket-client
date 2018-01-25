@@ -207,3 +207,30 @@ Show current config:
         metavar="FILENAME",
         help="the config file to upload (if omitted, return the current config)")
     parser.set_defaults(func="quantrocket.launchpad._cli_load_or_show_config")
+
+    examples = """
+Access the IB Gateway GUI in a web browser.
+
+Note: IB Gateway must already be running.
+
+Examples:
+
+Access the IB Gateway GUI for all running ibg services:
+
+    quantrocket launchpad gui
+
+Access a particular IB Gateway GUI:
+
+    quantrocket launchpad gui -g ibg2
+    """
+    parser = _subparsers.add_parser(
+        "gui",
+        help="access the IB Gateway GUI in a web browser",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-g", "--gateways",
+        metavar="SERVICE_NAME",
+        nargs="*",
+        help="limit to these IB Gateway services (default all IB Gateway services)")
+    parser.set_defaults(func="quantrocket.launchpad._cli_open_ibg_gui")
