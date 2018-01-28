@@ -26,17 +26,13 @@ Examples:
 
 Run a backtrader backtest and save the performance chart to file:
 
-    quantrocket satellite exec satellite-bt 'python /codeload/quickstart.py' --return-file '/tmp/backtrader-plot.pdf' --outfile 'backtrader-plot.pdf'
+    quantrocket satellite exec 'python /codeload/backtrader/dual_moving_average.py' --return-file '/tmp/backtrader-plot.pdf' --outfile 'backtrader-plot.pdf'
     """
     parser = _subparsers.add_parser(
         "exec",
         help="execute an abitrary command on a satellite service and optionally return a file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "service",
-        metavar="SERVICE_NAME",
-        help="the service name")
     parser.add_argument(
         "cmd",
         metavar="CMD",
@@ -50,4 +46,9 @@ Run a backtrader backtest and save the performance chart to file:
         metavar="FILEPATH",
         dest="filepath_or_buffer",
         help="the location to write the return_file (omit to write to stdout)")
+    parser.add_argument(
+        "-s", "--service",
+        metavar="SERVICE_NAME",
+        default="satellite",
+        help="the service name (default 'satellite')")
     parser.set_defaults(func="quantrocket.satellite._cli_execute_command")

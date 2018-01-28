@@ -17,15 +17,12 @@ from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
-def execute_command(service, cmd, return_file=None, filepath_or_buffer=None):
+def execute_command(cmd, return_file=None, filepath_or_buffer=None, service="satellite"):
     """
     Execute an abitrary command on a satellite service and optionally return a file.
 
     Parameters
     ----------
-    service : str, required
-        the service name
-
     cmd: str, required
         the command to run
 
@@ -34,6 +31,9 @@ def execute_command(service, cmd, return_file=None, filepath_or_buffer=None):
 
     filepath_or_buffer : str, optional
         the location to write the return_file (omit to write to stdout)
+
+    service : str, optional
+        the service name (default 'satellite')
 
     Returns
     -------
