@@ -50,7 +50,34 @@ class Houston(requests.Session):
     @property
     def base_url(self):
         if "HOUSTON_URL" not in os.environ:
-            raise ImproperlyConfigured("HOUSTON_URL is not set")
+            raise ImproperlyConfigured("""HOUSTON_URL is not set
+
+--------------------------------------------------------------------------------
+Please set HOUSTON_URL environment variable.
+
+For local deployments: http://localhost:1969
+For Docker Cloud deployments: https://houston.quantrocket.XXXXXX.svc.dockerapp.io:443 (see Docker Cloud for your exact URL)
+
+--------------------
+|  Windows syntax  |
+--------------------
+
+To set the environment variable on Windows, run:
+
+    [Environment]::SetEnvironmentVariable("HOUSTON_URL", "http://localhost:1969", "User")
+
+IMPORTANT: you must close and re-open PowerShell for the environment variable to take effect!
+
+--------------------
+| Mac/Linux syntax |
+--------------------
+
+To set the environment variable on Mac, run:
+
+    touch ~/.profile
+    echo 'export HOUSTON_URL=http://localhost:1969' >> ~/.profile
+    source ~/.profile
+""")
         return os.environ["HOUSTON_URL"]
 
     def request(self, method, url, *args, **kwargs):
