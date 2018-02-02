@@ -171,17 +171,65 @@ List order status of open orders by order ref:
         help="limit to open orders (default False, must be True if order_ids not provided)")
     parser.set_defaults(func="quantrocket.blotter._cli_list_order_statuses")
 
-    #parser = _subparsers.add_parser("active", help="list active orders")
-    #parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies (= order refs)")
-    #parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
-    #parser.add_argument("--diff-positions", action="store_true", help="only show orders which don't match up to an existing position")
-    #parser.set_defaults(func="quantrocket.blotter.get_active_orders")
+    examples = """
+Query current positions.
 
-    #parser = _subparsers.add_parser("positions", help="get current positions from the blotter database")
-    #parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies")
-    #parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
-    #parser.add_argument("--diff-orders", action="store_true", help="only show positions which don't match up to one or more existing orders")
-    #parser.set_defaults(func="quantrocket.blotter.get_positions")
+Examples:
+
+Query current positions in human-readable format:
+
+    quantrocket blotter positions --pretty
+
+Save current positions to CSV file:
+
+    quantrocket blotter positions --outfile positions.csv
+
+Query positions for a single order ref:
+
+    quantrocket blotter positions --order-refs my-strategy
+    """
+    parser = _subparsers.add_parser(
+        "positions",
+        help="query current positions",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "-r", "--order-refs",
+        nargs="*",
+        metavar="ORDER_REF",
+        help="limit to these order refs")
+    filters.add_argument(
+        "-a", "--accounts",
+        nargs="*",
+        metavar="ACCOUNT",
+        help="limit to these accounts")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    output_format_group.add_argument(
+        "-p", "--pretty",
+        action="store_const",
+        const="txt",
+        dest="output",
+        help="format output in human-readable format (default is CSV)")
+    parser.set_defaults(func="quantrocket.blotter._cli_download_positions")
 
     #parser = _subparsers.add_parser("rollover", help="generate orders to rollover futures contracts based on rollover rules")
     #parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies")

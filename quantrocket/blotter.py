@@ -13,10 +13,13 @@
 # limitations under the License.
 
 import sys
+import six
+import json
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.parse import dict_strs_to_dict
+from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
 def place_orders(orders=None, infilepath_or_buffer=None):
     """
@@ -216,3 +219,96 @@ def list_order_statuses(order_ids=None, conids=None, order_refs=None,
 
 def _cli_list_order_statuses(*args, **kwargs):
     return json_to_cli(list_order_statuses, *args, **kwargs)
+
+def download_positions(filepath_or_buffer=None, output="csv",
+                       order_refs=None, accounts=None, conids=None):
+    """
+    Query current positions and write results to file.
+
+    To return positions as a Python list, see list_positions.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, txt, default is csv)
+
+    order_refs : list of str, optional
+        limit to these order refs
+
+    accounts : list of str, optional
+        limit to these accounts
+
+    conids : list of int, optional
+        limit to these conids
+
+    Returns
+    -------
+    None
+    """
+    params = {}
+    if order_refs:
+        params["order_refs"] = order_refs
+    if accounts:
+        params["accounts"] = accounts
+    if conids:
+        params["conids"] = conids
+
+    output = output or "csv"
+
+    if output not in ("csv", "json", "txt"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/blotter/positions.{0}".format(output), params=params)
+
+    houston.raise_for_status_with_json(response)
+
+    # Don't write a null response to file
+    if response.content[:4] == b"null":
+        return
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_positions(*args, **kwargs):
+    return json_to_cli(download_positions, *args, **kwargs)
+
+def list_positions(order_refs=None, accounts=None, conids=None):
+    """
+    Query current positions and return them as a Python list.
+
+    Parameters
+    ----------
+    order_refs : list of str, optional
+        limit to these order refs
+
+    accounts : list of str, optional
+        limit to these accounts
+
+    conids : list of int, optional
+        limit to these conids
+
+    Returns
+    -------
+    list
+
+    Examples
+    --------
+    Query current positions and load into Pandas:
+
+    >>> positions = list_positions()
+    >>> if positions:
+    >>>     positions = pd.DataFrame(positions)
+    """
+    f = six.StringIO()
+    download_positions(f, output="json",
+                       conids=conids, accounts=accounts,
+                       order_refs=order_refs)
+
+    if f.getvalue():
+        return json.loads(f.getvalue())
+    else:
+        return []
