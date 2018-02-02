@@ -89,9 +89,10 @@ def _cli_place_orders(*args, **kwargs):
         kwargs["orders"] = orders
     return json_to_cli(place_orders, *args, **kwargs)
 
-def cancel_orders(order_ids=None, conids=None, strategies=None, cancel_all=None):
+def cancel_orders(order_ids=None, conids=None, order_refs=None, accounts=None,
+                  cancel_all=None):
     """
-    Cancel one or more orders by order ID, conid, or strategy (order ref).
+    Cancel one or more orders by order ID, conid, or order ref.
 
     Parameters
     ----------
@@ -101,8 +102,11 @@ def cancel_orders(order_ids=None, conids=None, strategies=None, cancel_all=None)
     conids : list of int, optional
         cancel orders for these conids
 
-    strategies: list of str, optional
-        cancel orders for these strategy codes)
+    order_refs: list of str, optional
+        cancel orders for these order refs
+
+    accounts : list of str, optional
+        cancel orders for these accounts
 
     cancel_all : bool
         cancel all open orders
@@ -116,15 +120,15 @@ def cancel_orders(order_ids=None, conids=None, strategies=None, cancel_all=None)
     --------
     Cancel orders by order ID:
 
-    >>> cancel_orders(order_ids=['DU12345:7002:45','DU12345:7002:46'])
+    >>> cancel_orders(order_ids=['6002:45','6002:46'])
 
     Cancel orders by conid:
 
     >>> cancel_orders(conids=[123456])
 
-    Cancel orders by strategy (order ref):
+    Cancel orders by order ref:
 
-    >>> cancel_orders(strategies=['my-strategy'])
+    >>> cancel_orders(order_refs=['my-strategy'])
 
     Cancel all open orders:
 
@@ -135,8 +139,10 @@ def cancel_orders(order_ids=None, conids=None, strategies=None, cancel_all=None)
         params["order_ids"] = order_ids
     if conids:
         params["conids"] = conids
-    if strategies:
-        params["strategies"] = strategies
+    if order_refs:
+        params["order_refs"] = order_refs
+    if accounts:
+        params["accounts"] = accounts
     if cancel_all:
         params["cancel_all"] = cancel_all
 
@@ -147,9 +153,10 @@ def cancel_orders(order_ids=None, conids=None, strategies=None, cancel_all=None)
 def _cli_cancel_orders(*args, **kwargs):
     return json_to_cli(cancel_orders, *args, **kwargs)
 
-def list_order_statuses(order_ids=None, conids=None, strategies=None):
+def list_order_statuses(order_ids=None, conids=None, order_refs=None,
+                        accounts=None, open_orders=None):
     """
-    List order status for one or more orders by order ID, conid, or strategy (order ref).
+    List order status for one or more orders by order ID, conid, order ref, or account.
 
     Parameters
     ----------
@@ -159,8 +166,14 @@ def list_order_statuses(order_ids=None, conids=None, strategies=None):
     conids : list of int, optional
         limit to orders for these conids
 
-    strategies: list of str, optional
-        limit to orders for these strategy codes)
+    order_refs : list of str, optional
+        limit to orders for these order refs
+
+    accounts : list of str, optional
+        limit to orders for these accounts
+
+    open_orders : bool
+        limit to open orders (default False, must be True if order_ids not provided)
 
     Returns
     -------
@@ -171,27 +184,31 @@ def list_order_statuses(order_ids=None, conids=None, strategies=None):
     --------
     List order status by order ID:
 
-    >>> list_order_statuses(order_ids=['DU12345:7002:45','DU12345:7002:46'])
-
-    List order status by conid:
-
-    >>> list_order_statuses(conids=[123456])
-
-    List order status by strategy (order ref):
-
-    >>> list_order_statuses(strategies=['my-strategy'])
+    >>> list_order_statuses(order_ids=['6002:45','6002:46'])
 
     List order status for all open orders:
 
-    >>> list_order_statuses()
+    >>> list_order_statuses(open_orders=True)
+
+    List order status of open orders by conid:
+
+    >>> list_order_statuses(conids=[123456], open_orders=True)
+
+    List order status of open orders by order ref:
+
+    >>> list_order_statuses(order_refs=['my-strategy'], open_orders=True)
     """
     params = {}
     if order_ids:
         params["order_ids"] = order_ids
     if conids:
         params["conids"] = conids
-    if strategies:
-        params["strategies"] = strategies
+    if order_refs:
+        params["order_refs"] = order_refs
+    if accounts:
+        params["accounts"] = accounts
+    if open_orders:
+        params["open_orders"] = open_orders
 
     response = houston.get("/blotter/orders", params=params)
     houston.raise_for_status_with_json(response)

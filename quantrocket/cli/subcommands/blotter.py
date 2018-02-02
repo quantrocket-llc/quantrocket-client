@@ -38,7 +38,7 @@ Place orders from a JSON file.
 
 Place an order by specifying the order parameters on the command line:
 
-    quantrocket blotter order --params ConId:123456 Action:BUY Quantity:100 OrderType:MKT Tif:Day Account:DU12345 OrderRef:my-strategy
+    quantrocket blotter order --params ConId:123456 Action:BUY TotalQuantity:100 OrderType:MKT Tif:Day Account:DU12345 OrderRef:my-strategy
     """
     parser = _subparsers.add_parser(
         "order",
@@ -62,21 +62,21 @@ Place an order by specifying the order parameters on the command line:
     parser.set_defaults(func="quantrocket.blotter._cli_place_orders")
 
     examples = """
-Cancel one or more orders by order ID, conid, or strategy (order ref).
+Cancel one or more orders by order ID, conid, or order ref.
 
 Examples:
 
 Cancel orders by order ID:
 
-    quantrocket blotter cancel -o DU12345:7002:45 DU12345:7002:46
+    quantrocket blotter cancel -o 6002:45 6001:46
 
 Cancel orders by conid:
 
     quantrocket blotter cancel -i 123456
 
-Cancel orders by strategy (order ref):
+Cancel orders by order ref:
 
-    quantrocket blotter cancel -s my-strategy
+    quantrocket blotter cancel --order-refs my-strategy
 
 Cancel all open orders:
 
@@ -84,12 +84,12 @@ Cancel all open orders:
     """
     parser = _subparsers.add_parser(
         "cancel",
-        help="cancel one or more orders by order ID, conid, or strategy (order ref)",
+        help="cancel one or more orders by order ID, conid, or order ref",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-o", "--order-ids",
-        metavar="ORDERID",
+        metavar="ORDER_ID",
         nargs="*",
         help="cancel these order IDs")
     parser.add_argument(
@@ -99,10 +99,15 @@ Cancel all open orders:
         metavar="CONID",
         help="cancel orders for these conids")
     parser.add_argument(
-        "-s", "--strategies",
+        "-r", "--order-refs",
         nargs="*",
-        metavar="CODE",
-        help="cancel orders for these strategy codes")
+        metavar="ORDER_REF",
+        help="cancel orders for these order refs")
+    parser.add_argument(
+        "-a", "--accounts",
+        nargs="*",
+        metavar="ACCOUNT",
+        help="cancel orders for these accounts")
     parser.add_argument(
         "--all",
         action="store_true",
@@ -112,35 +117,35 @@ Cancel all open orders:
     parser.set_defaults(func="quantrocket.blotter._cli_cancel_orders")
 
     examples = """
-List order status for one or more orders by order ID, conid, or strategy (order ref).
+List order status for one or more orders by order ID, conid, order ref, or account.
 
 Examples:
 
 List order status by order ID:
 
-    quantrocket blotter status -o DU12345:7002:45 DU12345:7002:46
-
-List order status by conid:
-
-    quantrocket blotter status -i 123456
-
-List order status by strategy (order ref):
-
-    quantrocket blotter status -s my-strategy
+    quantrocket blotter status -o 6002:45 6001:46
 
 List order status for all open orders:
 
-    quantrocket blotter status
+    quantrocket blotter status --open
+
+List order status of open orders by conid:
+
+    quantrocket blotter status -i 123456 --open
+
+List order status of open orders by order ref:
+
+    quantrocket blotter status --order-refs my-strategy --open
     """
     parser = _subparsers.add_parser(
         "status",
-        help="List order status for one or more orders by order ID, conid, or "
-        "strategy (order ref)",
+        help="List order status for one or more orders by order ID, conid, "
+        "order ref, or account",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-o", "--order-ids",
-        metavar="ORDERID",
+        metavar="ORDER_ID",
         nargs="*",
         help="limit to these order IDs")
     parser.add_argument(
@@ -150,10 +155,20 @@ List order status for all open orders:
         metavar="CONID",
         help="limit to orders for these conids")
     parser.add_argument(
-        "-s", "--strategies",
+        "-r", "--order-refs",
         nargs="*",
-        metavar="CODE",
-        help="limit to orders for these strategy codes")
+        metavar="ORDER_REF",
+        help="limit to orders for these order refs")
+    parser.add_argument(
+        "-a", "--accounts",
+        nargs="*",
+        metavar="ACCOUNT",
+        help="limit to orders for these accounts")
+    parser.add_argument(
+        "--open",
+        action="store_true",
+        dest="open_orders",
+        help="limit to open orders (default False, must be True if order_ids not provided)")
     parser.set_defaults(func="quantrocket.blotter._cli_list_order_statuses")
 
     #parser = _subparsers.add_parser("active", help="list active orders")
