@@ -312,3 +312,81 @@ def list_positions(order_refs=None, accounts=None, conids=None):
         return json.loads(f.getvalue())
     else:
         return []
+
+def download_pnl(filepath_or_buffer=None,
+                 order_refs=None, accounts=None, conids=None,
+                 start_date=None, end_date=None, time=None,
+                 details=False, csv=False):
+    """
+    Query trading performance and return a PDF tearsheet or CSV of results.
+
+    Trading performance is broken down by account and order ref and optionally by
+    conid.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, txt, default is csv)
+
+    order_refs : list of str, optional
+        limit to these order refs
+
+    accounts : list of str, optional
+        limit to these accounts
+
+    conids : list of int, optional
+        limit to these conids
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to history on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to history on or before this date
+
+    time : str (HH:MM:SS [TZ]), optional
+        time of day with optional timezone to calculate daily PNL (default is
+        11:59:59 UTC)
+
+    details : bool
+        return detailed results for all securities instead of aggregating to
+        account/order ref level (only supported for a single account and order ref
+        at a time)
+
+    csv : bool
+        return a CSV of PNL (default is to return a PDF performance tear sheet)
+
+    Returns
+    -------
+    None
+    """
+    params = {}
+    if order_refs:
+        params["order_refs"] = order_refs
+    if accounts:
+        params["accounts"] = accounts
+    if conids:
+        params["conids"] = conids
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if time:
+        params["time"] = time
+    if details:
+        params["details"] = details
+
+    output = "csv" if csv else "pdf"
+
+    response = houston.get("/blotter/pnl.{0}".format(output), params=params)
+
+    houston.raise_for_status_with_json(response)
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_pnl(*args, **kwargs):
+    return json_to_cli(download_pnl, *args, **kwargs)

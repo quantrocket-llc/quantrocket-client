@@ -231,6 +231,84 @@ Query positions for a single order ref:
         help="format output in human-readable format (default is CSV)")
     parser.set_defaults(func="quantrocket.blotter._cli_download_positions")
 
+    examples = """
+Query trading performance and return a PDF tearsheet or CSV of results.
+
+Trading performance is broken down by account and order ref and optionally by
+conid.
+
+Examples:
+
+Get a Moonchart PDF of all trading performance PNL:
+
+    quantrocket blotter pnl -o pnl.pdf
+
+Get a PDF for a single account and order ref, broken down by conid:
+
+    quantrocket blotter pnl --accounts U12345 --order-refs mystrategy1 --details -o pnl_details.pdf
+
+Get a CSV of performance results for a particular date range:
+
+    quantrocket blotter pnl -s 2018-03-01 -e 2018-06-30 --csv -o pnl_2018Q2.csv
+
+Calculate daily performance as of 4PM Eastern time (instead of the default 11:59:59 UTC):
+
+    quantrocket blotter pnl --time '16:00:00 America/New_York' -o pnl.pdf
+    """
+    parser = _subparsers.add_parser(
+        "pnl",
+        help="query trading performance and return a PDF tearsheet or CSV of results.",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "-r", "--order-refs",
+        nargs="*",
+        metavar="ORDER_REF",
+        help="limit to these order refs")
+    filters.add_argument(
+        "-a", "--accounts",
+        nargs="*",
+        metavar="ACCOUNT",
+        help="limit to these accounts")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to history on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to history on or before this date")
+    filters.add_argument(
+        "-t", "--time",
+        metavar="HH:MM:SS [TZ]",
+        help="time of day with optional timezone to calculate daily PNL (default is "
+        "11:59:59 UTC)")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-d", "--details",
+        action="store_true",
+        help="return detailed results for all securities instead of aggregating to "
+        "account/order ref level (only supported for a single account and order ref "
+        "at a time)")
+    outputs.add_argument(
+        "--csv",
+        action="store_true",
+        help="return a CSV of PNL (default is to return a PDF "
+        "performance tear sheet)")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    parser.set_defaults(func="quantrocket.blotter._cli_download_pnl")
+
     #parser = _subparsers.add_parser("rollover", help="generate orders to rollover futures contracts based on rollover rules")
     #parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies")
     #parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
@@ -244,11 +322,3 @@ Query positions for a single order ref:
     #parser.add_argument("-o", "--order", nargs="+", metavar="FIELD:VALUE", help="order details as JSON or as multiple key-value pairs (e.g. orderType:MKT tif:DAY)")
     #parser.add_argument("--oca", dest="oca_suffix", metavar="SUFFIX", help="create OCA group containing client ID, order ID, and this suffix (run this command multiple times with this option to create OCA orders)")
     #parser.set_defaults(func="quantrocket.blotter.close_positions")
-
-    #parser = _subparsers.add_parser("pnl", help="query live trading results from the blotter database")
-    #parser.add_argument("start_date", metavar="YYYY-MM-DD", help="start date")
-    #parser.add_argument("end_date", nargs="?", metavar="YYYY-MM-DD", help="end date (optional)")
-    #parser.add_argument("-s", "--strategies", nargs="+", metavar="CODE", help="one or more strategies to show performance for")
-    #parser.add_argument("-a", "--account", help="the account to show performance for (if not provided, the default account registered with the account service will be used)")
-    #parser.add_argument("-w", "--raw", action="store_true", help="return raw performance data instead of a performance tearsheet")
-    #parser.set_defaults(func="quantrocket.blotter.get_pnl")
