@@ -69,7 +69,7 @@ To set the environment variable on Windows, run:
 IMPORTANT: you must close and re-open PowerShell for the environment variable to take effect!
 
 --------------------
-| Mac/Linux syntax |
+|    Mac syntax    |
 --------------------
 
 To set the environment variable on Mac, run:
@@ -77,6 +77,16 @@ To set the environment variable on Mac, run:
     touch ~/.profile
     echo 'export HOUSTON_URL=http://localhost:1969' >> ~/.profile
     source ~/.profile
+
+--------------------
+|   Linux syntax   |
+--------------------
+
+To set the environment variable on Linux, run:
+
+    touch ~/.bashrc
+    echo 'export HOUSTON_URL=http://localhost:1969' >> ~/.bashrc
+    source ~/.bashrc
 """)
         return os.environ["HOUSTON_URL"]
 
