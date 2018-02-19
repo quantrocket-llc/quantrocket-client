@@ -157,7 +157,7 @@ def _cli_cancel_orders(*args, **kwargs):
     return json_to_cli(cancel_orders, *args, **kwargs)
 
 def list_order_statuses(order_ids=None, conids=None, order_refs=None,
-                        accounts=None, open_orders=None):
+                        accounts=None, open_orders=None, fields=None):
     """
     List order status for one or more orders by order ID, conid, order ref, or account.
 
@@ -178,6 +178,10 @@ def list_order_statuses(order_ids=None, conids=None, order_refs=None,
     open_orders : bool
         limit to open orders (default False, must be True if order_ids not provided)
 
+    fields : list of str, optional
+        return these fields in addition to the default fields (pass '?' or any invalid
+        fieldname to see available fields)
+
     Returns
     -------
     dict
@@ -189,9 +193,9 @@ def list_order_statuses(order_ids=None, conids=None, order_refs=None,
 
     >>> list_order_statuses(order_ids=['6002:45','6002:46'])
 
-    List order status for all open orders:
+    List order status for all open orders and include extra fields in output:
 
-    >>> list_order_statuses(open_orders=True)
+    >>> list_order_statuses(open_orders=True, fields=["LmtPrice", "OcaGroup"])
 
     List order status of open orders by conid:
 
@@ -200,6 +204,11 @@ def list_order_statuses(order_ids=None, conids=None, order_refs=None,
     List order status of open orders by order ref:
 
     >>> list_order_statuses(order_refs=['my-strategy'], open_orders=True)
+
+    Load order statuses into pandas (with order IDs as index):
+
+    >>> statuses = list_order_statuses(open_orders=True)
+    >>> statuses = pd.DataFrame(statuses).T
     """
     params = {}
     if order_ids:
@@ -212,6 +221,8 @@ def list_order_statuses(order_ids=None, conids=None, order_refs=None,
         params["accounts"] = accounts
     if open_orders:
         params["open_orders"] = open_orders
+    if fields:
+        params["fields"] = fields
 
     response = houston.get("/blotter/orders", params=params)
     houston.raise_for_status_with_json(response)

@@ -169,6 +169,12 @@ List order status of open orders by order ref:
         action="store_true",
         dest="open_orders",
         help="limit to open orders (default False, must be True if order_ids not provided)")
+    parser.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="return these fields in addition to the default fields (pass '?' or any invalid "
+        "fieldname to see available fields)")
     parser.set_defaults(func="quantrocket.blotter._cli_list_order_statuses")
 
     examples = """
