@@ -313,6 +313,59 @@ def list_positions(order_refs=None, accounts=None, conids=None):
     else:
         return []
 
+def download_executions(filepath_or_buffer=None,
+                        order_refs=None, accounts=None, conids=None,
+                        start_date=None, end_date=None):
+    """
+    Query executions from the executions database.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    order_refs : list of str, optional
+        limit to these order refs
+
+    accounts : list of str, optional
+        limit to these accounts
+
+    conids : list of int, optional
+        limit to these conids
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to executions on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to executions on or before this date
+
+    Returns
+    -------
+    None
+    """
+    params = {}
+    if order_refs:
+        params["order_refs"] = order_refs
+    if accounts:
+        params["accounts"] = accounts
+    if conids:
+        params["conids"] = conids
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+
+    response = houston.get("/blotter/executions.csv", params=params)
+
+    houston.raise_for_status_with_json(response)
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_executions(*args, **kwargs):
+    return json_to_cli(download_executions, *args, **kwargs)
+
 def download_pnl(filepath_or_buffer=None,
                  order_refs=None, accounts=None, conids=None,
                  start_date=None, end_date=None, time=None,

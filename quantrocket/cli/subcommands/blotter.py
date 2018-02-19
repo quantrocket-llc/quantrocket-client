@@ -232,6 +232,53 @@ Query positions for a single order ref:
     parser.set_defaults(func="quantrocket.blotter._cli_download_positions")
 
     examples = """
+Query executions from the executions database.
+
+Examples:
+
+Get a CSV of all executions:
+
+    quantrocket blotter executions -o executions.csv
+    """
+    parser = _subparsers.add_parser(
+        "executions",
+        help="query executions from the executions database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "-r", "--order-refs",
+        nargs="*",
+        metavar="ORDER_REF",
+        help="limit to these order refs")
+    filters.add_argument(
+        "-a", "--accounts",
+        nargs="*",
+        metavar="ACCOUNT",
+        help="limit to these accounts")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to executions on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to executions on or before this date")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    parser.set_defaults(func="quantrocket.blotter._cli_download_executions")
+
+    examples = """
 Query trading performance and return a PDF tearsheet or CSV of results.
 
 Trading performance is broken down by account and order ref and optionally by
@@ -257,7 +304,7 @@ Calculate daily performance as of 4PM Eastern time (instead of the default 11:59
     """
     parser = _subparsers.add_parser(
         "pnl",
-        help="query trading performance and return a PDF tearsheet or CSV of results.",
+        help="query trading performance and return a PDF tearsheet or CSV of results",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
