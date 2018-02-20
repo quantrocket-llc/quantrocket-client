@@ -38,7 +38,7 @@ Place orders from a JSON file.
 
 Place an order by specifying the order parameters on the command line:
 
-    quantrocket blotter order --params ConId:123456 Action:BUY TotalQuantity:100 OrderType:MKT Tif:Day Account:DU12345 OrderRef:my-strategy
+    quantrocket blotter order --params ConId:123456 Action:BUY Exchange:SMART TotalQuantity:100 OrderType:MKT Tif:Day Account:DU12345 OrderRef:my-strategy
     """
     parser = _subparsers.add_parser(
         "order",

@@ -49,7 +49,8 @@ def place_orders(orders=None, infilepath_or_buffer=None):
     >>> order1 = {
             'ConId':123456,
             'Action':'BUY',
-            'Quantity':100,
+            'Exchange':'SMART',
+            'TotalQuantity':100,
             'OrderType':'MKT',
             'Tif':'Day',
             'Account':'DU12345',
