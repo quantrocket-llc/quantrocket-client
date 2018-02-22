@@ -140,8 +140,8 @@ download to file.
 You can query one or more COA codes. Run `quantrocket fundamental codes` to see
 available codes.
 
-Annual or interim/quarterly reports are available. Annual is the default and
-provides deeper history.
+Annual or interim reports are available. Annual is the default and provides
+deeper history.
 
 By default restatements are excluded, but they can optionally be included.
 
@@ -151,7 +151,7 @@ Query total revenue (COA code RTLR) for a universe of Australian stocks:
 
     quantrocket fundamental financials RTLR -u asx-stk -s 2014-01-01 -e 2017-01-01 -o rtlr.csv
 
-Query net income (COA code NINC) from interim/quarterly reports for two securities
+Query net income (COA code NINC) from interim reports for two securities
 (identified by conid) and include restatements:
 
     quantrocket fundamental financials NINC -i 123456 234567 --interim --restatements -o ninc.csv
@@ -209,7 +209,7 @@ minimal set of fields (several required fields will always be returned)
     filters.add_argument(
         "-q", "--interim",
         action="store_true",
-        help="return interim/quarterly reports (default is to return annual reports, "
+        help="return interim reports (default is to return annual reports, "
         "which provide deeper history)")
     filters.add_argument(
         "-r", "--restatements",

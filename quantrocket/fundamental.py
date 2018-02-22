@@ -135,8 +135,8 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
     You can query one or more COA codes. Use the `list_reuters_codes` function to see
     available codes.
 
-    Annual or interim/quarterly reports are available. Annual is the default and
-    provides deeper history.
+    Annual or interim reports are available. Annual is the default and provides
+    deeper history.
 
     By default restatements are excluded, but they can optionally be included.
 
@@ -174,7 +174,7 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
         exclude these conids
 
     interim : bool, optional
-        return interim/quarterly reports (default is to return annual reports,
+        return interim reports (default is to return annual reports,
         which provide deeper history)
 
     restatements : bool, optional
@@ -199,7 +199,7 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
                                     end_date="2017-01-01")
     >>> financials = pd.read_csv(f, parse_dates=["StatementDate", "SourceDate", "FiscalPeriodEndDate"])
 
-    Query net income (COA code NINC) from interim/quarterly reports for two securities
+    Query net income (COA code NINC) from interim reports for two securities
     (identified by conid) and include restatements:
 
     >>> download_reuters_financials(["NINC"], f, conids=[123456, 234567],
