@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import os
+import six
 import requests
-from .exceptions import ImproperlyConfigured
+from .exceptions import ImproperlyConfigured, CannotConnectToHouston
 from quantrocket.cli.utils.output import json_to_cli
 
 class Houston(requests.Session):
@@ -106,7 +107,37 @@ To set the environment variable on Linux, run:
             kwargs["params"].pop("conids")
             kwargs["data"] = data
 
-        return super(Houston, self).request(method, url, *args, **kwargs)
+        try:
+            return super(Houston, self).request(method, url, *args, **kwargs)
+        except requests.ConnectionError as error:
+            if "Failed to establish a new connection" not in str(error):
+                raise
+
+            parsed = six.moves.urllib.parse.urlparse(error.request.url)
+
+            raise CannotConnectToHouston("""{error}
+
+Could not connect to houston at {scheme}://{netloc}
+
+Please verify that houston is running and bound to port {port} by checking the output of:
+
+    docker ps
+
+The output should resemble:
+
+    quantrocket/houston ... 0.0.0.0:{port}->80/tcp ... quantrocket_houston_1
+    ...
+
+If not running you can deploy it with:
+
+    docker-compose -p quantrocket up -d
+""".format(
+       error=error,
+       scheme=parsed.scheme,
+       netloc=parsed.netloc,
+       port=parsed.port
+   ))
+
 
     @staticmethod
     def raise_for_status_with_json(response):

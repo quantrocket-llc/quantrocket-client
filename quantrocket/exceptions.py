@@ -14,3 +14,6 @@
 
 class ImproperlyConfigured(Exception):
     pass
+
+class CannotConnectToHouston(Exception):
+    pass
