@@ -18,6 +18,31 @@ import requests
 from .exceptions import ImproperlyConfigured, CannotConnectToHouston
 from quantrocket.cli.utils.output import json_to_cli
 
+CANNOT_CONNECT_TO_HOUSTON_ERROR_LOCAL = """{error}
+
+Could not connect to houston at {scheme}://{netloc}
+
+Please verify that houston is running and bound to port {port} by checking the output of:
+
+    docker ps
+
+The output should resemble:
+
+    quantrocket/houston ... 0.0.0.0:{port}->80/tcp ... quantrocket_houston_1
+    ...
+
+If not running you can deploy it with:
+
+    docker-compose -p quantrocket up -d
+"""
+
+CANNOT_CONNECT_TO_HOUSTON_ERROR_CLOUD = """{error}
+
+Could not connect to houston at {scheme}://{netloc}
+
+Please verify that the URL is correct and houston is running.
+"""
+
 class Houston(requests.Session):
     """
     Subclass of `requests.Session` that provides an interface to the houston
@@ -115,28 +140,19 @@ To set the environment variable on Linux, run:
 
             parsed = six.moves.urllib.parse.urlparse(error.request.url)
 
-            raise CannotConnectToHouston("""{error}
+            if parsed.port == 443:
+                raise CannotConnectToHouston(CANNOT_CONNECT_TO_HOUSTON_ERROR_CLOUD.format(
+                    error=error,
+                    scheme=parsed.scheme,
+                    netloc=parsed.netloc
+                ))
 
-Could not connect to houston at {scheme}://{netloc}
-
-Please verify that houston is running and bound to port {port} by checking the output of:
-
-    docker ps
-
-The output should resemble:
-
-    quantrocket/houston ... 0.0.0.0:{port}->80/tcp ... quantrocket_houston_1
-    ...
-
-If not running you can deploy it with:
-
-    docker-compose -p quantrocket up -d
-""".format(
-       error=error,
-       scheme=parsed.scheme,
-       netloc=parsed.netloc,
-       port=parsed.port
-   ))
+            raise CannotConnectToHouston(CANNOT_CONNECT_TO_HOUSTON_ERROR_LOCAL.format(
+                error=error,
+                scheme=parsed.scheme,
+                netloc=parsed.netloc,
+                port=parsed.port
+            ))
 
 
     @staticmethod
