@@ -140,6 +140,10 @@ To set the environment variable on Linux, run:
 
             parsed = six.moves.urllib.parse.urlparse(error.request.url)
 
+            if parsed.hostname == "houston" and parsed.port in (None, 80):
+                # don't do anything special within containers
+                raise
+
             if parsed.port == 443:
                 raise CannotConnectToHouston(CANNOT_CONNECT_TO_HOUSTON_ERROR_CLOUD.format(
                     error=error,
