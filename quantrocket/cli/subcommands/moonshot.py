@@ -194,6 +194,51 @@ Run a 2-D parameter scan for multiple strategies:
         help="the location to write the results file (omit to write to stdout)")
     parser.set_defaults(func="quantrocket.moonshot._cli_scan_parameters")
 
+    examples = """
+Run one or more strategies and generate orders.
+
+Allocations are read from configuration (quantrocket.moonshot.allocations.yml).
+
+Examples:
+
+Generate orders for a single strategy called umd-nyse:
+
+    quantrocket moonshot orders umd-nyse -o orders.csv
+
+Generate orders and automatically place them (if any) through the blotter:
+
+    quantrocket moonshot orders umd-nyse | quantrocket blotter order -f -
+
+Generate orders for multiple strategies for a particular account:
+
+    quantrocket moonshot orders umd-japan hml-japan --accounts DU12345 -o orders.csv
+    """
+    parser = _subparsers.add_parser(
+        "orders",
+        help="run one or more strategies and generate orders.",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "strategies",
+        nargs="+",
+        metavar="CODE",
+        help="one or more strategy codes")
+    parser.add_argument(
+        "-a", "--accounts",
+        metavar="ACCOUNT",
+        nargs="*",
+        help="limit to these accounts")
+    parser.add_argument(
+        "-j", "--json",
+        action="store_true",
+        help="format orders as JSON (default is CSV)")
+    parser.add_argument(
+        "-o", "--outfile",
+        metavar="FILEPATH",
+        dest="filepath_or_buffer",
+        help="the location to write the orders file (omit to write to stdout)")
+    parser.set_defaults(func="quantrocket.moonshot._cli_generate_orders")
+
     #parser = _subparsers.add_parser("walkforward", help="run walkforward analysis for one or more strategies")
     #parser.add_argument("start_date", metavar="YYYY-MM-DD", help="start date")
     #parser.add_argument("end_date", metavar="YYYY-MM-DD", help="end date")

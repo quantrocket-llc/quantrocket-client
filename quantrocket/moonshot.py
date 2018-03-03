@@ -204,3 +204,45 @@ def _cli_scan_parameters(*args, **kwargs):
     if params:
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(scan_parameters, *args, **kwargs)
+
+def generate_orders(strategies, accounts=None, json=False, filepath_or_buffer=None):
+    """
+    Run one or more strategies and generate orders.
+
+    Allocations are read from configuration (quantrocket.moonshot.allocations.yml).
+
+    Parameters
+    ----------
+    strategies : list of str, required
+        one or more strategy codes
+
+    accounts : list of str, optional
+        limit to these accounts
+
+    json : bool
+        format orders as JSON (default is CSV)
+
+    filepath_or_buffer : str, optional
+        the location to write the orders file (omit to write to stdout)
+
+    Returns
+    -------
+    None
+    """
+    params = {}
+    if strategies:
+        params["strategies"] = strategies
+    if accounts:
+        params["accounts"] = accounts
+
+    output = "json" if json else "csv"
+
+    response = houston.get("/moonshot/orders.{0}".format(output), params=params, timeout=60*5)
+
+    houston.raise_for_status_with_json(response)
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_generate_orders(*args, **kwargs):
+    return json_to_cli(generate_orders, *args, **kwargs)
