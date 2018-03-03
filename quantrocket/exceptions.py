@@ -17,3 +17,6 @@ class ImproperlyConfigured(Exception):
 
 class CannotConnectToHouston(Exception):
     pass
+
+class UnavailableInsideJupyter(EnvironmentError):
+    pass

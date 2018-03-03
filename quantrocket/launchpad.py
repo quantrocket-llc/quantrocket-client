@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import webbrowser
 from quantrocket.houston import houston
+from quantrocket.exceptions import UnavailableInsideJupyter
 from quantrocket.cli.utils.output import json_to_cli
 
 def list_gateway_statuses(exchanges=None, sec_type=None, research_vendors=None, status=None,
@@ -203,6 +205,13 @@ def open_ibg_gui(gateways=None):
     -------
     None
     """
+    if os.environ.get("YOU_ARE_INSIDE_JUPYTER", False):
+        raise UnavailableInsideJupyter("""Cannot open GUI inside Jupyter
+
+Please use the Jupyter commands menu to open the IB Gateway GUI
+(Commands > QuantRocket > IB Gateway GUI)
+""")
+
     if not gateways:
         gateways = sorted(list_gateway_statuses())
     for gateway in gateways:

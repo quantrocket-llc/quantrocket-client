@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import webbrowser
 from quantrocket.houston import houston
+from quantrocket.exceptions import UnavailableInsideJupyter
 from quantrocket.cli.utils.output import json_to_cli
 
 def open_jupyter():
@@ -24,7 +26,13 @@ def open_jupyter():
     -------
     None
     """
-    url = "{0}/jupyter".format(houston.base_url)
+    if os.environ.get("YOU_ARE_INSIDE_JUPYTER", False):
+        raise UnavailableInsideJupyter("""Cannot open Jupyter
+
+You can't open jupyter because you are already inside jupyter!
+""")
+
+    url = "{0}/jupyter/lab".format(houston.base_url)
     webbrowser.open(url)
 
 def _cli_open_jupyter(*args, **kwargs):
