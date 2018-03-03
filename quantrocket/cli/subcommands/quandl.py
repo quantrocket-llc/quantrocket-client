@@ -15,6 +15,9 @@
 SUPPORTED_DBS = ["ZEP", "NS1"]
 
 def add_subparser(subparsers):
+
+    # not implemented
+    return
     _parser = subparsers.add_parser("quandl", description="QuantRocket Quandl data CLI", help="Manage and query Quandl datasets")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True

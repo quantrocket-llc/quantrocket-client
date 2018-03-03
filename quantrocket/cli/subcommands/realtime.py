@@ -13,6 +13,9 @@
 # limitations under the License.
 
 def add_subparser(subparsers):
+
+    # not implemented
+    return
     _parser = subparsers.add_parser("realtime", description="QuantRocket realtime data CLI", help="Manage and query real-time data")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
