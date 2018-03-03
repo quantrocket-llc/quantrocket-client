@@ -15,7 +15,7 @@
 import argparse
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("flightlog", description="QuantRocket logging service CLI", help="quantrocket flightlog -h")
+    _parser = subparsers.add_parser("flightlog", description="QuantRocket logging service CLI", help="Monitor and download logs")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 

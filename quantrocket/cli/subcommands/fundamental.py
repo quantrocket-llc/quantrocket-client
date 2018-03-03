@@ -15,7 +15,7 @@
 import argparse
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("fundamental", description="QuantRocket fundamental data CLI", help="quantrocket fundamental -h")
+    _parser = subparsers.add_parser("fundamental", description="QuantRocket fundamental data CLI", help="Fetch and query fundamental data")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 

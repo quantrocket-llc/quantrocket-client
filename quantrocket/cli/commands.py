@@ -63,8 +63,8 @@ def handle_error(msg):
         logger.error(l)
 
 def get_parser():
-    parser = argparse.ArgumentParser(description="QuantRocket CLI")
-    subparsers = parser.add_subparsers(title="commands", dest="command", help="for command-specific help type:")
+    parser = argparse.ArgumentParser(description="QuantRocket command line interface")
+    subparsers = parser.add_subparsers(title="commands", dest="command", help="for specific help type: quantrocket <subcommand> -h")
     subparsers.required = True
     add_subcommands(subparsers)
     return parser

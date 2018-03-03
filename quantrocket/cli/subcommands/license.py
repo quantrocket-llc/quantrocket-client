@@ -15,7 +15,7 @@
 import argparse
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("license", description="QuantRocket license service CLI", help="quantrocket license -h")
+    _parser = subparsers.add_parser("license", description="QuantRocket license service CLI", help="Query license details")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 

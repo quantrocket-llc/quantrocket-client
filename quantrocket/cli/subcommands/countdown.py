@@ -15,7 +15,7 @@
 import argparse
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("countdown", description="QuantRocket cron service CLI", help="quantrocket countdown -h")
+    _parser = subparsers.add_parser("countdown", description="QuantRocket cron service CLI", help="Manage crontabs")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 

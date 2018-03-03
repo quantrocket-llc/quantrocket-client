@@ -27,7 +27,7 @@ Access the Jupyter environment:
     parser = subparsers.add_parser(
         "jupyter",
         description="QuantRocket Jupyter CLI",
-        help="access the Jupyter environment in a web browser",
+        help="Access JupyterLab in a web browser",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.set_defaults(func="quantrocket.jupyter._cli_open_jupyter")

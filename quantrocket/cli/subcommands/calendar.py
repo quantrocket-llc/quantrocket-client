@@ -13,7 +13,7 @@
 # limitations under the License.
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("calendar", description="QuantRocket calendar CLI", help="quantrocket calendar -h")
+    _parser = subparsers.add_parser("calendar", description="QuantRocket calendar CLI", help="Manage exchange calendars")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 

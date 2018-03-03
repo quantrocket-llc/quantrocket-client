@@ -15,7 +15,7 @@
 import argparse
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("history", description="QuantRocket historical market data CLI", help="quantrocket history -h")
+    _parser = subparsers.add_parser("history", description="QuantRocket historical market data CLI", help="Fetch and query historical data")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 

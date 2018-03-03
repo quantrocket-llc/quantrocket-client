@@ -15,7 +15,7 @@
 import argparse
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("db", description="QuantRocket database service CLI", help="quantrocket db -h")
+    _parser = subparsers.add_parser("db", description="QuantRocket database service CLI", help="Manage, download, and backup databases")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 

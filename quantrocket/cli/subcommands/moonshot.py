@@ -16,7 +16,7 @@ import argparse
 from quantrocket.cli.utils.parse import dict_str, list_or_int_or_float_or_str
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("moonshot", description="QuantRocket Moonshot CLI", help="quantrocket moonshot -h")
+    _parser = subparsers.add_parser("moonshot", description="QuantRocket Moonshot CLI", help="Backtest and trade with Moonshot")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 

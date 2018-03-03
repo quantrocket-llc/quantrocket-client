@@ -15,7 +15,7 @@
 import argparse
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("launchpad", description="QuantRocket IB Gateway service CLI", help="quantrocket launchpad -h")
+    _parser = subparsers.add_parser("launchpad", description="QuantRocket IB Gateway service CLI", help="Start and stop IB Gateway")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 

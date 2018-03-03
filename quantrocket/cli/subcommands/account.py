@@ -16,7 +16,7 @@ import argparse
 from quantrocket.cli.utils.parse import dict_str
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("account", description="QuantRocket account CLI", help="quantrocket account -h")
+    _parser = subparsers.add_parser("account", description="QuantRocket account CLI", help="Query account balances and exchange rates")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
