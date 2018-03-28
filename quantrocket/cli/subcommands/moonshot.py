@@ -23,19 +23,24 @@ def add_subparser(subparsers):
     examples = """
 Backtest one or more strategies.
 
-By default returns a PDF tear sheet of performance charts but can also return a CSV of
-backtest results.
+By default returns a CSV of backtest results but can also return a PDF tear sheet of
+performance charts.
+
+If testing multiple strategies, each column in the CSV represents a strategy.
+If testing a single strategy with the `--details` option, each column in the CSV
+represents a security in the strategy universe.
 
 Examples:
-
-Backtest a single strategy called demo, using all available history:
-
-    quantrocket moonshot backtest demo -o tearsheet.pdf
 
 Backtest several HML (High Minus Low) strategies from 2005-2015 and return a
 CSV of results:
 
-    quantrocket moonshot backtest hml-us hml-eur hml-asia -s 2005-01-01 -e 2015-12-31 --csv -o hml_results.csv
+    quantrocket moonshot backtest hml-us hml-eur hml-asia -s 2005-01-01 -e 2015-12-31 -o hml_results.csv
+
+Backtest a single strategy called demo using all available history and return a
+PDF tear sheet:
+
+    quantrocket moonshot backtest demo --pdf -o tearsheet.pdf
     """
     parser = _subparsers.add_parser(
         "backtest",
@@ -85,10 +90,12 @@ CSV of results:
         help="return detailed results for all securities instead of aggregating to "
         "strategy level (only supported for single-strategy backtests)")
     outputs.add_argument(
-        "--csv",
-        action="store_true",
-        help="return a CSV of performance data (default is to return a PDF "
-        "performance tear sheet)")
+        "--pdf",
+        action="store_const",
+        const="pdf",
+        dest="output",
+        help="return a PDF performance tear sheet (default is to return a CSV "
+        "of performance results)")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="FILEPATH",
@@ -99,18 +106,18 @@ CSV of results:
     examples="""
 Run a parameter scan for one or more strategies.
 
-By default returns a PDF tear sheet of results but can also return a CSV.
+By default returns a CSV of scan results but can also return a PDF tear sheet.
 
 Examples:
 
 Run a parameter scan for several different moving averages on a strategy
-called trend-friend:
+called trend-friend and return a PDF:
 
-    quantrocket moonshot paramscan trend-friend -p MAVG_WINDOW -v 20 50 100 -o tearsheet.pdf
+    quantrocket moonshot paramscan trend-friend -p MAVG_WINDOW -v 20 50 100 --pdf -o tearsheet.pdf
 
-Run a 2-D parameter scan for multiple strategies:
+Run a 2-D parameter scan for multiple strategies and return a PDF:
 
-    quantrocket moonshot paramscan strat1 strat2 strat3 -p MIN_STD -v 1 1.5 2 --param2 STD_WINDOW --vals2 20 50 100 200 -o tearsheet.pdf
+    quantrocket moonshot paramscan strat1 strat2 strat3 -p MIN_STD -v 1 1.5 2 --param2 STD_WINDOW --vals2 20 50 100 200 --pdf -o tearsheet.pdf
     """
     parser = _subparsers.add_parser(
         "paramscan",
@@ -183,10 +190,11 @@ Run a 2-D parameter scan for multiple strategies:
         "(pass as 'param:value')")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
-        "--csv",
-        action="store_true",
-        help="return a CSV of results data (default is to return a PDF "
-        "tear sheet)")
+        "--pdf",
+        action="store_const",
+        const="pdf",
+        dest="output",
+        help="return a PDF tear sheet of results (default is to return a CSV)")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="FILEPATH",

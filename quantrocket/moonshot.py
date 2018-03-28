@@ -19,12 +19,16 @@ from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 
 def backtest(strategies, start_date=None, end_date=None, allocations=None,
-                 nlv=None, params=None, details=None, csv=None, filepath_or_buffer=None):
+             nlv=None, params=None, details=None, output="csv", csv=None, filepath_or_buffer=None):
     """
     Backtest one or more strategies.
 
-    By default returns a PDF tear sheet of performance charts but can also return a CSV of
-    backtest results.
+    By default returns a CSV of backtest results but can also return a PDF tear sheet
+    of performance charts.
+
+    If testing multiple strategies, each column in the CSV represents a strategy.
+    If testing a single strategy and `details=True`, each column in the CSV
+    represents a security in the strategy universe.
 
     Parameters
     ----------
@@ -54,9 +58,12 @@ def backtest(strategies, start_date=None, end_date=None, allocations=None,
         return detailed results for all securities instead of aggregating to
         strategy level (only supported for single-strategy backtests)
 
+    output : str, required
+        the output format (choices are csv or pdf)
+
     csv : bool
-        return a CSV of performance data (default is to return a PDF
-        performance tear sheet)
+       DEPRECATED: this argument will be removed in a future version. This argument
+       may be omitted as CSV is the default.
 
     filepath_or_buffer : str, optional
         the location to write the results file (omit to write to stdout)
@@ -65,7 +72,17 @@ def backtest(strategies, start_date=None, end_date=None, allocations=None,
     -------
     None
     """
+    if output not in ("csv", "pdf"):
+        raise ValueError("invalid output: {0} (choices are csv or pdf".format(output))
+
+    if csv is not None:
+        import warnings
+        warnings.warn(
+            "the `csv` argument is deprecated and will removed in a future version; "
+            "this argument may be omitted as csv is the default", DeprecationWarning)
+
     _params = {}
+
     if strategies:
         _params["strategies"] = strategies
     if start_date:
@@ -78,12 +95,11 @@ def backtest(strategies, start_date=None, end_date=None, allocations=None,
         _params["nlv"] = dict_to_dict_strs(nlv)
     if details:
         _params["details"] = details
-    if csv:
-        _params["csv"] = csv
     if params:
         _params["params"] = dict_to_dict_strs(params)
 
-    response = houston.post("/moonshot/backtests", params=_params, timeout=60*60*24)
+    response = houston.post("/moonshot/backtests.{0}".format(output),
+                            params=_params, timeout=60*60*24)
 
     houston.raise_for_status_with_json(response)
 
@@ -104,12 +120,12 @@ def _cli_backtest(*args, **kwargs):
 
 def scan_parameters(strategies, start_date=None, end_date=None,
                     param1=None, vals1=None, param2=None, vals2=None,
-                    allocations=None, nlv=None, params=None, csv=None,
-                    filepath_or_buffer=None):
+                    allocations=None, nlv=None, params=None, output="csv",
+                    csv=None, filepath_or_buffer=None):
     """
     Run a parameter scan for one or more strategies.
 
-    By default returns a PDF tear sheet of results but can also return a CSV.
+    By default returns a CSV of scan results but can also return a PDF tear sheet.
 
     Parameters
     ----------
@@ -151,9 +167,12 @@ def scan_parameters(strategies, start_date=None, end_date=None,
         one or more strategy params to set on the fly before backtesting
         (pass as {param:value})
 
+    output : str, required
+        the output format (choices are csv or pdf)
+
     csv : bool
-        return a CSV of performance data (default is to return a PDF
-        tear sheet)
+        DEPRECATED: this argument will be removed in a future version. This argument
+        may be omitted as CSV is the default.
 
     filepath_or_buffer : str, optional
         the location to write the results file (omit to write to stdout)
@@ -162,6 +181,15 @@ def scan_parameters(strategies, start_date=None, end_date=None,
     -------
     None
     """
+    if output not in ("csv", "pdf"):
+        raise ValueError("invalid output: {0} (choices are csv or pdf".format(output))
+
+    if csv is not None:
+        import warnings
+        warnings.warn(
+            "the `csv` argument is deprecated and will removed in a future version; "
+            "this argument may be omitted as csv is the default", DeprecationWarning)
+
     _params = {}
     if strategies:
         _params["strategies"] = strategies
@@ -181,12 +209,10 @@ def scan_parameters(strategies, start_date=None, end_date=None,
         _params["allocations"] = dict_to_dict_strs(allocations)
     if nlv:
         _params["nlv"] = dict_to_dict_strs(nlv)
-    if csv:
-        _params["csv"] = csv
     if params:
         _params["params"] = dict_to_dict_strs(params)
 
-    response = houston.post("/moonshot/paramscans", params=_params, timeout=60*60*24)
+    response = houston.post("/moonshot/paramscans.{0}".format(output), params=_params, timeout=60*60*24)
 
     houston.raise_for_status_with_json(response)
 
