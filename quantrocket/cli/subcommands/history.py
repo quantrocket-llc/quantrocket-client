@@ -113,11 +113,19 @@ market data for Australian stocks from the realtime service:
         "-p", "--primary-exchange",
         action="store_true",
         help="limit to data from the primary exchange")
-    parser.add_argument(
+    times_group = parser.add_mutually_exclusive_group()
+    times_group.add_argument(
         "--times",
         nargs="*",
         metavar="HH:MM:SS",
-        help="limit to these times")
+        help="limit to these times (refers to the bar's start time; mutually exclusive "
+        "with --between-times)")
+    times_group.add_argument(
+        "--between-times",
+        nargs=2,
+        metavar="HH:MM:SS",
+        help="limit to times between these two times (refers to the bar's start time; "
+        "mutually exclusive with --times)")
     parser.add_argument(
         "-n", "--no-config",
         action="store_true",

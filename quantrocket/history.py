@@ -20,7 +20,7 @@ from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
 def create_db(code, universes=None, start_date=None, end_date=None,
               vendor=None, bar_size=None, bar_type=None, outside_rth=False,
-              primary_exchange=False, times=None,
+              primary_exchange=False, times=None, between_times=None,
               no_config=False, config_filepath_or_buffer=None):
     """
     Create a new history database.
@@ -73,7 +73,12 @@ def create_db(code, universes=None, start_date=None, end_date=None,
         limit to data from the primary exchange (default False)
 
     times : list of str (HH:MM:SS), optional
-        limit to these times
+        limit to these times (refers to the bar's start time; mutually exclusive
+        with `between_times`)
+
+    between_times : list of str (HH:MM:SS), optional
+        limit to times between these two times (refers to the bar's start time;
+        mutually exclusive with `times`)
 
     no_config : bool
         create a database with no config (data can be loaded manually instead of fetched
@@ -107,6 +112,8 @@ def create_db(code, universes=None, start_date=None, end_date=None,
         params["primary_exchange"] = primary_exchange
     if times:
         params["times"] = times
+    if between_times:
+        params["between_times"] = between_times
     if no_config:
         params["no_config"] = True
 
