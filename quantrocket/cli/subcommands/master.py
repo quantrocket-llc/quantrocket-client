@@ -530,3 +530,163 @@ Delist a security by symbol + exchange:
         choices=["STK", "ETF", "FUT", "CASH", "IND"],
         help="the security type of the security to be delisted (if needed to disambiguate). Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.master._cli_delist_security")
+
+    examples = """
+Fetch upcoming trading hours for exchanges and save to securites master database.
+
+Examples:
+
+Fetch trading hours for all exchanges in securities master database:
+
+    quantrocket master fetch-calendar
+    """
+    parser = _subparsers.add_parser(
+        "fetch-calendar",
+        help="fetch upcoming trading hours for exchanges and save to securites master database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-e", "--exchanges",
+        help="limit to these exchanges")
+    parser.set_defaults(func="quantrocket.master._cli_fetch_calendar")
+
+    examples = """
+Check whether exchanges are open or closed.
+
+Examples:
+
+Check whether NYSE is open or closed now:
+
+    quantrocket master calendar NYSE
+
+Check whether the Tokyo Stock Exchange was open or closed 5 hours ago:
+
+    quantrocket master calendar TSEJ --ago 5h
+
+Check whether GLOBEX will be open or closed in 30 minutes:
+
+    quantrocket master calendar GLOBEX --in 30min
+    """
+    parser = _subparsers.add_parser(
+        "calendar",
+        help="check whether exchanges are open or closed",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "exchanges",
+        metavar="EXCHANGE",
+        nargs="+",
+        help="the exchange(s) to check")
+    parser.add_argument(
+        "-t", "--sec-type",
+        metavar="SEC_TYPE",
+        choices=["STK", "FUT", "CASH", "OPT"],
+        help="the security type, if needed to disambiguate for exchanges that "
+        "trade multiple security types. Possible choices: %(choices)s")
+    timedelta_group = parser.add_mutually_exclusive_group()
+    timedelta_group.add_argument(
+        "-i", "--in",
+        metavar="TIMEDELTA",
+        dest="in_",
+        help="check whether exchanges will be open or closed at this point in the "
+        "future (use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+    timedelta_group.add_argument(
+        "-a", "--ago",
+        metavar="TIMEDELTA",
+        help="check whether exchanges were open or closed this long ago "
+        "(use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+    parser.set_defaults(func="quantrocket.master._cli_list_calendar_statuses")
+
+    examples = """
+Assert that one or more exchanges are open and exit non-zero if closed.
+
+Intended to be used as a conditional for running other commands.
+
+Examples:
+
+Place Moonshot orders if NYSE is open now:
+
+    quantrocket master isopen NYSE && quantrocket moonshot orders my-strategy | quantrocket blotter order -f -
+
+Fetch historical data for Australian stocks if the exchange was open 4 hours ago:
+
+    quantrocket master isopen ASX --ago 4h && quantrocket history fetch asx-stk-1d
+
+Log a message if the London Stock Exchange will be open in 30 minutes:
+
+    quantrocket master isopen LSE --in 30min && quantrocket flightlog log 'the market opens soon!'
+    """
+    parser = _subparsers.add_parser(
+        "isopen",
+        help="assert that one or more exchanges are open and exit non-zero if closed",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "exchanges",
+        metavar="EXCHANGE",
+        nargs="+",
+        help="the exchange(s) to check")
+    parser.add_argument(
+        "-t", "--sec-type",
+        metavar="SEC_TYPE",
+        choices=["STK", "FUT", "CASH", "OPT"],
+        help="the security type, if needed to disambiguate for exchanges that "
+        "trade multiple security types. Possible choices: %(choices)s")
+    timedelta_group = parser.add_mutually_exclusive_group()
+    timedelta_group.add_argument(
+        "-i", "--in",
+        metavar="TIMEDELTA",
+        dest="in_",
+        help="assert that exchanges will be open at this point in the "
+        "future (use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+    timedelta_group.add_argument(
+        "-a", "--ago",
+        metavar="TIMEDELTA",
+        help="assert that exchanges were open this long ago "
+        "(use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+    parser.set_defaults(func="quantrocket.master._cli_isopen")
+
+    examples = """
+Assert that one or more exchanges are closed and exit non-zero if open.
+
+Intended to be used as a conditional for running other commands.
+
+Examples:
+
+Place Moonshot orders if the NYSE will be closed NYSE in 1 hour:
+
+    quantrocket master isclosed NYSE --in 1h && quantrocket moonshot orders my-strategy | quantrocket blotter order -f -
+
+Fetch historical data for Australian stocks if the exchange is closed now:
+
+    quantrocket master isclosed ASX && quantrocket history fetch asx-stk-1d
+    """
+    parser = _subparsers.add_parser(
+        "isclosed",
+        help="assert that one or more exchanges are closed and exit non-zero if open",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "exchanges",
+        metavar="EXCHANGE",
+        nargs="+",
+        help="the exchange(s) to check")
+    parser.add_argument(
+        "-t", "--sec-type",
+        metavar="SEC_TYPE",
+        choices=["STK", "FUT", "CASH", "OPT"],
+        help="the security type, if needed to disambiguate for exchanges that "
+        "trade multiple security types. Possible choices: %(choices)s")
+    timedelta_group = parser.add_mutually_exclusive_group()
+    timedelta_group.add_argument(
+        "-i", "--in",
+        metavar="TIMEDELTA",
+        dest="in_",
+        help="assert that exchanges will be closed at this point in the "
+        "future (use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+    timedelta_group.add_argument(
+        "-a", "--ago",
+        metavar="TIMEDELTA",
+        help="assert that exchanges were closed this long ago "
+        "(use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+    parser.set_defaults(func="quantrocket.master._cli_isclosed")

@@ -547,3 +547,85 @@ def _cli_load_or_show_rollrules(filename=None):
         return json_to_cli(load_rollrules_config, filename)
     else:
         return json_to_cli(get_rollrules_config)
+
+def fetch_calendar(exchanges=None):
+    """
+    Fetch upcoming trading hours for exchanges and save to securites master database.
+
+    Parameters
+    ----------
+    exchanges : list of str, optional
+        limit to these exchanges
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    params = {}
+    if exchanges:
+        params["exchanges"] = exchanges
+
+    response = houston.post("/master/calendar", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_fetch_calendar(*args, **kwargs):
+    return json_to_cli(fetch_calendar, *args, **kwargs)
+
+def list_calendar_statuses(exchanges, sec_type=None, in_=None, ago=None):
+    """
+    Check whether exchanges are open or closed.
+
+    Parameters
+    ----------
+    exchanges : list of str, required
+        the exchange(s) to check
+
+    sec_type : str, optional
+        the security type, if needed to disambiguate for exchanges that
+        trade multiple security types. Possible choices: STK, FUT, CASH, OPT
+
+    in_ : str, optional
+        check whether exchanges will be open or closed at this point in the
+        future (use Pandas timedelta string, e.g. 2h or 30min or 1d)
+
+    ago : str, optional
+        check whether exchanges were open or closed this long ago
+        (use Pandas timedelta string, e.g. 2h or 30min or 1d)
+
+    Returns
+    -------
+    dict
+        exchange calendar status
+    """
+    params = {}
+    if exchanges:
+        params["exchanges"] = exchanges
+    if sec_type:
+        params["sec_type"] = sec_type
+    if in_:
+        params["in"] = in_
+    if ago:
+        params["ago"] = ago
+
+    response = houston.get("/master/calendar", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_list_calendar_statuses(*args, **kwargs):
+    return json_to_cli(list_calendar_statuses, *args, **kwargs)
+
+def _cli_isopen(*args, **kwargs):
+    statuses = list_calendar_statuses(*args, **kwargs)
+    is_open = all([
+        calendar["status"] == "open" for calendar in statuses.values()
+    ])
+    return '', int(not is_open)
+
+def _cli_isclosed(*args, **kwargs):
+    statuses = list_calendar_statuses(*args, **kwargs)
+    is_closed = all([
+        calendar["status"] == "closed" for calendar in statuses.values()
+    ])
+    return '', int(not is_closed)
