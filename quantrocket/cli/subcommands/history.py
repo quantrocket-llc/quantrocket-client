@@ -180,6 +180,11 @@ in front of other queued requests:
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
         help="fetch history up to this end date (overrides config)")
+    parser.add_argument(
+        "--delist-missing",
+        action="store_true",
+        default=False,
+        help="auto-delist securities that are no longer available from IB")
     parser.set_defaults(func="quantrocket.history._cli_fetch_history")
 
     examples = """
