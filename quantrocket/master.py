@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sys
+import six
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
@@ -629,3 +630,72 @@ def _cli_isclosed(*args, **kwargs):
         calendar["status"] == "closed" for calendar in statuses.values()
     ])
     return '', int(not is_closed)
+
+def round_to_tick_sizes(infilepath_or_buffer, round_fields,
+                        how=None, append_ticksize=False,
+                        outfilepath_or_buffer=None):
+    """
+    Round prices in a CSV file to valid tick sizes.
+
+    CSV should contain columns `ConId`, `Exchange`, and the columns to be rounded
+    (e.g. `LmtPrice`). Additional columns will be ignored and returned unchanged.
+
+    Parameters
+    ----------
+    infilepath_or_buffer : str or file-like object, required
+        CSV file with prices to be rounded (specify '-' to read file from stdin)
+
+    round_fields : list of str, required
+        columns to be rounded
+
+    how : str, optional
+        which direction to round to. Possible choices: 'up', 'down', 'nearest'
+        (default is 'nearest')
+
+    append_ticksize : bool
+        append a column of tick sizes for each field to be rounded (default False)
+
+    outfilepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    Returns
+    -------
+    None
+    """
+
+    params = {}
+    if round_fields:
+        params["round_fields"] = round_fields
+    if how:
+        params["how"] = how
+    if append_ticksize:
+        params["append_ticksize"] = append_ticksize
+
+    url = "/master/ticksizes.csv"
+
+    if infilepath_or_buffer == "-":
+        # No-op if an empty file is passed on stdin
+        f = six.StringIO(sys.stdin.read())
+        if not f.getvalue():
+            return
+
+        response = houston.get(url, params=params, data=to_bytes(f))
+
+    elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
+        if infilepath_or_buffer.seekable():
+            infilepath_or_buffer.seek(0)
+        response = houston.get(url, params=params, data=to_bytes(infilepath_or_buffer))
+
+    elif infilepath_or_buffer:
+        with open(infilepath_or_buffer, "rb") as f:
+            response = houston.get(url, params=params, data=f)
+    else:
+        raise ValueError("infilepath_or_buffer is required")
+
+    houston.raise_for_status_with_json(response)
+
+    filepath_or_buffer = outfilepath_or_buffer or sys.stdout
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_round_to_tick_sizes(*args, **kwargs):
+    return json_to_cli(round_to_tick_sizes, *args, **kwargs)

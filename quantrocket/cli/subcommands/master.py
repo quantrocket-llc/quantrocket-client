@@ -690,3 +690,58 @@ Fetch historical data for Australian stocks if the exchange is closed now:
         help="assert that exchanges were closed this long ago "
         "(use Pandas timedelta string, e.g. 2h or 30min or 1d)")
     parser.set_defaults(func="quantrocket.master._cli_isclosed")
+
+    examples = """
+Round prices in a CSV file to valid tick sizes.
+
+CSV should contain columns `ConId`, `Exchange`, and the columns to be rounded
+(e.g. `LmtPrice`). Additional columns will be ignored and returned unchanged.
+
+Examples:
+
+Round the LmtPrice column in a CSV of orders and return a new CSV:
+
+    quantrocket master ticksize -f orders.csv --round LmtPrice -o rounded_orders.csv
+
+Round the StopPrice column in a CSV of orders and append the tick size as a
+new column (called StopPriceTickSize):
+
+    quantrocket master ticksize -f orders.csv -r StopPrice --append-ticksize -o rounded_orders.csv
+
+Round the LmtPrice column in a CSV of Moonshot orders then place the orders:
+
+    quantrocket moonshot orders umd-japan | quantrocket master ticksize -f - -r LmtPrice | quantrocket blotter order -f -
+    """
+    parser = _subparsers.add_parser(
+        "ticksize",
+        help="round prices in a CSV to valid tick sizes",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-f", "--infile",
+        required=True,
+        metavar="INFILE",
+        dest="infilepath_or_buffer",
+        help="CSV file with prices to be rounded (specify '-' to read file from stdin)")
+    parser.add_argument(
+        "-r", "--round",
+        nargs="+",
+        metavar="FIELD",
+        dest="round_fields",
+        help="columns to be rounded")
+    parser.add_argument(
+        "-d", "--how",
+        metavar="DIRECTION",
+        choices=["up", "down", "nearest"],
+        help="which direction to round to. Possible choices: up, down, nearest "
+        "(default is 'nearest')")
+    parser.add_argument(
+        "-a", "--append-ticksize",
+        action="store_true",
+        help="append a column of tick sizes for each field to be rounded")
+    parser.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="outfilepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    parser.set_defaults(func="quantrocket.master._cli_round_to_tick_sizes")
