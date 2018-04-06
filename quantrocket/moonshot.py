@@ -72,6 +72,8 @@ def backtest(strategies, start_date=None, end_date=None, allocations=None,
     -------
     None
     """
+    output = output or "csv"
+
     if output not in ("csv", "pdf"):
         raise ValueError("invalid output: {0} (choices are csv or pdf".format(output))
 
@@ -181,6 +183,8 @@ def scan_parameters(strategies, start_date=None, end_date=None,
     -------
     None
     """
+    output = output or "csv"
+
     if output not in ("csv", "pdf"):
         raise ValueError("invalid output: {0} (choices are csv or pdf".format(output))
 
