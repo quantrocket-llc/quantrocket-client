@@ -547,9 +547,9 @@ def get_historical_prices(codes, start_date=None, end_date=None,
     db_bar_sizes = set()
     for db in dbs:
         db_config = get_db_config(db)
-        universes = db_config.get("universes", None)
-        if universes:
-            db_universes.update(set(universes))
+        _db_universes = db_config.get("universes", None)
+        if _db_universes:
+            db_universes.update(set(_db_universes))
         bar_size = db_config.get("bar_size")
         db_bar_sizes.add(bar_size)
 
