@@ -20,3 +20,6 @@ class CannotConnectToHouston(Exception):
 
 class UnavailableInsideJupyter(EnvironmentError):
     pass
+
+class ParameterError(ValueError):
+    pass
