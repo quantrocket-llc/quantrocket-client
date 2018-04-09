@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import six
 import sys
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket.exceptions import ParameterError
 
 def fetch_reuters_financials(universes=None, conids=None):
     """
@@ -249,6 +251,138 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
 
 def _cli_download_reuters_financials(*args, **kwargs):
     return json_to_cli(download_reuters_financials, *args, **kwargs)
+
+def reindex_reuters_financials_like(reindex_like, coa_codes, fields=["Amount"],
+                           interim=False, restatements=False):
+    """
+    Return a multiindex (CoaCode, Field, Date) DataFrame of point-in-time
+    Reuters financial statements for one or more Chart of Account (COA)
+    codes, reindexed to match the index (dates) and columns (conids) of
+    `reindex_like`. Financial values are forward-filled in order to provide
+    the latest reading at any given date. Financials are indexed to the
+    SourceDate field, i.e. the date on which the financial statement was
+    released. SourceDate is shifted forward 1 day to avoid lookahead bias.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and conids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    coa_codes : list of str, required
+        the Chart of Account (COA) code(s) to query
+
+    fields : list of str
+        a list of fields to include in the resulting DataFrame. Defaults to
+        simply including the Amount field.
+
+    interim : bool
+        query interim/quarterly reports (default is to query annual reports,
+        which provide deeper history)
+
+    restatements : bool, optional
+        include restatements (default is to exclude them)
+
+    Returns
+    -------
+    DataFrame
+        a multiindex (CoaCode, Field, Date) DataFrame of financials,
+        shaped like the input DataFrame
+
+    Examples
+    --------
+    Let's calculate book value per share, defined as:
+
+        (Total Assets - Total Liabilities) / Number of shares outstanding
+
+    The COA codes for these metrics are 'ATOT' (Total Assets), 'LTLL' (Total
+    Liabilities), and 'QTCO' (Total Common Shares Outstanding).
+
+
+    >>> closes = prices.loc["Close"]
+    >>> financials = reindex_reuters_financials_like(closes, coa_codes=["ATOT", "LTLL", "QTCO"])
+    >>> tot_assets = financials.loc["ATOT"].loc["Amount"]
+    >>> tot_liabilities = financials.loc["LTLL"].loc["Amount"]
+    >>> shares_out = financials.loc["QTCO"].loc["Amount"]
+    >>> book_values_per_share = (tot_assets - tot_liabilities)/shares_out
+
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join(index_levels)))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    conids = list(reindex_like.columns)
+    start_date = reindex_like.index.min().date()
+    # Since financial reports are sparse, start well before the reindex_like
+    # min date
+    start_date -= pd.Timedelta(days=365+180)
+    start_date = start_date.isoformat()
+    end_date = reindex_like.index.max().date().isoformat()
+
+    f = six.StringIO()
+    download_reuters_financials(
+        coa_codes, f, conids=conids, start_date=start_date, end_date=end_date,
+        fields=fields, interim=interim, restatements=restatements)
+    financials = pd.read_csv(
+        f, parse_dates=["SourceDate","FiscalPeriodEndDate"])
+
+    # Rename SourceDate to match price history index name
+    financials = financials.rename(columns={"SourceDate": "Date"})
+
+    # Drop any fields we don't need
+    needed_fields = set(fields)
+    needed_fields.update(set(("ConId", "Date", "CoaCode")))
+    unneeded_fields = set(financials.columns) - needed_fields
+    if unneeded_fields:
+        financials = financials.drop(unneeded_fields, axis=1)
+
+    # Create a unioned index of input DataFrame and statement SourceDates
+    union_date_idx = reindex_like.index.union(financials.Date.values).sort_values()
+
+    all_financials = {}
+    for code in coa_codes:
+        financials_for_code = financials.loc[financials.CoaCode == code]
+        if "CoaCode" not in fields:
+            financials_for_code = financials_for_code.drop("CoaCode", axis=1)
+        financials_for_code = financials_for_code.pivot(index="ConId",columns="Date").T
+        multiidx = pd.MultiIndex.from_product(
+            (financials_for_code.index.get_level_values(0).unique(), union_date_idx),
+            names=["Field", "Date"])
+        financials_for_code = financials_for_code.reindex(index=multiidx, columns=reindex_like.columns)
+
+        # financial values are sparse so ffill
+        financials_for_code = financials_for_code.fillna(method="ffill")
+
+        # Shift to avoid lookahead bias
+        financials_for_code = financials_for_code.shift()
+
+        # In cases the statements included dates not in the input
+        # DataFrame, drop those now that we've ffilled
+        extra_dates = union_date_idx.difference(reindex_like.index)
+        if not extra_dates.empty:
+            financials_for_code.drop(extra_dates, axis=0, level="Date", inplace=True)
+
+        all_financials[code] = financials_for_code
+
+    financials = pd.concat(all_financials, names=["CoaCode", "Field", "Date"])
+
+    return financials
 
 def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
                                start_date=None, end_date=None,
