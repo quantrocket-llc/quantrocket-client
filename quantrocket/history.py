@@ -390,7 +390,7 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
         raise ValueError("Invalid ouput: {0}".format(output))
 
     response = houston.get("/history/{0}.{1}".format(code, output), params=params,
-                           timeout=60*5)
+                           timeout=60*30)
 
     houston.raise_for_status_with_json(response)
 

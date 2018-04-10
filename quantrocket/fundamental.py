@@ -241,7 +241,7 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
         raise ValueError("Invalid ouput: {0}".format(output))
 
     response = houston.get("/fundamental/reuters/financials.{0}".format(output), params=params,
-                           timeout=60*5)
+                           timeout=60*15)
 
     houston.raise_for_status_with_json(response)
 
@@ -474,7 +474,7 @@ def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
         raise ValueError("Invalid ouput: {0}".format(output))
 
     response = houston.get("/fundamental/reuters/estimates.{0}".format(output), params=params,
-                           timeout=60*5)
+                           timeout=60*15)
 
     houston.raise_for_status_with_json(response)
 
