@@ -425,7 +425,7 @@ def get_historical_prices(codes, start_date=None, end_date=None,
                           exclude_universes=None, exclude_conids=None,
                           times=None, cont_fut=None, fields=None,
                           master_fields=None, timezone=None,
-                          infer_timezone=False):
+                          infer_timezone=None):
     """
     Query one or more history databases and load prices into a DataFrame.
 
@@ -477,8 +477,9 @@ def get_historical_prices(codes, start_date=None, end_date=None,
         `pytz.all_timezones` for choices); ignored for non-intraday bar sizes
 
     infer_timezone : bool
-        infer the timezone from the securities master Timezone field; ignored
-        if `timezone` is passed; ignored for non-intraday bar sizes
+        infer the timezone from the securities master Timezone field; defaults to
+        True if using intraday bars and no `timezone` specified; ignored for
+        non-intraday bars, or if `timezone` is passed
 
     Returns
     -------
@@ -594,6 +595,16 @@ def get_historical_prices(codes, start_date=None, end_date=None,
     prices = prices.pivot(index="ConId", columns="Date").T
     prices.index.set_names(["Field", "Date"], inplace=True)
 
+
+    is_intraday = db_bar_sizes[0] not in ("1 day", "1 week", "1 month")
+
+    if is_intraday and not timezone and infer_timezone is not False:
+        infer_timezone = True
+        if not master_fields:
+            master_fields = []
+        if "Timezone" not in master_fields:
+            master_fields.append("Timezone")
+
     # Next, get the master file
     if master_fields:
         universes = universes
@@ -623,8 +634,6 @@ def get_historical_prices(codes, start_date=None, end_date=None,
 
         securities = securities.reindex(index=idx, level="Field")
         prices = pd.concat((prices, securities))
-
-    is_intraday = db_bar_sizes[0] not in ("1 day", "1 week", "1 month")
 
     if is_intraday:
         dates = pd.to_datetime(prices.index.get_level_values("Date"), utc=True)
