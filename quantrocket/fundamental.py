@@ -252,7 +252,7 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
 def _cli_download_reuters_financials(*args, **kwargs):
     return json_to_cli(download_reuters_financials, *args, **kwargs)
 
-def reindex_reuters_financials_like(reindex_like, coa_codes, fields=["Amount"],
+def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amount"],
                            interim=False, restatements=False):
     """
     Return a multiindex (CoaCode, Field, Date) DataFrame of point-in-time
@@ -301,7 +301,7 @@ def reindex_reuters_financials_like(reindex_like, coa_codes, fields=["Amount"],
 
 
     >>> closes = prices.loc["Close"]
-    >>> financials = reindex_reuters_financials_like(closes, coa_codes=["ATOT", "LTLL", "QTCO"])
+    >>> financials = get_reuters_financials_reindexed_like(closes, coa_codes=["ATOT", "LTLL", "QTCO"])
     >>> tot_assets = financials.loc["ATOT"].loc["Amount"]
     >>> tot_liabilities = financials.loc["LTLL"].loc["Amount"]
     >>> shares_out = financials.loc["QTCO"].loc["Amount"]
