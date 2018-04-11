@@ -621,7 +621,8 @@ def get_historical_prices(codes, start_date=None, end_date=None,
             universes=universes,
             exclude_conids=exclude_conids,
             exclude_universes=exclude_universes,
-            fields=master_fields
+            fields=master_fields,
+            delisted=True
         )
         securities = pd.read_csv(f, index_col="ConId")
 
