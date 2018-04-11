@@ -626,6 +626,12 @@ def get_historical_prices(codes, start_date=None, end_date=None,
         )
         securities = pd.read_csv(f, index_col="ConId")
 
+        if "Delisted" in securities.columns:
+            securities.loc[:, "Delisted"] = securities.Delisted.astype(bool)
+
+        if "Etf" in securities.columns:
+            securities.loc[:, "Etf"] = securities.Etf.astype(bool)
+
         # Append securities, indexed to the min date, to allow easy ffill on demand
         securities = pd.DataFrame(securities.T, columns=prices.columns)
         securities.index.name = "Field"
