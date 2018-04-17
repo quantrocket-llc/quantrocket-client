@@ -28,7 +28,7 @@ TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", "/tmp")
 def create_db(code, universes=None, start_date=None, end_date=None,
               vendor=None, bar_size=None, bar_type=None, outside_rth=False,
               primary_exchange=False, times=None, between_times=None,
-              no_config=False, config_filepath_or_buffer=None):
+              shard=None, no_config=False, config_filepath_or_buffer=None):
     """
     Create a new history database.
 
@@ -87,6 +87,11 @@ def create_db(code, universes=None, start_date=None, end_date=None,
         limit to times between these two times (refers to the bar's start time;
         mutually exclusive with `times`)
 
+    shard : str, optional
+        whether and how to shard the database, i.e. break it into smaller pieces. Possible
+        choices are `time` (separate database for each bar time), `off` (no sharding), or
+        `auto` (decide automatically based on bar size and universe size). Default `auto`.
+
     no_config : bool
         create a database with no config (data can be loaded manually instead of fetched
         from a vendor)
@@ -121,6 +126,8 @@ def create_db(code, universes=None, start_date=None, end_date=None,
         params["times"] = times
     if between_times:
         params["between_times"] = between_times
+    if shard:
+        params["shard"] = shard
     if no_config:
         params["no_config"] = True
 

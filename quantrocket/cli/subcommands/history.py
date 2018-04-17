@@ -127,6 +127,14 @@ market data for Australian stocks from the realtime service:
         help="limit to times between these two times (refers to the bar's start time; "
         "mutually exclusive with --times)")
     parser.add_argument(
+        "--shard",
+        metavar="HOW",
+        choices=["time", "off", "auto"],
+        help="whether and how to shard the database, i.e. break it into smaller pieces. "
+        "Possible choices are `time` (separate database for each bar time), `off` (no "
+        "sharding), or `auto` (decide automatically based on bar size and universe size). "
+        "Default `auto`.")
+    parser.add_argument(
         "-n", "--no-config",
         action="store_true",
         help="create a database with no config (data can be loaded manually instead of fetched "
