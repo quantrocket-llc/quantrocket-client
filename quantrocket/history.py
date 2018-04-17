@@ -710,7 +710,7 @@ def load_history_from_file(code, infilepath_or_buffer):
     url = "/history/{0}.csv".format(code)
 
     # Loading large amounts of data can take awhile
-    timeout = 60*10
+    timeout = 60*60
 
     if infilepath_or_buffer == "-":
         response = houston.patch(url, data=to_bytes(sys.stdin), timeout=timeout)
