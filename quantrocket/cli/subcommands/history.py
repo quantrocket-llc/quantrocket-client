@@ -372,6 +372,46 @@ Download a CSV of all historical market data since 2015 from a database called
     parser.set_defaults(func="quantrocket.history._cli_download_history_file")
 
     examples = """
+Query historical market data availability from a history database and download
+to file.
+
+This command is normally called after running:
+
+    quantrocket history fetch [DB] --availability
+
+Examples:
+
+Download a CSV of available start dates by ticker from a database called
+"usa-stk" to a file called start_dates.csv:
+
+    quantrocket history availability usa-stk -o start_dates.csv
+    """
+    parser = _subparsers.add_parser(
+        "availability",
+        help="query historical market data availability from a history database "
+        "and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the code of the database to query")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    parser.set_defaults(func="quantrocket.history._cli_download_history_availability_file")
+
+    examples = """
 Return the configuration for a history database.
 
 Examples:

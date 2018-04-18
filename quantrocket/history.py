@@ -307,6 +307,94 @@ def cancel_history_requests(codes, queues=None):
 def _cli_cancel_history_requests(*args, **kwargs):
     return json_to_cli(cancel_history_requests, *args, **kwargs)
 
+def download_history_availability_file(code, filepath_or_buffer=None, output="csv"):
+    """
+    Query historical market data availability from a history database and download to file.
+
+    This function is normally called after running:
+
+        quantrocket history fetch mydb --availability
+
+    Parameters
+    ----------
+    code : str, required
+        the code of the database to query
+
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    Returns
+    -------
+    None
+
+    See Also
+    --------
+    get_history_availability : load historical availability into Series
+    """
+    output = output or "csv"
+
+    if output not in ("csv", "json", "txt"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/history/availability/{0}.{1}".format(code, output))
+
+    houston.raise_for_status_with_json(response)
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_history_availability_file(*args, **kwargs):
+    return json_to_cli(download_history_availability_file, *args, **kwargs)
+
+def get_history_availability(code):
+    """
+    Query historical data availability from a history database, returning a
+    Series of start dates (with conids as the index) representing how far back
+    data can be fetched from IB.
+
+    This function is normally called after running a command such as:
+
+        quantrocket history fetch [DB] --availability
+
+    Parameters
+    ----------
+    code : str, required
+        the code of the database to query
+
+    Returns
+    -------
+    Series
+        Series of start dates by conid
+
+    Examples
+    --------
+    Load start dates and display cumulative number of tickers available by
+    start year:
+
+    >>> start_dates = get_history_availability("mydb")
+    >>> cum_ticker_counts = start_dates.groupby(start_dates.dt.year).count().cumsum()
+    >>> print(cum_ticker_counts)
+    StartDate
+    1984    420
+    1985    493
+    1986    539
+    1987    648
+    ...
+    """
+    # Import pandas lazily since it can take a moment to import
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    f = io.StringIO()
+    download_history_availability_file(code, f)
+    start_dates = pd.read_csv(f, index_col="ConId", parse_dates=["StartDate"])
+    return start_dates.StartDate
+
 def download_history_file(code, filepath_or_buffer=None, output="csv",
                           start_date=None, end_date=None,
                           universes=None, conids=None,
