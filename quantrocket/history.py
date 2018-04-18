@@ -202,7 +202,7 @@ def _cli_drop_db(*args, **kwargs):
     return json_to_cli(drop_db, *args, **kwargs)
 
 def fetch_history(codes, priority=False, conids=None, start_date=None, end_date=None,
-                  delist_missing=False):
+                  availability_only=False, delist_missing=False):
     """
     Fetch historical market data from IB and save it to a history database. The request is
     queued and the data is fetched asynchronously.
@@ -224,6 +224,10 @@ def fetch_history(codes, priority=False, conids=None, start_date=None, end_date=
     end_date : str (YYYY-MM-DD), optional
         fetch history up to this end date (overrides config)
 
+    availability_only : bool
+        determine and store how far back data is available but
+        don't yet fetch the data
+
     delist_missing : bool
         auto-delist securities that are no longer available from IB
 
@@ -244,6 +248,8 @@ def fetch_history(codes, priority=False, conids=None, start_date=None, end_date=
         params["start_date"] = start_date
     if end_date:
         params["end_date"] = end_date
+    if availability_only:
+        params["availability_only"] = availability_only
     if delist_missing:
         params["delist_missing"] = delist_missing
     response = houston.post("/history/queue", params=params)

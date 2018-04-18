@@ -156,6 +156,10 @@ Fetch historical data for 3 history databases of Japanese stocks:
 
     quantrocket history fetch 'jpn-lrg-1d' 'jpn-mid-1d' 'jpn-sml-1d'
 
+Fetch how far back data is available but don't yet fetch the data:
+
+    quantrocket history fetch 'usa-stk-15min' --availability
+
 Fetch historical data for a database of US futures, using the priority queue to jump
 in front of other queued requests:
 
@@ -188,6 +192,12 @@ in front of other queued requests:
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
         help="fetch history up to this end date (overrides config)")
+    parser.add_argument(
+        "-a", "--availability",
+        action="store_true",
+        dest="availability_only",
+        help="determine and store how far back data is available but "
+        "don't yet fetch the data")
     parser.add_argument(
         "--delist-missing",
         action="store_true",
