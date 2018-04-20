@@ -271,6 +271,10 @@ def generate_orders(strategies, accounts=None, json=False, filepath_or_buffer=No
 
     houston.raise_for_status_with_json(response)
 
+    # Don't write a null response to file
+    if response.content[:4] == b"null":
+        return
+
     filepath_or_buffer = filepath_or_buffer or sys.stdout
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
