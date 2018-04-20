@@ -547,6 +547,8 @@ Fetch trading hours for all exchanges in securities master database:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-e", "--exchanges",
+        nargs="*",
+        metavar="EXCHANGE",
         help="limit to these exchanges")
     parser.set_defaults(func="quantrocket.master._cli_fetch_calendar")
 
@@ -726,6 +728,7 @@ Round the LmtPrice column in a CSV of Moonshot orders then place the orders:
     parser.add_argument(
         "-r", "--round",
         nargs="+",
+        required=True,
         metavar="FIELD",
         dest="round_fields",
         help="columns to be rounded")
