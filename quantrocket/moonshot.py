@@ -235,7 +235,7 @@ def _cli_scan_parameters(*args, **kwargs):
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(scan_parameters, *args, **kwargs)
 
-def generate_orders(strategies, accounts=None, json=False, filepath_or_buffer=None):
+def trade(strategies, accounts=None, json=False, filepath_or_buffer=None):
     """
     Run one or more strategies and generate orders.
 
@@ -278,5 +278,5 @@ def generate_orders(strategies, accounts=None, json=False, filepath_or_buffer=No
     filepath_or_buffer = filepath_or_buffer or sys.stdout
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
-def _cli_generate_orders(*args, **kwargs):
-    return json_to_cli(generate_orders, *args, **kwargs)
+def _cli_trade(*args, **kwargs):
+    return json_to_cli(trade, *args, **kwargs)

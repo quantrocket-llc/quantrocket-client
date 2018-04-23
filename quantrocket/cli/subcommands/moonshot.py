@@ -211,18 +211,18 @@ Examples:
 
 Generate orders for a single strategy called umd-nyse:
 
-    quantrocket moonshot orders umd-nyse -o orders.csv
+    quantrocket moonshot trade umd-nyse -o orders.csv
 
 Generate orders and automatically place them (if any) through the blotter:
 
-    quantrocket moonshot orders umd-nyse | quantrocket blotter order -f -
+    quantrocket moonshot trade umd-nyse | quantrocket blotter order -f -
 
 Generate orders for multiple strategies for a particular account:
 
-    quantrocket moonshot orders umd-japan hml-japan --accounts DU12345 -o orders.csv
+    quantrocket moonshot trade umd-japan hml-japan --accounts DU12345 -o orders.csv
     """
     parser = _subparsers.add_parser(
-        "orders",
+        "trade",
         help="run one or more strategies and generate orders.",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -245,7 +245,7 @@ Generate orders for multiple strategies for a particular account:
         metavar="FILEPATH",
         dest="filepath_or_buffer",
         help="the location to write the orders file (omit to write to stdout)")
-    parser.set_defaults(func="quantrocket.moonshot._cli_generate_orders")
+    parser.set_defaults(func="quantrocket.moonshot._cli_trade")
 
     #parser = _subparsers.add_parser("walkforward", help="run walkforward analysis for one or more strategies")
     #parser.add_argument("start_date", metavar="YYYY-MM-DD", help="start date")
