@@ -62,8 +62,17 @@ def handle_error(msg):
     for l in msg.splitlines():
         logger.error(l)
 
+class ArgumentParser(argparse.ArgumentParser):
+    """
+    ArgumentParser that logs parsing errors to flightlog if not a tty.
+    """
+    def error(self, message):
+        if not sys.stdin.isatty():
+            handle_error(message)
+        return super(ArgumentParser, self).error(message)
+
 def get_parser():
-    parser = argparse.ArgumentParser(description="QuantRocket command line interface")
+    parser = ArgumentParser(description="QuantRocket command line interface")
     subparsers = parser.add_subparsers(title="commands", dest="command", help="for specific help type: quantrocket <subcommand> -h")
     subparsers.required = True
     add_subcommands(subparsers)
