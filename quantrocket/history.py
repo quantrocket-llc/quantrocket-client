@@ -778,8 +778,34 @@ def get_historical_prices(codes, start_date=None, end_date=None,
     prices.index = pd.MultiIndex.from_tuples(prices.index)
     prices.index.set_names(["Field", "Date", "Time"], inplace=True)
 
+    # Drop time if not intraday
     if not is_intraday:
         prices.index = prices.index.droplevel("Time")
+        return prices
+
+    # If intraday, fill missing times so that each date has the same set of
+    # times, allowing easier comparisons. Example implications:
+    # - if history is retrieved intraday, this ensures that today will have NaN
+    #   entries for future times
+    # - early close dates will have a full set of times, with NaNs after the
+    #   early close
+    unique_fields = prices.index.get_level_values("Field").unique()
+    unique_dates = prices.index.get_level_values("Date").unique()
+    unique_times = prices.index.get_level_values("Time").unique()
+    interpolated_index = None
+    for field in unique_fields:
+        if field in master_fields:
+            min_date = prices.loc[field].index.min()
+            field_idx = pd.MultiIndex.from_tuples([(field,min_date[0], min_date[1])])
+        else:
+            field_idx = pd.MultiIndex.from_product([[field], unique_dates, unique_times])
+        if interpolated_index is None:
+            interpolated_index = field_idx
+        else:
+            interpolated_index = interpolated_index.append(field_idx)
+
+    prices = prices.reindex(interpolated_index)
+    prices.index.set_names(["Field", "Date", "Time"], inplace=True)
 
     return prices
 
