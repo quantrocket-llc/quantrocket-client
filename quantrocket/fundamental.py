@@ -253,7 +253,7 @@ def _cli_download_reuters_financials(*args, **kwargs):
     return json_to_cli(download_reuters_financials, *args, **kwargs)
 
 def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amount"],
-                           interim=False, restatements=False):
+                           interim=False, restatements=False, ffill_limit=None):
     """
     Return a multiindex (CoaCode, Field, Date) DataFrame of point-in-time
     Reuters financial statements for one or more Chart of Account (COA)
@@ -271,7 +271,8 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
         be conformed
 
     coa_codes : list of str, required
-        the Chart of Account (COA) code(s) to query
+        the Chart of Account (COA) code(s) to query. Use the `list_reuters_codes`
+        function to see available codes.
 
     fields : list of str
         a list of fields to include in the resulting DataFrame. Defaults to
@@ -283,6 +284,12 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
 
     restatements : bool, optional
         include restatements (default is to exclude them)
+
+    ffill_limit : int, optional
+        maximum number of consecutive NaN values to forward fill. In other words,
+        if there is a gap with more than this number of consecutive NaNs, it will only
+        be partially filled. This can prevent using financial statements that are
+        too old, in the event that subsequent reports aren't available.
 
     Returns
     -------
@@ -367,7 +374,7 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
         financials_for_code = financials_for_code.reindex(index=multiidx, columns=reindex_like.columns)
 
         # financial values are sparse so ffill
-        financials_for_code = financials_for_code.fillna(method="ffill")
+        financials_for_code = financials_for_code.fillna(method="ffill", limit=ffill_limit)
 
         # Shift to avoid lookahead bias
         financials_for_code = financials_for_code.shift()
@@ -484,3 +491,136 @@ def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
 
 def _cli_download_reuters_estimates(*args, **kwargs):
     return json_to_cli(download_reuters_estimates, *args, **kwargs)
+
+def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
+                                         period_types=["Q"], ffill_limit=None):
+    """
+    Return a multiindex (Indicator, Field, Date) DataFrame of point-in-time
+    Reuters estimates and actuals for one or more indicator codes, reindexed
+    to match the index (dates) and columns (conids) of `reindex_like`.
+    Estimates and actuals are forward-filled in order to provide the latest
+    reading at any given date, indexed to the UpdatedDate field.
+    UpdatedDate is shifted forward 1 day to avoid lookahead bias.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and conids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    codes : list of str, required
+        the indicator code(s) to query. Use the `list_reuters_codes`
+        function to see available codes.
+
+    fields : list of str
+        a list of fields to include in the resulting DataFrame. Defaults to
+        simply including the Actual field.
+
+    period_types : list of str, optional
+        limit to these fiscal period types. Possible choices: A, Q, S, where
+        A=Annual, Q=Quarterly, S=Semi-Annual. Default is Q/Quarterly.
+
+    ffill_limit : int, optional
+        maximum number of consecutive NaN values to forward fill. In other words,
+        if there is a gap with more than this number of consecutive NaNs, it will only
+        be partially filled. This can prevent using estimates/actuals that are
+        too old, in the event that subsequent reports aren't available.
+
+    Returns
+    -------
+    DataFrame
+        a multiindex (Indicator, Field, Date) DataFrame of estimates and actuals,
+        shaped like the input DataFrame
+
+    Examples
+    --------
+    Query book value per share (code BVPS):
+
+    >>> closes = prices.loc["Close"]
+    >>> estimates = get_reuters_estimates_reindexed_like(closes, codes=["BVPS"])
+    >>> book_values_per_share = estimates.loc["BVPS"].loc["Actual"]
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join(index_levels)))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    conids = list(reindex_like.columns)
+    start_date = reindex_like.index.min().date()
+    # Since financial reports are sparse, start well before the reindex_like
+    # min date
+    start_date -= pd.Timedelta(days=365+180)
+    start_date = start_date.isoformat()
+    end_date = reindex_like.index.max().date().isoformat()
+
+    f = six.StringIO()
+    if "UpdatedDate" not in fields:
+        fields.append("UpdatedDate")
+    download_reuters_estimates(
+        codes, f, conids=conids, start_date=start_date, end_date=end_date,
+        fields=fields, period_types=period_types)
+    parse_dates = ["UpdatedDate","FiscalPeriodEndDate"]
+    if "AnnounceDate" in fields:
+        parse_dates.append("AnnounceDate")
+    estimates = pd.read_csv(
+        f, parse_dates=parse_dates)
+
+    # Drop records with no actuals
+    estimates = estimates.loc[estimates.UpdatedDate.notnull()]
+
+    # Rename UpdatedDate to match price history index name
+    estimates = estimates.rename(columns={"UpdatedDate": "Date"})
+
+    # Drop any fields we don't need
+    needed_fields = set(fields)
+    needed_fields.update(set(("ConId", "Date", "Indicator")))
+    unneeded_fields = set(estimates.columns) - needed_fields
+    if unneeded_fields:
+        estimates = estimates.drop(unneeded_fields, axis=1)
+
+    # Create a unioned index of input DataFrame and statement AnnounceDates
+    union_date_idx = reindex_like.index.union(estimates.Date.values).sort_values()
+
+    all_estimates = {}
+    for code in codes:
+        estimates_for_code = estimates.loc[estimates.Indicator == code]
+        if "Indicator" not in fields:
+            estimates_for_code = estimates_for_code.drop("Indicator", axis=1)
+        estimates_for_code = estimates_for_code.pivot(index="ConId",columns="Date").T
+        multiidx = pd.MultiIndex.from_product(
+            (estimates_for_code.index.get_level_values(0).unique(), union_date_idx),
+            names=["Field", "Date"])
+        estimates_for_code = estimates_for_code.reindex(index=multiidx, columns=reindex_like.columns)
+
+        # estimates are sparse so ffill
+        estimates_for_code = estimates_for_code.fillna(method="ffill", limit=ffill_limit)
+
+        # Shift to avoid lookahead bias
+        estimates_for_code = estimates_for_code.shift()
+
+        # In cases the statements included dates not in the input
+        # DataFrame, drop those now that we've ffilled
+        extra_dates = union_date_idx.difference(reindex_like.index)
+        if not extra_dates.empty:
+            estimates_for_code.drop(extra_dates, axis=0, level="Date", inplace=True)
+
+        all_estimates[code] = estimates_for_code
+
+    estimates = pd.concat(all_estimates, names=["Indicator", "Field", "Date"])
+
+    return estimates
