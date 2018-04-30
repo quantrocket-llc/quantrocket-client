@@ -129,7 +129,7 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
                                 start_date=None, end_date=None,
                                 universes=None, conids=None,
                                 exclude_universes=None, exclude_conids=None,
-                                interim=False, restatements=False, fields=None):
+                                interim=False, exclude_restatements=False, fields=None):
     """
     Query financial statements from the Reuters financials database and
     download to file.
@@ -139,8 +139,6 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
 
     Annual or interim reports are available. Annual is the default and provides
     deeper history.
-
-    By default restatements are excluded, but they can optionally be included.
 
     Parameters
     ----------
@@ -154,14 +152,10 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
         output format (json, csv, txt, default is csv)
 
     start_date : str (YYYY-MM-DD), optional
-        limit to statements on or after this date (based on the
-        fiscal period end date if including restatements, otherwise the
-        filing date)
+        limit to statements on or after this fiscal period end date
 
     end_date : str (YYYY-MM-DD), optional
-        limit to statements on or before this date (based on the
-        fiscal period end date if including restatements, otherwise the
-        filing date)
+        limit to statements on or before this fiscal period end date
 
     universes : list of str, optional
         limit to these universes
@@ -179,8 +173,8 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
         return interim reports (default is to return annual reports,
         which provide deeper history)
 
-    restatements : bool, optional
-        include restatements (default is to exclude them)
+    exclude_restatements : bool, optional
+        exclude restatements (default is to include them)
 
     fields : list of str, optional
         only return these fields (pass ['?'] or any invalid fieldname to see
@@ -202,10 +196,10 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
     >>> financials = pd.read_csv(f, parse_dates=["StatementDate", "SourceDate", "FiscalPeriodEndDate"])
 
     Query net income (COA code NINC) from interim reports for two securities
-    (identified by conid) and include restatements:
+    (identified by conid) and exclude restatements:
 
     >>> download_reuters_financials(["NINC"], f, conids=[123456, 234567],
-                                    interim=True, restatements=True)
+                                    interim=True, exclude_restatements=True)
 
     Query common and preferred shares outstanding (COA codes QTCO and QTPO) and return a
     minimal set of fields (several required fields will always be returned):
@@ -230,8 +224,8 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
         params["exclude_conids"] = exclude_conids
     if interim:
         params["interim"] = interim
-    if restatements:
-        params["restatements"] = restatements
+    if exclude_restatements:
+        params["exclude_restatements"] = exclude_restatements
     if fields:
         params["fields"] = fields
 
@@ -253,7 +247,7 @@ def _cli_download_reuters_financials(*args, **kwargs):
     return json_to_cli(download_reuters_financials, *args, **kwargs)
 
 def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amount"],
-                           interim=False, restatements=False, ffill_limit=None):
+                           interim=False, exclude_restatements=False, ffill_limit=None):
     """
     Return a multiindex (CoaCode, Field, Date) DataFrame of point-in-time
     Reuters financial statements for one or more Chart of Account (COA)
@@ -282,8 +276,8 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
         query interim/quarterly reports (default is to query annual reports,
         which provide deeper history)
 
-    restatements : bool, optional
-        include restatements (default is to exclude them)
+    exclude_restatements : bool, optional
+        exclude restatements (default is to include them)
 
     ffill_limit : int, optional
         maximum number of consecutive NaN values to forward fill. In other words,
@@ -345,7 +339,7 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
     f = six.StringIO()
     download_reuters_financials(
         coa_codes, f, conids=conids, start_date=start_date, end_date=end_date,
-        fields=fields, interim=interim, restatements=restatements)
+        fields=fields, interim=interim, exclude_restatements=exclude_restatements)
     financials = pd.read_csv(
         f, parse_dates=["SourceDate","FiscalPeriodEndDate"])
 
@@ -367,6 +361,10 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
         financials_for_code = financials.loc[financials.CoaCode == code]
         if "CoaCode" not in fields:
             financials_for_code = financials_for_code.drop("CoaCode", axis=1)
+        # There might be duplicate SourceDates if a company announced
+        # reports for several fiscal periods at once. In this case we keep
+        # only the last value (i.e. latest fiscal period)
+        financials_for_code = financials_for_code.drop_duplicates(subset=["Date"], keep="last")
         financials_for_code = financials_for_code.pivot(index="ConId",columns="Date").T
         multiidx = pd.MultiIndex.from_product(
             (financials_for_code.index.get_level_values(0).unique(), union_date_idx),
@@ -593,7 +591,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     if unneeded_fields:
         estimates = estimates.drop(unneeded_fields, axis=1)
 
-    # Create a unioned index of input DataFrame and statement AnnounceDates
+    # Create a unioned index of input DataFrame and UpdatedDate
     union_date_idx = reindex_like.index.union(estimates.Date.values).sort_values()
 
     all_estimates = {}
@@ -601,6 +599,10 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
         estimates_for_code = estimates.loc[estimates.Indicator == code]
         if "Indicator" not in fields:
             estimates_for_code = estimates_for_code.drop("Indicator", axis=1)
+        # There might be duplicate UpdatedDates if a company announced
+        # reports for several fiscal periods at once. In this case we keep
+        # only the last value (i.e. latest fiscal period)
+        estimates_for_code = estimates_for_code.drop_duplicates(subset=["Date"], keep="last")
         estimates_for_code = estimates_for_code.pivot(index="ConId",columns="Date").T
         multiidx = pd.MultiIndex.from_product(
             (estimates_for_code.index.get_level_values(0).unique(), union_date_idx),

@@ -143,8 +143,6 @@ available codes.
 Annual or interim reports are available. Annual is the default and provides
 deeper history.
 
-By default restatements are excluded, but they can optionally be included.
-
 Examples:
 
 Query total revenue (COA code RTLR) for a universe of Australian stocks:
@@ -152,9 +150,9 @@ Query total revenue (COA code RTLR) for a universe of Australian stocks:
     quantrocket fundamental financials RTLR -u asx-stk -s 2014-01-01 -e 2017-01-01 -o rtlr.csv
 
 Query net income (COA code NINC) from interim reports for two securities
-(identified by conid) and include restatements:
+(identified by conid) and exclude restatements:
 
-    quantrocket fundamental financials NINC -i 123456 234567 --interim --restatements -o ninc.csv
+    quantrocket fundamental financials NINC -i 123456 234567 --interim --exclude-restatements -o ninc.csv
 
 Query common and preferred shares outstanding (COA codes QTCO and QTPO) and return a
 minimal set of fields (several required fields will always be returned)
@@ -175,15 +173,11 @@ minimal set of fields (several required fields will always be returned)
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to statements on or after this date (based on the "
-        "fiscal period end date if including restatements, otherwise the "
-        "filing date)")
+        help="limit to statements on or after this fiscal period end date")
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to statements on or before this date (based on the "
-        "fiscal period end date if including restatements, otherwise the "
-        "filing date)")
+        help="limit to statements on or before this fiscal period end date")
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
@@ -212,9 +206,9 @@ minimal set of fields (several required fields will always be returned)
         help="return interim reports (default is to return annual reports, "
         "which provide deeper history)")
     filters.add_argument(
-        "-r", "--restatements",
+        "-r", "--exclude-restatements",
         action="store_true",
-        help="include restatements (default is to exclude them)")
+        help="exclude restatements (default is to include them)")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
