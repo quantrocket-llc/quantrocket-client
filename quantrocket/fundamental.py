@@ -354,7 +354,7 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
         financials = financials.drop(unneeded_fields, axis=1)
 
     # Create a unioned index of input DataFrame and statement SourceDates
-    union_date_idx = reindex_like.index.union(financials.Date.values).sort_values()
+    union_date_idx = reindex_like.index.union(financials.Date.drop_duplicates().values).sort_values()
 
     all_financials = {}
     for code in coa_codes:
@@ -364,18 +364,24 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
         # There might be duplicate SourceDates if a company announced
         # reports for several fiscal periods at once. In this case we keep
         # only the last value (i.e. latest fiscal period)
-        financials_for_code = financials_for_code.drop_duplicates(subset=["Date"], keep="last")
+        financials_for_code = financials_for_code.drop_duplicates(subset=["ConId", "Date"], keep="last")
         financials_for_code = financials_for_code.pivot(index="ConId",columns="Date").T
         multiidx = pd.MultiIndex.from_product(
             (financials_for_code.index.get_level_values(0).unique(), union_date_idx),
             names=["Field", "Date"])
         financials_for_code = financials_for_code.reindex(index=multiidx, columns=reindex_like.columns)
 
-        # financial values are sparse so ffill
-        financials_for_code = financials_for_code.fillna(method="ffill", limit=ffill_limit)
+        # financial values are sparse so ffill (one field at a time)
+        all_fields_for_code = {}
+        for field in financials_for_code.index.get_level_values("Field").unique():
+            field_for_code = financials_for_code.loc[field].fillna(method="ffill")
 
-        # Shift to avoid lookahead bias
-        financials_for_code = financials_for_code.shift()
+            # Shift to avoid lookahead bias
+            field_for_code = field_for_code.shift()
+
+            all_fields_for_code[field] = field_for_code
+
+        financials_for_code = pd.concat(all_fields_for_code, names=["Field", "Date"])
 
         # In cases the statements included dates not in the input
         # DataFrame, drop those now that we've ffilled
@@ -592,7 +598,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
         estimates = estimates.drop(unneeded_fields, axis=1)
 
     # Create a unioned index of input DataFrame and UpdatedDate
-    union_date_idx = reindex_like.index.union(estimates.Date.values).sort_values()
+    union_date_idx = reindex_like.index.union(estimates.Date.drop_duplicates().values).sort_values()
 
     all_estimates = {}
     for code in codes:
@@ -602,18 +608,24 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
         # There might be duplicate UpdatedDates if a company announced
         # reports for several fiscal periods at once. In this case we keep
         # only the last value (i.e. latest fiscal period)
-        estimates_for_code = estimates_for_code.drop_duplicates(subset=["Date"], keep="last")
+        estimates_for_code = estimates_for_code.drop_duplicates(subset=["ConId","Date"], keep="last")
         estimates_for_code = estimates_for_code.pivot(index="ConId",columns="Date").T
         multiidx = pd.MultiIndex.from_product(
             (estimates_for_code.index.get_level_values(0).unique(), union_date_idx),
             names=["Field", "Date"])
         estimates_for_code = estimates_for_code.reindex(index=multiidx, columns=reindex_like.columns)
 
-        # estimates are sparse so ffill
-        estimates_for_code = estimates_for_code.fillna(method="ffill", limit=ffill_limit)
+        # estimates are sparse so ffill (one field at a time)
+        all_fields_for_code = {}
+        for field in estimates_for_code.index.get_level_values("Field").unique():
+            field_for_code = estimates_for_code.loc[field].fillna(method="ffill")
 
-        # Shift to avoid lookahead bias
-        estimates_for_code = estimates_for_code.shift()
+            # Shift to avoid lookahead bias
+            field_for_code = field_for_code.shift()
+
+            all_fields_for_code[field] = field_for_code
+
+        estimates_for_code = pd.concat(all_fields_for_code, names=["Field", "Date"])
 
         # In cases the statements included dates not in the input
         # DataFrame, drop those now that we've ffilled
