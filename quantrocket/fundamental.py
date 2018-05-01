@@ -247,7 +247,7 @@ def _cli_download_reuters_financials(*args, **kwargs):
     return json_to_cli(download_reuters_financials, *args, **kwargs)
 
 def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amount"],
-                           interim=False, exclude_restatements=False, ffill_limit=None):
+                           interim=False, exclude_restatements=False, max_lag=None):
     """
     Return a multiindex (CoaCode, Field, Date) DataFrame of point-in-time
     Reuters financial statements for one or more Chart of Account (COA)
@@ -279,11 +279,13 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
     exclude_restatements : bool, optional
         exclude restatements (default is to include them)
 
-    ffill_limit : int, optional
-        maximum number of consecutive NaN values to forward fill. In other words,
-        if there is a gap with more than this number of consecutive NaNs, it will only
-        be partially filled. This can prevent using financial statements that are
-        too old, in the event that subsequent reports aren't available.
+    max_lag : str, optional
+        maximum amount of time a data point can be used after the
+        associated fiscal period has ended. Setting a limit can prevent
+        using data that is reported long after the fiscal period ended, or
+        can limit how far data is forward filled in the absence of subsequent
+        data. Specify as a Pandas offset alias, e.g. '500D'. By default, no
+        maximum limit is applied.
 
     Returns
     -------
@@ -349,6 +351,8 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
     # Drop any fields we don't need
     needed_fields = set(fields)
     needed_fields.update(set(("ConId", "Date", "CoaCode")))
+    if max_lag:
+        needed_fields.add("FiscalPeriodEndDate")
     unneeded_fields = set(financials.columns) - needed_fields
     if unneeded_fields:
         financials = financials.drop(unneeded_fields, axis=1)
@@ -380,6 +384,23 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
             field_for_code = field_for_code.shift()
 
             all_fields_for_code[field] = field_for_code
+
+        # Filter stale values if asked to
+        if max_lag:
+            fiscal_period_end_dates = all_fields_for_code["FiscalPeriodEndDate"]
+            # subtract the max_lag from the index date to get the
+            # earliest possible fiscal period end date for that row
+            earliest_allowed_fiscal_period_end_dates = fiscal_period_end_dates.apply(
+                lambda x: fiscal_period_end_dates.index - pd.Timedelta(max_lag))
+            within_max_timedelta = fiscal_period_end_dates.apply(pd.to_datetime) >= earliest_allowed_fiscal_period_end_dates
+
+            for field, field_for_code in all_fields_for_code.items():
+                field_for_code = field_for_code.where(within_max_timedelta)
+                all_fields_for_code[field] = field_for_code
+
+            # Clean up if FiscalPeriodEndDate was just kept around for this purpose
+            if "FiscalPeriodEndDate" not in fields:
+                del all_fields_for_code["FiscalPeriodEndDate"]
 
         financials_for_code = pd.concat(all_fields_for_code, names=["Field", "Date"])
 
@@ -497,7 +518,7 @@ def _cli_download_reuters_estimates(*args, **kwargs):
     return json_to_cli(download_reuters_estimates, *args, **kwargs)
 
 def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
-                                         period_types=["Q"], ffill_limit=None):
+                                         period_types=["Q"], max_lag=None):
     """
     Return a multiindex (Indicator, Field, Date) DataFrame of point-in-time
     Reuters estimates and actuals for one or more indicator codes, reindexed
@@ -525,11 +546,13 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
         limit to these fiscal period types. Possible choices: A, Q, S, where
         A=Annual, Q=Quarterly, S=Semi-Annual. Default is Q/Quarterly.
 
-    ffill_limit : int, optional
-        maximum number of consecutive NaN values to forward fill. In other words,
-        if there is a gap with more than this number of consecutive NaNs, it will only
-        be partially filled. This can prevent using estimates/actuals that are
-        too old, in the event that subsequent reports aren't available.
+    max_lag : str, optional
+        maximum amount of time a data point can be used after the
+        associated fiscal period has ended. Setting a limit can prevent
+        using data that is reported long after the fiscal period ended, or
+        can limit how far data is forward filled in the absence of subsequent
+        data. Specify as a Pandas offset alias, e.g. '500D'. By default, no
+        maximum limit is applied.
 
     Returns
     -------
@@ -593,6 +616,8 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     # Drop any fields we don't need
     needed_fields = set(fields)
     needed_fields.update(set(("ConId", "Date", "Indicator")))
+    if max_lag:
+        needed_fields.add("FiscalPeriodEndDate")
     unneeded_fields = set(estimates.columns) - needed_fields
     if unneeded_fields:
         estimates = estimates.drop(unneeded_fields, axis=1)
@@ -624,6 +649,23 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
             field_for_code = field_for_code.shift()
 
             all_fields_for_code[field] = field_for_code
+
+        # Filter stale values if asked to
+        if max_lag:
+            fiscal_period_end_dates = all_fields_for_code["FiscalPeriodEndDate"]
+            # subtract the max_lag from the index date to get the
+            # earliest possible fiscal period end date for that row
+            earliest_allowed_fiscal_period_end_dates = fiscal_period_end_dates.apply(
+                lambda x: fiscal_period_end_dates.index - pd.Timedelta(max_lag))
+            within_max_timedelta = fiscal_period_end_dates.apply(pd.to_datetime) >= earliest_allowed_fiscal_period_end_dates
+
+            for field, field_for_code in all_fields_for_code.items():
+                field_for_code = field_for_code.where(within_max_timedelta)
+                all_fields_for_code[field] = field_for_code
+
+            # Clean up if FiscalPeriodEndDate was just kept around for this purpose
+            if "FiscalPeriodEndDate" not in fields:
+                del all_fields_for_code["FiscalPeriodEndDate"]
 
         estimates_for_code = pd.concat(all_fields_for_code, names=["Field", "Date"])
 
