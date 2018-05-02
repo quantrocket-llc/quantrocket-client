@@ -209,6 +209,64 @@ Show current config:
     parser.set_defaults(func="quantrocket.launchpad._cli_load_or_show_config")
 
     examples = """
+Set IB username/password and trading mode (paper/live) for IB Gateway, or view
+current username and trading mode.
+
+Can be used to set new credentials or switch between paper and live trading
+(must have previously entered live credentials). Setting new credentials will
+restart IB Gateway and takes a moment to complete.
+
+Examples:
+
+View current credentials for IB Gateway service named ibg1 (shows username and
+trading mode only):
+
+    quantrocket launchpad credentials ibg1
+
+Set credentials for ibg1 (will prompt for password):
+
+    quantrocket launchpad credentials ibg1 -u myuser --paper
+
+Leave credentials as-is but switch to live trading (must have previously entered
+live credentials):
+
+    quantrocket launchpad credentials ibg1 --live
+    """
+    parser = _subparsers.add_parser(
+        "credentials",
+        help="set IB username/password and trading mode (paper/live)",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "gateway",
+        metavar="SERVICE_NAME",
+        help="name of IB Gateway service to set credentials for (for example, "
+        "'ibg1')")
+    parser.add_argument(
+        "-u", "--username",
+        metavar="USERNAME",
+        help="IB username (optional if only modifying trading mode)")
+    parser.add_argument(
+        "-p", "--password",
+        metavar="PASSWORD",
+        help="IB password (if omitted and user is provided, will be prompted "
+        "for password)")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--paper",
+        action="store_const",
+        dest="trading_mode",
+        const="paper",
+        help="set trading mode to paper trading")
+    group.add_argument(
+        "--live",
+        action="store_const",
+        dest="trading_mode",
+        const="live",
+        help="set trading mode to live trading")
+    parser.set_defaults(func="quantrocket.launchpad._cli_get_or_set_credentials")
+
+    examples = """
 Access the IB Gateway GUI in a web browser.
 
 Note: IB Gateway must already be running.
