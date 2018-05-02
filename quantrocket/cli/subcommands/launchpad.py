@@ -212,7 +212,9 @@ Show current config:
 Set IB username/password and trading mode (paper/live) for IB Gateway, or view
 current username and trading mode.
 
-Setting new credentials will restart IB Gateway and takes a moment to complete.
+Can be used to set new credentials or switch between paper and live trading
+(must have previously entered live credentials). Setting new credentials will
+restart IB Gateway and takes a moment to complete.
 
 Examples:
 
