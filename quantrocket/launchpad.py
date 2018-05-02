@@ -14,6 +14,7 @@
 
 import os
 import webbrowser
+import getpass
 from quantrocket.houston import houston
 from quantrocket.exceptions import UnavailableInsideJupyter
 from quantrocket.cli.utils.output import json_to_cli
@@ -189,6 +190,81 @@ def _cli_load_or_show_config(filename=None):
         return json_to_cli(load_launchpad_config, filename)
     else:
         return json_to_cli(get_launchpad_config)
+
+def get_credentials(gateway):
+    """
+    Returns IB username and trading mode (paper/live) for IB Gateway.
+
+    Parameters
+    ----------
+    gateway : str, required
+        name of IB Gateway service to get credentials for (for example, 'ibg1')
+
+    Returns
+    -------
+    dict
+        credentials
+    """
+    statuses = list_gateway_statuses(gateways=[gateway])
+    if not statuses:
+        raise ValueError("no such IB Gateway: {0}".format(gateway))
+
+    response = houston.get("/{0}/credentials".format(gateway))
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def set_credentials(gateway, username=None, password=None, trading_mode=None):
+    """
+    Set IB username/password and trading mode (paper/live) for IB Gateway.
+
+    Can be used to set new credentials or switch between paper and live trading
+    (must have previously entered live credentials). Setting new credentials will
+    restart IB Gateway and takes a moment to complete.
+
+    Parameters
+    ----------
+    gateway : str, required
+        name of IB Gateway service to set credentials for (for example, 'ibg1')
+
+    username : str, optional
+        IB username (optional if only modifying trading environment)
+
+    password : str, optional
+        IB password (if omitted and username is provided, will be prompted
+        for password)
+
+    trading_mode : str, optional
+        the trading mode to use ('paper' or 'live')
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    statuses = list_gateway_statuses(gateways=[gateway])
+    if not statuses:
+        raise ValueError("no such IB Gateway: {0}".format(gateway))
+
+    if username and not password:
+        password = getpass.getpass(prompt="Enter IB Password: ")
+
+    data = {}
+    if username:
+        data["username"] = username
+    if password:
+        data["password"] = password
+    if trading_mode:
+        data["trading_mode"] = trading_mode
+
+    response = houston.put("/{0}/credentials".format(gateway), data=data, timeout=120)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_get_or_set_credentials(*args, **kwargs):
+    if kwargs.get("username", None) or kwargs.get("password", None) or kwargs.get("trading_mode", None):
+        return json_to_cli(set_credentials, *args, **kwargs)
+    else:
+        return json_to_cli(get_credentials, gateway=kwargs.get("gateway", None))
 
 def open_ibg_gui(gateways=None):
     """
