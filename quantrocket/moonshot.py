@@ -235,7 +235,7 @@ def _cli_scan_parameters(*args, **kwargs):
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(scan_parameters, *args, **kwargs)
 
-def trade(strategies, accounts=None, json=False, filepath_or_buffer=None):
+def trade(strategies, accounts=None, review_date=None, json=False, filepath_or_buffer=None):
     """
     Run one or more strategies and generate orders.
 
@@ -248,6 +248,9 @@ def trade(strategies, accounts=None, json=False, filepath_or_buffer=None):
 
     accounts : list of str, optional
         limit to these accounts
+
+    review_date : str (YYYY-MM-DD), optional
+        generate orders as if it were this date, rather than using the latest date
 
     json : bool
         format orders as JSON (default is CSV)
@@ -264,6 +267,8 @@ def trade(strategies, accounts=None, json=False, filepath_or_buffer=None):
         params["strategies"] = strategies
     if accounts:
         params["accounts"] = accounts
+    if review_date:
+        params["review_date"] = review_date
 
     output = "json" if json else "csv"
 

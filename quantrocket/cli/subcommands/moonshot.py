@@ -220,6 +220,10 @@ Generate orders and automatically place them (if any) through the blotter:
 Generate orders for multiple strategies for a particular account:
 
     quantrocket moonshot trade umd-japan hml-japan --accounts DU12345 -o orders.csv
+
+Generate orders as if it were an earlier date (for prupose of review):
+
+    quantrocket moonshot trade umd-nyse -o orders.csv --review-date 2018-05-11
     """
     parser = _subparsers.add_parser(
         "trade",
@@ -236,6 +240,10 @@ Generate orders for multiple strategies for a particular account:
         metavar="ACCOUNT",
         nargs="*",
         help="limit to these accounts")
+    parser.add_argument(
+         "-r", "--review-date",
+         metavar="YYYY-MM-DD",
+         help="generate orders as if it were this date, rather than using the latest date")
     parser.add_argument(
         "-j", "--json",
         action="store_true",
