@@ -233,11 +233,22 @@ def _cli_list_order_statuses(*args, **kwargs):
     return json_to_cli(list_order_statuses, *args, **kwargs)
 
 def download_positions(filepath_or_buffer=None, output="csv",
-                       order_refs=None, accounts=None, conids=None):
+                       order_refs=None, accounts=None, conids=None,
+                       view="blotter"):
     """
     Query current positions and write results to file.
 
     To return positions as a Python list, see list_positions.
+
+    There are two ways to view positions: blotter view (default) and broker view.
+
+    The default "blotter view" returns positions by account, conid, and order ref. Positions
+    are tracked based on execution records saved to the blotter database.
+
+    "Broker view" (view='broker') returns positions by account and conid (but
+    not order ref) as reported directly by IB. Broker view is more authoritative but less
+    informative than blotter view. Broker view is typically used to verify the accuracy
+    of blotter view.
 
     Parameters
     ----------
@@ -245,16 +256,21 @@ def download_positions(filepath_or_buffer=None, output="csv",
         filepath to write the data to, or file-like object (defaults to stdout)
 
     output : str
-        output format (json, csv, txt, default is csv)
+        output format (json or csv, default is csv)
 
     order_refs : list of str, optional
-        limit to these order refs
+        limit to these order refs (not supported with broker view)
 
     accounts : list of str, optional
         limit to these accounts
 
     conids : list of int, optional
         limit to these conids
+
+    view : str, optional
+        whether to return 'broker' view of positions (by account and conid) or
+        default 'blotter' view (by account, conid, and order ref). Choices are:
+        blotter, broker
 
     Returns
     -------
@@ -267,10 +283,12 @@ def download_positions(filepath_or_buffer=None, output="csv",
         params["accounts"] = accounts
     if conids:
         params["conids"] = conids
+    if view:
+        params["view"] = view
 
     output = output or "csv"
 
-    if output not in ("csv", "json", "txt"):
+    if output not in ("csv", "json"):
         raise ValueError("Invalid ouput: {0}".format(output))
 
     response = houston.get("/blotter/positions.{0}".format(output), params=params)
@@ -288,20 +306,36 @@ def download_positions(filepath_or_buffer=None, output="csv",
 def _cli_download_positions(*args, **kwargs):
     return json_to_cli(download_positions, *args, **kwargs)
 
-def list_positions(order_refs=None, accounts=None, conids=None):
+def list_positions(order_refs=None, accounts=None, conids=None,
+                   view="blotter"):
     """
     Query current positions and return them as a Python list.
+
+    There are two ways to view positions: blotter view (default) and broker view.
+
+    The default "blotter view" returns positions by account, conid, and order ref. Positions
+    are tracked based on execution records saved to the blotter database.
+
+    "Broker view" (view='broker') returns positions by account and conid (but
+    not order ref) as reported directly by IB. Broker view is more authoritative but less
+    informative than blotter view. Broker view is typically used to verify the accuracy
+    of blotter view.
 
     Parameters
     ----------
     order_refs : list of str, optional
-        limit to these order refs
+        limit to these order refs (not supported with broker view)
 
     accounts : list of str, optional
         limit to these accounts
 
     conids : list of int, optional
         limit to these conids
+
+    view : str, optional
+        whether to return 'broker' view of positions (by account and conid) or
+        default 'blotter' view (by account, conid, and order ref). Choices are:
+        blotter, broker
 
     Returns
     -------
@@ -318,7 +352,7 @@ def list_positions(order_refs=None, accounts=None, conids=None):
     f = six.StringIO()
     download_positions(f, output="json",
                        conids=conids, accounts=accounts,
-                       order_refs=order_refs)
+                       order_refs=order_refs, view=view)
 
     if f.getvalue():
         return json.loads(f.getvalue())

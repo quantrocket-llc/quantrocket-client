@@ -180,11 +180,21 @@ List order status of open orders by order ref:
     examples = """
 Query current positions.
 
+There are two ways to view positions: blotter view (default) and broker view.
+
+The default "blotter view" returns positions by account, conid, and order ref. Positions
+are tracked based on execution records saved to the blotter database.
+
+"Broker view" (using the `--broker` option) returns positions by account and conid (but
+not order ref) as reported directly by IB. Broker view is more authoritative but less
+informative than blotter view. Broker view is typically used to verify the accuracy
+of blotter view.
+
 Examples:
 
-Query current positions in human-readable format:
+Query current positions:
 
-    quantrocket blotter positions --pretty
+    quantrocket blotter positions
 
 Save current positions to CSV file:
 
@@ -193,6 +203,10 @@ Save current positions to CSV file:
 Query positions for a single order ref:
 
     quantrocket blotter positions --order-refs my-strategy
+
+Query positions using broker view:
+
+    quantrocket blotter positions --broker
     """
     parser = _subparsers.add_parser(
         "positions",
@@ -210,13 +224,20 @@ Query positions for a single order ref:
         "-r", "--order-refs",
         nargs="*",
         metavar="ORDER_REF",
-        help="limit to these order refs")
+        help="limit to these order refs (not supported with broker view)")
     filters.add_argument(
         "-a", "--accounts",
         nargs="*",
         metavar="ACCOUNT",
         help="limit to these accounts")
     outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "--broker",
+        action="store_const",
+        dest="view",
+        const="broker",
+        help="return 'broker' view of positions (by account and conid) instead "
+        "of default 'blotter' view (by account, conid, and order ref)")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
@@ -229,12 +250,6 @@ Query positions for a single order ref:
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
-    output_format_group.add_argument(
-        "-p", "--pretty",
-        action="store_const",
-        const="txt",
-        dest="output",
-        help="format output in human-readable format (default is CSV)")
     parser.set_defaults(func="quantrocket.blotter._cli_download_positions")
 
     examples = """
