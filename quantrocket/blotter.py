@@ -18,7 +18,7 @@ import json
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
-from quantrocket.cli.utils.parse import dict_strs_to_dict
+from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
 def place_orders(orders=None, infilepath_or_buffer=None):
@@ -369,6 +369,83 @@ def list_positions(order_refs=None, accounts=None, conids=None,
         return json.loads(f.getvalue())
     else:
         return []
+
+def close_positions(filepath_or_buffer=None, output="csv",
+                    order_refs=None, accounts=None, conids=None,
+                    params=None):
+    """
+    Generate orders to close positions.
+
+    Doesn't actually place any orders but returns an orders file that can be placed
+    separately. Additional order parameters can be appended with the `params` argument.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json or csv, default is csv)
+
+    order_refs : list of str, optional
+        limit to these order refs
+
+    accounts : list of str, optional
+        limit to these accounts
+
+    conids : list of int, optional
+        limit to these conids
+
+    params : dict of PARAM:VALUE, optional
+        additional parameters to append to each row in output (pass as {param:value},
+        for example {"OrderType":"MKT"})
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Get orders to close positions, then place the orders:
+
+    >>> from quantrocket.blotter import place_orders, close_positions
+    >>> import io
+    >>> orders_file = io.StringIO()
+    >>> close_positions(orders_file, params={"OrderType":"MKT", "Tif":"DAY", "Exchange":"SMART"})
+    >>> place_orders(infilepath_or_buffer=orders_file)
+    """
+    _params = {}
+    if order_refs:
+        _params["order_refs"] = order_refs
+    if accounts:
+        _params["accounts"] = accounts
+    if conids:
+        _params["conids"] = conids
+    if params:
+        _params["params"] = dict_to_dict_strs(params)
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.delete("/blotter/positions.{0}".format(output), params=_params)
+
+    houston.raise_for_status_with_json(response)
+
+    # Don't write a null response to file
+    if response.content[:4] == b"null":
+        return
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_close_positions(*args, **kwargs):
+    params = kwargs.get("params", None)
+    if params:
+        kwargs["params"] = dict_strs_to_dict(*params)
+    return json_to_cli(close_positions, *args, **kwargs)
 
 def download_executions(filepath_or_buffer=None,
                         order_refs=None, accounts=None, conids=None,

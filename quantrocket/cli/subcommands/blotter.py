@@ -248,14 +248,72 @@ Query positions using broker view:
         metavar="OUTFILE",
         dest="filepath_or_buffer",
         help="filename to write the data to (default is stdout)")
-    output_format_group = outputs.add_mutually_exclusive_group()
-    output_format_group.add_argument(
+    outputs.add_argument(
         "-j", "--json",
         action="store_const",
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
     parser.set_defaults(func="quantrocket.blotter._cli_download_positions")
+
+    examples = """
+Generate orders to close positions.
+
+Doesn't actually place any orders but returns an orders file that can be placed
+separately. Additional order parameters can be appended with the `--params` option.
+
+Examples:
+
+Generate MKT orders to close positions for a particular strategy:
+
+    quantrocket blotter close --order-refs my-strategy --params OrderType:MKT Tif:DAY Exchange:SMART
+
+Generate orders and also place them:
+
+    quantrocket blotter close -r my-strategy -p OrderType:MKT Tif:DAY Exchange:SMART | quantrocket blotter order -f -
+    """
+    parser = _subparsers.add_parser(
+        "close",
+        help="generate orders to close positions",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "-r", "--order-refs",
+        nargs="*",
+        metavar="ORDER_REF",
+        help="limit to these order refs")
+    filters.add_argument(
+        "-a", "--accounts",
+        nargs="*",
+        metavar="ACCOUNT",
+        help="limit to these accounts")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    outputs.add_argument(
+        "-p", "--params",
+        nargs="*",
+        type=dict_str,
+        metavar="PARAM:VALUE",
+        help="additional parameters to append to each row in output "
+        "(pass as 'param:value', for example OrderType:MKT)")
+    outputs.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    parser.set_defaults(func="quantrocket.blotter._cli_close_positions")
 
     examples = """
 Query executions from the executions database.
@@ -387,11 +445,3 @@ Calculate daily performance as of 4PM Eastern time (instead of the default 11:59
     #parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
     #parser.add_argument("-r", "--rules", nargs="*", metavar="KEY:VALUE", help="rollover rules as multiple key-value pairs in relativedelta format (e.g. days=-8) (omit to use rollover rules defined in master service)")
     #parser.set_defaults(func="quantrocket.blotter.rollover_positions")
-
-    #parser = _subparsers.add_parser("close", help="generate orders to close positions")
-    #parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies")
-    #parser.add_argument("-c", "--conids", nargs="*", metavar="CONID", help="limit to these conids")
-    #parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
-    #parser.add_argument("-o", "--order", nargs="+", metavar="FIELD:VALUE", help="order details as JSON or as multiple key-value pairs (e.g. orderType:MKT tif:DAY)")
-    #parser.add_argument("--oca", dest="oca_suffix", metavar="SUFFIX", help="create OCA group containing client ID, order ID, and this suffix (run this command multiple times with this option to create OCA orders)")
-    #parser.set_defaults(func="quantrocket.blotter.close_positions")
