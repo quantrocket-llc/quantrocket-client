@@ -157,13 +157,20 @@ def cancel_orders(order_ids=None, conids=None, order_refs=None, accounts=None,
 def _cli_cancel_orders(*args, **kwargs):
     return json_to_cli(cancel_orders, *args, **kwargs)
 
-def list_order_statuses(order_ids=None, conids=None, order_refs=None,
-                        accounts=None, open_orders=None, fields=None):
+def download_order_statuses(filepath_or_buffer=None, output="csv",
+                            order_ids=None, conids=None, order_refs=None,
+                            accounts=None, open_orders=None, fields=None):
     """
-    List order status for one or more orders by order ID, conid, order ref, or account.
+    Download order status for one or more orders by order ID, conid, order ref, or account.
 
     Parameters
     ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json or csv, default is csv)
+
     order_ids : list of str, optional
         limit to these order IDs
 
@@ -185,31 +192,27 @@ def list_order_statuses(order_ids=None, conids=None, order_refs=None,
 
     Returns
     -------
-    dict
-        order statuses
+    None
 
     Examples
     --------
-    List order status by order ID:
+    Download order status by order ID and load into Pandas:
 
-    >>> list_order_statuses(order_ids=['6002:45','6002:46'])
+    >>> f = io.StringIO()
+    >>> download_order_statuses(f, order_ids=['6001:45','6001:46'])
+    >>> order_statuses = pd.read_csv(f)
 
-    List order status for all open orders and include extra fields in output:
+    Download order status for all open orders and include extra fields in output:
 
-    >>> list_order_statuses(open_orders=True, fields=["LmtPrice", "OcaGroup"])
+    >>> download_order_statuses(open_orders=True, fields=["LmtPrice", "OcaGroup"])
 
-    List order status of open orders by conid:
+    Download order status of open orders by conid:
 
-    >>> list_order_statuses(conids=[123456], open_orders=True)
+    >>> download_order_statuses(conids=[123456], open_orders=True)
 
-    List order status of open orders by order ref:
+    Download order status of open orders by order ref:
 
-    >>> list_order_statuses(order_refs=['my-strategy'], open_orders=True)
-
-    Load order statuses into pandas (with order IDs as index):
-
-    >>> statuses = list_order_statuses(open_orders=True)
-    >>> statuses = pd.DataFrame(statuses).T
+    >>> download_order_statuses(order_refs=['my-strategy'], open_orders=True)
     """
     params = {}
     if order_ids:
@@ -225,12 +228,25 @@ def list_order_statuses(order_ids=None, conids=None, order_refs=None,
     if fields:
         params["fields"] = fields
 
-    response = houston.get("/blotter/orders", params=params)
-    houston.raise_for_status_with_json(response)
-    return response.json()
+    output = output or "csv"
 
-def _cli_list_order_statuses(*args, **kwargs):
-    return json_to_cli(list_order_statuses, *args, **kwargs)
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/blotter/orders.{0}".format(output), params=params)
+
+    houston.raise_for_status_with_json(response)
+
+    # Don't write a null response to file
+    if response.content[:4] == b"null":
+        return
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_order_statuses(*args, **kwargs):
+    return json_to_cli(download_order_statuses, *args, **kwargs)
 
 def download_positions(filepath_or_buffer=None, output="csv",
                        order_refs=None, accounts=None, conids=None,
@@ -279,6 +295,10 @@ def download_positions(filepath_or_buffer=None, output="csv",
     Returns
     -------
     None
+
+    See Also
+    --------
+    list_positions : load positions into Python list
     """
     params = {}
     if order_refs:

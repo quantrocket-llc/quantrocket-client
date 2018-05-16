@@ -68,7 +68,7 @@ Examples:
 
 Cancel orders by order ID:
 
-    quantrocket blotter cancel -o 6002:45 6001:46
+    quantrocket blotter cancel -d 6002:45 6001:46
 
 Cancel orders by conid:
 
@@ -88,7 +88,7 @@ Cancel all open orders:
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "-o", "--order-ids",
+        "-d", "--order-ids",
         metavar="ORDER_ID",
         nargs="*",
         help="cancel these order IDs")
@@ -117,65 +117,82 @@ Cancel all open orders:
     parser.set_defaults(func="quantrocket.blotter._cli_cancel_orders")
 
     examples = """
-List order status for one or more orders by order ID, conid, order ref, or account.
+Download order status for one or more orders by order ID, conid, order ref, or account.
 
 Examples:
 
-List order status by order ID:
+Download order status by order ID and save to file:
 
-    quantrocket blotter status -o 6002:45 6001:46
+    quantrocket blotter status -d 6002:45 6001:46 -o statuses.csv
 
-List order status for all open orders:
+Download order status for all open orders and display in terminal:
 
-    quantrocket blotter status --open
+    quantrocket blotter status --open | csvlook
 
-List order status of open orders by conid:
+Download order status with extra fields and display as YAML:
+
+    quantrocket blotter status --open --fields Exchange LmtPrice --json | json2yaml
+
+Download order status of open orders by conid:
 
     quantrocket blotter status -i 123456 --open
 
-List order status of open orders by order ref:
+Download order status of open orders by order ref:
 
     quantrocket blotter status --order-refs my-strategy --open
     """
     parser = _subparsers.add_parser(
         "status",
-        help="List order status for one or more orders by order ID, conid, "
+        help="download order status for one or more orders by order ID, conid, "
         "order ref, or account",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-o", "--order-ids",
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-d", "--order-ids",
         metavar="ORDER_ID",
         nargs="*",
         help="limit to these order IDs")
-    parser.add_argument(
+    filters.add_argument(
         "-i", "--conids",
         type=int,
         nargs="*",
         metavar="CONID",
         help="limit to orders for these conids")
-    parser.add_argument(
+    filters.add_argument(
         "-r", "--order-refs",
         nargs="*",
         metavar="ORDER_REF",
         help="limit to orders for these order refs")
-    parser.add_argument(
+    filters.add_argument(
         "-a", "--accounts",
         nargs="*",
         metavar="ACCOUNT",
         help="limit to orders for these accounts")
-    parser.add_argument(
+    filters.add_argument(
         "--open",
         action="store_true",
         dest="open_orders",
         help="limit to open orders (default False, must be True if order_ids not provided)")
-    parser.add_argument(
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
         "-f", "--fields",
         metavar="FIELD",
         nargs="*",
         help="return these fields in addition to the default fields (pass '?' or any invalid "
         "fieldname to see available fields)")
-    parser.set_defaults(func="quantrocket.blotter._cli_list_order_statuses")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    outputs.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    parser.set_defaults(func="quantrocket.blotter._cli_download_order_statuses")
 
     examples = """
 Query current positions.
