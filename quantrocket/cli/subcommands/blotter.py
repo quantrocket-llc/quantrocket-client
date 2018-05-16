@@ -117,7 +117,7 @@ Cancel all open orders:
     parser.set_defaults(func="quantrocket.blotter._cli_cancel_orders")
 
     examples = """
-Download order status for one or more orders by order ID, conid, order ref, or account.
+Download order statuses.
 
 Examples:
 
@@ -143,8 +143,7 @@ Download order status of open orders by order ref:
     """
     parser = _subparsers.add_parser(
         "status",
-        help="download order status for one or more orders by order ID, conid, "
-        "order ref, or account",
+        help="download order statuses",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
@@ -173,7 +172,15 @@ Download order status of open orders by order ref:
         "--open",
         action="store_true",
         dest="open_orders",
-        help="limit to open orders (default False, must be True if order_ids not provided)")
+        help="limit to open orders")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to orders submitted on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to orders submitted on or before this date")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-f", "--fields",

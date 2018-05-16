@@ -159,9 +159,10 @@ def _cli_cancel_orders(*args, **kwargs):
 
 def download_order_statuses(filepath_or_buffer=None, output="csv",
                             order_ids=None, conids=None, order_refs=None,
-                            accounts=None, open_orders=None, fields=None):
+                            accounts=None, open_orders=None,
+                            start_date=None, end_date=None, fields=None):
     """
-    Download order status for one or more orders by order ID, conid, order ref, or account.
+    Download order statuses.
 
     Parameters
     ----------
@@ -184,7 +185,13 @@ def download_order_statuses(filepath_or_buffer=None, output="csv",
         limit to orders for these accounts
 
     open_orders : bool
-        limit to open orders (default False, must be True if order_ids not provided)
+        limit to open orders
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to orders submitted on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to orders submitted on or before this date
 
     fields : list of str, optional
         return these fields in addition to the default fields (pass '?' or any invalid
@@ -227,6 +234,10 @@ def download_order_statuses(filepath_or_buffer=None, output="csv",
         params["open_orders"] = open_orders
     if fields:
         params["fields"] = fields
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
 
     output = output or "csv"
 
