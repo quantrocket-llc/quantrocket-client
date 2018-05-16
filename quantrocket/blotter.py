@@ -234,7 +234,7 @@ def _cli_list_order_statuses(*args, **kwargs):
 
 def download_positions(filepath_or_buffer=None, output="csv",
                        order_refs=None, accounts=None, conids=None,
-                       view="blotter"):
+                       view="blotter", misrecorded=False):
     """
     Query current positions and write results to file.
 
@@ -272,6 +272,10 @@ def download_positions(filepath_or_buffer=None, output="csv",
         default 'blotter' view (by account, conid, and order ref). Choices are:
         blotter, broker
 
+    misrecorded : bool
+        limit to positions where the blotter quantity and broker quantity disagree
+        (requires `view='broker'`)
+
     Returns
     -------
     None
@@ -285,6 +289,8 @@ def download_positions(filepath_or_buffer=None, output="csv",
         params["conids"] = conids
     if view:
         params["view"] = view
+    if misrecorded:
+        params["misrecorded"] = misrecorded
 
     output = output or "csv"
 
@@ -307,7 +313,7 @@ def _cli_download_positions(*args, **kwargs):
     return json_to_cli(download_positions, *args, **kwargs)
 
 def list_positions(order_refs=None, accounts=None, conids=None,
-                   view="blotter"):
+                   view="blotter", misrecorded=False):
     """
     Query current positions and return them as a Python list.
 
@@ -337,6 +343,10 @@ def list_positions(order_refs=None, accounts=None, conids=None,
         default 'blotter' view (by account, conid, and order ref). Choices are:
         blotter, broker
 
+    misrecorded : bool
+        limit to positions where the blotter quantity and broker quantity disagree
+        (requires `view='broker'`)
+
     Returns
     -------
     list
@@ -352,7 +362,8 @@ def list_positions(order_refs=None, accounts=None, conids=None,
     f = six.StringIO()
     download_positions(f, output="json",
                        conids=conids, accounts=accounts,
-                       order_refs=order_refs, view=view)
+                       order_refs=order_refs, view=view,
+                       misrecorded=misrecorded)
 
     if f.getvalue():
         return json.loads(f.getvalue())
