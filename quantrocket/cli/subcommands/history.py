@@ -183,15 +183,22 @@ in front of other queued requests:
         "-i", "--conids",
         nargs="*",
         metavar="CONID",
-        help="fetch history for these conids (overrides config)")
+        help="fetch history for these conids, overriding config "
+        "(typically used to fetch a subset of securities)")
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="fetch history for these universes, overriding config "
+        "(typically used to fetch a subset of securities)")
     parser.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="fetch history back to this start date (overrides config)")
+        help="fetch history back to this start date, overriding config")
     parser.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="fetch history up to this end date (overrides config)")
+        help="fetch history up to this end date, overriding config")
     parser.add_argument(
         "-a", "--availability",
         action="store_true",

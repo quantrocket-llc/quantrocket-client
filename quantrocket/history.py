@@ -201,8 +201,9 @@ def drop_db(code, confirm_by_typing_db_code_again=None):
 def _cli_drop_db(*args, **kwargs):
     return json_to_cli(drop_db, *args, **kwargs)
 
-def fetch_history(codes, priority=False, conids=None, start_date=None, end_date=None,
-                  availability_only=False, delist_missing=False):
+def fetch_history(codes, priority=False, conids=None, universes=None,
+                  start_date=None, end_date=None, availability_only=False,
+                  delist_missing=False):
     """
     Fetch historical market data from IB and save it to a history database. The request is
     queued and the data is fetched asynchronously.
@@ -216,13 +217,18 @@ def fetch_history(codes, priority=False, conids=None, start_date=None, end_date=
         use the priority queue (default is to use the standard queue)
 
     conids : list of int, optional
-        fetch history for these conids (overrides config)
+        fetch history for these conids, overriding config (typically
+        used to fetch a subset of securities)
+
+    universes : list of str, optional
+        fetch history for these universes, overriding config (typically
+        used to fetch a subset of securities)
 
     start_date : str (YYYY-MM-DD), optional
-        fetch history back to this start date (overrides config)
+        fetch history back to this start date, overriding config
 
     end_date : str (YYYY-MM-DD), optional
-        fetch history up to this end date (overrides config)
+        fetch history up to this end date, overriding config
 
     availability_only : bool
         determine and store how far back data is available but
@@ -244,6 +250,8 @@ def fetch_history(codes, priority=False, conids=None, start_date=None, end_date=
         params["priority"] = priority
     if conids:
         params["conids"] = conids
+    if universes:
+        params["universes"] = universes
     if start_date:
         params["start_date"] = start_date
     if end_date:
