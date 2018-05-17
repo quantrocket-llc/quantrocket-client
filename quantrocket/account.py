@@ -109,7 +109,9 @@ def _cli_download_account_balances(*args, **kwargs):
     return json_to_cli(download_account_balances, *args, **kwargs)
 
 def download_account_portfolio(filepath_or_buffer=None, output="csv",
-                               accounts=None):
+                               accounts=None, sec_types=None,
+                               exchanges=None, conids=None, symbols=None,
+                               include_zero=False, fields=None):
     """
     Download current IB portfolio.
 
@@ -123,6 +125,25 @@ def download_account_portfolio(filepath_or_buffer=None, output="csv",
 
     accounts : list of str, optional
         limit to these accounts
+
+    sec_types : list of str, optional
+        limit to these security types
+
+    exchanges : list of str, optional
+        limit to these exchanges
+
+    conids : list of int, optional
+        limit to these conids
+
+    symbols : list of str, optional
+        limit to these symbols
+
+    include_zero : bool
+        include zero position rows (default is to exclude them)
+
+    fields : list of str, optional
+        only return these fields (pass ['?'] or any invalid fieldname to see
+        available fields)
 
     Returns
     -------
@@ -139,6 +160,18 @@ def download_account_portfolio(filepath_or_buffer=None, output="csv",
     params = {}
     if accounts:
         params["accounts"] = accounts
+    if sec_types:
+        params["sec_types"] = sec_types
+    if exchanges:
+        params["exchanges"] = exchanges
+    if conids:
+        params["conids"] = conids
+    if symbols:
+        params["symbols"] = symbols
+    if include_zero:
+        params["include_zero"] = include_zero
+    if fields:
+        params["fields"] = fields
 
     output = output or "csv"
 

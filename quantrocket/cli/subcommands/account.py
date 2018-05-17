@@ -130,6 +130,31 @@ Download current portfolio for a particular account and save to file:
         nargs="*",
         metavar="ACCOUNT",
         help="limit to these accounts")
+    filters.add_argument(
+        "-t", "--sec-types",
+        nargs="*",
+        metavar="SEC_TYPE",
+        help="limit to these security types")
+    filters.add_argument(
+        "-e", "--exchanges",
+        nargs="*",
+        metavar="EXCHANGE",
+        help="limit to these exchanges")
+    filters.add_argument(
+        "-i", "--conids",
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "-s", "--symbols",
+        nargs="*",
+        metavar="SYMBOL",
+        help="limit to these symbols")
+    filters.add_argument(
+        "-z", "--zero",
+        action="store_true",
+        dest="include_zero",
+        help="include zero position rows (default is to exclude them)")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
@@ -142,6 +167,12 @@ Download current portfolio for a particular account and save to file:
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
     parser.set_defaults(func="quantrocket.account._cli_download_account_portfolio")
 
     examples = """
