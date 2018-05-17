@@ -261,7 +261,7 @@ def _cli_download_order_statuses(*args, **kwargs):
 
 def download_positions(filepath_or_buffer=None, output="csv",
                        order_refs=None, accounts=None, conids=None,
-                       view="blotter", misrecorded=False):
+                       view="blotter", diff=False):
     """
     Query current positions and write results to file.
 
@@ -299,7 +299,7 @@ def download_positions(filepath_or_buffer=None, output="csv",
         default 'blotter' view (by account, conid, and order ref). Choices are:
         blotter, broker
 
-    misrecorded : bool
+    diff : bool
         limit to positions where the blotter quantity and broker quantity disagree
         (requires `view='broker'`)
 
@@ -320,8 +320,8 @@ def download_positions(filepath_or_buffer=None, output="csv",
         params["conids"] = conids
     if view:
         params["view"] = view
-    if misrecorded:
-        params["misrecorded"] = misrecorded
+    if diff:
+        params["diff"] = diff
 
     output = output or "csv"
 
@@ -344,7 +344,7 @@ def _cli_download_positions(*args, **kwargs):
     return json_to_cli(download_positions, *args, **kwargs)
 
 def list_positions(order_refs=None, accounts=None, conids=None,
-                   view="blotter", misrecorded=False):
+                   view="blotter", diff=False):
     """
     Query current positions and return them as a Python list.
 
@@ -374,7 +374,7 @@ def list_positions(order_refs=None, accounts=None, conids=None,
         default 'blotter' view (by account, conid, and order ref). Choices are:
         blotter, broker
 
-    misrecorded : bool
+    diff : bool
         limit to positions where the blotter quantity and broker quantity disagree
         (requires `view='broker'`)
 
@@ -394,7 +394,7 @@ def list_positions(order_refs=None, accounts=None, conids=None,
     download_positions(f, output="json",
                        conids=conids, accounts=accounts,
                        order_refs=order_refs, view=view,
-                       misrecorded=misrecorded)
+                       diff=diff)
 
     if f.getvalue():
         return json.loads(f.getvalue())

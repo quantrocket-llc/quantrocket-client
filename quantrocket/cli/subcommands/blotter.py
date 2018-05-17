@@ -255,7 +255,7 @@ Query positions using broker view:
         metavar="ACCOUNT",
         help="limit to these accounts")
     filters.add_argument(
-        "--misrecorded",
+        "--diff",
         action="store_true",
         help="limit to positions where the blotter quantity and broker quantity "
         "disagree (requires --broker)")
