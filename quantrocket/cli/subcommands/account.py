@@ -107,6 +107,44 @@ Query historical account balances over a date range:
     parser.set_defaults(func="quantrocket.account._cli_download_account_balances")
 
     examples = """
+Download current IB portfolio.
+
+Examples:
+
+View current portfolio in terminal:
+
+    quantrocket account portfolio | csvlook
+
+Download current portfolio for a particular account and save to file:
+
+    quantrocket account portfolio --accounts U12345 -o portfolio.csv
+    """
+    parser = _subparsers.add_parser(
+        "portfolio",
+        help="download current IB portfolio",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-a", "--accounts",
+        nargs="*",
+        metavar="ACCOUNT",
+        help="limit to these accounts")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    outputs.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    parser.set_defaults(func="quantrocket.account._cli_download_account_portfolio")
+
+    examples = """
 Query exchange rates for the base currency.
 
 The exchange rates in the exchange rate database are sourced from the

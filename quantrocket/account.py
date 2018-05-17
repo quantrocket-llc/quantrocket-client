@@ -108,6 +108,58 @@ def _cli_download_account_balances(*args, **kwargs):
         kwargs["below"] = dict_strs_to_dict(*below)
     return json_to_cli(download_account_balances, *args, **kwargs)
 
+def download_account_portfolio(filepath_or_buffer=None, output="csv",
+                               accounts=None):
+    """
+    Download current IB portfolio.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json or csv, default is csv)
+
+    accounts : list of str, optional
+        limit to these accounts
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Download current portfolio. You can use StringIO to load the CSV into pandas.
+
+    >>> f = io.StringIO()
+    >>> download_account_portfolio(f)
+    >>> portfolio = pd.read_csv(f, parse_dates=["LastUpdated"])
+    """
+    params = {}
+    if accounts:
+        params["accounts"] = accounts
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/account/portfolio.{0}".format(output), params=params)
+
+    houston.raise_for_status_with_json(response)
+
+    # Don't write a null response to file
+    if response.content[:4] == b"null":
+        return
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_account_portfolio(*args, **kwargs):
+    return json_to_cli(download_account_portfolio, *args, **kwargs)
+
 def download_exchange_rates(filepath_or_buffer=None, output="csv",
                             start_date=None, end_date=None, latest=False,
                             base_currencies=None, quote_currencies=None):
