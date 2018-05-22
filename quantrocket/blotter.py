@@ -534,9 +534,9 @@ def _cli_download_executions(*args, **kwargs):
 def download_pnl(filepath_or_buffer=None,
                  order_refs=None, accounts=None, conids=None,
                  start_date=None, end_date=None, time=None,
-                 details=False, csv=False):
+                 details=False, output="csv"):
     """
-    Query trading performance and return a PDF tearsheet or CSV of results.
+    Query trading performance and return a CSV of results or PDF tearsheet.
 
     Trading performance is broken down by account and order ref and optionally by
     conid.
@@ -573,8 +573,8 @@ def download_pnl(filepath_or_buffer=None,
         account/order ref level (only supported for a single account and order ref
         at a time)
 
-    csv : bool
-        return a CSV of PNL (default is to return a PDF performance tear sheet)
+    output : str, required
+        the output format (choices are csv or pdf, default is csv)
 
     Returns
     -------
@@ -596,7 +596,10 @@ def download_pnl(filepath_or_buffer=None,
     if details:
         params["details"] = details
 
-    output = "csv" if csv else "pdf"
+    output = output or "csv"
+
+    if output not in ("csv", "pdf"):
+        raise ValueError("invalid output: {0} (choices are csv or pdf".format(output))
 
     response = houston.get("/blotter/pnl.{0}".format(output), params=params)
 

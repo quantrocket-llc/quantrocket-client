@@ -396,19 +396,19 @@ Examples:
 
 Get a Moonchart PDF of all trading performance PNL:
 
-    quantrocket blotter pnl -o pnl.pdf
+    quantrocket blotter pnl -o pnl.pdf --pdf
 
 Get a PDF for a single account and order ref, broken down by conid:
 
-    quantrocket blotter pnl --accounts U12345 --order-refs mystrategy1 --details -o pnl_details.pdf
+    quantrocket blotter pnl --accounts U12345 --order-refs mystrategy1 --details --pdf -o pnl_details.pdf
 
 Get a CSV of performance results for a particular date range:
 
-    quantrocket blotter pnl -s 2018-03-01 -e 2018-06-30 --csv -o pnl_2018Q2.csv
+    quantrocket blotter pnl -s 2018-03-01 -e 2018-06-30 -o pnl_2018Q2.csv
 
 Calculate daily performance as of 4PM Eastern time (instead of the default 11:59:59 UTC):
 
-    quantrocket blotter pnl --time '16:00:00 America/New_York' -o pnl.pdf
+    quantrocket blotter pnl --time '16:00:00 America/New_York' --pdf -o pnl.pdf
     """
     parser = _subparsers.add_parser(
         "pnl",
@@ -453,10 +453,11 @@ Calculate daily performance as of 4PM Eastern time (instead of the default 11:59
         "account/order ref level (only supported for a single account and order ref "
         "at a time)")
     outputs.add_argument(
-        "--csv",
-        action="store_true",
-        help="return a CSV of PNL (default is to return a PDF "
-        "performance tear sheet)")
+        "--pdf",
+        action="store_const",
+        const="pdf",
+        dest="output",
+        help="return a PDF tear sheet of PNL (default is to return a CSV)")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
