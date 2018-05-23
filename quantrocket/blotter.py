@@ -546,9 +546,6 @@ def download_pnl(filepath_or_buffer=None,
     filepath_or_buffer : str or file-like object
         filepath to write the data to, or file-like object (defaults to stdout)
 
-    output : str
-        output format (json, csv, txt, default is csv)
-
     order_refs : list of str, optional
         limit to these order refs
 
@@ -559,13 +556,13 @@ def download_pnl(filepath_or_buffer=None,
         limit to these conids
 
     start_date : str (YYYY-MM-DD), optional
-        limit to history on or after this date
+        limit to pnl on or after this date
 
     end_date : str (YYYY-MM-DD), optional
-        limit to history on or before this date
+        limit to pnl on or before this date
 
     time : str (HH:MM:SS [TZ]), optional
-        time of day with optional timezone to calculate daily PNL (default is
+        time of day (with optional timezone) for which to calculate daily PNL (default is
         11:59:59 UTC)
 
     details : bool

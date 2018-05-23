@@ -435,16 +435,16 @@ Calculate daily performance as of 4PM Eastern time (instead of the default 11:59
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to history on or after this date")
+        help="limit to pnl on or after this date")
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to history on or before this date")
+        help="limit to pnl on or before this date")
     filters.add_argument(
         "-t", "--time",
         metavar="HH:MM:SS [TZ]",
-        help="time of day with optional timezone to calculate daily PNL (default is "
-        "11:59:59 UTC)")
+        help="time of day (with optional timezone) for which to calculate daily "
+        "PNL (default is 11:59:59 UTC)")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-d", "--details",
