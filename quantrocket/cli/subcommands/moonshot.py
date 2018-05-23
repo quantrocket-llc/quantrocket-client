@@ -243,7 +243,7 @@ Generate orders as if it were an earlier date (for prupose of review):
     parser.add_argument(
          "-r", "--review-date",
          metavar="YYYY-MM-DD",
-         help="generate orders as if it were this date, rather than using the latest date")
+         help="generate orders as if it were this date, rather than using today's date")
     parser.add_argument(
         "-j", "--json",
         action="store_true",
@@ -281,15 +281,6 @@ Generate orders as if it were an earlier date (for prupose of review):
     #and "child" to show where param would need to be edited.)""")
     #parser.add_argument("-s", "--groupsort", action="store_true", help="sort by origin class (requires -g/--group-by-class), otherwise sort by param name")
     #parser.set_defaults(func="quantrocket.moonshot.get_params")
-
-    #parser = _subparsers.add_parser("trade", help="run one or more strategies and generate orders")
-    #parser.add_argument("strategies", nargs="*", metavar="CODE", help="one or more strategies to trade")
-    #parser.add_argument("-q", "--quotes", action="store_true", help="get realtime quotes asap and append to price history")
-    #parser.add_argument("-t", "--quotes-at", metavar="HH:MM:SS TZ", help="get realtime quotes at the specified time and append to price history")
-    #parser.add_argument("-f", "--quotes-func", metavar="PATH", help="dot-separated path of a function through which the quotes should be passed before appending them to price history")
-    #parser.add_argument("-s", "--save-quotes", metavar="DB", help="instruct the realtime service to save the realtime quotes to this price history database")
-    #parser.add_argument("-r", "--review-date", metavar="YYYY-MM-DD", help="generate trades as if it were this date")
-    #parser.set_defaults(func="quantrocket.moonshot.trade")
 
     #parser = _subparsers.add_parser("shortfall", help="compare live and simulated results")
     #parser.add_argument("start_date", metavar="YYYY-MM-DD", help="start date")

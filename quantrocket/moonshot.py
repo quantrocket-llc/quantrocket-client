@@ -250,7 +250,7 @@ def trade(strategies, accounts=None, review_date=None, json=False, filepath_or_b
         limit to these accounts
 
     review_date : str (YYYY-MM-DD), optional
-        generate orders as if it were this date, rather than using the latest date
+        generate orders as if it were this date, rather than using today's date
 
     json : bool
         format orders as JSON (default is CSV)
