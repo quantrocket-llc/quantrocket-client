@@ -646,6 +646,19 @@ Log a message if the London Stock Exchange will be open in 30 minutes:
         metavar="TIMEDELTA",
         help="assert that exchanges were open this long ago "
         "(use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+    sinceuntil_group = parser.add_mutually_exclusive_group()
+    sinceuntil_group.add_argument(
+        "-s", "--since",
+        metavar="FREQ",
+        help="assert that exchanges have been opened (as of --in or --ago if "
+        "applicable) since at least this time (use Pandas frequency string, "
+        "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))")
+    sinceuntil_group.add_argument(
+        "-u", "--until",
+        metavar="FREQ",
+        help="assert that exchanges will be opened (as of --in or --ago if "
+        "applicable) until at least this time (use Pandas frequency string, "
+        "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))")
     parser.set_defaults(func="quantrocket.master._cli_isopen")
 
     examples = """
@@ -653,15 +666,29 @@ Assert that one or more exchanges are closed and exit non-zero if open.
 
 Intended to be used as a conditional for running other commands.
 
+For --since/--until options, pass a Pandas frequency string, i.e. any string that
+is a valid `freq` argument to `pd.date_range`. See:
+https://pandas.pydata.org/pandas-docs/stable/timeseries.html#offset-aliases
+https://pandas.pydata.org/pandas-docs/stable/timeseries.html#anchored-offsets
+
 Examples:
 
 Place Moonshot orders if the NYSE will be closed NYSE in 1 hour:
 
     quantrocket master isclosed NYSE --in 1h && quantrocket moonshot orders my-strategy | quantrocket blotter order -f -
 
-Fetch historical data for Australian stocks if the exchange is closed now:
+Fetch historical data for Australian stocks if the exchange is closed now but was
+open 4 hours ago:
 
-    quantrocket master isclosed ASX && quantrocket history fetch asx-stk-1d
+    quantrocket master isclosed ASX && quantrocket master isopen ASX --ago 4h && quantrocket history fetch asx-stk-1d
+
+Place Moonshot orders if the NYSE has been closed since month end:
+
+    quantrocket master isclosed NYSE --since M && quantrocket moonshot orders monthly-rebalancing-strategy | quantrocket blotter order -f -
+
+Place Moonshot orders if the NYSE will be closed in 1 hour and remain closed through quarter end:
+
+    quantrocket master isclosed NYSE --in 1H --until Q && quantrocket moonshot orders end-of-quarter-strategy | quantrocket blotter order -f -
     """
     parser = _subparsers.add_parser(
         "isclosed",
@@ -691,6 +718,19 @@ Fetch historical data for Australian stocks if the exchange is closed now:
         metavar="TIMEDELTA",
         help="assert that exchanges were closed this long ago "
         "(use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+    sinceuntil_group = parser.add_mutually_exclusive_group()
+    sinceuntil_group.add_argument(
+        "-s", "--since",
+        metavar="FREQ",
+        help="assert that exchanges have been closed (as of --in or --ago if "
+        "applicable) since at least this time (use Pandas frequency string, "
+        "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))")
+    sinceuntil_group.add_argument(
+        "-u", "--until",
+        metavar="FREQ",
+        help="assert that exchanges will be closed (as of --in or --ago if "
+        "applicable) until at least this time (use Pandas frequency string, "
+        "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))")
     parser.set_defaults(func="quantrocket.master._cli_isclosed")
 
     examples = """

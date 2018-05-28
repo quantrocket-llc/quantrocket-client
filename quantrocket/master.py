@@ -617,18 +617,84 @@ def list_calendar_statuses(exchanges, sec_type=None, in_=None, ago=None):
 def _cli_list_calendar_statuses(*args, **kwargs):
     return json_to_cli(list_calendar_statuses, *args, **kwargs)
 
-def _cli_isopen(*args, **kwargs):
-    statuses = list_calendar_statuses(*args, **kwargs)
+def _cli_in_status_since(status, since=None, in_=None, ago=None):
+
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this command")
+
+    dt = pd.Timestamp.now(status["timezone"])
+    if in_:
+        dt += pd.Timedelta(in_)
+    elif ago:
+        dt -= pd.Timedelta(ago)
+
+    dt = dt.tz_localize(None)
+
+    required_since = pd.date_range(start=dt-pd.Timedelta("2000D"), end=dt,
+                                       freq=since, normalize=True)
+    required_since = required_since[-1]
+
+    actual_since = pd.Timestamp(status["since"])
+    return actual_since <= required_since
+
+def _cli_in_status_until(status, until=None, in_=None, ago=None):
+
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this command")
+
+    dt = pd.Timestamp.now(status["timezone"])
+    if in_:
+        dt += pd.Timedelta(in_)
+    elif ago:
+        dt -= pd.Timedelta(ago)
+
+    dt = dt.tz_localize(None)
+
+    required_until = pd.date_range(start=dt, end=dt+pd.Timedelta("2000D"),
+                                       freq=until, normalize=True)
+    # due to normalize=True, the date range might include a time before the
+    # start dt; filter it out
+    required_until = required_until[required_until > dt][0]
+
+    actual_until = pd.Timestamp(status["until"])
+    return actual_until >= required_until
+
+def _cli_isopen(exchanges, sec_type=None, in_=None, ago=None, since=None, until=None):
+    statuses = list_calendar_statuses(exchanges, sec_type=sec_type, in_=in_, ago=ago)
     is_open = all([
         calendar["status"] == "open" for calendar in statuses.values()
     ])
+    if is_open and since:
+        is_open = all([
+            _cli_in_status_since(status, since=since, in_=in_, ago=ago)
+            for status in statuses.values()])
+
+    elif is_open and until:
+        is_open = all([
+            _cli_in_status_until(status, until=until, in_=in_, ago=ago)
+            for status in statuses.values()])
+
     return '', int(not is_open)
 
-def _cli_isclosed(*args, **kwargs):
-    statuses = list_calendar_statuses(*args, **kwargs)
+def _cli_isclosed(exchanges, sec_type=None, in_=None, ago=None, since=None, until=None):
+    statuses = list_calendar_statuses(exchanges, sec_type=sec_type, in_=in_, ago=ago)
     is_closed = all([
         calendar["status"] == "closed" for calendar in statuses.values()
     ])
+    if is_closed and since:
+        is_closed = all([
+            _cli_in_status_since(status, since=since, in_=in_, ago=ago)
+            for status in statuses.values()])
+
+    elif is_closed and until:
+        is_closed = all([
+            _cli_in_status_until(status, until=until, in_=in_, ago=ago)
+            for status in statuses.values()])
+
     return '', int(not is_closed)
 
 def round_to_tick_sizes(infilepath_or_buffer, round_fields,
