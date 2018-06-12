@@ -597,6 +597,11 @@ Check whether GLOBEX will be open or closed in 30 minutes:
         metavar="TIMEDELTA",
         help="check whether exchanges were open or closed this long ago "
         "(use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+    parser.add_argument(
+        "-o", "--outside-rth",
+        action="store_true",
+        help="check extended hours calendar (default is to check regular "
+        "trading hours calendar)")
     parser.set_defaults(func="quantrocket.master._cli_list_calendar_statuses")
 
     examples = """
@@ -659,6 +664,11 @@ Log a message if the London Stock Exchange will be open in 30 minutes:
         help="assert that exchanges will be opened (as of --in or --ago if "
         "applicable) until at least this time (use Pandas frequency string, "
         "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))")
+    parser.add_argument(
+        "-o", "--outside-rth",
+        action="store_true",
+        help="check extended hours calendar (default is to check regular "
+        "trading hours calendar)")
     parser.set_defaults(func="quantrocket.master._cli_isopen")
 
     examples = """
@@ -731,6 +741,11 @@ Place Moonshot orders if the NYSE will be closed in 1 hour and remain closed thr
         help="assert that exchanges will be closed (as of --in or --ago if "
         "applicable) until at least this time (use Pandas frequency string, "
         "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))")
+    parser.add_argument(
+        "-o", "--outside-rth",
+        action="store_true",
+        help="check extended hours calendar (default is to check regular "
+        "trading hours calendar)")
     parser.set_defaults(func="quantrocket.master._cli_isclosed")
 
     examples = """

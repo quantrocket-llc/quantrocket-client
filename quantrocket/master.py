@@ -574,7 +574,7 @@ def fetch_calendar(exchanges=None):
 def _cli_fetch_calendar(*args, **kwargs):
     return json_to_cli(fetch_calendar, *args, **kwargs)
 
-def list_calendar_statuses(exchanges, sec_type=None, in_=None, ago=None):
+def list_calendar_statuses(exchanges, sec_type=None, in_=None, ago=None, outside_rth=False):
     """
     Check whether exchanges are open or closed.
 
@@ -595,6 +595,10 @@ def list_calendar_statuses(exchanges, sec_type=None, in_=None, ago=None):
         check whether exchanges were open or closed this long ago
         (use Pandas timedelta string, e.g. 2h or 30min or 1d)
 
+    outside_rth : bool
+        check extended hours calendar (default is to check regular
+        trading hours calendar)
+
     Returns
     -------
     dict
@@ -609,6 +613,8 @@ def list_calendar_statuses(exchanges, sec_type=None, in_=None, ago=None):
         params["in"] = in_
     if ago:
         params["ago"] = ago
+    if outside_rth:
+        params["outside_rth"] = outside_rth
 
     response = houston.get("/master/calendar", params=params)
     houston.raise_for_status_with_json(response)
@@ -663,8 +669,8 @@ def _cli_in_status_until(status, until=None, in_=None, ago=None):
     actual_until = pd.Timestamp(status["until"])
     return actual_until >= required_until
 
-def _cli_isopen(exchanges, sec_type=None, in_=None, ago=None, since=None, until=None):
-    statuses = list_calendar_statuses(exchanges, sec_type=sec_type, in_=in_, ago=ago)
+def _cli_isopen(exchanges, sec_type=None, in_=None, ago=None, since=None, until=None, outside_rth=False):
+    statuses = list_calendar_statuses(exchanges, sec_type=sec_type, in_=in_, ago=ago, outside_rth=outside_rth)
     is_open = all([
         calendar["status"] == "open" for calendar in statuses.values()
     ])
@@ -680,8 +686,8 @@ def _cli_isopen(exchanges, sec_type=None, in_=None, ago=None, since=None, until=
 
     return '', int(not is_open)
 
-def _cli_isclosed(exchanges, sec_type=None, in_=None, ago=None, since=None, until=None):
-    statuses = list_calendar_statuses(exchanges, sec_type=sec_type, in_=in_, ago=ago)
+def _cli_isclosed(exchanges, sec_type=None, in_=None, ago=None, since=None, until=None, outside_rth=False):
+    statuses = list_calendar_statuses(exchanges, sec_type=sec_type, in_=in_, ago=ago, outside_rth=outside_rth)
     is_closed = all([
         calendar["status"] == "closed" for calendar in statuses.values()
     ])

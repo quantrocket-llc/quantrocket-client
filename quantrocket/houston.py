@@ -82,7 +82,6 @@ class Houston(requests.Session):
 Please set HOUSTON_URL environment variable.
 
 For local deployments: http://localhost:1969
-For Docker Cloud deployments: https://houston.quantrocket.XXXXXX.svc.dockerapp.io:443 (see Docker Cloud for your exact URL)
 
 --------------------
 |  Windows syntax  |
