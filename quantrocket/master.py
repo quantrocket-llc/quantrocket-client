@@ -638,9 +638,16 @@ def _cli_in_status_since(status, since=None, in_=None, ago=None):
 
     dt = dt.tz_localize(None)
 
-    required_since = pd.date_range(start=dt-pd.Timedelta("2000D"), end=dt,
-                                       freq=since, normalize=True)
-    required_since = required_since[-1]
+    required_since = pd.date_range(periods=5, end=dt,
+                                   freq=since, normalize=False)
+
+    # For >1D freq, normalize to midnight
+    if required_since.freq.isAnchored() or required_since.freq.rule_code == "D":
+        required_since = pd.date_range(periods=5, end=dt, freq=since, normalize=True)
+        required_since = required_since[-1]
+    else:
+        # If not normalized, the last value is dt, so use the penultimate value
+        required_since = required_since[-2]
 
     actual_since = pd.Timestamp(status["since"])
     return actual_since <= required_since
@@ -660,11 +667,20 @@ def _cli_in_status_until(status, until=None, in_=None, ago=None):
 
     dt = dt.tz_localize(None)
 
-    required_until = pd.date_range(start=dt, end=dt+pd.Timedelta("2000D"),
-                                       freq=until, normalize=True)
-    # due to normalize=True, the date range might include a time before the
-    # start dt; filter it out
-    required_until = required_until[required_until > dt][0]
+    required_until = pd.date_range(start=dt, periods=5,
+                                   freq=until, normalize=False)
+
+    # For >1D freq, normalize to midnight
+    if required_until.freq.isAnchored() or required_until.freq.rule_code == "D":
+        required_until = pd.date_range(start=dt, periods=5,
+                                   freq=until, normalize=True)
+        # due to normalize=True, the date range might include a time before the
+        # start dt; filter it out
+        required_until = required_until[required_until > dt]
+        required_until = required_until[0]
+    else:
+        # If not normalized, the first value is dt, so use the second value
+        required_until = required_until[1]
 
     actual_until = pd.Timestamp(status["until"])
     return actual_until >= required_until
