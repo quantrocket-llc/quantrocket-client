@@ -596,11 +596,12 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     end_date = reindex_like.index.max().date().isoformat()
 
     f = six.StringIO()
-    if "UpdatedDate" not in fields:
-        fields.append("UpdatedDate")
+    query_fields = fields.copy()
+    if "UpdatedDate" not in query_fields:
+        query_fields.append("UpdatedDate")
     download_reuters_estimates(
         codes, f, conids=conids, start_date=start_date, end_date=end_date,
-        fields=fields, period_types=period_types)
+        fields=query_fields, period_types=period_types)
     parse_dates = ["UpdatedDate","FiscalPeriodEndDate"]
     if "AnnounceDate" in fields:
         parse_dates.append("AnnounceDate")
@@ -610,8 +611,8 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     # Drop records with no actuals
     estimates = estimates.loc[estimates.UpdatedDate.notnull()]
 
-    # Rename UpdatedDate to match price history index name
-    estimates = estimates.rename(columns={"UpdatedDate": "Date"})
+    # Use UpdatedDate date for index
+    estimates["Date"] = estimates.UpdatedDate.dt.date
 
     # Drop any fields we don't need
     needed_fields = set(fields)
