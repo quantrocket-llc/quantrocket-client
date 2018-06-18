@@ -23,3 +23,6 @@ class UnavailableInsideJupyter(EnvironmentError):
 
 class ParameterError(ValueError):
     pass
+
+class MissingData(ValueError):
+    pass

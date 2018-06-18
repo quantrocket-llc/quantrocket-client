@@ -14,10 +14,12 @@
 
 import six
 import sys
+import io
 from quantrocket.houston import houston
+from quantrocket.master import download_master_file
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
-from quantrocket.exceptions import ParameterError
+from quantrocket.exceptions import ParameterError, MissingData
 
 def fetch_reuters_financials(universes=None, conids=None):
     """
@@ -611,8 +613,26 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     # Drop records with no actuals
     estimates = estimates.loc[estimates.UpdatedDate.notnull()]
 
-    # Use UpdatedDate date for index
-    estimates["Date"] = estimates.UpdatedDate.dt.date
+    # Convert UTC UpdatedDate to security timezone, and cast to date for
+    # index
+    f = io.StringIO()
+    download_master_file(f, conids=list(estimates.ConId.unique()),
+                         delisted=True, fields=["Timezone"])
+    timezones = pd.read_csv(f, index_col="ConId")
+    estimates = estimates.join(timezones, on="ConId")
+    if estimates.Timezone.isnull().any():
+        conids_missing_timezones = list(estimates.ConId[estimates.Timezone.isnull()].unique())
+        raise MissingData("timezones are missing for some conids so cannot convert UTC "
+                          "estimates to timezone of security (conids missing timezone: {0})".format(
+                              ",".join([str(conid) for conid in conids_missing_timezones])
+                          ))
+
+    # If only 1 timezone in data, use a faster method
+    if len(estimates.Timezone.unique()) == 1:
+        timezone = list(estimates.Timezone.unique())[0]
+        estimates["Date"] = pd.to_datetime(estimates.UpdatedDate.values).tz_localize("UTC").tz_convert(timezone).date
+    else:
+        estimates["Date"] = estimates.apply(lambda row: row.UpdatedDate.tz_localize("UTC").tz_convert(row.Timezone).date(), axis=1)
 
     # Drop any fields we don't need
     needed_fields = set(fields)
