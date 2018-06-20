@@ -143,7 +143,7 @@ def stop_gateways(exchanges=None, sec_type=None, research_vendors=None, gateways
     if gateways:
         params["gateways"] = gateways
 
-    response = houston.delete("/launchpad/gateways", params=params, timeout=45)
+    response = houston.delete("/launchpad/gateways", params=params, timeout=60)
     houston.raise_for_status_with_json(response)
     return response.json()
 
