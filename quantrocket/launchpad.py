@@ -256,7 +256,7 @@ def set_credentials(gateway, username=None, password=None, trading_mode=None):
     if trading_mode:
         data["trading_mode"] = trading_mode
 
-    response = houston.put("/{0}/credentials".format(gateway), data=data, timeout=120)
+    response = houston.put("/{0}/credentials".format(gateway), data=data, timeout=180)
     houston.raise_for_status_with_json(response)
     return response.json()
 
