@@ -235,7 +235,7 @@ def _cli_scan_parameters(*args, **kwargs):
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(scan_parameters, *args, **kwargs)
 
-def trade(strategies, accounts=None, review_date=None, json=False, filepath_or_buffer=None):
+def trade(strategies, accounts=None, review_date=None, output="csv", filepath_or_buffer=None):
     """
     Run one or more strategies and generate orders.
 
@@ -252,8 +252,8 @@ def trade(strategies, accounts=None, review_date=None, json=False, filepath_or_b
     review_date : str (YYYY-MM-DD), optional
         generate orders as if it were this date, rather than using today's date
 
-    json : bool
-        format orders as JSON (default is CSV)
+    output : str, required
+        the output format (choices are csv or json)
 
     filepath_or_buffer : str, optional
         the location to write the orders file (omit to write to stdout)
@@ -270,7 +270,10 @@ def trade(strategies, accounts=None, review_date=None, json=False, filepath_or_b
     if review_date:
         params["review_date"] = review_date
 
-    output = "json" if json else "csv"
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("invalid output: {0} (choices are csv or json".format(output))
 
     response = houston.get("/moonshot/orders.{0}".format(output), params=params, timeout=60*5)
 

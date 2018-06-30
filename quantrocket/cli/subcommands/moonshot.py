@@ -246,7 +246,9 @@ Generate orders as if it were an earlier date (for prupose of review):
          help="generate orders as if it were this date, rather than using today's date")
     parser.add_argument(
         "-j", "--json",
-        action="store_true",
+        action="store_const",
+        const="json",
+        dest="output",
         help="format orders as JSON (default is CSV)")
     parser.add_argument(
         "-o", "--outfile",

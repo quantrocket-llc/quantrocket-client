@@ -45,11 +45,6 @@ Create a database of 1-second bars just before the open for a universe of Canadi
 stocks in 2016:
 
     quantrocket history create-db 'tse-enr-929' -u 'tse-enr' -z '1 secs' --outside-rth --times 09:29:55 09:29:56 09:29:57 09:29:58 09:29:59 -s 2016-01-01 -e 2016-12-31
-
-Create a database which won't fetch any data but into which you will load shortable shares
-market data for Australian stocks from the realtime service:
-
-    quantrocket history create-db 'asx-shortable' --no-config
     """
     parser = _subparsers.add_parser(
         "create-db",
