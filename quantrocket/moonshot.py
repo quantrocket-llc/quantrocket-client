@@ -18,7 +18,7 @@ from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 
-def backtest(strategies, start_date=None, end_date=None, allocations=None,
+def backtest(strategies, start_date=None, end_date=None, segment=None, allocations=None,
              nlv=None, params=None, details=None, output="csv", csv=None, filepath_or_buffer=None):
     """
     Backtest one or more strategies.
@@ -40,6 +40,11 @@ def backtest(strategies, start_date=None, end_date=None, allocations=None,
 
     end_date : str (YYYY-MM-DD), optional
         the backtest end date (default is to use all available history)
+
+    segment : str, optional
+        backtest in date segments of this size, to reduce memory usage
+        (use Pandas frequency string, e.g. 'A' for annual segments or 'Q'
+        for quarterly segments)
 
     allocations : dict of CODE:FLOAT, optional
         the allocation for each strategy, passed as {code:allocation} (default
@@ -91,6 +96,8 @@ def backtest(strategies, start_date=None, end_date=None, allocations=None,
         _params["start_date"] = start_date
     if end_date:
         _params["end_date"] = end_date
+    if segment:
+        _params["segment"] = segment
     if allocations:
         _params["allocations"] = dict_to_dict_strs(allocations)
     if nlv:
@@ -120,7 +127,7 @@ def _cli_backtest(*args, **kwargs):
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(backtest, *args, **kwargs)
 
-def scan_parameters(strategies, start_date=None, end_date=None,
+def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
                     param1=None, vals1=None, param2=None, vals2=None,
                     allocations=None, nlv=None, params=None, output="csv",
                     csv=None, filepath_or_buffer=None):
@@ -139,6 +146,11 @@ def scan_parameters(strategies, start_date=None, end_date=None,
 
     end_date : str (YYYY-MM-DD), optional
         the backtest end date (default is to use all available history)
+
+    segment : str, optional
+        backtest in date segments of this size, to reduce memory usage
+        (use Pandas frequency string, e.g. 'A' for annual segments or 'Q'
+        for quarterly segments)
 
     param1 : str, required
         the name of the parameter to test (a class attribute on the strategy)
@@ -201,6 +213,8 @@ def scan_parameters(strategies, start_date=None, end_date=None,
         _params["start_date"] = start_date
     if end_date:
         _params["end_date"] = end_date
+    if segment:
+        _params["segment"] = segment
     if param1:
         _params["param1"] = param1
     if vals1:

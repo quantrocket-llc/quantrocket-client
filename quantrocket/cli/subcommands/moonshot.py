@@ -41,6 +41,10 @@ Backtest a single strategy called demo using all available history and return a
 PDF tear sheet:
 
     quantrocket moonshot backtest demo --pdf -o tearsheet.pdf
+
+Run a backtest in 1-year segments to reduce memory usage:
+
+    quantrocket moonshot backtest big-strategy -s 2000-01-01 -e 2018-01-01 --segment A -o results.csv
     """
     parser = _subparsers.add_parser(
         "backtest",
@@ -61,6 +65,12 @@ PDF tear sheet:
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
         help="the backtest end date (default is to use all available history)")
+    backtest_options.add_argument(
+        "-g", "--segment",
+        metavar="FREQ",
+        help="backtest in date segments of this size, to reduce memory usage "
+        "(use Pandas frequency string, e.g. 'A' for annual segments or 'Q' "
+        "for quarterly segments)")
     backtest_options.add_argument(
         "-l", "--allocations",
         type=dict_str,
@@ -118,6 +128,10 @@ called trend-friend and return a PDF:
 Run a 2-D parameter scan for multiple strategies and return a PDF:
 
     quantrocket moonshot paramscan strat1 strat2 strat3 -p MIN_STD -v 1 1.5 2 --param2 STD_WINDOW --vals2 20 50 100 200 --pdf -o tearsheet.pdf
+
+Run a parameter scan in 1-year segments to reduce memory usage:
+
+    quantrocket moonshot paramscan big-strategy -s 2000-01-01 -e 2018-01-01 --segment A -p MAVG_WINDOW -v 20 50 100 --pdf -o tearsheet.pdf
     """
     parser = _subparsers.add_parser(
         "paramscan",
@@ -138,6 +152,12 @@ Run a 2-D parameter scan for multiple strategies and return a PDF:
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
         help="the backtest end date (default is to use all available history)")
+    backtest_options.add_argument(
+        "-g", "--segment",
+        metavar="FREQ",
+        help="backtest in date segments of this size, to reduce memory usage "
+        "(use Pandas frequency string, e.g. 'A' for annual segments or 'Q' "
+        "for quarterly segments)")
     backtest_options.add_argument(
         "-p", "--param1",
         metavar="PARAM",
