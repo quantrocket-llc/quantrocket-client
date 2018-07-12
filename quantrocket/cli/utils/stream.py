@@ -22,7 +22,12 @@ def print_stream(func):
     def wrapper(*args, **kwargs):
         generator = func(*args, **kwargs)
         for chunk in generator:
-            print(chunk)
+            try:
+                # disable output buffering using flush to allow grepping
+                # stream (flush arg not available before Python 3.3)
+                print(chunk, flush=True)
+            except TypeError:
+                print(chunk)
 
     return wrapper
 
