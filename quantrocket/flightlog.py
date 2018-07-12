@@ -22,7 +22,6 @@ import os
 from six.moves import queue, urllib
 from .exceptions import ImproperlyConfigured
 from .houston import Houston, houston
-from quantrocket.cli.utils.stream import print_stream
 from quantrocket.cli.utils.output import json_to_cli
 
 FLIGHTLOG_PATH = "/flightlog/handler"
@@ -189,9 +188,19 @@ def stream_logs(detail=False, hist=None, color=True):
         houston.close()
         return
 
+def _cli_print_stream(*args, **kwargs):
+    generator = stream_logs(*args, **kwargs)
+    for chunk in generator:
+        try:
+            # disable output buffering using flush to allow grepping
+            # stream (flush arg not available before Python 3.3);
+            # called via exec in order to catch SyntaxError on Python 2
+            exec("print(chunk, flush=True)")
+        except (SyntaxError, TypeError):
+            print(chunk)
+
 def _cli_stream_logs(*args, **kwargs):
-    wrapped = print_stream(stream_logs)
-    return json_to_cli(wrapped, *args, **kwargs)
+    return json_to_cli(_cli_print_stream, *args, **kwargs)
 
 def download_logfile(outfile, detail=False):
     """

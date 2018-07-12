@@ -14,23 +14,6 @@
 
 import six
 
-def print_stream(func):
-    """
-    Decorator that returns a function which prints the chunks returned by the
-    wrapped func.
-    """
-    def wrapper(*args, **kwargs):
-        generator = func(*args, **kwargs)
-        for chunk in generator:
-            try:
-                # disable output buffering using flush to allow grepping
-                # stream (flush arg not available before Python 3.3)
-                print(chunk, flush=True)
-            except TypeError:
-                print(chunk)
-
-    return wrapper
-
 def to_bytes(f):
     """
     Yields the file line-by-line, converting str to bytes.
