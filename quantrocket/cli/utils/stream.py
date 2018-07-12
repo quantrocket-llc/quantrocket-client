@@ -24,9 +24,10 @@ def print_stream(func):
         for chunk in generator:
             try:
                 # disable output buffering using flush to allow grepping
-                # stream (flush arg not available before Python 3.3)
-                print(chunk, flush=True)
-            except TypeError:
+                # stream (flush arg not available before Python 3.3);
+                # called via exec in order to catch SyntaxError on Python 2
+                exec("print(chunk, flush=True)")
+            except (SyntaxError, TypeError):
                 print(chunk)
 
     return wrapper
