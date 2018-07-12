@@ -9,10 +9,10 @@ pipelines:
     branches:
         master:
             - step:
-                image: python:2.7
+                image: python:3.3
                 script:
                     - pip install -U tox
-                    - tox -e py27
+                    - tox -e py33
     tags:
         '*':
             - step:
