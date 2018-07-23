@@ -14,7 +14,7 @@
 
 import six
 import sys
-import io
+import os
 from quantrocket.houston import houston
 from quantrocket.master import download_master_file
 from quantrocket.cli.utils.output import json_to_cli
@@ -615,7 +615,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
 
     # Convert UTC UpdatedDate to security timezone, and cast to date for
     # index
-    f = io.StringIO()
+    f = six.StringIO()
     download_master_file(f, conids=list(estimates.ConId.unique()),
                          delisted=True, fields=["Timezone"])
     timezones = pd.read_csv(f, index_col="ConId")
@@ -701,3 +701,420 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     estimates = pd.concat(all_estimates, names=["Indicator", "Field", "Date"])
 
     return estimates
+
+def fetch_shortable_shares(countries=None):
+    """
+    Fetch IB shortable shares data and save to database.
+
+    Data is organized by country and updated every 15 minutes. Historical
+    data is available from April 2018.
+
+    Parameters
+    ----------
+    countries : list of str, optional
+        limit to these countries (pass '?' or any invalid country to see
+        available countries)
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    if countries:
+        params["countries"] = countries
+    response = houston.post("/fundamental/stockloan/shares", params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_fetch_shortable_shares(*args, **kwargs):
+    return json_to_cli(fetch_shortable_shares, *args, **kwargs)
+
+def fetch_borrow_fees(countries=None):
+    """
+    Fetch IB borrow fees data and save to database.
+
+    Data is organized by country and updated every 15 minutes. Historical
+    data is available from April 2018.
+
+    Parameters
+    ----------
+    countries : list of str, optional
+        limit to these countries (pass '?' or any invalid country to see
+        available countries)
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    if countries:
+        params["countries"] = countries
+    response = houston.post("/fundamental/stockloan/fees", params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_fetch_borrow_fees(*args, **kwargs):
+    return json_to_cli(fetch_borrow_fees, *args, **kwargs)
+
+def download_shortable_shares(filepath_or_buffer=None, output="csv",
+                              start_date=None, end_date=None,
+                              universes=None, conids=None,
+                              exclude_universes=None, exclude_conids=None):
+    """
+    Query shortable shares from the stockloan database and download to file.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to data on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to data on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    conids : list of int, optional
+        limit to these conids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_conids : list of int, optional
+        exclude these conids
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query shortable shares for a universe of Australian stocks.
+
+    >>> f = io.StringIO()
+    >>> download_shortable_shares("asx_shortables.csv", universes=["asx-stk"])
+    >>> shortables = pd.read_csv("asx_shortables.csv", parse_dates=["Date"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if conids:
+        params["conids"] = conids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_conids:
+        params["exclude_conids"] = exclude_conids
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/stockloan/shares.{0}".format(output), params=params,
+                           timeout=60*5)
+
+    houston.raise_for_status_with_json(response)
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_shortable_shares(*args, **kwargs):
+    return json_to_cli(download_shortable_shares, *args, **kwargs)
+
+def download_borrow_fees(filepath_or_buffer=None, output="csv",
+                         start_date=None, end_date=None,
+                         universes=None, conids=None,
+                         exclude_universes=None, exclude_conids=None):
+    """
+    Query borrow fees from the stockloan database and download to file.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to data on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to data on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    conids : list of int, optional
+        limit to these conids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_conids : list of int, optional
+        exclude these conids
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query borrow fees for a universe of Australian stocks.
+
+    >>> f = io.StringIO()
+    >>> download_borrow_fees("asx_borrow_fees.csv", universes=["asx-stk"])
+    >>> borrow_fees = pd.read_csv("asx_borrow_fees.csv", parse_dates=["Date"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if conids:
+        params["conids"] = conids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_conids:
+        params["exclude_conids"] = exclude_conids
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/stockloan/fees.{0}".format(output), params=params,
+                           timeout=60*5)
+
+    houston.raise_for_status_with_json(response)
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_borrow_fees(*args, **kwargs):
+    return json_to_cli(download_borrow_fees, *args, **kwargs)
+
+def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_like,
+                                       time=None, timezone=None):
+    """
+    Common base function for get_shortable_shares_reindexed_like and
+    get_borrow_fees_reindexed_like.
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join(index_levels)))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    conids = list(reindex_like.columns)
+    start_date = reindex_like.index.min().date()
+    # Stockloan data is sparse but batched in monthly files, so start >1-month
+    # before the reindex_like min date
+    start_date -= pd.Timedelta(days=45)
+    start_date = start_date.isoformat()
+    end_date = reindex_like.index.max().date().isoformat()
+
+    f = six.StringIO()
+    stockloan_func(
+        f, conids=conids, start_date=start_date, end_date=end_date)
+    stockloan_data = pd.read_csv(f, parse_dates=["Date"])
+
+    # Convert UTC Date to security timezone
+    f = six.StringIO()
+    download_master_file(f, conids=list(stockloan_data.ConId.unique()),
+                         delisted=True, fields=["Timezone"])
+    timezones = pd.read_csv(f, index_col="ConId")
+    stockloan_data = stockloan_data.join(timezones, on="ConId")
+    if stockloan_data.Timezone.isnull().any():
+        conids_missing_timezones = list(stockloan_data.ConId[stockloan_data.Timezone.isnull()].unique())
+        raise MissingData("timezones are missing for some conids so cannot convert UTC "
+                          "stockloan data timestamps to timezone of security (conids "
+                          "missing timezone: {0})".format(
+                              ",".join([str(conid) for conid in conids_missing_timezones])
+                          ))
+
+    security_timezones = list(stockloan_data.Timezone.unique())
+    # If only 1 timezone in data, use a faster method
+    if len(security_timezones) == 1:
+        timezone = security_timezones[0]
+        stockloan_data.loc[:, "Date"] = pd.to_datetime(stockloan_data.Date.values).tz_localize("UTC").tz_convert(timezone)
+    else:
+        stockloan_data.loc[:, "Date"] = stockloan_data.apply(lambda row: row.Date.tz_localize("UTC").tz_convert(row.Timezone), axis=1)
+
+    # Create an index of `reindex_like` dates at `time`
+    if time:
+        index_at_time = pd.Index(reindex_like.index.to_series().apply(
+            lambda x: pd.datetime.combine(x, pd.Timestamp(time).time())))
+    else:
+        index_at_time = reindex_like.index
+
+    # Set index timezone, getting timezone from provided param, or from
+    # reindex_like TZ, or inferring from securities master
+    if not timezone:
+        if reindex_like.index.tz:
+            timezone = reindex_like.tz.zone
+        elif len(security_timezones) == 1:
+            timezone = security_timezones[0]
+        else:
+            raise ParameterError(
+                "no timezone specified and cannot infer because multiple timezones are "
+                "present in data, please specify timezone (timezones in data: {0})".format(
+                    ", ".join(security_timezones)))
+
+    index_at_time = index_at_time.tz_localize(timezone)
+
+    stockloan_data = stockloan_data.drop("Timezone", axis=1)
+    stockloan_data = stockloan_data.pivot(index="ConId",columns="Date").T
+    stockloan_data = stockloan_data.loc[stockloan_field]
+
+    # Create a unioned index of requested times and stockloan data timestamps
+    unioned_idx = index_at_time.union(stockloan_data.index)
+    # performance boost: don't need to reindex and ffill earlier than the
+    # stockloan data start date
+    unioned_idx = unioned_idx[unioned_idx >= stockloan_data.index.min()]
+    stockloan_data = stockloan_data.reindex(index=unioned_idx, columns=reindex_like.columns)
+
+    stockloan_data = stockloan_data.fillna(method="ffill")
+
+    # Keep only the requested times, now that we've ffilled
+    stockloan_data = stockloan_data.reindex(index=index_at_time)
+
+    # Replace index_at_time with the original reindex_like index (this needs
+    # to be done because index_at_time is tz-aware and reindex_like may not
+    # be, and because index_at_time uses the requested `time` if provided.
+    # Since index_at_time was derived from reindex_like.index and has the
+    # same shape, it is safe to replace it.)
+    stockloan_data.index = reindex_like.index
+
+    return stockloan_data
+
+def get_shortable_shares_reindexed_like(reindex_like, time=None, timezone=None):
+    """
+    Return a DataFrame of shortable shares, reindexed to match the index
+    (dates) and columns (conids) of `reindex_like`.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and conids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    time : str (HH:MM:SS), optional
+        return shortable shares as of this time of day. If provided, this
+        replaces the times of day in `reindex_like`'s DatetimeIndex; if
+        omitted, the times in `reindex_like`'s DatetimeIndex will be used.
+        Note that for a DatetimeIndex containing dates only, the time is
+        00:00:00, meaning shortable shares will be returned as of midnight
+        at the start of the day.
+
+    timezone : str, optional
+        the timezone of `time`, or of `reindex_like`'s DatetimeIndex if `time`
+        is omitted. If `timezone` is omitted, it will be inferred from `reindex_like`'s
+        DatetimeIndex if set, otherwise it will be inferred from the timezone
+        of the component securities. If component securities cover multiple
+        timezones and `reindex_like`'s DatetimeIndex is not tz-aware, `timezone`
+        must be provided.
+
+    Returns
+    -------
+    DataFrame
+        a DataFrame of shortable shares, shaped like the input DataFrame
+
+    Examples
+    --------
+    Get shortable shares as of 9:30 AM for a DataFrame of US stocks:
+
+    >>> closes = prices.loc["Close"]
+    >>> shortables = get_shortable_shares_reindexed_like(closes, time="09:30:00")
+    """
+    shortable_shares = _get_stockloan_data_reindexed_like(
+        download_shortable_shares, "Quantity",
+        reindex_like=reindex_like, time=time, timezone=timezone)
+
+    # fillna(0) where date > 2018-04-15, the data start date (NaNs after that
+    # date indicate no shortable shares, NaNs before that date indicate don't
+    # know)
+    data_start_date = os.environ.get("STOCKLOAN_DATA_START_DATE", "2018-04-15")
+    after_start_date_selector = shortable_shares.index > data_start_date
+    shortable_shares.loc[after_start_date_selector, :] = shortable_shares.loc[
+        after_start_date_selector].fillna(0)
+
+    return shortable_shares
+
+def get_borrow_fees_reindexed_like(reindex_like, time=None, timezone=None):
+    """
+    Return a DataFrame of borrow fees, reindexed to match the index
+    (dates) and columns (conids) of `reindex_like`.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and conids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    time : str (HH:MM:SS), optional
+        return shortable shares as of this time of day. If provided, this
+        replaces the times of day in `reindex_like`'s DatetimeIndex; if
+        omitted, the times in `reindex_like`'s DatetimeIndex will be used.
+        Note that for a DatetimeIndex containing dates only, the time is
+        00:00:00, meaning shortable shares will be returned as of midnight
+        at the start of the day.
+
+    timezone : str, optional
+        the timezone of `time`, or of `reindex_like`'s DatetimeIndex if `time`
+        is omitted. If `timezone` is omitted, it will be inferred from `reindex_like`'s
+        DatetimeIndex if set, otherwise it will be inferred from the timezone
+        of the component securities. If component securities cover multiple
+        timezones and `reindex_like`'s DatetimeIndex is not tz-aware, `timezone`
+        must be provided.
+
+    Returns
+    -------
+    DataFrame
+        a DataFrame of borrow fees, shaped like the input DataFrame
+
+    Examples
+    --------
+    Get borrow_fees as of 4:30 PM for a universe of US stocks:
+
+    >>> closes = prices.loc["Close"]
+    >>> borrow_fees = get_borrow_fees_reindexed_like(closes, time="16:30:00")
+    """
+    return _get_stockloan_data_reindexed_like(
+        download_borrow_fees, "FeeRate",
+        reindex_like=reindex_like, time=time, timezone=timezone)

@@ -323,3 +323,181 @@ Query EPS estimates and actuals for a universe of Australian stocks:
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields)")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_estimates")
+
+    examples = """
+Fetch IB shortable shares data and save to database.
+
+Data is organized by country and updated every 15 minutes. Historical
+data is available from April 15, 2018.
+
+Examples:
+
+Fetch shortable shares data for US stocks:
+
+    quantrocket fundamental fetch-shortshares --countries usa
+
+Fetch shortable shares data for all stocks:
+
+    quantrocket fundamental fetch-shortshares
+    """
+    parser = _subparsers.add_parser(
+        "fetch-shortshares",
+        help="fetch IB shortable shares data and save to database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-c", "--countries",
+        nargs="*",
+        metavar="COUNTRY",
+        help="limit to these countries (pass '?' or any invalid country to see "
+        "available countries)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_shortable_shares")
+
+    examples = """
+Fetch IB borrow fees data and save to database.
+
+Data is organized by country and updated every 15 minutes. Historical
+data is available from April 15, 2018.
+
+Examples:
+
+Fetch borrow fees for US stocks:
+
+    quantrocket fundamental fetch-shortfees --countries usa
+
+Fetch borrow fees for all stocks:
+
+    quantrocket fundamental fetch-shortfees
+    """
+    parser = _subparsers.add_parser(
+        "fetch-shortfees",
+        help="fetch IB borrow fees data and save to database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-c", "--countries",
+        nargs="*",
+        metavar="COUNTRY",
+        help="limit to these countries (pass '?' or any invalid country to see "
+        "available countries)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_borrow_fees")
+
+    examples = """
+Query shortable shares from the stockloan database and download to file.
+
+Examples:
+
+Query shortable shares for a universe of Australian stocks:
+
+    quantrocket fundamental shortshares -u asx-stk -o asx_shortables.csv
+    """
+    parser = _subparsers.add_parser(
+        "shortshares",
+        help="query shortable shares from the stockloan database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to data on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to data on or before this date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="exclude these conids")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_shortable_shares")
+
+    examples = """
+Query borrow fees from the stockloan database and download to file.
+
+Examples:
+
+Query borrow fees for a universe of Australian stocks:
+
+    quantrocket fundamental shortfees -u asx-stk -o asx_borrow_fees.csv
+    """
+    parser = _subparsers.add_parser(
+        "shortfees",
+        help="query borrow fees from the stockloan database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to data on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to data on or before this date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="exclude these conids")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_borrow_fees")
