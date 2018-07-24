@@ -24,10 +24,1022 @@ import pandas as pd
 import pytz
 import numpy as np
 from quantrocket.fundamental import (
+    get_reuters_estimates_reindexed_like,
+    get_reuters_financials_reindexed_like,
     get_borrow_fees_reindexed_like,
     get_shortable_shares_reindexed_like
 )
-from quantrocket.exceptions import ParameterError
+from quantrocket.exceptions import ParameterError, MissingData
+
+class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
+
+    def test_complain_if_time_level_in_index(self):
+        """
+        Tests error handling when reindex_like has a Time level in the index.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=[12345,23456],
+            index=pd.MultiIndex.from_product((
+                pd.date_range(start="2018-01-01", periods=3, freq="D"),
+                ["15:00:00","15:15:00"]), names=["Date", "Time"]))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_reuters_estimates_reindexed_like(closes, codes="BVPS")
+
+        self.assertIn("reindex_like should not have 'Time' in index", str(cm.exception))
+
+    def test_complain_if_date_level_not_in_index(self):
+        """
+        Tests error handling when reindex_like doesn't have an index named
+        Date.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=[12345,23456],
+            index=pd.date_range(start="2018-01-01", periods=3, freq="D"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_reuters_estimates_reindexed_like(closes, codes="BVPS")
+
+        self.assertIn("reindex_like must have index called 'Date'", str(cm.exception))
+
+    def test_complain_if_not_datetime_index(self):
+        """
+        Tests error handling when the reindex_like index is named Date but is
+        not a DatetimeIndex.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=[12345,23456],
+            index=pd.Index(["foo","bar","bat"], name="Date"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_reuters_estimates_reindexed_like(closes, codes="BVPS")
+
+        self.assertIn("reindex_like must have a DatetimeIndex", str(cm.exception))
+
+    @patch("quantrocket.fundamental.download_reuters_estimates")
+    @patch("quantrocket.fundamental.download_master_file")
+    def test_pass_args_correctly(self,
+                                 mock_download_master_file,
+                                 mock_download_reuters_estimates):
+        """
+        Tests that conids, date ranges, and and other args are correctly
+        passed to download_reuters_estimates.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=[12345,23456],
+            index=pd.date_range(start="2018-03-01", periods=6, freq="MS", name="Date"))
+
+        def _mock_download_reuters_estimates(codes, f, *args, **kwargs):
+            estimates = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-06-30",
+                        "2018-06-30"
+                        ],
+                    UpdatedDate=[
+                        "2018-04-06T10:00:00",
+                        "2018-04-06T10:00:00",
+                        "2018-04-23T13:00:00",
+                        "2018-04-23T13:00:00",
+                        "2018-07-23T13:00:00",
+                        "2018-07-23T13:00:00",
+                        ],
+                     ConId=[
+                         12345,
+                         12345,
+                         23456,
+                         23456,
+                         12345,
+                         12345,
+                         ],
+                     Indicator=[
+                         "BVPS",
+                         "EPS",
+                         "BVPS",
+                         "EPS",
+                         "BVPS",
+                         "EPS"
+                         ],
+                     Actual=[
+                         20,
+                         9.56,
+                         50,
+                         63.22,
+                         24.5,
+                         11.35
+                     ]))
+            estimates.to_csv(f, index=False)
+            f.seek(0)
+
+        def _mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(ConId=[12345,23456],
+                                               Timezone=["Japan","Japan"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        mock_download_master_file.side_effect = _mock_download_master_file
+
+        mock_download_reuters_estimates.side_effect = _mock_download_reuters_estimates
+
+        get_reuters_estimates_reindexed_like(
+            closes, ["BVPS","EPS"], fields=["Actual", "FiscalPeriodEndDate"],
+            period_types=["Q"], max_lag="500D")
+
+        reuters_estimates_call = mock_download_reuters_estimates.mock_calls[0]
+        _, args, kwargs = reuters_estimates_call
+        self.assertListEqual(args[0], ["BVPS", "EPS"])
+        self.assertListEqual(kwargs["conids"], [12345,23456])
+        self.assertEqual(kwargs["start_date"], "2016-09-02") # 365+180 days before reindex_like min date
+        self.assertEqual(kwargs["end_date"], "2018-08-01")
+        self.assertEqual(kwargs["fields"], ["Actual", "FiscalPeriodEndDate", "UpdatedDate"])
+        self.assertEqual(kwargs["period_types"], ["Q"])
+
+        master_call = mock_download_master_file.mock_calls[0]
+        _, args, kwargs = master_call
+        self.assertEqual(kwargs["conids"], [12345,23456])
+
+        get_reuters_estimates_reindexed_like(
+            closes, ["BVPS", "EPS", "ROA"], fields=["Actual", "Mean"],
+            period_types=["A","S"], max_lag="500D")
+
+        reuters_estimates_call = mock_download_reuters_estimates.mock_calls[1]
+        _, args, kwargs = reuters_estimates_call
+        self.assertListEqual(args[0], ["BVPS", "EPS", "ROA"])
+        self.assertListEqual(kwargs["conids"], [12345,23456])
+        self.assertEqual(kwargs["start_date"], "2016-09-02") # 365+180 days before reindex_like min date
+        self.assertEqual(kwargs["end_date"], "2018-08-01")
+        self.assertEqual(kwargs["fields"], ["Actual", "Mean","UpdatedDate"])
+        self.assertEqual(kwargs["period_types"], ["A","S"])
+
+        master_call = mock_download_master_file.mock_calls[1]
+        _, args, kwargs = master_call
+        self.assertEqual(kwargs["conids"], [12345,23456])
+
+    def test_dedupe_updated_date(self):
+        """
+        Tests that duplicate UpdatedDates (resulting from reporting several
+        fiscal periods at once) are deduped by keeping the latest record.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,1),
+            columns=[12345],
+            index=pd.date_range(start="2018-03-01", periods=6, freq="MS", name="Date"))
+
+        def mock_download_reuters_estimates(codes, f, *args, **kwargs):
+            estimates = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-03-31",
+                        "2018-06-30",
+                        ],
+                    UpdatedDate=[
+                        "2018-07-23T10:00:00",
+                        "2018-07-23T10:00:00",
+                        ],
+                     ConId=[
+                         12345,
+                         12345,
+                         ],
+                     Indicator=[
+                         "EPS",
+                         "EPS"
+                         ],
+                     Actual=[
+                         9.56,
+                         11.35
+                     ]))
+            estimates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(ConId=[12345],
+                                           Timezone=["Japan"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_reuters_estimates', new=mock_download_reuters_estimates):
+            with patch('quantrocket.fundamental.download_master_file', new=mock_download_master_file):
+
+                estimates = get_reuters_estimates_reindexed_like(
+                    closes, ["EPS"])
+
+        self.assertSetEqual(set(estimates.index.get_level_values("Indicator")), {"EPS"})
+        self.assertSetEqual(set(estimates.index.get_level_values("Field")), {"Actual"})
+
+        eps = estimates.loc["EPS"].loc["Actual"]
+        self.assertListEqual(list(eps.index), list(closes.index))
+        self.assertListEqual(list(eps.columns), list(closes.columns))
+        self.assertEqual(eps[12345].loc["2018-08-01"], 11.35)
+
+    def test_ffill_no_lookahead_bias(self):
+        """
+        Tests that indicators are ffilled and are shifted forward 1 period to
+        avoid lookahead bias.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,1),
+            columns=[12345],
+            index=pd.date_range(start="2018-07-20", periods=6, freq="D", name="Date"))
+
+        def mock_download_reuters_estimates(codes, f, *args, **kwargs):
+            estimates = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-03-30",
+                        "2018-06-30"
+                        ],
+                    UpdatedDate=[
+                        "2018-04-23T10:00:00",
+                        "2018-07-23T10:00:00",
+                        ],
+                     ConId=[
+                         12345,
+                         12345,
+                         ],
+                     Indicator=[
+                         "EPS",
+                         "EPS",
+                         ],
+                     Actual=[
+                         13.45,
+                         16.34
+                     ]))
+            estimates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(ConId=[12345],
+                                           Timezone=["America/New_York"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_reuters_estimates', new=mock_download_reuters_estimates):
+            with patch('quantrocket.fundamental.download_master_file', new=mock_download_master_file):
+
+                estimates = get_reuters_estimates_reindexed_like(
+                    closes, ["EPS"])
+
+        self.assertSetEqual(set(estimates.index.get_level_values("Indicator")), {"EPS"})
+        self.assertSetEqual(set(estimates.index.get_level_values("Field")), {"Actual"})
+
+        eps = estimates.loc["EPS"].loc["Actual"]
+        self.assertListEqual(list(eps.index), list(closes.index))
+        self.assertListEqual(list(eps.columns), list(closes.columns))
+        self.assertEqual(eps[12345].loc["2018-07-23"], 13.45)
+        self.assertEqual(eps[12345].loc["2018-07-24"], 16.34)
+
+    def test_max_lag(self):
+        """
+        Tests that max_lag works as expected.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,1),
+            columns=[12345],
+            index=pd.date_range(start="2018-07-20", periods=6, freq="D", name="Date"))
+
+        def mock_download_reuters_estimates(codes, f, *args, **kwargs):
+            estimates = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-06-30"
+                        ],
+                    UpdatedDate=[
+                        "2018-07-06T18:00:35",
+                        ],
+                     ConId=[
+                         12345,
+                         ],
+                     Indicator=[
+                         "BVPS",
+                         ],
+                     Actual=[
+                         45
+                     ]))
+            estimates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(ConId=[12345],
+                                           Timezone=["America/New_York"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_reuters_estimates', new=mock_download_reuters_estimates):
+            with patch('quantrocket.fundamental.download_master_file', new=mock_download_master_file):
+
+                # request without max_lag
+                estimates = get_reuters_estimates_reindexed_like(
+                    closes, ["BVPS"])
+
+        self.assertSetEqual(set(estimates.index.get_level_values("Indicator")), {"BVPS"})
+        self.assertSetEqual(set(estimates.index.get_level_values("Field")), {"Actual"})
+
+        bvps = estimates.loc["BVPS"].loc["Actual"]
+        self.assertListEqual(list(bvps.index), list(closes.index))
+        self.assertListEqual(list(bvps.columns), list(closes.columns))
+        # Data is ffiled to end of frame
+        self.assertTrue((bvps[12345] == 45).all())
+
+        with patch('quantrocket.fundamental.download_reuters_estimates', new=mock_download_reuters_estimates):
+            with patch('quantrocket.fundamental.download_master_file', new=mock_download_master_file):
+
+                # request with max_lag
+                estimates = get_reuters_estimates_reindexed_like(
+                    closes, ["BVPS"], max_lag="23D")
+
+        bvps = estimates.loc["BVPS"].loc["Actual"][12345]
+        # Data is only ffiled to 2018-07-23 (2018-06-30 + 23D)
+        self.assertTrue((bvps.loc[bvps.index <= "2018-07-23"] == 45).all())
+        self.assertTrue((bvps.loc[bvps.index > "2018-07-23"].isnull()).all())
+
+    def test_tz_aware_index(self):
+        """
+        Tests that reindex_like.index can be tz-naive or tz-aware.
+        """
+        def mock_download_reuters_estimates(codes, f, *args, **kwargs):
+            estimates = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-03-31",
+                        "2018-06-30"
+                        ],
+                    UpdatedDate=[
+                        "2018-04-23T14:00:00",
+                        "2018-07-06T17:34:00",
+                        ],
+                     ConId=[
+                         12345,
+                         12345
+                         ],
+                     Indicator=[
+                         "ROA",
+                         "ROA"
+                         ],
+                     Actual=[
+                         35,
+                         23
+                     ]))
+            estimates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(ConId=[12345],
+                                           Timezone=["America/New_York"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_reuters_estimates', new=mock_download_reuters_estimates):
+            with patch('quantrocket.fundamental.download_master_file', new=mock_download_master_file):
+
+                # request with tz_naive
+                closes = pd.DataFrame(
+                    np.random.rand(4,1),
+                    columns=[12345],
+                    index=pd.date_range(start="2018-07-05", periods=4, freq="D", name="Date"))
+
+                estimates = get_reuters_estimates_reindexed_like(
+                    closes, ["ROA"])
+
+        self.assertSetEqual(set(estimates.index.get_level_values("Indicator")), {"ROA"})
+        self.assertSetEqual(set(estimates.index.get_level_values("Field")), {"Actual"})
+
+        roas = estimates.loc["ROA"].loc["Actual"]
+        self.assertListEqual(list(roas.index), list(closes.index))
+        self.assertListEqual(list(roas.columns), list(closes.columns))
+        roas = roas.reset_index()
+        roas.loc[:, "Date"] = roas.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            roas.to_dict(orient="records"),
+            [{'Date': '2018-07-05T00:00:00', 12345: 35.0},
+             {'Date': '2018-07-06T00:00:00', 12345: 35.0},
+             {'Date': '2018-07-07T00:00:00', 12345: 23.0},
+             {'Date': '2018-07-08T00:00:00', 12345: 23.0}]
+        )
+
+        with patch('quantrocket.fundamental.download_reuters_estimates', new=mock_download_reuters_estimates):
+            with patch('quantrocket.fundamental.download_master_file', new=mock_download_master_file):
+
+                # request with tz-aware
+                closes = pd.DataFrame(
+                    np.random.rand(4,1),
+                    columns=[12345],
+                    index=pd.date_range(start="2018-07-05", periods=4, freq="D",
+                                        tz="America/New_York", name="Date"))
+
+                estimates = get_reuters_estimates_reindexed_like(
+                    closes, ["ROA"])
+
+        roas = estimates.loc["ROA"].loc["Actual"]
+        roas = roas.reset_index()
+        roas.loc[:, "Date"] = roas.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            roas.to_dict(orient="records"),
+            [{'Date': '2018-07-05T00:00:00-0400', 12345: 35.0},
+             {'Date': '2018-07-06T00:00:00-0400', 12345: 35.0},
+             {'Date': '2018-07-07T00:00:00-0400', 12345: 23.0},
+             {'Date': '2018-07-08T00:00:00-0400', 12345: 23.0}]
+        )
+
+    def test_complain_if_missing_securities(self):
+        """
+        Tests error handling when a security is missing from the securities
+        master.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=[12345,23456],
+            index=pd.date_range(start="2018-03-01", periods=6, freq="MS", name="Date"))
+
+        def mock_download_reuters_estimates(codes, f, *args, **kwargs):
+            estimates = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-06-30",
+                        "2018-06-30"
+                        ],
+                    UpdatedDate=[
+                        "2018-04-06T10:00:00",
+                        "2018-04-06T10:00:00",
+                        "2018-04-23T13:00:00",
+                        "2018-04-23T13:00:00",
+                        "2018-07-23T13:00:00",
+                        "2018-07-23T13:00:00",
+                        ],
+                     ConId=[
+                         12345,
+                         12345,
+                         23456,
+                         23456,
+                         12345,
+                         12345,
+                         ],
+                     Indicator=[
+                         "BVPS",
+                         "EPS",
+                         "BVPS",
+                         "EPS",
+                         "BVPS",
+                         "EPS"
+                         ],
+                     Actual=[
+                         20,
+                         9.56,
+                         50,
+                         63.22,
+                         24.5,
+                         11.35
+                     ]))
+            estimates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(ConId=[12345],
+                                           Timezone=["Japan"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_reuters_estimates', new=mock_download_reuters_estimates):
+            with patch('quantrocket.fundamental.download_master_file', new=mock_download_master_file):
+
+
+                with self.assertRaises(MissingData) as cm:
+                    get_reuters_estimates_reindexed_like(
+                        closes, ["BVPS","EPS"])
+
+        self.assertIn((
+            "timezones are missing for some conids so cannot convert UTC "
+            "estimates to timezone of security (conids missing timezone: 23456)"), str(cm.exception))
+
+    def test_convert_utc_to_security_timezone(self):
+        """
+        Tests that estimate UpdatedDates are converted from UTC to the
+        security timezone for the purpose of date alignment.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(4,2),
+            columns=[12345,23456],
+            index=pd.date_range(start="2018-07-22", periods=4, freq="D", name="Date"))
+
+        def mock_download_reuters_estimates(codes, f, *args, **kwargs):
+            estimates = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-06-30",
+                        "2018-06-30",
+                        ],
+                    UpdatedDate=[
+                        "2018-04-06T08:00:00",
+                        "2018-04-07T09:35:00",
+                        "2018-07-23T17:00:00", # = 2018-07-23 America/New_York
+                        "2018-07-23T17:00:00", # = 2018-07-24 Japan
+                        ],
+                     ConId=[
+                         12345,
+                         23456,
+                         12345,
+                         23456
+                         ],
+                     Indicator=[
+                         "EPS",
+                         "EPS",
+                         "EPS",
+                         "EPS"
+                         ],
+                     Actual=[
+                         24.5,
+                         11.35,
+                         26.7,
+                         15.4
+                     ]))
+            estimates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(ConId=[12345,23456],
+                                           Timezone=["America/New_York", "Japan"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_reuters_estimates', new=mock_download_reuters_estimates):
+            with patch('quantrocket.fundamental.download_master_file', new=mock_download_master_file):
+
+                estimates = get_reuters_estimates_reindexed_like(
+                    closes, ["EPS"])
+
+        eps = estimates.loc["EPS"].loc["Actual"]
+        eps = eps.reset_index()
+        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(eps.to_dict(orient="records"),
+            [{'Date': '2018-07-22T00:00:00', 12345: 24.5, 23456: 11.35},
+             {'Date': '2018-07-23T00:00:00', 12345: 24.5, 23456: 11.35},
+             {'Date': '2018-07-24T00:00:00', 12345: 26.7, 23456: 11.35},
+             {'Date': '2018-07-25T00:00:00', 12345: 26.7, 23456: 15.4}]
+        )
+
+    def test_ignore_no_actuals(self):
+        """
+        Tests that estimates with no actuals are ignored.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(4,2),
+            columns=[12345,23456],
+            index=pd.date_range(start="2018-07-05", periods=4, freq="D", name="Date"))
+
+        def mock_download_reuters_estimates(codes, f, *args, **kwargs):
+            estimates = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-03-31",
+                        "2018-06-30",
+                        "2018-03-31",
+                        "2018-06-30",
+                        ],
+                    UpdatedDate=[
+                        "2018-04-23T14:00:00",
+                        "2018-07-06T17:34:00",
+                        "2018-04-23T14:00:00",
+                        "2018-07-06T17:34:00",
+                        ],
+                     ConId=[
+                         12345,
+                         12345,
+                         23456,
+                         23456,
+                         ],
+                     Indicator=[
+                         "ROA",
+                         "ROA",
+                         "ROA",
+                         "ROA"
+                         ],
+                     Actual=[
+                         35,
+                         None,
+                         None,
+                         46.7
+                     ]))
+            estimates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(ConId=[12345, 23456],
+                                           Timezone=["America/New_York", "America/New_York"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_reuters_estimates', new=mock_download_reuters_estimates):
+            with patch('quantrocket.fundamental.download_master_file', new=mock_download_master_file):
+
+                estimates = get_reuters_estimates_reindexed_like(
+                    closes, ["ROA"])
+
+        self.assertSetEqual(set(estimates.index.get_level_values("Indicator")), {"ROA"})
+        self.assertSetEqual(set(estimates.index.get_level_values("Field")), {"Actual"})
+
+        roas = estimates.loc["ROA"].loc["Actual"]
+        self.assertListEqual(list(roas.index), list(closes.index))
+        self.assertListEqual(list(roas.columns), list(closes.columns))
+        # replace nan with "nan" to allow equality comparisons
+        roas = roas.where(roas.notnull(), "nan")
+        roas = roas.reset_index()
+        roas.loc[:, "Date"] = roas.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            roas.to_dict(orient="records"),
+            [{'Date': '2018-07-05T00:00:00', 12345: 35.0, 23456: "nan"},
+             {'Date': '2018-07-06T00:00:00', 12345: 35.0, 23456: "nan"},
+             {'Date': '2018-07-07T00:00:00', 12345: 35.0, 23456: 46.7},
+             {'Date': '2018-07-08T00:00:00', 12345: 35.0, 23456: 46.7}]
+        )
+
+class ReutersFinancialsReindexedLikeTestCase(unittest.TestCase):
+
+    def test_complain_if_time_level_in_index(self):
+        """
+        Tests error handling when reindex_like has a Time level in the index.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=[12345,23456],
+            index=pd.MultiIndex.from_product((
+                pd.date_range(start="2018-01-01", periods=3, freq="D"),
+                ["15:00:00","15:15:00"]), names=["Date", "Time"]))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_reuters_financials_reindexed_like(closes, "ATOT")
+
+        self.assertIn("reindex_like should not have 'Time' in index", str(cm.exception))
+
+    def test_complain_if_date_level_not_in_index(self):
+        """
+        Tests error handling when reindex_like doesn't have an index named
+        Date.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=[12345,23456],
+            index=pd.date_range(start="2018-01-01", periods=3, freq="D"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_reuters_financials_reindexed_like(closes, "ATOT")
+
+        self.assertIn("reindex_like must have index called 'Date'", str(cm.exception))
+
+    def test_complain_if_not_datetime_index(self):
+        """
+        Tests error handling when the reindex_like index is named Date but is
+        not a DatetimeIndex.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=[12345,23456],
+            index=pd.Index(["foo","bar","bat"], name="Date"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_reuters_financials_reindexed_like(closes, "ATOT")
+
+        self.assertIn("reindex_like must have a DatetimeIndex", str(cm.exception))
+
+    @patch("quantrocket.fundamental.download_reuters_financials")
+    def test_pass_args_correctly(self,
+                                 mock_download_reuters_financials):
+        """
+        Tests that conids, date ranges, and and other args are correctly
+        passed to download_reuters_financials.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=[12345,23456],
+            index=pd.date_range(start="2018-03-01", periods=6, freq="MS", name="Date"))
+
+        def _mock_download_reuters_financials(coa_codes, f, *args, **kwargs):
+            financials = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-06-30",
+                        "2018-06-30"
+                        ],
+                    SourceDate=[
+                        "2018-04-06",
+                        "2018-04-06",
+                        "2018-04-23",
+                        "2018-04-23",
+                        "2018-07-23",
+                        "2018-07-23",
+                        ],
+                     ConId=[
+                         12345,
+                         12345,
+                         23456,
+                         23456,
+                         12345,
+                         12345,
+                         ],
+                     CoaCode=[
+                         "ATOT",
+                         "QTCO",
+                         "ATOT",
+                         "QTCO",
+                         "ATOT",
+                         "QTCO"
+                         ],
+                     Amount=[
+                         565,
+                         89,
+                         235,
+                         73,
+                         580,
+                         92
+                     ]))
+            financials.to_csv(f, index=False)
+            f.seek(0)
+
+        mock_download_reuters_financials.side_effect = _mock_download_reuters_financials
+
+        get_reuters_financials_reindexed_like(
+            closes, ["ATOT","QTCO"], fields=["Amount", "FiscalPeriodEndDate"],
+            interim=True, exclude_restatements=False, max_lag="500D")
+
+        reuters_financials_call = mock_download_reuters_financials.mock_calls[0]
+        _, args, kwargs = reuters_financials_call
+        self.assertListEqual(args[0], ["ATOT", "QTCO"])
+        self.assertListEqual(kwargs["conids"], [12345,23456])
+        self.assertEqual(kwargs["start_date"], "2016-09-02") # 365+180 days before reindex_like min date
+        self.assertEqual(kwargs["end_date"], "2018-08-01")
+        self.assertEqual(kwargs["fields"], ["Amount", "FiscalPeriodEndDate"])
+        self.assertTrue(kwargs["interim"])
+        self.assertFalse(kwargs["exclude_restatements"])
+
+        get_reuters_financials_reindexed_like(
+            closes, ["ATOT", "QTCO", "LTLL"], fields=["Amount", "Source"],
+            interim=False, exclude_restatements=True, max_lag="500D")
+
+        reuters_financials_call = mock_download_reuters_financials.mock_calls[1]
+        _, args, kwargs = reuters_financials_call
+        self.assertListEqual(args[0], ["ATOT", "QTCO", "LTLL"])
+        self.assertListEqual(kwargs["conids"], [12345,23456])
+        self.assertEqual(kwargs["start_date"], "2016-09-02") # 365+180 days before reindex_like min date
+        self.assertEqual(kwargs["end_date"], "2018-08-01")
+        self.assertEqual(kwargs["fields"], ["Amount", "Source"])
+        self.assertFalse(kwargs["interim"])
+        self.assertTrue(kwargs["exclude_restatements"])
+
+    def test_dedupe_source_date(self):
+        """
+        Tests that duplicate SourceDates (resulting from reporting several
+        fiscal periods at once) are deduped by keeping the latest record.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,1),
+            columns=[12345],
+            index=pd.date_range(start="2018-03-01", periods=6, freq="MS", name="Date"))
+
+        def mock_download_reuters_financials(coa_codes, f, *args, **kwargs):
+            financials = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-03-30",
+                        "2018-06-30"
+                        ],
+                    SourceDate=[
+                        "2018-07-23",
+                        "2018-07-23",
+                        ],
+                     ConId=[
+                         12345,
+                         12345,
+                         ],
+                     CoaCode=[
+                         "ATOT",
+                         "ATOT",
+                         ],
+                     Amount=[
+                         565,
+                         580
+                     ]))
+            financials.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_reuters_financials', new=mock_download_reuters_financials):
+
+            financials = get_reuters_financials_reindexed_like(
+                closes, ["ATOT"], interim=True)
+
+        self.assertSetEqual(set(financials.index.get_level_values("CoaCode")), {"ATOT"})
+        self.assertSetEqual(set(financials.index.get_level_values("Field")), {"Amount"})
+
+        atots = financials.loc["ATOT"].loc["Amount"]
+        self.assertListEqual(list(atots.index), list(closes.index))
+        self.assertListEqual(list(atots.columns), list(closes.columns))
+        self.assertEqual(atots[12345].loc["2018-08-01"], 580)
+
+    def test_ffill_no_lookahead_bias(self):
+        """
+        Tests that financial statement metrics are ffilled and are shifted
+        forward 1 period to avoid lookahead bias.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,1),
+            columns=[12345],
+            index=pd.date_range(start="2018-07-20", periods=6, freq="D", name="Date"))
+
+        def mock_download_reuters_financials(coa_codes, f, *args, **kwargs):
+            financials = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-03-30",
+                        "2018-06-30"
+                        ],
+                    SourceDate=[
+                        "2018-04-23",
+                        "2018-07-23",
+                        ],
+                     ConId=[
+                         12345,
+                         12345,
+                         ],
+                     CoaCode=[
+                         "ATOT",
+                         "ATOT",
+                         ],
+                     Amount=[
+                         565,
+                         580
+                     ]))
+            financials.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_reuters_financials', new=mock_download_reuters_financials):
+
+            financials = get_reuters_financials_reindexed_like(
+                closes, ["ATOT"], interim=True)
+
+        self.assertSetEqual(set(financials.index.get_level_values("CoaCode")), {"ATOT"})
+        self.assertSetEqual(set(financials.index.get_level_values("Field")), {"Amount"})
+
+        atots = financials.loc["ATOT"].loc["Amount"]
+        self.assertListEqual(list(atots.index), list(closes.index))
+        self.assertListEqual(list(atots.columns), list(closes.columns))
+        self.assertEqual(atots[12345].loc["2018-07-23"], 565)
+        self.assertEqual(atots[12345].loc["2018-07-24"], 580)
+
+    def test_max_lag(self):
+        """
+        Tests that max_lag works as expected.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,1),
+            columns=[12345],
+            index=pd.date_range(start="2018-07-20", periods=6, freq="D", name="Date"))
+
+        def mock_download_reuters_financials(coa_codes, f, *args, **kwargs):
+            financials = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-06-30"
+                        ],
+                    SourceDate=[
+                        "2018-07-06",
+                        ],
+                     ConId=[
+                         12345,
+                         ],
+                     CoaCode=[
+                         "ATOT",
+                         ],
+                     Amount=[
+                         580
+                     ]))
+            financials.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_reuters_financials', new=mock_download_reuters_financials):
+
+            # request without max_lag
+            financials = get_reuters_financials_reindexed_like(
+                closes, ["ATOT"], interim=True)
+
+        self.assertSetEqual(set(financials.index.get_level_values("CoaCode")), {"ATOT"})
+        self.assertSetEqual(set(financials.index.get_level_values("Field")), {"Amount"})
+
+        atots = financials.loc["ATOT"].loc["Amount"]
+        self.assertListEqual(list(atots.index), list(closes.index))
+        self.assertListEqual(list(atots.columns), list(closes.columns))
+        # Data is ffiled to end of frame
+        self.assertTrue((atots[12345] == 580).all())
+
+        with patch('quantrocket.fundamental.download_reuters_financials', new=mock_download_reuters_financials):
+
+            # request with max_lag
+            financials = get_reuters_financials_reindexed_like(
+                closes, ["ATOT"], interim=True, max_lag="23D")
+
+        atots = financials.loc["ATOT"].loc["Amount"][12345]
+        # Data is only ffiled to 2018-07-23 (2018-06-30 + 23D)
+        self.assertTrue((atots.loc[atots.index <= "2018-07-23"] == 580).all())
+        self.assertTrue((atots.loc[atots.index > "2018-07-23"].isnull()).all())
+
+    def test_tz_aware_index(self):
+        """
+        Tests that reindex_like.index can be tz-naive or tz-aware.
+        """
+        def mock_download_reuters_financials(coa_codes, f, *args, **kwargs):
+            financials = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-03-31",
+                        "2018-06-30"
+                        ],
+                    SourceDate=[
+                        "2018-04-23",
+                        "2018-07-06",
+                        ],
+                     ConId=[
+                         12345,
+                         12345
+                         ],
+                     CoaCode=[
+                         "ATOT",
+                         "ATOT"
+                         ],
+                     Amount=[
+                         580,
+                         542
+                     ]))
+            financials.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_reuters_financials', new=mock_download_reuters_financials):
+
+            # request with tz_naive
+            closes = pd.DataFrame(
+                np.random.rand(4,1),
+                columns=[12345],
+                index=pd.date_range(start="2018-07-05", periods=4, freq="D", name="Date"))
+
+            financials = get_reuters_financials_reindexed_like(
+                closes, ["ATOT"], interim=True)
+
+        self.assertSetEqual(set(financials.index.get_level_values("CoaCode")), {"ATOT"})
+        self.assertSetEqual(set(financials.index.get_level_values("Field")), {"Amount"})
+
+        atots = financials.loc["ATOT"].loc["Amount"]
+        self.assertListEqual(list(atots.index), list(closes.index))
+        self.assertListEqual(list(atots.columns), list(closes.columns))
+        atots = atots.reset_index()
+        atots.loc[:, "Date"] = atots.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            atots.to_dict(orient="records"),
+            [{'Date': '2018-07-05T00:00:00', 12345: 580.0},
+             {'Date': '2018-07-06T00:00:00', 12345: 580.0},
+             {'Date': '2018-07-07T00:00:00', 12345: 542.0},
+             {'Date': '2018-07-08T00:00:00', 12345: 542.0}]
+        )
+
+        with patch('quantrocket.fundamental.download_reuters_financials', new=mock_download_reuters_financials):
+
+            # request with tz-aware
+            closes = pd.DataFrame(
+                np.random.rand(4,1),
+                columns=[12345],
+                index=pd.date_range(start="2018-07-05", periods=4, freq="D", tz="America/New_York", name="Date"))
+
+            financials = get_reuters_financials_reindexed_like(
+                closes, ["ATOT"], interim=True)
+
+        atots = financials.loc["ATOT"].loc["Amount"][12345]
+        atots = atots.reset_index()
+        atots.loc[:, "Date"] = atots.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            atots.to_dict(orient="records"),
+            [{'Date': '2018-07-05T00:00:00-0400', 12345: 580.0},
+             {'Date': '2018-07-06T00:00:00-0400', 12345: 580.0},
+             {'Date': '2018-07-07T00:00:00-0400', 12345: 542.0},
+             {'Date': '2018-07-08T00:00:00-0400', 12345: 542.0}]
+        )
 
 class StockloanDataReindexedLikeTestCase(unittest.TestCase):
 
