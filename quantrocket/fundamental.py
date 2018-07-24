@@ -769,6 +769,8 @@ def download_shortable_shares(filepath_or_buffer=None, output="csv",
     """
     Query shortable shares from the stockloan database and download to file.
 
+    Data timestamps are UTC.
+
     Parameters
     ----------
     filepath_or_buffer : str or file-like object
@@ -845,6 +847,8 @@ def download_borrow_fees(filepath_or_buffer=None, output="csv",
     """
     Query borrow fees from the stockloan database and download to file.
 
+    Data timestamps are UTC.
+
     Parameters
     ----------
     filepath_or_buffer : str or file-like object
@@ -915,7 +919,7 @@ def _cli_download_borrow_fees(*args, **kwargs):
     return json_to_cli(download_borrow_fees, *args, **kwargs)
 
 def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_like,
-                                       time=None, timezone=None):
+                                       time=None):
     """
     Common base function for get_shortable_shares_reindexed_like and
     get_borrow_fees_reindexed_like.
@@ -934,7 +938,7 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
     if index_levels != ["Date"]:
         raise ParameterError(
             "reindex_like must have index called 'Date', but has {0}".format(
-                ",".join(index_levels)))
+                ",".join([str(name) for name in index_levels])))
 
     if not hasattr(reindex_like.index, "date"):
         raise ParameterError("reindex_like must have a DatetimeIndex")
@@ -950,53 +954,57 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
     f = six.StringIO()
     stockloan_func(
         f, conids=conids, start_date=start_date, end_date=end_date)
-    stockloan_data = pd.read_csv(f, parse_dates=["Date"])
+    stockloan_data = pd.read_csv(f)
+    stockloan_data.loc[:, "Date"] = pd.to_datetime(stockloan_data.Date, utc=True)
 
-    # Convert UTC Date to security timezone
-    f = six.StringIO()
-    download_master_file(f, conids=list(stockloan_data.ConId.unique()),
-                         delisted=True, fields=["Timezone"])
-    timezones = pd.read_csv(f, index_col="ConId")
-    stockloan_data = stockloan_data.join(timezones, on="ConId")
-    if stockloan_data.Timezone.isnull().any():
-        conids_missing_timezones = list(stockloan_data.ConId[stockloan_data.Timezone.isnull()].unique())
-        raise MissingData("timezones are missing for some conids so cannot convert UTC "
-                          "stockloan data timestamps to timezone of security (conids "
-                          "missing timezone: {0})".format(
-                              ",".join([str(conid) for conid in conids_missing_timezones])
-                          ))
+    # Determine timezone, from:
+    # - time param if provided
+    # - else reindex_like.index.tz if set
+    # - else component securities if all have same timezone
+    timezone = None
 
-    security_timezones = list(stockloan_data.Timezone.unique())
-    # If only 1 timezone in data, use a faster method
-    if len(security_timezones) == 1:
-        timezone = security_timezones[0]
-        stockloan_data.loc[:, "Date"] = pd.to_datetime(stockloan_data.Date.values).tz_localize("UTC").tz_convert(timezone)
-    else:
-        stockloan_data.loc[:, "Date"] = stockloan_data.apply(lambda row: row.Date.tz_localize("UTC").tz_convert(row.Timezone), axis=1)
+    if time and " " in time:
+        time, timezone = time.split(" ", 1)
+
+        if reindex_like.index.tz and reindex_like.index.tz.zone != timezone:
+            raise ParameterError((
+                "cannot use timezone {0} because reindex_like timezone is {1}, "
+                "these must match".format(timezone, reindex_like.index.tz.zone)))
+
+    if not timezone:
+        if reindex_like.index.tz:
+            timezone = reindex_like.index.tz.zone
+        else:
+            # try to infer from component securities
+            f = six.StringIO()
+            download_master_file(f, conids=list(stockloan_data.ConId.unique()),
+                                 delisted=True, fields=["Timezone"])
+            security_timezones = pd.read_csv(f, index_col="ConId")
+            security_timezones = list(security_timezones.Timezone.unique())
+            if len(security_timezones) > 1:
+                raise ParameterError(
+                    "no timezone specified and cannot infer because multiple timezones are "
+                    "present in data, please specify timezone (timezones in data: {0})".format(
+                    ", ".join(security_timezones)))
+            timezone = security_timezones[0]
 
     # Create an index of `reindex_like` dates at `time`
     if time:
+        try:
+            time = pd.Timestamp(time).time()
+        except ValueError as e:
+            raise ParameterError("could not parse time '{0}': {1}".format(
+                time, str(e)))
         index_at_time = pd.Index(reindex_like.index.to_series().apply(
-            lambda x: pd.datetime.combine(x, pd.Timestamp(time).time())))
+            lambda x: pd.datetime.combine(x, time)))
     else:
         index_at_time = reindex_like.index
 
-    # Set index timezone, getting timezone from provided param, or from
-    # reindex_like TZ, or inferring from securities master
-    if not timezone:
-        if reindex_like.index.tz:
-            timezone = reindex_like.tz.zone
-        elif len(security_timezones) == 1:
-            timezone = security_timezones[0]
-        else:
-            raise ParameterError(
-                "no timezone specified and cannot infer because multiple timezones are "
-                "present in data, please specify timezone (timezones in data: {0})".format(
-                    ", ".join(security_timezones)))
+    if not index_at_time.tz:
+        index_at_time = index_at_time.tz_localize(timezone)
 
-    index_at_time = index_at_time.tz_localize(timezone)
+    index_at_time = index_at_time.tz_convert("UTC")
 
-    stockloan_data = stockloan_data.drop("Timezone", axis=1)
     stockloan_data = stockloan_data.pivot(index="ConId",columns="Date").T
     stockloan_data = stockloan_data.loc[stockloan_field]
 
@@ -1021,7 +1029,7 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
 
     return stockloan_data
 
-def get_shortable_shares_reindexed_like(reindex_like, time=None, timezone=None):
+def get_shortable_shares_reindexed_like(reindex_like, time=None):
     """
     Return a DataFrame of shortable shares, reindexed to match the index
     (dates) and columns (conids) of `reindex_like`.
@@ -1033,21 +1041,17 @@ def get_shortable_shares_reindexed_like(reindex_like, time=None, timezone=None):
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
 
-    time : str (HH:MM:SS), optional
-        return shortable shares as of this time of day. If provided, this
-        replaces the times of day in `reindex_like`'s DatetimeIndex; if
-        omitted, the times in `reindex_like`'s DatetimeIndex will be used.
-        Note that for a DatetimeIndex containing dates only, the time is
-        00:00:00, meaning shortable shares will be returned as of midnight
-        at the start of the day.
-
-    timezone : str, optional
-        the timezone of `time`, or of `reindex_like`'s DatetimeIndex if `time`
-        is omitted. If `timezone` is omitted, it will be inferred from `reindex_like`'s
-        DatetimeIndex if set, otherwise it will be inferred from the timezone
-        of the component securities. If component securities cover multiple
-        timezones and `reindex_like`'s DatetimeIndex is not tz-aware, `timezone`
-        must be provided.
+    time : str (HH:MM:SS[ TZ]), optional
+        return shortable shares as of this time of day. If omitted, shortable
+        shares will be returned as of the times of day in `reindex_like`'s
+        DatetimeIndex. (Note that for a DatetimeIndex containing dates only,
+        the time is 00:00:00, meaning shortable shares will be returned as of
+        midnight at the start of the day.) A time and timezone can be passed
+        as a space-separated string (e.g. "09:30:00 America/New_York"). If
+        timezone is omitted, the timezone of `reindex_like`'s DatetimeIndex
+        will be used; if `reindex_like`'s timezone is not set, the timezone
+        will be inferred from the component securities, if all securities
+        share the same timezone.
 
     Returns
     -------
@@ -1056,14 +1060,26 @@ def get_shortable_shares_reindexed_like(reindex_like, time=None, timezone=None):
 
     Examples
     --------
-    Get shortable shares as of 9:30 AM for a DataFrame of US stocks:
+    Get shortable shares as of midnight for a DataFrame of US stocks:
 
     >>> closes = prices.loc["Close"]
-    >>> shortables = get_shortable_shares_reindexed_like(closes, time="09:30:00")
+    >>> shortables = get_shortable_shares_reindexed_like(closes)
+
+    Get shortable shares as of 9:20 AM for a DataFrame of US stocks (timezone
+    inferred from component stocks):
+
+    >>> closes = prices.loc["Close"]
+    >>> shortables = get_shortable_shares_reindexed_like(closes, time="09:20:00")
+
+    Get shortable shares as of 9:20 AM New York time for a multi-timezone DataFrame
+    of stocks:
+
+    >>> closes = prices.loc["Close"]
+    >>> shortables = get_shortable_shares_reindexed_like(closes, time="09:20:00 America/New_York")
     """
     shortable_shares = _get_stockloan_data_reindexed_like(
         download_shortable_shares, "Quantity",
-        reindex_like=reindex_like, time=time, timezone=timezone)
+        reindex_like=reindex_like, time=time)
 
     # fillna(0) where date > 2018-04-15, the data start date (NaNs after that
     # date indicate no shortable shares, NaNs before that date indicate don't
@@ -1075,7 +1091,7 @@ def get_shortable_shares_reindexed_like(reindex_like, time=None, timezone=None):
 
     return shortable_shares
 
-def get_borrow_fees_reindexed_like(reindex_like, time=None, timezone=None):
+def get_borrow_fees_reindexed_like(reindex_like, time=None):
     """
     Return a DataFrame of borrow fees, reindexed to match the index
     (dates) and columns (conids) of `reindex_like`.
@@ -1087,21 +1103,17 @@ def get_borrow_fees_reindexed_like(reindex_like, time=None, timezone=None):
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
 
-    time : str (HH:MM:SS), optional
-        return shortable shares as of this time of day. If provided, this
-        replaces the times of day in `reindex_like`'s DatetimeIndex; if
-        omitted, the times in `reindex_like`'s DatetimeIndex will be used.
-        Note that for a DatetimeIndex containing dates only, the time is
-        00:00:00, meaning shortable shares will be returned as of midnight
-        at the start of the day.
-
-    timezone : str, optional
-        the timezone of `time`, or of `reindex_like`'s DatetimeIndex if `time`
-        is omitted. If `timezone` is omitted, it will be inferred from `reindex_like`'s
-        DatetimeIndex if set, otherwise it will be inferred from the timezone
-        of the component securities. If component securities cover multiple
-        timezones and `reindex_like`'s DatetimeIndex is not tz-aware, `timezone`
-        must be provided.
+    time : str (HH:MM:SS[ TZ]), optional
+        return borrow fees as of this time of day. If omitted, borrow
+        fees will be returned as of the times of day in `reindex_like`'s
+        DatetimeIndex. (Note that for a DatetimeIndex containing dates only,
+        the time is 00:00:00, meaning borrow fees will be returned as of
+        midnight at the start of the day.) A time and timezone can be passed
+        as a space-separated string (e.g. "09:30:00 America/New_York"). If
+        timezone is omitted, the timezone of `reindex_like`'s DatetimeIndex
+        will be used; if `reindex_like`'s timezone is not set, the timezone
+        will be inferred from the component securities, if all securities
+        share the same timezone.
 
     Returns
     -------
@@ -1110,11 +1122,23 @@ def get_borrow_fees_reindexed_like(reindex_like, time=None, timezone=None):
 
     Examples
     --------
-    Get borrow_fees as of 4:30 PM for a universe of US stocks:
+    Get borrow fees as of midnight for a DataFrame of US stocks:
+
+    >>> closes = prices.loc["Close"]
+    >>> borrow_fees = get_borrow_fees_reindexed_like(closes)
+
+    Get borrow fees as of 4:30 PM for a DataFrame of US stocks (timezone inferred
+    from component stocks):
 
     >>> closes = prices.loc["Close"]
     >>> borrow_fees = get_borrow_fees_reindexed_like(closes, time="16:30:00")
+
+    Get borrow fees as of 4:30 PM New York time for a multi-timezone DataFrame
+    of stocks:
+
+    >>> closes = prices.loc["Close"]
+    >>> borrow_fees = get_borrow_fees_reindexed_like(closes, time="16:30:00 America/New_York")
     """
     return _get_stockloan_data_reindexed_like(
         download_borrow_fees, "FeeRate",
-        reindex_like=reindex_like, time=time, timezone=timezone)
+        reindex_like=reindex_like, time=time)

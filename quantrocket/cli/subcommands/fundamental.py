@@ -385,6 +385,8 @@ Fetch borrow fees for all stocks:
     examples = """
 Query shortable shares from the stockloan database and download to file.
 
+Data timestamps are UTC.
+
 Examples:
 
 Query shortable shares for a universe of Australian stocks:
@@ -444,6 +446,8 @@ Query shortable shares for a universe of Australian stocks:
 
     examples = """
 Query borrow fees from the stockloan database and download to file.
+
+Data timestamps are UTC.
 
 Examples:
 
