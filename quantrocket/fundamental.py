@@ -327,7 +327,7 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
     if index_levels != ["Date"]:
         raise ParameterError(
             "reindex_like must have index called 'Date', but has {0}".format(
-                ",".join(index_levels)))
+                ",".join([str(name) for name in index_levels])))
 
     if not hasattr(reindex_like.index, "date"):
         raise ParameterError("reindex_like must have a DatetimeIndex")
@@ -359,12 +359,26 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
     if unneeded_fields:
         financials = financials.drop(unneeded_fields, axis=1)
 
+    # if reindex_like.index is tz-aware, make financials tz-aware so they can
+    # be joined (tz-aware or tz-naive are both fine, as SourceDate represents
+    # dates which are assumed to be in the local timezone of the reported
+    # company)
+    if reindex_like.index.tz:
+        financials.loc[:, "Date"] = financials.Date.dt.tz_localize(reindex_like.index.tz.zone)
+        deduped_source_dates = financials.Date.drop_duplicates()
+    else:
+        # joining to tz-naive requires using values, whereas joining to
+        # tz-aware requires not using it. Why?
+        deduped_source_dates = financials.Date.drop_duplicates().values
+
     # Create a unioned index of input DataFrame and statement SourceDates
-    union_date_idx = reindex_like.index.union(financials.Date.drop_duplicates().values).sort_values()
+    union_date_idx = reindex_like.index.union(deduped_source_dates).sort_values()
 
     all_financials = {}
     for code in coa_codes:
         financials_for_code = financials.loc[financials.CoaCode == code]
+        if financials_for_code.empty:
+            continue
         if "CoaCode" not in fields:
             financials_for_code = financials_for_code.drop("CoaCode", axis=1)
         # There might be duplicate SourceDates if a company announced
@@ -584,7 +598,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     if index_levels != ["Date"]:
         raise ParameterError(
             "reindex_like must have index called 'Date', but has {0}".format(
-                ",".join(index_levels)))
+                ",".join([str(name) for name in index_levels])))
 
     if not hasattr(reindex_like.index, "date"):
         raise ParameterError("reindex_like must have a DatetimeIndex")
@@ -630,9 +644,13 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     # If only 1 timezone in data, use a faster method
     if len(estimates.Timezone.unique()) == 1:
         timezone = list(estimates.Timezone.unique())[0]
-        estimates["Date"] = pd.to_datetime(estimates.UpdatedDate.values).tz_localize("UTC").tz_convert(timezone).date
+        estimates["Date"] = pd.to_datetime(estimates.UpdatedDate.values).tz_localize("UTC").tz_convert(timezone)
     else:
-        estimates["Date"] = estimates.apply(lambda row: row.UpdatedDate.tz_localize("UTC").tz_convert(row.Timezone).date(), axis=1)
+        estimates["Date"] = estimates.apply(lambda row: row.UpdatedDate.tz_localize("UTC").tz_convert(row.Timezone), axis=1)
+
+    # Convert to dates (i.e. time = 00:00:00)
+    estimates.loc[:, "Date"] = pd.to_datetime(estimates.Date.apply(
+        lambda x: pd.datetime.combine(x, pd.Timestamp("00:00:00").time())))
 
     # Drop any fields we don't need
     needed_fields = set(fields)
@@ -643,12 +661,26 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     if unneeded_fields:
         estimates = estimates.drop(unneeded_fields, axis=1)
 
+    # if reindex_like.index is tz-aware, make financials tz-aware so they can
+    # be joined (tz-aware or tz-naive are both fine, as SourceDate represents
+    # dates which are assumed to be in the local timezone of the reported
+    # company)
+    if reindex_like.index.tz:
+        estimates.loc[:, "Date"] = estimates.Date.dt.tz_localize(reindex_like.index.tz.zone)
+        deduped_updated_dates = estimates.Date.drop_duplicates()
+    else:
+        # joining to tz-naive requires using values, whereas joining to
+        # tz-aware requires not using it. Why?
+        deduped_updated_dates = estimates.Date.drop_duplicates().values
+
     # Create a unioned index of input DataFrame and UpdatedDate
-    union_date_idx = reindex_like.index.union(estimates.Date.drop_duplicates().values).sort_values()
+    union_date_idx = reindex_like.index.union(deduped_updated_dates).sort_values()
 
     all_estimates = {}
     for code in codes:
         estimates_for_code = estimates.loc[estimates.Indicator == code]
+        if estimates_for_code.empty:
+            continue
         if "Indicator" not in fields:
             estimates_for_code = estimates_for_code.drop("Indicator", axis=1)
         # There might be duplicate UpdatedDates if a company announced
