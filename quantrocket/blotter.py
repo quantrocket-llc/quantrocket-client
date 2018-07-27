@@ -598,7 +598,7 @@ def download_pnl(filepath_or_buffer=None,
     if output not in ("csv", "pdf"):
         raise ValueError("invalid output: {0} (choices are csv or pdf".format(output))
 
-    response = houston.get("/blotter/pnl.{0}".format(output), params=params)
+    response = houston.get("/blotter/pnl.{0}".format(output), params=params, timeout=60*10)
 
     houston.raise_for_status_with_json(response)
 
