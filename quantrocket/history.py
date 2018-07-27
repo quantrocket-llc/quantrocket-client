@@ -653,6 +653,12 @@ def get_historical_prices(codes, start_date=None, end_date=None,
     if not isinstance(dbs, (list, tuple)):
         dbs = [dbs]
 
+    if master_fields:
+        if isinstance(master_fields, tuple):
+            master_fields = list(master_fields)
+        elif not isinstance(master_fields, list):
+            master_fields = [master_fields]
+
     db_universes = set()
     db_bar_sizes = set()
     for db in dbs:
@@ -802,7 +808,7 @@ def get_historical_prices(codes, start_date=None, end_date=None,
     unique_times = prices.index.get_level_values("Time").unique()
     interpolated_index = None
     for field in unique_fields:
-        if field in master_fields:
+        if master_fields and field in master_fields:
             min_date = prices.loc[field].index.min()
             field_idx = pd.MultiIndex.from_tuples([(field,min_date[0], min_date[1])])
         else:
