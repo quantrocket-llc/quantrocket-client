@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import io
+import six
 import os
 import sys
 import time
@@ -398,7 +398,7 @@ def get_history_availability(code):
     except ImportError:
         raise ImportError("pandas must be installed to use this function")
 
-    f = io.StringIO()
+    f = six.StringIO()
     download_history_availability_file(code, f)
     start_dates = pd.read_csv(f, index_col="ConId", parse_dates=["StartDate"])
     return start_dates.StartDate
@@ -729,7 +729,7 @@ def get_historical_prices(codes, start_date=None, end_date=None,
             if not universes:
                 conids = list(prices.columns)
 
-        f = io.StringIO()
+        f = six.StringIO()
         download_master_file(
             f,
             conids=conids,

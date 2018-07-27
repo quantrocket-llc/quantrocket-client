@@ -612,7 +612,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     end_date = reindex_like.index.max().date().isoformat()
 
     f = six.StringIO()
-    query_fields = fields.copy()
+    query_fields = list(fields) # copy fields on Py2 or 3: https://stackoverflow.com/a/2612815/417414
     if "UpdatedDate" not in query_fields:
         query_fields.append("UpdatedDate")
     download_reuters_estimates(
