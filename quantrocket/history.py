@@ -88,9 +88,12 @@ def create_db(code, universes=None, start_date=None, end_date=None,
         mutually exclusive with `times`)
 
     shard : str, optional
-        whether and how to shard the database, i.e. break it into smaller pieces. Possible
-        choices are `time` (separate database for each bar time), `off` (no sharding), or
-        `auto` (decide automatically based on bar size and universe size). Default `auto`.
+        whether and how to shard the database, i.e. break it into smaller pieces.
+        Possible choices are `time` (separate database for each bar time), `conid`
+        (separate database for each security), `conid,time` (duplicate copies of database,
+        one sharded by conid and the other by time), `off` (no sharding), or `auto`
+        (decide automatically, which chooses `conid,time` for intraday databases with
+        more than 100 securities and `off` otherwise). Default `auto`.
 
     no_config : bool
         create a database with no config (data can be loaded manually instead of fetched
