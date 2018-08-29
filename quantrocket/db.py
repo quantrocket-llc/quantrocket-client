@@ -15,7 +15,7 @@
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 
-def list_databases(service=None):
+def list_databases(service=None, codes=None, detail=False, expand=False):
     """
     List databases.
 
@@ -24,14 +24,32 @@ def list_databases(service=None):
     service : str, optional
         only list databases for this service
 
+    codes: list of str, optional
+        only list databases identified by these codes (omit to list all databases
+        for service)
+
+    detail : bool
+        return database statistics (default is to return a
+        flat list of database names)
+
+    expand : bool
+        expand sharded databases to include individual shards
+        (default is to return sharded databases as a single database)
+
     Returns
     -------
-    list
-        list of databases
+    list or dict
+        list of database names, or dict of {database name: statistics} if `detail=True`
     """
     params = {}
     if service:
         params["service"] = service
+    if codes:
+        params["codes"] = codes
+    if detail:
+        params["detail"] = detail
+    if expand:
+        params["expand"] = expand
     response = houston.get("/db/databases", params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
@@ -47,6 +65,7 @@ def download_database(database, outfile):
     ----------
     database : str, required
         the filename of the database (as returned by the list_databases)
+
     outfile: str, required
         filename to write the database to
 
@@ -71,9 +90,12 @@ def s3_push_databases(service, codes=None):
     Parameters
     ----------
     serivce : str, required
-        only push databases for this service (specify 'all' to push all services)
+        only push databases for this service (specify 'all' to
+        push all services)
+
     codes: list of str, optional
-        only push databases identified by these codes (omit to push all databases for service)
+        only push databases identified by these codes (omit to
+        push all databases for service)
 
     Returns
     -------
@@ -97,12 +119,16 @@ def s3_pull_databases(service, codes=None, force=False):
     Parameters
     ----------
     serivce : str, required
-        only pull databases for this service (specify 'all' to pull all services)
-    codes: list of str, optional
-        only pull databases identified by these codes (omit to pull all databases for service)
-    force: bool
-        overwrite existing database if one exists (default is to fail if one exists)
+        only pull databases for this service (specify 'all' to
+        pull all services)
 
+    codes: list of str, optional
+        only pull databases identified by these codes (omit to
+        pull all databases for service)
+
+    force: bool
+        overwrite existing database if one exists (default is to
+        fail if one exists)
 
     Returns
     -------
@@ -128,9 +154,12 @@ def optimize_databases(service, codes=None):
     Parameters
     ----------
     serivce : str, required
-        only optimize databases for this service (specify 'all' to optimize all services)
+        only optimize databases for this service (specify 'all' to
+        optimize all services)
+
     codes: list of str, optional
-        only optimize databases identified by these codes (omit to optimize all databases for service)
+        only optimize databases identified by these codes (omit to
+        optimize all databases for service)
 
     Returns
     -------
