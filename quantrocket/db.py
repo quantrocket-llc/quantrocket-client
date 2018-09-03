@@ -34,7 +34,7 @@ def list_databases(service=None, codes=None, detail=False, expand=False):
 
     expand : bool
         expand sharded databases to include individual shards
-        (default is to return sharded databases as a single database)
+        (default is to list sharded databases as a single database)
 
     Returns
     -------

@@ -58,7 +58,7 @@ List history databases:
         "-e", "--expand",
         action="store_true",
         help="expand sharded databases to include individual shards "
-        "(default is to return sharded databases as a single database)")
+        "(default is to list sharded databases as a single database)")
     parser.set_defaults(func="quantrocket.db._cli_list_databases")
 
     examples = """
