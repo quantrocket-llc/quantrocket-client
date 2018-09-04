@@ -38,8 +38,16 @@ def list_databases(service=None, codes=None, detail=False, expand=False):
 
     Returns
     -------
-    list or dict
-        list of database names, or dict of {database name: statistics} if `detail=True`
+    list
+        list of databases
+
+    Examples
+    --------
+    Load database details in a pandas DataFrame:
+
+    >>> from quantrocket.db import list_databases
+    >>> databases = list_databases(detail=True)
+    >>> databases = pd.DataFrame.from_records(databases)
     """
     params = {}
     if service:

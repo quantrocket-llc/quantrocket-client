@@ -24,13 +24,18 @@ List databases.
 
 Examples:
 
-List all databases:
+List all databases as a flat list:
 
     quantrocket db list
 
-List history databases:
+List all history databases and include details such as file size:
 
-    quantrocket db list history
+    quantrocket db list history --detail
+
+List details for a sharded history database called usa-stk-15min
+and list each shard individually:
+
+    quantrocket db list history usa-stk-15min --detail --expand
     """
     parser = _subparsers.add_parser(
         "list",
