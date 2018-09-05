@@ -18,6 +18,7 @@ from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket.utils.warn import deprecated_replaced_by
 
 def list_exchanges(regions=None, sec_types=None):
     """
@@ -48,20 +49,21 @@ def list_exchanges(regions=None, sec_types=None):
 def _cli_list_exchanges(*args, **kwargs):
     return json_to_cli(list_exchanges, *args, **kwargs)
 
-def fetch_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
-                        universes=None, conids=None):
+def collect_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
+                     universes=None, conids=None):
     """
-    Fetch securities listings from IB into securities master database, either by exchange or by universes/conids.
+    Collect securities listings from IB into securities master database.
 
-
-    Specify an exchange (optionally filtering by security type, currency, and/or symbol) to fetch
-    listings from the IB website and fetch associated contract details from the IB API. Or, specify universes
-    or conids to fetch details from the IB API, bypassing the website.
+    Specify an exchange (optionally filtering by security type, currency,
+    and/or symbol) to collect listings from the IB website and collect
+    associated contract details from the IB API. Or, specify universes or
+    conids to collect details from the IB API, bypassing the website.
 
     Parameters
     ----------
     exchange : str
-        the exchange code to fetch listings for (required unless providing universes or conids)
+        the exchange code to collect listings for (required unless providing
+        universes or conids)
 
     sec_types : list of str, optional
         limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND
@@ -102,12 +104,12 @@ def fetch_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_fetch_listings(*args, **kwargs):
-    return json_to_cli(fetch_listings, *args, **kwargs)
+def _cli_collect_listings(*args, **kwargs):
+    return json_to_cli(collect_listings, *args, **kwargs)
 
-def fetch_option_chains(universes=None, conids=None, infilepath_or_buffer=None):
+def collect_option_chains(universes=None, conids=None, infilepath_or_buffer=None):
     """
-    Fetch option chains for underlying securities.
+    Collect option chains for underlying securities.
 
     Note: option chains often consist of hundreds, sometimes thousands of
     options per underlying security. Be aware that requesting option chains
@@ -120,13 +122,14 @@ def fetch_option_chains(universes=None, conids=None, infilepath_or_buffer=None):
     Parameters
     ----------
     universes : list of str, optional
-        fetch options for these universes of underlying securities
+        collect options for these universes of underlying securities
 
     conids : list of int, optional
-        fetch options for these underlying conids
+        collect options for these underlying conids
 
     infilepath_or_buffer : str or file-like object, optional
-        fetch options for the conids in this file (specify '-' to read file from stdin)
+        collect options for the conids in this file (specify '-' to read file
+        from stdin)
 
     Returns
     -------
@@ -156,14 +159,14 @@ def fetch_option_chains(universes=None, conids=None, infilepath_or_buffer=None):
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_fetch_option_chains(*args, **kwargs):
-    return json_to_cli(fetch_option_chains, *args, **kwargs)
+def _cli_collect_option_chains(*args, **kwargs):
+    return json_to_cli(collect_option_chains, *args, **kwargs)
 
 def diff_securities(universes=None, conids=None, infilepath_or_buffer=None,
                     fields=None, delist_missing=False, delist_exchanges=None, wait=False):
     """
     Flag security details that have changed in IB's system since the time they
-    were last loaded into the securities master database.
+    were last collected into the securities master database.
 
     Diff can be run synchronously or asynchronously (asynchronous is the default
     and is recommended if diffing more than a handful of securities).
@@ -368,7 +371,8 @@ def create_universe(code, infilepath_or_buffer=None, from_universes=None,
         create the universe from these existing universes
 
     exclude_delisted : bool
-        exclude delisted securities that would otherwise be included (default is not to exclude them)
+        exclude delisted securities that would otherwise be included (default
+        is not to exclude them)
 
     append : bool
         append to universe if universe already exists (default False)
@@ -422,8 +426,10 @@ def _cli_create_universe(*args, **kwargs):
 
 def delete_universe(code):
     """
-    Delete a universe. (The listings details of the member securities won't be deleted,
-    only their grouping as a universe).
+    Delete a universe.
+
+    The listings details of the member securities won't be deleted, only
+    their grouping as a universe.
 
     Parameters
     ----------
@@ -462,9 +468,9 @@ def delist_security(conid=None, symbol=None, exchange=None, currency=None, sec_t
     """
     Mark a security as delisted.
 
-    The security can be specified by conid or a combination of other parameters (for
-    example, symbol + exchange). As a precaution, the request will fail if the parameters
-    match more than one security.
+    The security can be specified by conid or a combination of other
+    parameters (for example, symbol + exchange). As a precaution, the request
+    will fail if the parameters match more than one security.
 
     Parameters
     ----------
@@ -481,8 +487,8 @@ def delist_security(conid=None, symbol=None, exchange=None, currency=None, sec_t
         the currency of the security to be delisted (if needed to disambiguate)
 
     sec_type : str, optional
-        the security type of the security to be delisted (if needed to disambiguate). Possible
-        choices: STK, ETF, FUT, CASH, IND
+        the security type of the security to be delisted (if needed to disambiguate).
+        Possible choices: STK, ETF, FUT, CASH, IND
 
     Returns
     -------
@@ -549,9 +555,10 @@ def _cli_load_or_show_rollrules(filename=None):
     else:
         return json_to_cli(get_rollrules_config)
 
-def fetch_calendar(exchanges=None):
+def collect_calendar(exchanges=None):
     """
-    Fetch upcoming trading hours for exchanges and save to securites master database.
+    Collect upcoming trading hours for exchanges and save to securites
+    master database.
 
     Parameters
     ----------
@@ -571,8 +578,8 @@ def fetch_calendar(exchanges=None):
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_fetch_calendar(*args, **kwargs):
-    return json_to_cli(fetch_calendar, *args, **kwargs)
+def _cli_collect_calendar(*args, **kwargs):
+    return json_to_cli(collect_calendar, *args, **kwargs)
 
 def list_calendar_statuses(exchanges, sec_type=None, in_=None, ago=None, outside_rth=False):
     """
@@ -787,3 +794,38 @@ def round_to_tick_sizes(infilepath_or_buffer, round_fields,
 
 def _cli_round_to_tick_sizes(*args, **kwargs):
     return json_to_cli(round_to_tick_sizes, *args, **kwargs)
+
+@deprecated_replaced_by(collect_listings)
+def fetch_listings(*args, **kwargs):
+    """
+    Collect securities listings from IB into securities master database, either by exchange or by universes/conids.
+
+    [DEPRECATED] `fetch_listings` is deprecated and will be removed
+    in a future release, please use `collect_listings` instead.
+    """
+    return collect_listings(*args, **kwargs)
+
+@deprecated_replaced_by(collect_option_chains)
+def fetch_option_chains(*args, **kwargs):
+    """
+    Collect option chains for underlying securities.
+
+    [DEPRECATED] `fetch_option_chains` is deprecated and will be removed
+    in a future release, please use `collect_option_chains` instead.
+    """
+    return collect_option_chains(*args, **kwargs)
+
+@deprecated_replaced_by(collect_calendar)
+def fetch_calendar(*args, **kwargs):
+    """
+    Collect upcoming trading hours for exchanges and save to securites
+    master database.
+
+    [DEPRECATED] `fetch_calendar` is deprecated and will be removed
+    in a future release, please use `collect_calendar` instead.
+    """
+    return collect_calendar(*args, **kwargs)
+
+@deprecated_replaced_by("collect-calendar", old_name="fetch-calendar")
+def _cli_fetch_calendar(*args, **kwargs):
+    return json_to_cli(collect_calendar, *args, **kwargs)

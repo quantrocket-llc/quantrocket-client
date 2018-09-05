@@ -53,42 +53,40 @@ List stock exchanges in North America:
     parser.set_defaults(func="quantrocket.master._cli_list_exchanges")
 
     examples = """
-Fetch securities listings from IB into securities master database, either by
-exchange or by universes/conids.
+Collect securities listings from IB into securities master database.
 
 Specify an exchange (optionally filtering by security type, currency, and/or
-symbol) to fetch listings from the IB website and fetch associated contract
-details from the IB API. Or, specify universes or conids to fetch details from
+symbol) to collect listings from the IB website and collect associated contract
+details from the IB API. Or, specify universes or conids to collect details from
 the IB API, bypassing the website.
 
 Examples:
 
-Fetch all Toronto Stock Exchange stock listings:
+Collect all Toronto Stock Exchange stock listings:
 
     quantrocket master listings --exchange TSE --sec-types STK
 
-Fetch all NYSE ARCA ETF listings:
+Collect all NYSE ARCA ETF listings:
 
     quantrocket master listings --exchange ARCA --sec-types ETF
 
-Fetch specific symbols from Nasdaq:
+Collect specific symbols from Nasdaq:
 
     quantrocket master listings --exchange NASDAQ --symbols AAPL GOOG NFLX
 
-Re-fetch contract details for an existing universe called "japan-fin":
+Re-collect contract details for an existing universe called "japan-fin":
 
     quantrocket master listings --universes "japan-fin"
     """
     parser = _subparsers.add_parser(
         "listings",
-        help="fetch securities listings from IB into securities master database, either by "
-        "exchange or by universes/conids",
+        help="collect securities listings from IB into securities master database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-e", "--exchange",
         metavar="EXCHANGE",
-        help="the exchange code to fetch listings for (required unless providing universes "
+        help="the exchange code to collect listings for (required unless providing universes "
         "or conids)")
     parser.add_argument(
         "-t", "--sec-types",
@@ -117,10 +115,10 @@ Re-fetch contract details for an existing universe called "japan-fin":
         nargs="*",
         metavar="CONID",
         help="limit to these conids")
-    parser.set_defaults(func="quantrocket.master._cli_fetch_listings")
+    parser.set_defaults(func="quantrocket.master._cli_collect_listings")
 
     examples = """
-Fetch option chains for underlying securities.
+Collect option chains for underlying securities.
 
 Note: option chains often consist of hundreds, sometimes thousands of options
 per underlying security. Be aware that requesting option chains for large
@@ -131,41 +129,41 @@ hundred megabytes, and potentially add latency to database queries.
 
 Examples:
 
-Fetch option chains for several underlying securities:
+Collect option chains for several underlying securities:
 
     quantrocket master options --conids 8314 208813720 107113386
 
-Fetch option chains for NQ futures:
+Collect option chains for NQ futures:
 
     quantrocket master get -e GLOBEX -s NQ -t FUT | quantrocket master options -f -
 
-Fetch option chains for a large universe of stocks called "nyse-stk" (see note above):
+Collect option chains for a large universe of stocks called "nyse-stk" (see note above):
 
     quantrocket master options -u "nyse-stk"
     """
     parser = _subparsers.add_parser(
         "options",
-        help="fetch option chains for underlying securities",
+        help="collect option chains for underlying securities",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="fetch options for these universes of underlying securities")
+        help="collect options for these universes of underlying securities")
     parser.add_argument(
         "-i", "--conids",
         type=int,
         nargs="*",
         metavar="CONID",
-        help="fetch options for these underlying conids")
+        help="collect options for these underlying conids")
     parser.add_argument(
         "-f", "--infile",
         metavar="INFILE",
         dest="infilepath_or_buffer",
-        help="fetch options for the conids in this file (specify '-' to read "
+        help="collect options for the conids in this file (specify '-' to read "
         "file from stdin)")
-    parser.set_defaults(func="quantrocket.master._cli_fetch_option_chains")
+    parser.set_defaults(func="quantrocket.master._cli_collect_option_chains")
 
     examples = """
 Query security details from the securities master database and download to
@@ -290,7 +288,7 @@ Pretty print the exchange and currency for all listings of AAPL:
 
     examples = """
 Flag security details that have changed in IB's system since the time they
-were last loaded into the securities master database.
+were last collected into the securities master database.
 
 Diff can be run synchronously or asynchronously (asynchronous is the default
 and is recommended if diffing more than a handful of securities).
@@ -324,7 +322,7 @@ or that are now associated with the PINK exchange:
     parser = _subparsers.add_parser(
         "diff",
         help="flag security details that have changed in IB's system since the time "
-        "they were last loaded into the securities master database",
+        "they were last collected into the securities master database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -443,8 +441,10 @@ Copy a universe but exclude delisted securities:
     parser.set_defaults(func="quantrocket.master._cli_create_universe")
 
     examples = """
-Delete a universe. (The listings details of the member securities won't be
-deleted, only their grouping as a universe).
+Delete a universe.
+
+The listings details of the member securities won't be deleted, only their
+grouping as a universe.
 
 Examples:
 
@@ -455,8 +455,7 @@ securities won't be deleted, only their grouping as a universe):
     """
     parser = _subparsers.add_parser(
         "delete-universe",
-        help="delete a universe (the listings details of the member securities won't "
-        "be deleted, only their grouping as a universe)",
+        help="delete a universe",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -532,17 +531,17 @@ Delist a security by symbol + exchange:
     parser.set_defaults(func="quantrocket.master._cli_delist_security")
 
     examples = """
-Fetch upcoming trading hours for exchanges and save to securites master database.
+Collect upcoming trading hours for exchanges and save to securites master database.
 
 Examples:
 
-Fetch trading hours for all exchanges in securities master database:
+Collect trading hours for all exchanges in securities master database:
 
-    quantrocket master fetch-calendar
+    quantrocket master collect-calendar
     """
     parser = _subparsers.add_parser(
-        "fetch-calendar",
-        help="fetch upcoming trading hours for exchanges and save to securites master database",
+        "collect-calendar",
+        help="collect upcoming trading hours for exchanges and save to securites master database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -550,7 +549,7 @@ Fetch trading hours for all exchanges in securities master database:
         nargs="*",
         metavar="EXCHANGE",
         help="limit to these exchanges")
-    parser.set_defaults(func="quantrocket.master._cli_fetch_calendar")
+    parser.set_defaults(func="quantrocket.master._cli_collect_calendar")
 
     examples = """
 Check whether exchanges are open or closed.
@@ -615,9 +614,9 @@ Place Moonshot orders if NYSE is open now:
 
     quantrocket master isopen NYSE && quantrocket moonshot orders my-strategy | quantrocket blotter order -f -
 
-Fetch historical data for Australian stocks if the exchange was open 4 hours ago:
+Collect historical data for Australian stocks if the exchange was open 4 hours ago:
 
-    quantrocket master isopen ASX --ago 4h && quantrocket history fetch asx-stk-1d
+    quantrocket master isopen ASX --ago 4h && quantrocket history collect asx-stk-1d
 
 Log a message if the London Stock Exchange will be open in 30 minutes:
 
@@ -687,10 +686,10 @@ Place Moonshot orders if the NYSE will be closed NYSE in 1 hour:
 
     quantrocket master isclosed NYSE --in 1h && quantrocket moonshot orders my-strategy | quantrocket blotter order -f -
 
-Fetch historical data for Australian stocks if the exchange is closed now but was
+Collect historical data for Australian stocks if the exchange is closed now but was
 open 4 hours ago:
 
-    quantrocket master isclosed ASX && quantrocket master isopen ASX --ago 4h && quantrocket history fetch asx-stk-1d
+    quantrocket master isclosed ASX && quantrocket master isopen ASX --ago 4h && quantrocket history collect asx-stk-1d
 
 Place Moonshot orders if the NYSE has been closed since month end:
 
@@ -803,3 +802,21 @@ Round the LmtPrice column in a CSV of Moonshot orders then place the orders:
         dest="outfilepath_or_buffer",
         help="filename to write the data to (default is stdout)")
     parser.set_defaults(func="quantrocket.master._cli_round_to_tick_sizes")
+
+    examples = """
+Collect upcoming trading hours for exchanges and save to securites master database.
+
+[DEPRECATED] `fetch-calendar` is deprecated and will be removed in a future release,
+please use `collect-calendar` instead.
+    """
+    parser = _subparsers.add_parser(
+        "fetch-calendar",
+        help="[DEPRECATED] collect upcoming trading hours for exchanges and save to securites master database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-e", "--exchanges",
+        nargs="*",
+        metavar="EXCHANGE",
+        help="limit to these exchanges")
+    parser.set_defaults(func="quantrocket.master._cli_fetch_calendar")

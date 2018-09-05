@@ -22,6 +22,7 @@ from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.exceptions import ParameterError
+from quantrocket.utils.warn import deprecated_replaced_by
 
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", "/tmp")
 
@@ -41,18 +42,18 @@ def create_db(code, universes=None, start_date=None, end_date=None,
         include these universes
 
     start_date : str (YYYY-MM-DD), optional
-        fetch history back to this start date (default is to fetch as far back as data
+        collect history back to this start date (default is to collect as far back as data
         is available)
 
     end_date : str (YYYY-MM-DD), optional
-        fetch history up to this end date (default is to fetch up to the present)
+        collect history up to this end date (default is to collect up to the present)
 
     vendor : str, optional
-        the vendor to fetch data from (defaults to 'ib' which is currently the only
+        the vendor to collect data from (defaults to 'ib' which is currently the only
         supported vendor)
 
     bar_size : str, required for vendor ib
-        the bar size to fetch. Possible choices:
+        the bar size to collect. Possible choices:
         "1 secs", "5 secs",	"10 secs", "15 secs", "30 secs",
         "1 min", "2 mins", "3 mins", "5 mins", "10 mins", "15 mins", "20 mins", "30 mins",
         "1 hour", "2 hours", "3 hours", "4 hours", "8 hours",
@@ -61,7 +62,7 @@ def create_db(code, universes=None, start_date=None, end_date=None,
         "1 month"
 
     bar_type : str, optional
-        the bar type to fetch (if not specified, defaults to MIDPOINT for forex and
+        the bar type to collect (if not specified, defaults to MIDPOINT for forex and
         TRADES for everything else). Possible choices:
         "TRADES",
         "ADJUSTED_LAST",
@@ -96,7 +97,7 @@ def create_db(code, universes=None, start_date=None, end_date=None,
         more than 100 securities and `off` otherwise). Default `auto`.
 
     no_config : bool
-        create a database with no config (data can be loaded manually instead of fetched
+        create a database with no config (data can be loaded manually instead of collected
         from a vendor)
 
     config_filepath_or_buffer : str or file-like object, optional
@@ -204,38 +205,38 @@ def drop_db(code, confirm_by_typing_db_code_again=None):
 def _cli_drop_db(*args, **kwargs):
     return json_to_cli(drop_db, *args, **kwargs)
 
-def fetch_history(codes, priority=False, conids=None, universes=None,
-                  start_date=None, end_date=None, availability_only=False,
-                  delist_missing=False):
+def collect_history(codes, priority=False, conids=None, universes=None,
+                    start_date=None, end_date=None, availability_only=False,
+                    delist_missing=False):
     """
-    Fetch historical market data from IB and save it to a history database. The request is
-    queued and the data is fetched asynchronously.
+    Collect historical market data from IB and save it to a history database. The request is
+    queued and the data is collected asynchronously.
 
     Parameters
     ----------
     codes : list of str, required
-        the database code(s) to fetch data for
+        the database code(s) to collect data for
 
     priority : bool
         use the priority queue (default is to use the standard queue)
 
     conids : list of int, optional
-        fetch history for these conids, overriding config (typically
-        used to fetch a subset of securities)
+        collect history for these conids, overriding config (typically
+        used to collect a subset of securities)
 
     universes : list of str, optional
-        fetch history for these universes, overriding config (typically
-        used to fetch a subset of securities)
+        collect history for these universes, overriding config (typically
+        used to collect a subset of securities)
 
     start_date : str (YYYY-MM-DD), optional
-        fetch history back to this start date, overriding config
+        collect history back to this start date, overriding config
 
     end_date : str (YYYY-MM-DD), optional
-        fetch history up to this end date, overriding config
+        collect history up to this end date, overriding config
 
     availability_only : bool
         determine and store how far back data is available but
-        don't yet fetch the data
+        don't yet collect the data
 
     delist_missing : bool
         auto-delist securities that are no longer available from IB
@@ -268,12 +269,12 @@ def fetch_history(codes, priority=False, conids=None, universes=None,
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_fetch_history(*args, **kwargs):
-    return json_to_cli(fetch_history, *args, **kwargs)
+def _cli_collect_history(*args, **kwargs):
+    return json_to_cli(collect_history, *args, **kwargs)
 
 def get_history_queue():
     """
-    Get the current queue of historical data requests.
+    Get the current queue of historical data collections.
 
     Returns
     -------
@@ -288,17 +289,17 @@ def get_history_queue():
 def _cli_get_history_queue(*args, **kwargs):
     return json_to_cli(get_history_queue, *args, **kwargs)
 
-def cancel_history_requests(codes, queues=None):
+def cancel_collections(codes, queues=None):
     """
-    Cancel running or pending historical data requests.
+    Cancel running or pending historical data collections.
 
     Parameters
     ----------
     codes : list of str, required
-        the database code(s) to cancel requests for
+        the database code(s) to cancel collections for
 
     queues : list of str, optional
-        only cancel requests in these queues. Possible choices: standard, priority
+        only cancel collections in these queues. Possible choices: standard, priority
 
     Returns
     -------
@@ -315,8 +316,8 @@ def cancel_history_requests(codes, queues=None):
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_cancel_history_requests(*args, **kwargs):
-    return json_to_cli(cancel_history_requests, *args, **kwargs)
+def _cli_cancel_collections(*args, **kwargs):
+    return json_to_cli(cancel_collections, *args, **kwargs)
 
 def download_history_availability_file(code, filepath_or_buffer=None, output="csv"):
     """
@@ -324,7 +325,7 @@ def download_history_availability_file(code, filepath_or_buffer=None, output="cs
 
     This function is normally called after running:
 
-        quantrocket history fetch mydb --availability
+        quantrocket history collect mydb --availability
 
     Parameters
     ----------
@@ -364,11 +365,11 @@ def get_history_availability(code):
     """
     Query historical data availability from a history database, returning a
     Series of start dates (with conids as the index) representing how far back
-    data can be fetched from IB.
+    data can be collected from IB.
 
     This function is normally called after running a command such as:
 
-        quantrocket history fetch [DB] --availability
+        quantrocket history collect [DB] --availability
 
     Parameters
     ----------
@@ -866,3 +867,27 @@ def load_history_from_file(code, infilepath_or_buffer):
 
 def _cli_load_history_from_file(*args, **kwargs):
     return json_to_cli(load_history_from_file, *args, **kwargs)
+
+@deprecated_replaced_by(collect_history)
+def fetch_history(*args, **kwargs):
+    """
+    Collect historical market data from IB and save it to a history database.
+
+    [DEPRECATED] `fetch_history` is deprecated and will be removed
+    in a future release, please use `collect_history` instead.
+    """
+    return collect_history(*args, **kwargs)
+
+@deprecated_replaced_by("collect", old_name="fetch")
+def _cli_fetch_history(*args, **kwargs):
+    return json_to_cli(collect_history, *args, **kwargs)
+
+@deprecated_replaced_by(cancel_collections)
+def cancel_history_requests(*args, **kwargs):
+    """
+    Cancel running or pending historical data collections.
+
+    [DEPRECATED] `cancel_history_requests` is deprecated and will be removed
+    in a future release, please use `cancel_collections` instead.
+    """
+    return cancel_collections(*args, **kwargs)

@@ -20,10 +20,11 @@ from quantrocket.master import download_master_file
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.exceptions import ParameterError, MissingData
+from quantrocket.utils.warn import deprecated_replaced_by
 
-def fetch_reuters_financials(universes=None, conids=None):
+def collect_reuters_financials(universes=None, conids=None):
     """
-    Fetch Reuters financial statements from IB and save to database.
+    Collect Reuters financial statements from IB and save to database.
 
     This data provides cash flow, balance sheet, and income metrics.
 
@@ -51,12 +52,12 @@ def fetch_reuters_financials(universes=None, conids=None):
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_fetch_reuters_financials(*args, **kwargs):
-    return json_to_cli(fetch_reuters_financials, *args, **kwargs)
+def _cli_collect_reuters_financials(*args, **kwargs):
+    return json_to_cli(collect_reuters_financials, *args, **kwargs)
 
-def fetch_reuters_estimates(universes=None, conids=None):
+def collect_reuters_estimates(universes=None, conids=None):
     """
-    Fetch Reuters estimates and actuals from IB and save to database.
+    Collect Reuters estimates and actuals from IB and save to database.
 
     This data provides analyst estimates and actuals for a variety of indicators.
 
@@ -84,15 +85,15 @@ def fetch_reuters_estimates(universes=None, conids=None):
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_fetch_reuters_estimates(*args, **kwargs):
-    return json_to_cli(fetch_reuters_estimates, *args, **kwargs)
+def _cli_collect_reuters_estimates(*args, **kwargs):
+    return json_to_cli(collect_reuters_estimates, *args, **kwargs)
 
 def list_reuters_codes(codes=None, report_types=None, statement_types=None):
     """
     List available Chart of Account (COA) codes from the Reuters financials database
     and/or indicator codes from the Reuters estimates/actuals database
 
-    Note: you must fetch Reuters financials into the database before you can
+    Note: you must collect Reuters financials into the database before you can
     list COA codes.
 
 
@@ -734,9 +735,9 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
 
     return estimates
 
-def fetch_shortable_shares(countries=None):
+def collect_shortable_shares(countries=None):
     """
-    Fetch IB shortable shares data and save to database.
+    Collect IB shortable shares data and save to database.
 
     Data is organized by country and updated every 15 minutes. Historical
     data is available from April 2018.
@@ -761,12 +762,12 @@ def fetch_shortable_shares(countries=None):
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_fetch_shortable_shares(*args, **kwargs):
-    return json_to_cli(fetch_shortable_shares, *args, **kwargs)
+def _cli_collect_shortable_shares(*args, **kwargs):
+    return json_to_cli(collect_shortable_shares, *args, **kwargs)
 
-def fetch_borrow_fees(countries=None):
+def collect_borrow_fees(countries=None):
     """
-    Fetch IB borrow fees data and save to database.
+    Collect IB borrow fees data and save to database.
 
     Data is organized by country and updated every 15 minutes. Historical
     data is available from April 2018.
@@ -791,8 +792,8 @@ def fetch_borrow_fees(countries=None):
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_fetch_borrow_fees(*args, **kwargs):
-    return json_to_cli(fetch_borrow_fees, *args, **kwargs)
+def _cli_collect_borrow_fees(*args, **kwargs):
+    return json_to_cli(collect_borrow_fees, *args, **kwargs)
 
 def download_shortable_shares(filepath_or_buffer=None, output="csv",
                               start_date=None, end_date=None,
@@ -1174,3 +1175,31 @@ def get_borrow_fees_reindexed_like(reindex_like, time=None):
     return _get_stockloan_data_reindexed_like(
         download_borrow_fees, "FeeRate",
         reindex_like=reindex_like, time=time)
+
+@deprecated_replaced_by(collect_reuters_financials)
+def fetch_reuters_financials(*args, **kwargs):
+    """
+    Collect Reuters financial statements from IB and save to database.
+
+    [DEPRECATED] `fetch_reuters_financials` is deprecated and will be removed
+    in a future release, please use `collect_reuters_financials` instead.
+    """
+    return collect_reuters_financials(*args, **kwargs)
+
+@deprecated_replaced_by("collect-financials", old_name="fetch-financials")
+def _cli_fetch_reuters_financials(*args, **kwargs):
+    return json_to_cli(collect_reuters_financials, *args, **kwargs)
+
+@deprecated_replaced_by(collect_reuters_estimates)
+def fetch_reuters_estimates(*args, **kwargs):
+    """
+    Collect Reuters estimates and actuals from IB and save to database.
+
+    [DEPRECATED] `fetch_reuters_estimates` is deprecated and will be removed
+    in a future release, please use `collect_reuters_estimates` instead.
+    """
+    return collect_reuters_estimates(*args, **kwargs)
+
+@deprecated_replaced_by("collect-estimates", old_name="fetch-estimates")
+def _cli_fetch_reuters_estimates(*args, **kwargs):
+    return json_to_cli(collect_reuters_estimates, *args, **kwargs)

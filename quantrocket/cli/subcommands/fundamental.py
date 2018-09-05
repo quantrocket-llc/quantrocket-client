@@ -15,28 +15,28 @@
 import argparse
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("fundamental", description="QuantRocket fundamental data CLI", help="Fetch and query fundamental data")
+    _parser = subparsers.add_parser("fundamental", description="QuantRocket fundamental data CLI", help="Collect and query fundamental data")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
     examples = """
-Fetch Reuters financial statements from IB and save to database.
+Collect Reuters financial statements from IB and save to database.
 
 This data provides cash flow, balance sheet, and income metrics.
 
 Examples:
 
-Fetch Reuters financial statements for a universe of Japanese banks:
+Collect Reuters financial statements for a universe of Japanese banks:
 
-    quantrocket fundamental fetch-financials --universes 'japan-bank'
+    quantrocket fundamental collect-financials --universes 'japan-bank'
 
-Fetch Reuters financial statements for a particular security:
+Collect Reuters financial statements for a particular security:
 
-    quantrocket fundamental fetch-financials --conids 123456
+    quantrocket fundamental collect-financials --conids 123456
     """
     parser = _subparsers.add_parser(
-        "fetch-financials",
-        help="fetch Reuters financial statements from IB and save to database",
+        "collect-financials",
+        help="collect Reuters financial statements from IB and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -50,26 +50,26 @@ Fetch Reuters financial statements for a particular security:
         nargs="*",
         metavar="CONID",
         help="limit to these conids (must provide universes, conids, or both)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_financials")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_reuters_financials")
 
     examples = """
-Fetch Reuters estimates and actuals from IB and save to database.
+Collect Reuters estimates and actuals from IB and save to database.
 
 This data provides analyst estimates and actuals for a variety of indicators.
 
 Examples:
 
-Fetch Reuters estimates and actuals for a universe of Japanese banks:
+Collect Reuters estimates and actuals for a universe of Japanese banks:
 
-    quantrocket fundamental fetch-estimates --universes 'japan-bank'
+    quantrocket fundamental collect-estimates --universes 'japan-bank'
 
-Fetch Reuters estimates and actuals for a particular security:
+Collect Reuters estimates and actuals for a particular security:
 
-    quantrocket fundamental fetch-estimates --conids 123456
+    quantrocket fundamental collect-estimates --conids 123456
     """
     parser = _subparsers.add_parser(
-        "fetch-estimates",
-        help="fetch Reuters estimates and actuals from IB and save to database",
+        "collect-estimates",
+        help="collect Reuters estimates and actuals from IB and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -83,13 +83,13 @@ Fetch Reuters estimates and actuals for a particular security:
         nargs="*",
         metavar="CONID",
         help="limit to these conids (must provide universes, conids, or both)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_estimates")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_reuters_estimates")
 
     examples = """
 List available Chart of Account (COA) codes from the Reuters financials database
 and/or indicator codes from the Reuters estimates/actuals database
 
-Note: you must fetch Reuters financials into the database before you can
+Note: you must collect Reuters financials into the database before you can
 list COA codes.
 
 Examples:
@@ -325,24 +325,24 @@ Query EPS estimates and actuals for a universe of Australian stocks:
     parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_estimates")
 
     examples = """
-Fetch IB shortable shares data and save to database.
+Collect IB shortable shares data and save to database.
 
 Data is organized by country and updated every 15 minutes. Historical
 data is available from April 15, 2018.
 
 Examples:
 
-Fetch shortable shares data for US stocks:
+Collect shortable shares data for US stocks:
 
-    quantrocket fundamental fetch-shortshares --countries usa
+    quantrocket fundamental collect-shortshares --countries usa
 
-Fetch shortable shares data for all stocks:
+Collect shortable shares data for all stocks:
 
-    quantrocket fundamental fetch-shortshares
+    quantrocket fundamental collect-shortshares
     """
     parser = _subparsers.add_parser(
-        "fetch-shortshares",
-        help="fetch IB shortable shares data and save to database",
+        "collect-shortshares",
+        help="collect IB shortable shares data and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -351,27 +351,27 @@ Fetch shortable shares data for all stocks:
         metavar="COUNTRY",
         help="limit to these countries (pass '?' or any invalid country to see "
         "available countries)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_shortable_shares")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_shortable_shares")
 
     examples = """
-Fetch IB borrow fees data and save to database.
+Collect IB borrow fees data and save to database.
 
 Data is organized by country and updated every 15 minutes. Historical
 data is available from April 15, 2018.
 
 Examples:
 
-Fetch borrow fees for US stocks:
+Collect borrow fees for US stocks:
 
-    quantrocket fundamental fetch-shortfees --countries usa
+    quantrocket fundamental collect-shortfees --countries usa
 
-Fetch borrow fees for all stocks:
+Collect borrow fees for all stocks:
 
-    quantrocket fundamental fetch-shortfees
+    quantrocket fundamental collect-shortfees
     """
     parser = _subparsers.add_parser(
-        "fetch-shortfees",
-        help="fetch IB borrow fees data and save to database",
+        "collect-shortfees",
+        help="collect IB borrow fees data and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -380,7 +380,7 @@ Fetch borrow fees for all stocks:
         metavar="COUNTRY",
         help="limit to these countries (pass '?' or any invalid country to see "
         "available countries)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_borrow_fees")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_borrow_fees")
 
     examples = """
 Query shortable shares from the stockloan database and download to file.
@@ -505,3 +505,51 @@ Query borrow fees for a universe of Australian stocks:
         dest="output",
         help="format output as JSON (default is CSV)")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_borrow_fees")
+
+    examples = """
+Collect Reuters financial statements from IB and save to database
+
+[DEPRECATED] `fetch-financials` is deprecated and will be removed in a future release,
+please use `collect-financials` instead.
+    """
+    parser = _subparsers.add_parser(
+        "fetch-financials",
+        help="[DEPRECATED] collect Reuters financial statements from IB and save to database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes (must provide universes, conids, or both)")
+    parser.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids (must provide universes, conids, or both)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_financials")
+
+    examples = """
+Collect Reuters estimates and actuals from IB and save to database.
+
+[DEPRECATED] `fetch-estimates` is deprecated and will be removed in a future release,
+please use `collect-estimates` instead.
+    """
+    parser = _subparsers.add_parser(
+        "fetch-estimates",
+        help="[DEPRECATED] collect Reuters estimates and actuals from IB and save to database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes (must provide universes, conids, or both)")
+    parser.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids (must provide universes, conids, or both)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_estimates")
