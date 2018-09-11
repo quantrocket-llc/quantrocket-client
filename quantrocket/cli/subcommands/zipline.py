@@ -241,15 +241,11 @@ Create a pyfolio PDF tear sheet from a Zipline backtest result.
 
 Examples:
 
-Create a full pyfolio tear sheet from a Zipline CSV results file:
+Create a pyfolio tear sheet from a Zipline CSV results file:
 
     quantrocket zipline tearsheet results.csv -o results.pdf
 
-Create a simple pyfolio tear sheet:
-
-    quantrocket zipline tearsheet results.csv -o results.pdf --simple
-
-Run a Zipline backtest and create a full pyfolio tear sheet without saving
+Run a Zipline backtest and create a pyfolio tear sheet without saving
 the CSV file:
 
     quantrocket zipline run -f 'buy_aapl.py' -s 2010-04-01 -e 2016-02-01 | quantrocket zipline tearsheet -o buy_aapl.pdf
@@ -271,35 +267,4 @@ the CSV file:
         required=True,
         dest="outfilepath_or_buffer",
         help="the location to write the pyfolio tear sheet")
-    parser.add_argument(
-        "-s", "--simple",
-        action="store_true",
-        help="create a simple tear sheet (default is to create a full tear sheet)"),
-    parser.add_argument(
-        "-l", "--live-start-date",
-        metavar="YYYY-MM-DD",
-        help="date when the strategy began live trading")
-    parser.add_argument(
-        "--slippage",
-        metavar="INT",
-        type=float,
-        help="basis points of slippage to apply to returns before generating tear sheet "
-        "stats and plots")
-    parser.add_argument(
-        "--hide-positions",
-        action="store_true",
-        help="don't output any symbol names"),
-    parser.add_argument(
-        "--bayesian",
-        action="store_true",
-        help="include a Bayesian tear sheet"),
-    parser.add_argument(
-        "--round-trips",
-        action="store_true",
-        help="include a round-trips tear sheet"),
-    parser.add_argument(
-        "--bootstrap",
-        action="store_true",
-        help="perform bootstrap analysis for the performance metrics (takes a few minutes "
-        "longer)")
     parser.set_defaults(func="quantrocket.zipline._cli_create_tearsheet")

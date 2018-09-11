@@ -123,9 +123,7 @@ def run_algorithm(algofile, data_frequency=None, capital_base=None,
 def _cli_run_algorithm(*args, **kwargs):
     return json_to_cli(run_algorithm, *args, **kwargs)
 
-def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None, simple=None,
-                     live_start_date=None, slippage=None, hide_positions=None,
-                     bayesian=None, round_trips=None, bootstrap=None):
+def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None):
     """
     Create a pyfolio PDF tear sheet from a Zipline backtest result.
 
@@ -137,65 +135,26 @@ def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None, simple=No
     outfilepath_or_buffer : str or file-like, optional
         the location to write the pyfolio tear sheet (write to stdout if omitted)
 
-    simple : bool
-        create a simple tear sheet (default is to create a full tear sheet)
-
-    live_start_date : str (YYYY-MM-DD), optional
-        date when the strategy began live trading
-
-    slippage : int or float, optional
-        basis points of slippage to apply to returns before generating tear sheet
-        stats and plots
-
-    hide_positions : bool
-        don't output any symbol names
-
-    bayesian : bool
-        include a Bayesian tear sheet
-
-    round_trips : bool
-        include a round-trips tear sheet
-
-    bootstrap : bool
-        perform bootstrap analysis for the performance metrics (takes a few minutes
-        longer)
-
     Returns
     -------
     None
     """
-    params = {}
-    if simple:
-        params["simple"] = simple
-    if live_start_date:
-        params["live_start_date"] = live_start_date
-    if slippage:
-        params["slippage"] = slippage
-    if hide_positions:
-        params["hide_positions"] = hide_positions
-    if bayesian:
-        params["bayesian"] = bayesian
-    if round_trips:
-        params["round_trips"] = round_trips
-    if bootstrap:
-        params["bootstrap"] = bootstrap
-
     url = "/zipline/tearsheets"
-    # Pyfolio can take a long time, particularly for Bayesian analysis
+    # Pyfolio can take a long time
     timeout = 60*60*5
 
     if infilepath_or_buffer == "-":
         infilepath_or_buffer = sys.stdin.buffer if six.PY3 else sys.stdin
-        response = houston.post(url, data=infilepath_or_buffer, params=params, timeout=timeout)
+        response = houston.post(url, data=infilepath_or_buffer, timeout=timeout)
 
     elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
         if infilepath_or_buffer.seekable():
             infilepath_or_buffer.seek(0)
-        response = houston.post(url, data=infilepath_or_buffer, params=params, timeout=timeout)
+        response = houston.post(url, data=infilepath_or_buffer, timeout=timeout)
 
     else:
         with open(infilepath_or_buffer, "rb") as f:
-            response = houston.post(url, data=f, params=params, timeout=timeout)
+            response = houston.post(url, data=f, timeout=timeout)
 
     houston.raise_for_status_with_json(response)
 
