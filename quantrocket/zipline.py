@@ -205,12 +205,23 @@ def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None, simple=No
 def _cli_create_tearsheet(*args, **kwargs):
     return json_to_cli(create_tearsheet, *args, **kwargs)
 
-def ingest_bundle(history_db=None, calendar=None, bundle=None, assets_versions=None):
+def ingest_bundle(history_db=None, calendar=None, bundle=None,
+                  start_date=None, end_date=None,
+                  universes=None, conids=None,
+                  exclude_universes=None, exclude_conids=None):
     """
-    Ingest a data bundle into Zipline for later backtesting.
+    Ingest a history database into Zipline for later backtesting.
 
-    You can ingest 1-minute or 1-day history databases from QuantRocket, or you
-    can ingest data using Zipline's built-in capabilities.
+    You can ingest 1-minute or 1-day history databases.
+
+    Re-ingesting a previously ingested database will create a new version of the
+    ingested data, while preserving the earlier version. See
+    `quantrocket.zipline.clean_bundles` to remove earlier versions.
+
+    Ingestion parameters (start_date, end_date, universes, conids, exclude_universes,
+    exclude_conids) can only be specified the first time a bundle is ingested, and
+    will be reused for subsequent ingestions. You must remove the bundle and start
+    over to change the parameters.
 
     Parameters
     ----------
@@ -218,20 +229,61 @@ def ingest_bundle(history_db=None, calendar=None, bundle=None, assets_versions=N
         the code of a history db to ingest
 
     calendar : str, optional
-        the name of the calendar to use with this history db bundle (default is
-        NYSE; provide an invalid calendar name to see available choices)
+        the name of the calendar to use with this history db bundle (provide '?' or
+        any invalid calendar name to see available choices)
 
     bundle : str, optional
-        the data bundle to ingest (default is quantopian-quandl); don't provide
-        if specifying history_db
+        the name to assign to the bundle (defaults to the history database code)
 
-    assets_versions : list of int, optional
-        versions of the assets db to which to downgrade
+    start_date : str (YYYY-MM-DD), optional
+        limit to history on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to history on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    conids : list of int, optional
+        limit to these conids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_conids : list of int, optional
+        exclude these conids
 
     Returns
     -------
     dict
         status message
+
+    Examples
+    --------
+    Ingest a history database called "arca-etf-eod" into Zipline:
+
+    >>> from quantrocket.zipline import ingest_bundle
+    >>> ingest_bundle(history_db="arca-etf-eod", calendar="NYSE")
+
+    Re-ingest "arca-etf-eod" (calendar and other ingestion parameters aren't
+    needed as they will be re-used from the first ingestion):
+
+    >>> ingest_bundle(history_db="arca-etf-eod")
+
+    Ingest a history database called "lse-stk" into Zipline and associate it with
+    the LSE calendar:
+
+    >>> ingest_bundle(history_db="lse-stk", calendar="LSE")
+
+    Ingest a single year of US 1-minute stock data and name the bundle usa-stk-2017:
+
+    >>> ingest_bundle(history_db="usa-stk-1min", calendar="NYSE",
+    >>>               start_date="2017-01-01", end_date="2017-12-31",
+    >>>               bundle="usa-stk-2017")
+
+    Re-ingest the bundle usa-stk-2017:
+
+    >>> ingest_bundle(bundle="usa-stk-2017")
     """
     params = {}
     if history_db:
@@ -240,10 +292,20 @@ def ingest_bundle(history_db=None, calendar=None, bundle=None, assets_versions=N
         params["calendar"] = calendar
     if bundle:
         params["bundle"] = bundle
-    if assets_versions:
-        params["assets_versions"] = assets_versions
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if conids:
+        params["conids"] = conids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_conids:
+        params["exclude_conids"] = exclude_conids
 
-    response = houston.post("/zipline/bundles", params=params, timeout=60*30)
+    response = houston.post("/zipline/bundles", params=params, timeout=60*60*48)
 
     houston.raise_for_status_with_json(response)
     return response.json()
@@ -268,38 +330,57 @@ def list_bundles():
 def _cli_list_bundles(*args, **kwargs):
     return json_to_cli(list_bundles, *args, **kwargs)
 
-def clean_bundles(bundle=None, before=None, after=None, keep_last=None):
+def clean_bundles(bundles, before=None, after=None, keep_last=None, clean_all=False):
     """
-    Clean up data downloaded with the ingest command.
+    Remove previously ingested data for one or more bundles.
 
     Parameters
     ----------
-    bundle : str, optional
-        the data bundle to clean (default is quantopian-quandl)
+    bundles : list of str, required
+        the data bundles to clean
 
-    before : str, optional
-        clear all data before this TIMESTAMP. This may not be passed with keep_last
+    before : str (YYYY-MM-DD[ HH:MM:SS]), optional
+        clear all data before this timestamp. Mutually exclusive with keep_last
+        and clean_all.
 
-    after : str, optional
-        clear all data after this TIMESTAMP. This may not be passed with keep_last
+    after : str (YYYY-MM-DD[ HH:MM:SS]), optional
+        clear all data after this timestamp. Mutually exclusive with keep_last
+        and clean_all.
 
     keep_last : int, optional
-        clear all but the last N downloads. This may not be passed with before or after.
+        clear all but the last N ingestions. Mutually exclusive with before,
+        after, and clean_all.
+
+    clean_all : bool
+        clear all ingestions for bundle(s), and delete bundle configuration.
+        Default False. Mutually exclusive with before, after, and keep_last.
 
     Returns
     -------
-    list
+    dict
         bundles removed
+
+    Examples
+    --------
+    Remove all but the last ingestion for a bundle called 'aus-1min':
+
+    >>> from quantrocket.zipline import clean_bundles
+    >>> clean_bundles("aus-1min", keep_last=1)
+
+    Remove all ingestions for bundles called 'aus-1min' and 'usa-1min':
+
+    >>> clean_bundles(["aus-1min", "usa-1min"], clean_all=True)
     """
     params = {}
-    if bundle:
-        params["bundle"] = bundle
+    params["bundles"] = bundles
     if before:
         params["before"] = before
     if after:
         params["after"] = after
     if keep_last:
         params["keep_last"] = keep_last
+    if clean_all:
+        params["clean_all"] = clean_all
 
     response = houston.delete("/zipline/bundles", params=params)
 
