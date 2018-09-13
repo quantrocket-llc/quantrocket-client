@@ -20,8 +20,8 @@ from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
 def run_algorithm(algofile, data_frequency=None, capital_base=None,
-                          bundle=None, bundle_timestamp=None, start=None, end=None,
-                          filepath_or_buffer=None, calendar=None):
+                  bundle=None, bundle_timestamp=None, start=None, end=None,
+                  filepath_or_buffer=None, calendar=None):
     """
     Run a Zipline backtest and write the test results to a CSV file.
 
@@ -40,8 +40,8 @@ def run_algorithm(algofile, data_frequency=None, capital_base=None,
     capital_base : float, optional
         the starting capital for the simulation (default is 10000000.0)
 
-    bundle : str, optional
-        the data bundle to use for the simulation (default is quantopian-quandl)
+    bundle : str, required
+        the data bundle to use for the simulation
 
     bundle_timestamp : str, optional
         the date to lookup data on or before (default is <current-time>)
@@ -56,7 +56,8 @@ def run_algorithm(algofile, data_frequency=None, capital_base=None,
         the location to write the output file (omit to write to stdout)
 
     calendar : str, optional
-        the calendar you want to use e.g. LSE. NYSE is the default.
+        the calendar you want to use e.g. LSE (default is to use the calendar
+        associated with the data bundle).
 
     Returns
     -------
@@ -64,46 +65,26 @@ def run_algorithm(algofile, data_frequency=None, capital_base=None,
 
     Examples
     --------
-    Run a backtest and load the results into pandas.
+    Run a backtest and save to CSV.
 
     >>> from quantrocket.zipline import run_algorithm
-    >>> import pandas as pd
-    >>> import io
-    >>> f = io.StringIO()
-    >>> run_algorithm("momentum_pipeline.py", bundle="my-bundle", start="2015-02-04", end="2015-12-31", filepath_or_buffer=f)
-    >>> results = pd.read_csv(f, index_col=["dataframe", "index", "column"])["value"]
+    >>> run_algorithm("momentum_pipeline.py", bundle="my-bundle",
+                      start="2015-02-04", end="2015-12-31",
+                      filepath_or_buffer="momentum_pipeline_results.csv")
 
-    To use the results with pyfolio, extract and massage the returns, positions,
-    transactions, and benchmark returns:
+    Get a pyfolio tear sheet from the results:
 
-    >>> # Extract returns
-    >>> returns = results.loc["returns"].unstack()
-    >>> returns.index = returns.index.droplevel(0).tz_localize("UTC")
-    >>> returns = returns["returns"].astype(float)
-    >>> # Extract positions
-    >>> positions = results.loc["positions"].unstack()
-    >>> positions.index = positions.index.droplevel(0).tz_localize("UTC")
-    >>> positions = positions.astype(float)
-    >>> # Extract transactions
-    >>> transactions = results.loc["transactions"].unstack()
-    >>> transactions.index = transactions.index.droplevel(0).tz_localize("UTC")
-    >>> transactions = transactions.apply(pd.to_numeric, errors='ignore')
-    >>> # Extract benchmark
-    >>> benchmark_returns = results.loc["benchmark"].unstack()
-    >>> benchmark_returns.index = benchmark_returns.index.droplevel(0).tz_localize("UTC")
-    >>> benchmark_returns = benchmark_returns["benchmark"].astype(float)
-
-    Ready for pyfolio:
-
-    >>> pf.create_full_tear_sheet(returns, positions=positions, transactions=transactions, benchmark_rets=benchmark_returns)
+    >>> import pyfolio as pf
+    >>> pf.from_zipline_csv("momentum_pipeline_results.csv")
     """
     params = {}
     if data_frequency:
         params["data_frequency"] = data_frequency
     if capital_base:
         params["capital_base"] = capital_base
-    if bundle:
-        params["bundle"] = bundle
+    if not bundle:
+        raise ValueError("must specify a bundle")
+    params["bundle"] = bundle
     if bundle_timestamp:
         params["bundle_timestamp"] = bundle_timestamp
     if start:

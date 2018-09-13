@@ -59,7 +59,7 @@ Re-ingest the bundle usa-stk-2017:
     """
     parser = _subparsers.add_parser(
         "ingest",
-        help="ingest a data bundle",
+        help="ingest a history database into Zipline",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -138,7 +138,7 @@ Remove all ingestions for bundles called 'aus-1min' and 'usa-1min':
     """
     parser = _subparsers.add_parser(
         "clean",
-        help="clean up data downloaded with the ingest command",
+        help="remove previously ingested data for one or more bundles",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -209,7 +209,8 @@ Run a backtest using the us_futures calendar:
     parser.add_argument(
         "-b", "--bundle",
         metavar="BUNDLE-NAME",
-        help="the data bundle to use for the simulation (default is quantopian-quandl)")
+        required=True,
+        help="the data bundle to use for the simulation")
     parser.add_argument(
         "--bundle-timestamp",
         metavar="TIMESTAMP",
