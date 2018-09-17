@@ -107,6 +107,7 @@ def main():
             # logged
             if exit_code > 0 and not sys.stdin.isatty() and not sys.stdout.isatty():
                 handle_error(result)
+                print(result)
             # otherwise print
             else:
                 print(result)
