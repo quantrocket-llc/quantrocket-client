@@ -49,10 +49,11 @@ def list_exchanges(regions=None, sec_types=None):
 def _cli_list_exchanges(*args, **kwargs):
     return json_to_cli(list_exchanges, *args, **kwargs)
 
-def collect_listings(exchange=None, sec_types=None, currencies=None, symbols=None,
-                     universes=None, conids=None):
+def collect_listings(exchanges=None, sec_types=None, currencies=None, symbols=None,
+                     universes=None, conids=None, exchange=None):
     """
-    Collect securities listings from IB into securities master database.
+    Collect securities listings from IB and store in securities master
+    database (quantrocket.master.main.sqlite).
 
     Specify an exchange (optionally filtering by security type, currency,
     and/or symbol) to collect listings from the IB website and collect
@@ -61,8 +62,8 @@ def collect_listings(exchange=None, sec_types=None, currencies=None, symbols=Non
 
     Parameters
     ----------
-    exchange : str
-        the exchange code to collect listings for (required unless providing
+    exchanges : list or str
+        one or more exchange codes to collect listings for (required unless providing
         universes or conids)
 
     sec_types : list of str, optional
@@ -80,6 +81,11 @@ def collect_listings(exchange=None, sec_types=None, currencies=None, symbols=Non
     conids : list of int, optional
         limit to these conids
 
+    exchange : str
+        DEPRECATED, this option will be removed in a future release, please use
+        `exchanges` instead (previously only a single exchange was supported but
+        now multiple exchanges are supported)
+
     Returns
     -------
     dict
@@ -87,8 +93,8 @@ def collect_listings(exchange=None, sec_types=None, currencies=None, symbols=Non
 
     """
     params = {}
-    if exchange:
-        params["exchange"] = exchange
+    if exchanges:
+        params["exchanges"] = exchanges
     if sec_types:
         params["sec_types"] = sec_types
     if currencies:
@@ -99,13 +105,59 @@ def collect_listings(exchange=None, sec_types=None, currencies=None, symbols=Non
         params["universes"] = universes
     if conids:
         params["conids"] = conids
+    if exchange:
+        import warnings
+        # DeprecationWarning is ignored by default but we want the user
+        # to see it
+        warnings.simplefilter("always", DeprecationWarning)
+        warnings.warn(
+            "the `exchange` option is deprecated and will be removed in a "
+            "future release, please use `exchanges` instead (previously only "
+            "a single exchange was supported but now multiple exchanges are "
+            "supported)", DeprecationWarning)
+        params["exchange"] = exchange
 
-    response = houston.post("/master/listings", params=params)
+    response = houston.post("/master/securities", params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
 
 def _cli_collect_listings(*args, **kwargs):
     return json_to_cli(collect_listings, *args, **kwargs)
+
+def collect_sharadar_listings(exchanges=None):
+    """
+    Collect securities listings from Sharadar (Quandl) and store in
+    quantrocket.master.sharadar.sqlite.
+
+    Sharadar listings will be collected then matched to the corresponding IB
+    listings in quantrocket.master.main.sqlite. To facilitate matching,
+    collect the IB listings before running this function. Securities are
+    matched on CUSIP if possible (requires CUSIP research subscription in IB
+    Account Management), otherwise on Symbol+PrimaryExchange+Currency.
+    IB<->Sharadar matches are stored in quantrocket.master.translations.sqlite
+    and can be queried via `translate_conids`.
+
+    Parameters
+    ----------
+    exchanges : list of str, optional
+        limit to these exchanges (Possible choices: NYSE, NASDAQ, AMEX,
+        ARCA, BATS, PINK)
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    params = {}
+    if exchanges:
+        params["exchanges"] = exchanges
+
+    response = houston.post("/master/sharadar/securities", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_sharadar_listings(*args, **kwargs):
+    return json_to_cli(collect_sharadar_listings, *args, **kwargs)
 
 def collect_option_chains(universes=None, conids=None, infilepath_or_buffer=None):
     """
@@ -163,7 +215,8 @@ def _cli_collect_option_chains(*args, **kwargs):
     return json_to_cli(collect_option_chains, *args, **kwargs)
 
 def diff_securities(universes=None, conids=None, infilepath_or_buffer=None,
-                    fields=None, delist_missing=False, delist_exchanges=None, wait=False):
+                    fields=None, delist_missing=False, delist_exchanges=None,
+                    wait=False):
     """
     Flag security details that have changed in IB's system since the time they
     were last collected into the securities master database.
@@ -241,7 +294,8 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
                          currencies=None, universes=None, symbols=None, conids=None,
                          exclude_universes=None, exclude_conids=None,
                          sectors=None, industries=None, categories=None,
-                         delisted=False, frontmonth=False, fields=None):
+                         delisted=False, frontmonth=False, fields=None,
+                         domain=None):
     """
     Query security details from the securities master database and download to file.
 
@@ -296,17 +350,30 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         only return these fields (pass ['?'] or any invalid fieldname to see
         available fields)
 
+    domain : str, optional
+        query against this domain (default is 'main', which runs against
+        quantrocket.master.main.sqlite. Possible choices: main, sharadar)
+
     Returns
     -------
     None
 
     Examples
     --------
-    You can use StringIO to load the CSV into pandas.
+    Download several exchanges to file:
+
+    >>> download_master_file("securities.csv", exchanges=["NYSE","NASDAQ"])
+
+    Download securities for a particular universe to in-memory file and
+    load the CSV into pandas.
 
     >>> f = io.StringIO()
     >>> download_master_file(f, universes=["my-universe"])
     >>> securities = pd.read_csv(f)
+
+    Download Sharadar securities from quantrocket.master.sharadar.sqlite:
+
+    >>> download_master_file("sharadar_securities.csv", domain="sharadar")
     """
     params = {}
     if exchanges:
@@ -340,10 +407,14 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
 
     output = output or "csv"
 
+    url = "/master/{0}securities.{1}".format(
+        "{0}/".format(domain) if domain else "",
+        output)
+
     if output not in ("csv", "json", "txt"):
         raise ValueError("Invalid ouput: {0}".format(output))
 
-    response = houston.get("/master/securities.{0}".format(output), params=params)
+    response = houston.get(url, params=params)
 
     houston.raise_for_status_with_json(response)
 
@@ -354,8 +425,72 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
 def _cli_download_master_file(*args, **kwargs):
     return json_to_cli(download_master_file, *args, **kwargs)
 
+def translate_conids(conids, from_domain=None, to_domain=None):
+    """
+    Translate conids (contract IDs) from one domain to another.
+
+    Only translations to and from the "main" domain (that is, the
+    IB domain) are supported.
+
+    Parameters
+    ----------
+    conids : list of int, required
+        the conids to translate
+
+    from_domain : str, optional
+        the domain to translate from. This is the domain of the provided
+        conids. Possible choices: main, sharadar
+
+    to_domain : str, optional
+        the domain to translate to. Possible choices: main, sharadar
+
+    Returns
+    -------
+    dict
+        dict of <from_domain conid>:<to_domain conid>
+
+    Examples
+    --------
+    Translate a DataFrame with IB conids as columns to one with Sharadar
+    conids as columns, and mask columns that can't be translated:
+
+    >>> ib_conids = list(df_with_ib_cols.columns)
+    >>> ib_to_sharadar = translate_conids(ib_conids, to_domain="sharadar")
+    >>> df_with_sharadar_cols = df_with_ib_cols.rename(columns=ib_to_sharadar)
+    >>> # Mask columns where no Sharadar conid was available
+    >>> no_translations = set(ib_conids) - set(ib_to_sharadar)
+    >>> df_with_sharadar_cols.loc[:, no_translations] = None
+
+    Translate a DataFrame with Sharadar conids as columns to one with IB
+    conids as columns, and drop columns that can't be translated:
+
+    >>> sharadar_conids = list(df_with_sharadar_cols.columns)
+    >>> sharadar_to_ib = translate_conids(sharadar_conids, from_domain="sharadar")
+    >>> df_with_ib_cols = df_with_sharadar_cols.rename(columns=sharadar_to_ib)
+    >>> # Drop columns where no IB conid was available
+    >>> no_translations = set(sharadar_conids) - set(sharadar_to_ib)
+    >>> df_with_ib_cols = df_with_ib_cols.drop(no_translations, axis=1)
+    """
+    params = {}
+    params["conids"] = conids
+    if from_domain:
+        params["from_domain"] = from_domain
+    if to_domain:
+        params["to_domain"] = to_domain
+
+    response = houston.get("/master/translations", params=params)
+    houston.raise_for_status_with_json(response)
+    translations = response.json()
+    # JSON requires dict keys to be strings, re-cast to int
+    translations = dict([(int(k),v) for k,v in translations.items()])
+    return translations
+
+def _cli_translate_conids(*args, **kwargs):
+    return json_to_cli(translate_conids, *args, **kwargs)
+
 def create_universe(code, infilepath_or_buffer=None, from_universes=None,
-                    exclude_delisted=False, append=False, replace=False):
+                    exclude_delisted=False, append=False, replace=False,
+                    domain=None):
     """
     Create a universe of securities.
 
@@ -380,11 +515,27 @@ def create_universe(code, infilepath_or_buffer=None, from_universes=None,
     replace : bool
         replace universe if universe already exists (default False)
 
+    domain : str, optional
+        create universe in this domain (default is 'main', which runs against
+        quantrocket.master.main.sqlite. Possible choices: main, sharadar)
+
     Returns
     -------
     dict
         status message
 
+    Examples
+    --------
+    Create a universe called 'nyse-stk' from a CSV file:
+
+    >>> create_universe("usa-stk", "nyse_securities.csv")
+
+    Create a universe from a DataFrame:
+
+    >>> import io
+    >>> f = io.StringIO()
+    >>> japan_securities.to_csv(f)
+    >>> create_universe("japan-stk", f)
     """
     if append and replace:
         raise ValueError("append and replace are mutually exclusive")
@@ -397,7 +548,9 @@ def create_universe(code, infilepath_or_buffer=None, from_universes=None,
     if replace:
         params["replace"] = replace
 
-    url = "/master/universes/{0}".format(code)
+    url = "/master/{0}universes/{1}".format(
+        "{0}/".format(domain) if domain else "",
+        code)
 
     if append:
         method = "PATCH"
@@ -424,7 +577,7 @@ def create_universe(code, infilepath_or_buffer=None, from_universes=None,
 def _cli_create_universe(*args, **kwargs):
     return json_to_cli(create_universe, *args, **kwargs)
 
-def delete_universe(code):
+def delete_universe(code, domain=None):
     """
     Delete a universe.
 
@@ -436,28 +589,48 @@ def delete_universe(code):
     code : str, required
         the universe code
 
+    domain : str, optional
+        the domain from which to delete the universe (default is 'main', which
+        runs against quantrocket.master.main.sqlite. Possible choices:
+        main, sharadar)
+
     Returns
     -------
     dict
         status message
     """
-    response = houston.delete("/master/universes/{0}".format(code))
+
+    url = "/master/{0}universes/{1}".format(
+        "{0}/".format(domain) if domain else "",
+        code)
+
+    response = houston.delete(url)
     houston.raise_for_status_with_json(response)
     return response.json()
 
 def _cli_delete_universe(*args, **kwargs):
     return json_to_cli(delete_universe, *args, **kwargs)
 
-def list_universes():
+def list_universes(domain=None):
     """
     List universes and their size.
+
+    Parameters
+    ----------
+    domain : str, optional
+        the domain to list universes for (default is 'main', which
+        runs against quantrocket.master.main.sqlite. Possible choices:
+        main, sharadar)
 
     Returns
     -------
     dict
         dict of universe:size
     """
-    response = houston.get("/master/universes")
+    url = "/master/{0}universes".format(
+        "{0}/".format(domain) if domain else "")
+
+    response = houston.get(url)
     houston.raise_for_status_with_json(response)
     return response.json()
 
@@ -829,3 +1002,7 @@ def fetch_calendar(*args, **kwargs):
 @deprecated_replaced_by("collect-calendar", old_name="fetch-calendar")
 def _cli_fetch_calendar(*args, **kwargs):
     return json_to_cli(collect_calendar, *args, **kwargs)
+
+@deprecated_replaced_by("collect", old_name="listings")
+def _cli_listings(*args, **kwargs):
+    return json_to_cli(collect_listings, *args, **kwargs)

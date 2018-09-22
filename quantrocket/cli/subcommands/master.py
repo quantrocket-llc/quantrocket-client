@@ -53,7 +53,8 @@ List stock exchanges in North America:
     parser.set_defaults(func="quantrocket.master._cli_list_exchanges")
 
     examples = """
-Collect securities listings from IB into securities master database.
+Collect securities listings from IB and store in securities master database
+(quantrocket.master.main.sqlite).
 
 Specify an exchange (optionally filtering by security type, currency, and/or
 symbol) to collect listings from the IB website and collect associated contract
@@ -64,29 +65,30 @@ Examples:
 
 Collect all Toronto Stock Exchange stock listings:
 
-    quantrocket master listings --exchange TSE --sec-types STK
+    quantrocket master collect --exchanges TSE --sec-types STK
 
 Collect all NYSE ARCA ETF listings:
 
-    quantrocket master listings --exchange ARCA --sec-types ETF
+    quantrocket master collect -e ARCA --sec-types ETF
 
 Collect specific symbols from Nasdaq:
 
-    quantrocket master listings --exchange NASDAQ --symbols AAPL GOOG NFLX
+    quantrocket master collect -e NASDAQ --symbols AAPL GOOG NFLX
 
 Re-collect contract details for an existing universe called "japan-fin":
 
-    quantrocket master listings --universes "japan-fin"
+    quantrocket master collect --universes "japan-fin"
     """
     parser = _subparsers.add_parser(
-        "listings",
-        help="collect securities listings from IB into securities master database",
+        "collect",
+        help="collect securities listings from IB and store in securities master database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "-e", "--exchange",
+        "-e", "--exchanges",
+        nargs="*",
         metavar="EXCHANGE",
-        help="the exchange code to collect listings for (required unless providing universes "
+        help="one or more exchange codes to collect listings for (required unless providing universes "
         "or conids)")
     parser.add_argument(
         "-t", "--sec-types",
@@ -115,7 +117,48 @@ Re-collect contract details for an existing universe called "japan-fin":
         nargs="*",
         metavar="CONID",
         help="limit to these conids")
+    parser.add_argument(
+        "--exchange",
+        metavar="EXCHANGE",
+        help="DEPRECATED, this option will be removed in a future release, please use "
+        "`exchanges` instead (previously only a single exchange was supported but "
+        "now multiple exchanges are supported)")
     parser.set_defaults(func="quantrocket.master._cli_collect_listings")
+
+    examples = """
+Collect securities listings from Sharadar (Quandl) and store in
+quantrocket.master.sharadar.sqlite.
+
+Sharadar listings will be collected then matched to the corresponding IB
+listings in quantrocket.master.main.sqlite. To facilitate matching, collect
+the IB listings before running this command. Securities are matched on CUSIP
+if possible (requires CUSIP research subscription in IB Account Management),
+otherwise on Symbol+PrimaryExchange+Currency. IB<->Sharadar matches are stored
+in quantrocket.master.translations.sqlite and can be queried via
+`quantrocket master translate`.
+
+Examples:
+
+Collect all listings from Sharadar:
+
+    quantrocket master collect-sharadar
+
+Collect only NYSE listings from Sharadar:
+
+    quantrocket master collect-sharadar -e NYSE
+    """
+    parser = _subparsers.add_parser(
+        "collect-sharadar",
+        help="collect securities listings from Sharadar (Quandl) and store in quantrocket.master.sharadar.sqlite",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-e", "--exchanges",
+        nargs="*",
+        metavar="EXCHANGE",
+        choices=["NYSE", "NASDAQ", "AMEX", "ARCA", "BATS", 'PINK'],
+        help="limit to these exchanges. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.master._cli_collect_sharadar_listings")
 
     examples = """
 Collect option chains for underlying securities.
@@ -181,9 +224,14 @@ Download a CSV of all ARCA ETFs and use it to create a universe called
 
     quantrocket master get --exchanges ARCA --sec-types ETF | quantrocket master universe "arca-etf" --infile -
 
-Pretty print the exchange and currency for all listings of AAPL:
+Query the exchange and currency for all listings of AAPL and format for
+terminal display:
 
-    quantrocket master get --symbols AAPL --fields PrimaryExchange Currency --pretty
+    quantrocket master get --symbols AAPL --fields PrimaryExchange Currency | csvlook -I
+
+Download a CSV of Sharadar (Quandl) securities from quantrocket.master.sharadar.sqlite:
+
+    quantrocket master get --domain sharadar -o sharadar_securities.csv
     """
     parser = _subparsers.add_parser(
         "get",
@@ -284,6 +332,12 @@ Pretty print the exchange and currency for all listings of AAPL:
         nargs="*",
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields)")
+    domains = parser.add_argument_group("domain options")
+    domains.add_argument(
+        "--domain",
+        choices=["main", "sharadar"],
+        help="query against this domain (default is 'main', which runs against "
+        "quantrocket.master.main.sqlite. Possible choices: %(choices)s)")
     parser.set_defaults(func="quantrocket.master._cli_download_master_file")
 
     examples = """
@@ -365,6 +419,45 @@ or that are now associated with the PINK exchange:
     parser.set_defaults(func="quantrocket.master._cli_diff_securities")
 
     examples = """
+Translate conids (contract IDs) from one domain to another.
+
+Only translations to and from the "main" domain (that is, the
+IB domain) are supported.
+
+Examples:
+
+Translate IB conids to Sharadar conids:
+
+    quantrocket master translate 12345 23456 --to sharadar
+
+Translate Sharadar conids to IB conids:
+
+    quantrocket master translate 98765 87654 --from sharadar
+    """
+    parser = _subparsers.add_parser(
+        "translate",
+        help="translate conids from one domain to another",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "conids",
+        nargs="+",
+        metavar="CONID",
+        help="the conids to translate")
+    parser.add_argument(
+        "--from",
+        choices=["main","sharadar"],
+        dest="from_domain",
+        help="the domain to translate from. This is the domain of the provided "
+        "conids. Possible choices: %(choices)s")
+    parser.add_argument(
+        "--to",
+        choices=["main","sharadar"],
+        dest="to_domain",
+        help="the domain to translate to. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.master._cli_translate_conids")
+
+    examples = """
 List universes and their size.
 
 Examples:
@@ -372,12 +465,22 @@ Examples:
 List all universes and their size:
 
     quantrocket master list-universes
+
+List universes in quantrocket.master.sharadar.sqlite:
+
+    quantrocket master list-universes --domain sharadar
     """
     parser = _subparsers.add_parser(
         "list-universes",
         help="list universes and their size",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-d", "--domain",
+        choices=["main","sharadar"],
+        help="the domain to list universes for (default is 'main', which "
+        "runs against quantrocket.master.main.sqlite. Possible choices: "
+        "%(choices)s)")
     parser.set_defaults(func="quantrocket.master._cli_list_universes")
 
     examples = """
@@ -403,6 +506,10 @@ Create a universe consisting of several existing universes:
 Copy a universe but exclude delisted securities:
 
     quantrocket master universe "hong-kong-active" --from-universes "hong-kong" --exclude-delisted
+
+Create a universe of all listings in quantrocket.master.sharadar.sqlite:
+
+    quantrocket master get --domain sharadar | quantrocket master universe "sharadar-stk" --domain sharadar -f -
     """
     parser = _subparsers.add_parser(
         "universe",
@@ -438,6 +545,11 @@ Copy a universe but exclude delisted securities:
         "-r", "--replace",
         action="store_true",
         help="replace universe if universe already exists")
+    parser.add_argument(
+        "-d", "--domain",
+        choices=["main", "sharadar"],
+        help="create universe in this domain (default is 'main', which runs against "
+        "quantrocket.master.main.sqlite. Possible choices: %(choices)s)")
     parser.set_defaults(func="quantrocket.master._cli_create_universe")
 
     examples = """
@@ -451,7 +563,11 @@ Examples:
 Delete the universe called "italy-stk" (the listings details of the member
 securities won't be deleted, only their grouping as a universe):
 
-    quantrocket master delete-universe "italy-stk"
+    quantrocket master delete-universe 'italy-stk'
+
+Delete a universe from the sharadar domain (quantrocket.master.sharadar.sqlite):
+
+    quantrocket master delete-universe 'sharadar-nyse-delisted' --domain sharadar
     """
     parser = _subparsers.add_parser(
         "delete-universe",
@@ -461,6 +577,12 @@ securities won't be deleted, only their grouping as a universe):
     parser.add_argument(
         "code",
         help="the universe code")
+    parser.add_argument(
+        "-d", "--domain",
+        choices=["main","sharadar"],
+        help="the domain from which to delete the universe (default is "
+        "'main', which runs against quantrocket.master.main.sqlite. "
+        "Possible choices: %(choices)s)")
     parser.set_defaults(func="quantrocket.master._cli_delete_universe")
 
     examples = """
@@ -820,3 +942,48 @@ please use `collect-calendar` instead.
         metavar="EXCHANGE",
         help="limit to these exchanges")
     parser.set_defaults(func="quantrocket.master._cli_fetch_calendar")
+
+    examples = """
+Collect securities listings from IB and store in securities master database.
+
+[DEPRECATED] `listings` is deprecated and will be removed in a future release,
+please use `collect` instead.
+    """
+    parser = _subparsers.add_parser(
+        "listings",
+        help="[DEPRECATED] collect securities listings from IB and store in securities master database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-e", "--exchange",
+        metavar="EXCHANGE",
+        help="the exchange code to collect listings for (required unless providing universes "
+        "or conids)")
+    parser.add_argument(
+        "-t", "--sec-types",
+        nargs="*",
+        metavar="SEC_TYPE",
+        choices=["STK", "ETF", "FUT", "CASH", "IND"],
+        help="limit to these security types. Possible choices: %(choices)s")
+    parser.add_argument(
+        "-c", "--currencies",
+        nargs="*",
+        metavar="CURRENCY",
+        help="limit to these currencies")
+    parser.add_argument(
+        "-s", "--symbols",
+        nargs="*",
+        metavar="SYMBOL",
+        help="limit to these symbols")
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    parser.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    parser.set_defaults(func="quantrocket.master._cli_listings")

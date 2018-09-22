@@ -125,7 +125,7 @@ To set the environment variable on Linux, run:
 
         # Move conids from params to data if too long
         conids = kwargs.get("params", {}).get("conids", None)
-        if conids and isinstance(conids, list) and len(conids) > 1:
+        if conids and isinstance(conids, list) and len(conids) > 10:
             data = kwargs.get("data", {}) or {}
             data["conids"] = conids
             kwargs["params"].pop("conids")
