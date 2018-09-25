@@ -65,6 +65,11 @@ Create a database for collecting Sharadar Equity Prices (SEP) from Quandl:
         nargs="*",
         help="include these universes")
     parser.add_argument(
+        "-i", "--conids",
+        metavar="CONID",
+        nargs="*",
+        help="include these conids")
+    parser.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
         help="collect history back to this start date (default is to collect as far back as data "

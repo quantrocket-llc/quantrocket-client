@@ -26,7 +26,7 @@ from quantrocket.utils.warn import deprecated_replaced_by
 
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", "/tmp")
 
-def create_db(code, universes=None, start_date=None, end_date=None,
+def create_db(code, universes=None, conids=None, start_date=None, end_date=None,
               vendor=None, bar_size=None, bar_type=None, outside_rth=False,
               primary_exchange=False, times=None, between_times=None,
               shard=None, no_config=False, config_filepath_or_buffer=None):
@@ -40,6 +40,9 @@ def create_db(code, universes=None, start_date=None, end_date=None,
 
     universes : list of str
         include these universes
+
+    conids : list of int
+        include these conids
 
     start_date : str (YYYY-MM-DD), optional
         collect history back to this start date (default is to collect as far back as data
@@ -111,6 +114,8 @@ def create_db(code, universes=None, start_date=None, end_date=None,
     params = {}
     if universes:
         params["universes"] = universes
+    if conids:
+        params["conids"] = conids
     if start_date:
         params["start_date"] = start_date
     if end_date:
