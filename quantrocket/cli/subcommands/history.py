@@ -45,6 +45,10 @@ Create a database of 1-second bars just before the open for a universe of Canadi
 stocks in 2016:
 
     quantrocket history create-db 'tse-enr-929' -u 'tse-enr' -z '1 secs' --outside-rth --times 09:29:55 09:29:56 09:29:57 09:29:58 09:29:59 -s 2016-01-01 -e 2016-12-31
+
+Create a database for collecting Sharadar Equity Prices (SEP) from Quandl:
+
+    quantrocket history create-db 'sharadar-1d' --vendor 'sharadar/sep'
     """
     parser = _subparsers.add_parser(
         "create-db",
@@ -72,9 +76,9 @@ stocks in 2016:
     parser.add_argument(
         "-v", "--vendor",
         metavar="VENDOR",
-        choices=["ib"],
-        help="the vendor to collect data from (defaults to 'ib' which is currently the only "
-        "supported vendor)")
+        choices=["ib", "sharadar/sep"],
+        help="the vendor to collect data from (default 'ib'. Possible choices: "
+        "%(choices)s)")
     parser.add_argument(
         "-z", "--bar-size",
         metavar="BAR_SIZE",
