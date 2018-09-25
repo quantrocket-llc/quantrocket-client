@@ -664,6 +664,7 @@ def get_historical_prices(codes, start_date=None, end_date=None,
 
     db_universes = set()
     db_bar_sizes = set()
+    db_domains = set()
     for db in dbs:
         db_config = get_db_config(db)
         _db_universes = db_config.get("universes", None)
@@ -671,6 +672,9 @@ def get_historical_prices(codes, start_date=None, end_date=None,
             db_universes.update(set(_db_universes))
         bar_size = db_config.get("bar_size")
         db_bar_sizes.add(bar_size)
+        db_domain = db_config.get("domain", None)
+        if db_domain:
+            db_domains.add(db_domain)
 
     db_universes = list(db_universes)
     db_bar_sizes = list(db_bar_sizes)
@@ -679,6 +683,12 @@ def get_historical_prices(codes, start_date=None, end_date=None,
         raise ParameterError(
             "all databases must contain same bar size but {0} have different "
             "bar sizes: {1}".format(", ".join(dbs), ", ".join(db_bar_sizes))
+        )
+
+    if len(db_domains) > 1:
+        raise ParameterError(
+            "all databases must use the same securities master domain but {0} "
+            "use different domains: {1}".format(", ".join(dbs), ", ".join(db_domains))
         )
 
     all_prices = []
@@ -732,6 +742,8 @@ def get_historical_prices(codes, start_date=None, end_date=None,
             if not universes:
                 conids = list(prices.columns)
 
+        domain = list(db_domains)[0] if db_domains else None
+
         f = six.StringIO()
         download_master_file(
             f,
@@ -740,7 +752,8 @@ def get_historical_prices(codes, start_date=None, end_date=None,
             exclude_conids=exclude_conids,
             exclude_universes=exclude_universes,
             fields=master_fields,
-            delisted=True
+            delisted=True,
+            domain=domain
         )
         securities = pd.read_csv(f, index_col="ConId")
 
