@@ -735,6 +735,371 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
 
     return estimates
 
+def collect_sharadar_sf1(universes=None, conids=None, domain=None):
+    """
+    Collect Sharadar US Fundamentals (SF1) and save to database.
+
+    Before collecting Sharadar fundamentals, you must collect Sharadar listings
+    into the securities master database. See
+    `quantrocket.master.collect_sharadar_listings`.
+
+    You can collect fundamentals for all Sharadar listings in the securities
+    master database, or for a subset of universes or conids. If specifying
+    a subset, you must provide the `domain` parameter to indicate which domain
+    your universes/conids refer to (sharadar or main).
+
+    Parameters
+    ----------
+    universes : list of str, optional
+        limit to these universes
+
+    conids : list of int, optional
+        limit to these conids
+
+    domain : str, optional
+        the domain of the universes and/or conids (required if universes
+        or conids are provided, otherwise not allowed. Possible choices:
+        main, sharadar
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Collect Sharadar fundamentals for all listings in
+    quantrocket.master.sharadar.sqlite:
+
+    >>> collect_sharadar_sf1()
+
+    Collect Sharadar fundamentals for a particular universe defined in
+    quantrocket.master.sharadar.sqlite:
+
+    >>> collect_sharadar_sf1(universes="us-banks", domain="sharadar")
+
+    Collect Sharadar fundamentals for a particular conid defined in
+    quantrocket.master.main.sqlite:
+
+    >>> collect_sharadar_sf1(conids=[12345], domain="main")
+    """
+    params = {}
+    if universes:
+        params["universes"] = universes
+    if conids:
+        params["conids"] = conids
+    if domain:
+        params["domain"] = domain
+    response = houston.post("/fundamental/sharadar/sf1", params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_sharadar_sf1(*args, **kwargs):
+    return json_to_cli(collect_sharadar_sf1, *args, **kwargs)
+
+def list_sharadar_codes(codes=None, indicator_types=None):
+    """
+    List available indicators from the Sharadar US Fundamentals (SF1) database.
+
+    Indicator descriptions are also available at https://www.quandl.com/databases/SF1
+
+    Parameters
+    ----------
+    codes : list of str, optional
+        limit to these indicator codes
+
+    indicator_types : list of str, optional
+        limit to these indicator types. Possible choices: "Income Statement",
+        "Cash Flow Statement", "Balance Sheet", "Metrics", "Entity"
+
+    Returns
+    -------
+    dict
+        codes and descriptions
+    """
+    params = {}
+    if codes:
+        params["codes"] = codes
+    if indicator_types:
+        params["indicator_types"] = indicator_types
+    response = houston.get("/fundamental/sharadar/codes", params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_list_sharadar_codes(*args, **kwargs):
+    return json_to_cli(list_sharadar_codes, *args, **kwargs)
+
+def download_sharadar_sf1(filepath_or_buffer,
+                          start_date=None, end_date=None,
+                          universes=None, conids=None,
+                          exclude_universes=None, exclude_conids=None,
+                          dimensions=None, fields=None,
+                          output=None, domain=None):
+    """
+    Query Sharadar US Fundamentals (SF1) from the local database and download
+    to file.
+
+    The query results can be returned with IB conids or Sharadar conids, depending
+    on the `domain` param, which can be "main" (the default) or "sharadar". The
+    `domain` param also determines whether the `universes` and `conids`
+    params, if provided, are interpreted as referring to IB conids or Sharadar
+    conids.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to fundamentals on or after this fiscal period end date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to fundamentals on or before this fiscal period end date
+
+    universes : list of str, optional
+        limit to these universes
+
+    conids : list of int, optional
+        limit to these conids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_conids : list of int, optional
+        exclude these conids
+
+    dimensions : list of str, optional
+        limit to these dimensions. Possible choices: ARQ, ARY, ART, MRQ,
+        MRY, MRT. AR=As Reported, MR=Most Recent Reported, Q=Quarterly,
+        Y=Annual, T=Trailing Twelve Month. See
+        https://www.quandl.com/databases/SF1/documentation/dimensions
+        for more details.
+
+    fields : list of str, optional
+        only return these fields (pass ['?'] or any invalid fieldname to see
+        available fields, or see `list_sharadar_codes`)
+
+    domain : str, optional
+        the domain of the conids in which to return the results, as well as
+        the domain which the provided universes or conids, if any, refer to.
+        Default is 'main', which corresponds to IB conids. Possible choices:
+        main, sharadar
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query as-reported trailing twelve month (ART) fundamentals for all indicators
+    for a particular IB conid, then load the CSV into Pandas:
+
+    >>> download_sharadar_sf1("aapl_fundamentals.csv", conids=265598, dimensions="ART")
+    >>> fundamentals = pd.read_csv("aapl_fundamentals.csv", parse_dates=["REPORTPERIOD", "DATEKEY", "CALENDARDATE])
+
+    Query as-reported quarterly (ARQ) fundamentals for select indicators for a
+    universe defined in the sharadar domain:
+
+    >>> download_sharadar_sf1("sharadar_fundamentals.csv", universes="sharadar-usa-stk",
+                              domain="sharadar", dimensions="ARQ", fields=["REVENUE", "EPS"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if conids:
+        params["conids"] = conids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_conids:
+        params["exclude_conids"] = exclude_conids
+    if dimensions:
+        params["dimensions"] = dimensions
+    if fields:
+        params["fields"] = fields
+    if domain:
+        params["domain"] = domain
+
+    output = output or "csv"
+
+    if output not in ("csv", "json", "txt"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/sharadar/sf1.{0}".format(output), params=params,
+                           timeout=60*15)
+
+    houston.raise_for_status_with_json(response)
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_sharadar_sf1(*args, **kwargs):
+    return json_to_cli(download_sharadar_sf1, *args, **kwargs)
+
+def get_sharadar_sf1_reindexed_like(reindex_like, fields=None,
+                           dimension="ART", domain=None):
+    """
+    Return a multiindex (Field, Date) DataFrame of point-in-time
+    Sharadar US Fundamentals (SF1), reindexed to match the index (dates)
+    and columns (conids) of `reindex_like`. Financial indicators are
+    forward-filled in order to provide the latest reading at any given
+    date. Indicators are indexed to the Sharadar DATEKEY field, i.e. the
+    filing date. DATEKEY is shifted forward 1 day to avoid lookahead bias.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and conids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    fields : list of str
+        a list of fields to include in the resulting DataFrame. Defaults to
+        including all fields. For faster performance, limiting fields to
+        those needed is highly recommended, especially for large universes.
+
+    dimension: bool
+        the dimension of the data. Defaults to As Reported Trailing Twelve
+        Month (ART). Possible choices: ARQ, ARY, ART, MRQ,
+        MRY, MRT. AR=As Reported, MR=Most Recent Reported, Q=Quarterly,
+        Y=Annual, T=Trailing Twelve Month. See
+        https://www.quandl.com/databases/SF1/documentation/dimensions
+        for more details.
+
+    domain : str, optional
+        the domain of the conids in `reindex_like`. Default is 'main', which
+        indicates IB conids. Pass `domain="sharadar"` if `reindex_like` contains
+        Sharadar conids. Possible choices: main, sharadar
+
+    Returns
+    -------
+    DataFrame
+        a multiindex (Field, Date) DataFrame of fundamentals, shaped like
+        the input DataFrame
+
+    Examples
+    --------
+    Query several trailing twelve month indicators using a DataFrame of
+    historical prices from IB:
+
+    >>> closes = prices.loc["Close"]
+    >>> fundamentals = get_sharadar_sf1_reindexed_like(closes, fields=["EPS", "REVENUE"])
+    >>> eps = fundamentals.loc["EPS"]
+    >>> revenue = fundamentals.loc["REVENUE"]
+
+    Query quarterly book value per share using a DataFrame of historical prices
+    from IB:
+
+    >>> closes = prices.loc["Close"]
+    >>> fundamentals = get_sharadar_sf1_reindexed_like(closes, fields=["BVPS"], dimension="ARQ")
+    >>> bvps = fundamentals.loc["BVPS"]
+
+    Query outstanding shares using a DataFrame of historical prices from Sharadar Equity
+    Prices (SEP):
+
+    >>> closes = prices.loc["Close"]
+    >>> fundamentals = get_sharadar_sf1_reindexed_like(closes, fields=["SHARESWA"], domain="sharadar")
+    >>> shares_out = fundamentals.loc["SHARESWA"]
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join([str(name) for name in index_levels])))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    conids = list(reindex_like.columns)
+    start_date = reindex_like.index.min().date()
+    # Since financial reports are sparse, start well before the reindex_like
+    # min date
+    start_date -= pd.Timedelta(days=365+180)
+    start_date = start_date.isoformat()
+    end_date = reindex_like.index.max().date().isoformat()
+
+    f = six.StringIO()
+    download_sharadar_sf1(
+        f, conids=conids, start_date=start_date, end_date=end_date,
+        fields=fields, dimensions=dimension, domain=domain)
+    financials = pd.read_csv(
+        f, parse_dates=["DATEKEY","REPORTPERIOD"])
+
+    # Rename DATEKEY to match price history index name
+    financials = financials.rename(columns={"DATEKEY": "Date"})
+
+    # Drop any fields we don't need
+    if fields:
+        needed_fields = set(fields)
+        needed_fields.update(set(("ConId", "Date")))
+        unneeded_fields = set(financials.columns) - needed_fields
+        if unneeded_fields:
+            financials = financials.drop(unneeded_fields, axis=1)
+
+    # if reindex_like.index is tz-aware, make financials tz-aware so they can
+    # be joined (tz-aware or tz-naive are both fine, as DATEKEY represents
+    # dates which are assumed to be in the local timezone of the reported
+    # company)
+    if reindex_like.index.tz:
+        financials.loc[:, "Date"] = financials.Date.dt.tz_localize(reindex_like.index.tz.zone)
+        deduped_datekeys = financials.Date.drop_duplicates()
+    else:
+        # joining to tz-naive requires using values, whereas joining to
+        # tz-aware requires not using it. Why?
+        deduped_datekeys = financials.Date.drop_duplicates().values
+
+    # Create a unioned index of input DataFrame and statement DATEKEYs
+    union_date_idx = reindex_like.index.union(deduped_datekeys).sort_values()
+
+    # There might be duplicate DATEKEYs if a company announced
+    # reports for several fiscal periods at once. In this case we keep
+    # only the last value (i.e. latest fiscal period)
+    financials = financials.drop_duplicates(subset=["ConId", "Date"], keep="last")
+    financials = financials.pivot(index="ConId",columns="Date").T
+    multiidx = pd.MultiIndex.from_product(
+        (financials.index.get_level_values(0).unique(), union_date_idx),
+        names=["Field", "Date"])
+    financials = financials.reindex(index=multiidx, columns=reindex_like.columns)
+
+    # financial values are sparse so ffill (one field at a time)
+    all_fields = {}
+    for fieldname in financials.index.get_level_values("Field").unique():
+        field = financials.loc[fieldname].fillna(method="ffill")
+
+        # Shift to avoid lookahead bias
+        field = field.shift()
+
+        all_fields[fieldname] = field
+
+    financials = pd.concat(all_fields, names=["Field", "Date"])
+
+    # In cases the statements included dates not in the input
+    # DataFrame, drop those now that we've ffilled
+    extra_dates = union_date_idx.difference(reindex_like.index)
+    if not extra_dates.empty:
+        financials.drop(extra_dates, axis=0, level="Date", inplace=True)
+
+    return financials
+
 def collect_shortable_shares(countries=None):
     """
     Collect IB shortable shares data and save to database.

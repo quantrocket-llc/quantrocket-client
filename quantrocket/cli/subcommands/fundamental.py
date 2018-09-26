@@ -325,6 +325,188 @@ Query EPS estimates and actuals for a universe of Australian stocks:
     parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_estimates")
 
     examples = """
+Collect Sharadar US Fundamentals (SF1) and save to database.
+
+Before collecting Sharadar fundamentals, you must collect Sharadar listings
+into the securities master database:
+
+    quantrocket master collect-sharadar
+
+You can collect fundamentals for all Sharadar listings in the securities
+master database, or for a subset of universes or conids. If specifying
+a subset, you must provide the --domain option to indicate which domain
+your universes/conids refer to (sharadar or main).
+
+Examples:
+
+Collect Sharadar fundamentals for all listings in
+quantrocket.master.sharadar.sqlite:
+
+    quantrocket fundamental collect-sf1
+
+Collect Sharadar fundamentals for a particular universe defined in
+quantrocket.master.sharadar.sqlite:
+
+    quantrocket fundamental collect-sf1 --universes 'us-banks' --domain sharadar
+
+Collect Sharadar fundamentals for a particular conid defined in
+quantrocket.master.main.sqlite:
+
+    quantrocket fundamental collect-sf1 --conids 12345 --domain main
+    """
+    parser = _subparsers.add_parser(
+        "collect-sf1",
+        help="collect Sharadar US Fundamentals (SF1) and save to database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    parser.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    parser.add_argument(
+        "--domain",
+        choices=["main","sharadar"],
+        help="the domain of the universes and/or conids (required if universes "
+        "or conids are provided, otherwise not allowed. Possible choices: "
+        "%(choices)s)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_sf1")
+
+    examples = """
+List available indicators from the Sharadar US Fundamentals (SF1) database.
+
+Indicator descriptions are also available at https://www.quandl.com/databases/SF1
+
+Examples:
+
+List all SF1 codes:
+
+    quantrocket fundamental sharadar-codes
+
+List all SF1 codes from the income statement:
+
+    quantrocket fundamental sharadar-codes -t 'Income Statement'
+
+    """
+    parser = _subparsers.add_parser(
+        "sharadar-codes",
+        help="list available indicators from the Sharadar US Fundamentals (SF1) "
+        "database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-c", "--codes",
+        nargs="*",
+        metavar="CODE",
+        help="limit to these indicator codes")
+    parser.add_argument(
+        "-t", "--indicator-types",
+        nargs="*",
+        metavar="INDICATOR_TYPE",
+        choices=["Income Statement", "Cash Flow Statement", "Balance Sheet",
+                 "Metrics", "Entity"],
+        help="limit to these indicator types. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.fundamental._cli_list_sharadar_codes")
+
+    examples = """
+Query Sharadar US Fundamentals (SF1) from the local database and download to file.
+
+The query results can be returned with IB conids or Sharadar conids, depending
+on the `--domain` option, which can be "main" (the default) or "sharadar". The
+`--domain` option also determines whether the `--universes` and `--conids`
+options, if provided, are interpreted as referring to IB conids or Sharadar conids.
+
+Examples:
+
+Query as-reported trailing twelve month (ART) fundamentals for all indicators for
+a particular IB conid:
+
+    quantrocket fundamental sf1 -i 265598 -d ART -o aapl_fundamentals.csv
+
+Query as-reported quarterly (ARQ) fundamentals for select indicators for a universe
+defined in the sharadar domain:
+
+    quantrocket fundamental sf1 -u sharadar-usa-stk --domain sharadar --dimensions ARQ -f REVENUE EPS -o sharadar_fundamentals.csv
+    """
+    parser = _subparsers.add_parser(
+        "sf1",
+        help="query Sharadar US Fundamentals (SF1) from the local database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to fundamentals on or after this fiscal period end date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to fundamentals on or before this fiscal period end date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="exclude these conids")
+    filters.add_argument(
+        "-d", "--dimensions",
+        nargs="*",
+        choices=["ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"],
+        help="limit to these dimensions. Possible choices: %(choices)s. "
+        "AR=As Reported, MR=Most Recent Reported, Q=Quarterly, Y=Annual, "
+        "T=Trailing Twelve Month. See "
+        "https://www.quandl.com/databases/SF1/documentation/dimensions "
+        "for more details.")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields, or see `quantrocket fundamental sharadar-codes`))")
+    outputs.add_argument(
+        "--domain",
+        choices=["main","sharadar"],
+        help="the domain of the conids in which to return the results, as well as "
+        "the domain which the provided universes or conids, if any, refer to. "
+        "Default is 'main', which corresponds to IB conids. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_sharadar_sf1")
+
+    examples = """
 Collect IB shortable shares data and save to database.
 
 Data is organized by country and updated every 15 minutes. Historical
