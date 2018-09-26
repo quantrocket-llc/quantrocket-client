@@ -735,7 +735,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
 
     return estimates
 
-def collect_sharadar_sf1(universes=None, conids=None, domain=None):
+def collect_sharadar_sf1(universes=None, conids=None, domain=None, rebuild=False):
     """
     Collect Sharadar US Fundamentals (SF1) and save to database.
 
@@ -761,6 +761,11 @@ def collect_sharadar_sf1(universes=None, conids=None, domain=None):
         or conids are provided, otherwise not allowed. Possible choices:
         main, sharadar
 
+    rebuild : bool
+        collect complete history from Sharadar (default is to collect only
+        the updated history since the last collection). Use this option after
+        upgrading your Sharadar SF1 subscription.
+
     Returns
     -------
     dict
@@ -782,6 +787,11 @@ def collect_sharadar_sf1(universes=None, conids=None, domain=None):
     quantrocket.master.main.sqlite:
 
     >>> collect_sharadar_sf1(conids=[12345], domain="main")
+
+    Re-collect complete Sharadar fundamentals history after upgrading your
+    Sharadar subscription to obtain deeper history:
+
+    >>> collect_sharadar_sf1(rebuild=True)
     """
     params = {}
     if universes:
@@ -790,6 +800,8 @@ def collect_sharadar_sf1(universes=None, conids=None, domain=None):
         params["conids"] = conids
     if domain:
         params["domain"] = domain
+    if rebuild:
+        params["rebuild"] = rebuild
     response = houston.post("/fundamental/sharadar/sf1", params=params)
 
     houston.raise_for_status_with_json(response)

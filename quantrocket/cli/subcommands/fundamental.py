@@ -353,6 +353,11 @@ Collect Sharadar fundamentals for a particular conid defined in
 quantrocket.master.main.sqlite:
 
     quantrocket fundamental collect-sf1 --conids 12345 --domain main
+
+Re-collect complete Sharadar fundamentals history after upgrading your Sharadar
+subscription to obtain deeper history:
+
+    quantrocket fundamental collect-sf1 --rebuild
     """
     parser = _subparsers.add_parser(
         "collect-sf1",
@@ -376,6 +381,11 @@ quantrocket.master.main.sqlite:
         help="the domain of the universes and/or conids (required if universes "
         "or conids are provided, otherwise not allowed. Possible choices: "
         "%(choices)s)")
+    parser.add_argument(
+        "--rebuild",
+        help="collect complete history from Sharadar (default is to collect only "
+        "the updated history since the last collection). Use this option after "
+        "upgrading your Sharadar SF1 subscription.")
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_sf1")
 
     examples = """
