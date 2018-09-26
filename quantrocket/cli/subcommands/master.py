@@ -476,7 +476,7 @@ List universes in quantrocket.master.sharadar.sqlite:
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "-d", "--domain",
+        "--domain",
         choices=["main","sharadar"],
         help="the domain to list universes for (default is 'main', which "
         "runs against quantrocket.master.main.sqlite. Possible choices: "
@@ -546,7 +546,7 @@ Create a universe of all listings in quantrocket.master.sharadar.sqlite:
         action="store_true",
         help="replace universe if universe already exists")
     parser.add_argument(
-        "-d", "--domain",
+        "--domain",
         choices=["main", "sharadar"],
         help="create universe in this domain (default is 'main', which runs against "
         "quantrocket.master.main.sqlite. Possible choices: %(choices)s)")
@@ -578,7 +578,7 @@ Delete a universe from the sharadar domain (quantrocket.master.sharadar.sqlite):
         "code",
         help="the universe code")
     parser.add_argument(
-        "-d", "--domain",
+        "--domain",
         choices=["main","sharadar"],
         help="the domain from which to delete the universe (default is "
         "'main', which runs against quantrocket.master.main.sqlite. "
