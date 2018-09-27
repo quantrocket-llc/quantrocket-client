@@ -383,6 +383,7 @@ subscription to obtain deeper history:
         "%(choices)s)")
     parser.add_argument(
         "--rebuild",
+        action="store_true",
         help="collect complete history from Sharadar (default is to collect only "
         "the updated history since the last collection). Use this option after "
         "upgrading your Sharadar SF1 subscription.")
