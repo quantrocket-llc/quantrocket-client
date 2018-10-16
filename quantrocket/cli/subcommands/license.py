@@ -39,3 +39,21 @@ View the current license profile:
         help="refresh the license profile before returning it (default is to "
         "return the cached profile, which is refreshed every few minutes)")
     parser.set_defaults(func="quantrocket.license._cli_get_license_profile")
+
+    examples = """
+Set QuantRocket license key.
+
+Examples:
+
+    quantrocket license set XXXXXXXXXX
+    """
+    parser = _subparsers.add_parser(
+        "set",
+        help="set QuantRocket license key",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "key",
+        metavar="LICENSEKEY",
+        help="the license key for your account")
+    parser.set_defaults(func="quantrocket.license._cli_set_license")

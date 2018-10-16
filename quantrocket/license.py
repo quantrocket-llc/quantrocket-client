@@ -40,3 +40,24 @@ def get_license_profile(force_refresh=False):
 
 def _cli_get_license_profile(*args, **kwargs):
     return json_to_cli(get_license_profile, *args, **kwargs)
+
+def set_license(key):
+    """
+    Set QuantRocket license key.
+
+    Parameters
+    ----------
+    key : str, required
+        the license key for your account
+
+    Returns
+    -------
+    dict
+        license profile
+    """
+    response = houston.put("/license-service/license/{0}".format(key))
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_set_license(*args, **kwargs):
+    return json_to_cli(set_license, *args, **kwargs)
