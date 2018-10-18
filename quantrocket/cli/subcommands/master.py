@@ -126,38 +126,27 @@ Re-collect contract details for an existing universe called "japan-fin":
     parser.set_defaults(func="quantrocket.master._cli_collect_listings")
 
     examples = """
-Collect securities listings from Sharadar (Quandl) and store in
+Collect securities listings from Sharadar and save to
 quantrocket.master.sharadar.sqlite.
 
-Sharadar listings will be collected then matched to the corresponding IB
-listings in quantrocket.master.main.sqlite. To facilitate matching, collect
-the IB listings before running this command. Securities are matched on CUSIP
-if possible (requires CUSIP research subscription in IB Account Management),
-otherwise on Symbol+PrimaryExchange+Currency. IB<->Sharadar matches are stored
-in quantrocket.master.translations.sqlite and can be queried via
+Requires a Sharadar data plan. Collects NYSE, NASDAQ, or all US stock
+listings, depending on your plan.
+
+Sharadar listings have their own ConIds which are distinct from IB ConIds.
+To facilitate using Sharadar and IB data together or separately, this command
+also collects a list of IB<->Sharadar ConId translations and saves them
+to quantrocket.master.translations.sqlite. They can be queried via
 `quantrocket master translate`.
 
 Examples:
 
-Collect all listings from Sharadar:
-
     quantrocket master collect-sharadar
-
-Collect only NYSE listings from Sharadar:
-
-    quantrocket master collect-sharadar -e NYSE
     """
     parser = _subparsers.add_parser(
         "collect-sharadar",
-        help="collect securities listings from Sharadar (Quandl) and store in quantrocket.master.sharadar.sqlite",
+        help="collect securities listings from Sharadar and save to quantrocket.master.sharadar.sqlite",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-e", "--exchanges",
-        nargs="*",
-        metavar="EXCHANGE",
-        choices=["NYSE", "NASDAQ", "AMEX", "ARCA", "BATS", 'PINK'],
-        help="limit to these exchanges. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.master._cli_collect_sharadar_listings")
 
     examples = """
@@ -229,7 +218,7 @@ terminal display:
 
     quantrocket master get --symbols AAPL --fields PrimaryExchange Currency | csvlook -I
 
-Download a CSV of Sharadar (Quandl) securities from quantrocket.master.sharadar.sqlite:
+Download a CSV of Sharadar securities from quantrocket.master.sharadar.sqlite:
 
     quantrocket master get --domain sharadar -o sharadar_securities.csv
     """

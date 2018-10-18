@@ -735,86 +735,25 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
 
     return estimates
 
-def collect_sharadar_sf1(universes=None, conids=None, domain=None, rebuild=False):
+def collect_sharadar_fundamentals():
     """
-    Collect Sharadar US Fundamentals (SF1) and save to database.
-
-    Before collecting Sharadar fundamentals, you must collect Sharadar listings
-    into the securities master database. See
-    `quantrocket.master.collect_sharadar_listings`.
-
-    You can collect fundamentals for all Sharadar listings in the securities
-    master database, or for a subset of universes or conids. If specifying
-    a subset, you must provide the `domain` parameter to indicate which domain
-    your universes/conids refer to (sharadar or main).
-
-    Parameters
-    ----------
-    universes : list of str, optional
-        limit to these universes
-
-    conids : list of int, optional
-        limit to these conids
-
-    domain : str, optional
-        the domain of the universes and/or conids (required if universes
-        or conids are provided, otherwise not allowed. Possible choices:
-        main, sharadar
-
-    rebuild : bool
-        collect complete history from Sharadar (default is to collect only
-        the updated history since the last collection). Use this option after
-        upgrading your Sharadar SF1 subscription.
+    Collect Sharadar US Fundamentals and save to database.
 
     Returns
     -------
     dict
         status message
-
-    Examples
-    --------
-    Collect Sharadar fundamentals for all listings in
-    quantrocket.master.sharadar.sqlite:
-
-    >>> collect_sharadar_sf1()
-
-    Collect Sharadar fundamentals for a particular universe defined in
-    quantrocket.master.sharadar.sqlite:
-
-    >>> collect_sharadar_sf1(universes="us-banks", domain="sharadar")
-
-    Collect Sharadar fundamentals for a particular conid defined in
-    quantrocket.master.main.sqlite:
-
-    >>> collect_sharadar_sf1(conids=[12345], domain="main")
-
-    Re-collect complete Sharadar fundamentals history after upgrading your
-    Sharadar subscription to obtain deeper history:
-
-    >>> collect_sharadar_sf1(rebuild=True)
     """
-    params = {}
-    if universes:
-        params["universes"] = universes
-    if conids:
-        params["conids"] = conids
-    if domain:
-        params["domain"] = domain
-    if rebuild:
-        params["rebuild"] = rebuild
-    response = houston.post("/fundamental/sharadar/sf1", params=params)
-
+    response = houston.post("/fundamental/sharadar/sf1")
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_collect_sharadar_sf1(*args, **kwargs):
-    return json_to_cli(collect_sharadar_sf1, *args, **kwargs)
+def _cli_collect_sharadar_fundamentals(*args, **kwargs):
+    return json_to_cli(collect_sharadar_fundamentals, *args, **kwargs)
 
 def list_sharadar_codes(codes=None, indicator_types=None):
     """
-    List available indicators from the Sharadar US Fundamentals (SF1) database.
-
-    Indicator descriptions are also available at https://www.quandl.com/databases/SF1
+    List available indicators from the Sharadar US Fundamentals database.
 
     Parameters
     ----------
@@ -843,19 +782,19 @@ def list_sharadar_codes(codes=None, indicator_types=None):
 def _cli_list_sharadar_codes(*args, **kwargs):
     return json_to_cli(list_sharadar_codes, *args, **kwargs)
 
-def download_sharadar_sf1(filepath_or_buffer,
-                          start_date=None, end_date=None,
-                          universes=None, conids=None,
-                          exclude_universes=None, exclude_conids=None,
-                          dimensions=None, fields=None,
-                          output=None, domain=None):
+def download_sharadar_fundamentals(filepath_or_buffer,
+                                   start_date=None, end_date=None,
+                                   universes=None, conids=None,
+                                   exclude_universes=None, exclude_conids=None,
+                                   dimensions=None, fields=None,
+                                   output=None, domain=None):
     """
-    Query Sharadar US Fundamentals (SF1) from the local database and download
+    Query Sharadar US Fundamentals from the local database and download
     to file.
 
     The query results can be returned with IB conids or Sharadar conids, depending
-    on the `domain` param, which can be "main" (the default) or "sharadar". The
-    `domain` param also determines whether the `universes` and `conids`
+    on the `domain` param, which can be "main" (= IB, the default) or "sharadar".
+    The `domain` param also determines whether the `universes` and `conids`
     params, if provided, are interpreted as referring to IB conids or Sharadar
     conids.
 
@@ -888,9 +827,7 @@ def download_sharadar_sf1(filepath_or_buffer,
     dimensions : list of str, optional
         limit to these dimensions. Possible choices: ARQ, ARY, ART, MRQ,
         MRY, MRT. AR=As Reported, MR=Most Recent Reported, Q=Quarterly,
-        Y=Annual, T=Trailing Twelve Month. See
-        https://www.quandl.com/databases/SF1/documentation/dimensions
-        for more details.
+        Y=Annual, T=Trailing Twelve Month.
 
     fields : list of str, optional
         only return these fields (pass ['?'] or any invalid fieldname to see
@@ -911,13 +848,13 @@ def download_sharadar_sf1(filepath_or_buffer,
     Query as-reported trailing twelve month (ART) fundamentals for all indicators
     for a particular IB conid, then load the CSV into Pandas:
 
-    >>> download_sharadar_sf1("aapl_fundamentals.csv", conids=265598, dimensions="ART")
+    >>> download_sharadar_fundamentals("aapl_fundamentals.csv", conids=265598, dimensions="ART")
     >>> fundamentals = pd.read_csv("aapl_fundamentals.csv", parse_dates=["REPORTPERIOD", "DATEKEY", "CALENDARDATE])
 
     Query as-reported quarterly (ARQ) fundamentals for select indicators for a
     universe defined in the sharadar domain:
 
-    >>> download_sharadar_sf1("sharadar_fundamentals.csv", universes="sharadar-usa-stk",
+    >>> download_sharadar_fundamentals("sharadar_fundamentals.csv", universes="sharadar-usa-stk",
                               domain="sharadar", dimensions="ARQ", fields=["REVENUE", "EPS"])
     """
     params = {}
@@ -954,14 +891,14 @@ def download_sharadar_sf1(filepath_or_buffer,
 
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
-def _cli_download_sharadar_sf1(*args, **kwargs):
-    return json_to_cli(download_sharadar_sf1, *args, **kwargs)
+def _cli_download_sharadar_fundamentals(*args, **kwargs):
+    return json_to_cli(download_sharadar_fundamentals, *args, **kwargs)
 
-def get_sharadar_sf1_reindexed_like(reindex_like, fields=None,
+def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
                            dimension="ART", domain=None):
     """
     Return a multiindex (Field, Date) DataFrame of point-in-time
-    Sharadar US Fundamentals (SF1), reindexed to match the index (dates)
+    Sharadar US Fundamentals, reindexed to match the index (dates)
     and columns (conids) of `reindex_like`. Financial indicators are
     forward-filled in order to provide the latest reading at any given
     date. Indicators are indexed to the Sharadar DATEKEY field, i.e. the
@@ -983,9 +920,7 @@ def get_sharadar_sf1_reindexed_like(reindex_like, fields=None,
         the dimension of the data. Defaults to As Reported Trailing Twelve
         Month (ART). Possible choices: ARQ, ARY, ART, MRQ,
         MRY, MRT. AR=As Reported, MR=Most Recent Reported, Q=Quarterly,
-        Y=Annual, T=Trailing Twelve Month. See
-        https://www.quandl.com/databases/SF1/documentation/dimensions
-        for more details.
+        Y=Annual, T=Trailing Twelve Month.
 
     domain : str, optional
         the domain of the conids in `reindex_like`. Default is 'main', which
@@ -1004,7 +939,7 @@ def get_sharadar_sf1_reindexed_like(reindex_like, fields=None,
     historical prices from IB:
 
     >>> closes = prices.loc["Close"]
-    >>> fundamentals = get_sharadar_sf1_reindexed_like(closes, fields=["EPS", "REVENUE"])
+    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes, fields=["EPS", "REVENUE"])
     >>> eps = fundamentals.loc["EPS"]
     >>> revenue = fundamentals.loc["REVENUE"]
 
@@ -1012,14 +947,13 @@ def get_sharadar_sf1_reindexed_like(reindex_like, fields=None,
     from IB:
 
     >>> closes = prices.loc["Close"]
-    >>> fundamentals = get_sharadar_sf1_reindexed_like(closes, fields=["BVPS"], dimension="ARQ")
+    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes, fields=["BVPS"], dimension="ARQ")
     >>> bvps = fundamentals.loc["BVPS"]
 
-    Query outstanding shares using a DataFrame of historical prices from Sharadar Equity
-    Prices (SEP):
+    Query outstanding shares using a DataFrame of historical prices from Sharadar:
 
     >>> closes = prices.loc["Close"]
-    >>> fundamentals = get_sharadar_sf1_reindexed_like(closes, fields=["SHARESWA"], domain="sharadar")
+    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes, fields=["SHARESWA"], domain="sharadar")
     >>> shares_out = fundamentals.loc["SHARESWA"]
     """
     try:
@@ -1050,7 +984,7 @@ def get_sharadar_sf1_reindexed_like(reindex_like, fields=None,
     end_date = reindex_like.index.max().date().isoformat()
 
     f = six.StringIO()
-    download_sharadar_sf1(
+    download_sharadar_fundamentals(
         f, conids=conids, start_date=start_date, end_date=end_date,
         fields=fields, dimensions=dimension, domain=domain)
     financials = pd.read_csv(

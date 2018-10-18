@@ -46,9 +46,9 @@ stocks in 2016:
 
     quantrocket history create-db 'tse-enr-929' -u 'tse-enr' -z '1 secs' --outside-rth --times 09:29:55 09:29:56 09:29:57 09:29:58 09:29:59 -s 2016-01-01 -e 2016-12-31
 
-Create a database for collecting Sharadar Equity Prices (SEP) from Quandl:
+Create a database for collecting Sharadar prices:
 
-    quantrocket history create-db 'sharadar-1d' --vendor 'sharadar/sep'
+    quantrocket history create-db 'sharadar-1d' --vendor 'sharadar'
     """
     parser = _subparsers.add_parser(
         "create-db",
@@ -81,7 +81,7 @@ Create a database for collecting Sharadar Equity Prices (SEP) from Quandl:
     parser.add_argument(
         "-v", "--vendor",
         metavar="VENDOR",
-        choices=["ib", "sharadar/sep"],
+        choices=["ib", "sharadar"],
         help="the vendor to collect data from (default 'ib'. Possible choices: "
         "%(choices)s)")
     parser.add_argument(

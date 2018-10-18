@@ -124,35 +124,26 @@ def collect_listings(exchanges=None, sec_types=None, currencies=None, symbols=No
 def _cli_collect_listings(*args, **kwargs):
     return json_to_cli(collect_listings, *args, **kwargs)
 
-def collect_sharadar_listings(exchanges=None):
+def collect_sharadar_listings():
     """
-    Collect securities listings from Sharadar (Quandl) and store in
+    Collect securities listings from Sharadar and save to
     quantrocket.master.sharadar.sqlite.
 
-    Sharadar listings will be collected then matched to the corresponding IB
-    listings in quantrocket.master.main.sqlite. To facilitate matching,
-    collect the IB listings before running this function. Securities are
-    matched on CUSIP if possible (requires CUSIP research subscription in IB
-    Account Management), otherwise on Symbol+PrimaryExchange+Currency.
-    IB<->Sharadar matches are stored in quantrocket.master.translations.sqlite
-    and can be queried via `translate_conids`.
+    Requires a Sharadar data plan. Collects NYSE, NASDAQ, or all US stock
+    listings, depending on your plan.
 
-    Parameters
-    ----------
-    exchanges : list of str, optional
-        limit to these exchanges (Possible choices: NYSE, NASDAQ, AMEX,
-        ARCA, BATS, PINK)
+    Sharadar listings have their own ConIds which are distinct from IB ConIds.
+    To facilitate using Sharadar and IB data together or separately, this command
+    also collects a list of IB<->Sharadar ConId translations and saves them
+    to quantrocket.master.translations.sqlite. They can be queried via
+    `translate_conids`.
 
     Returns
     -------
     dict
         status message
     """
-    params = {}
-    if exchanges:
-        params["exchanges"] = exchanges
-
-    response = houston.post("/master/sharadar/securities", params=params)
+    response = houston.post("/master/sharadar/securities")
     houston.raise_for_status_with_json(response)
     return response.json()
 

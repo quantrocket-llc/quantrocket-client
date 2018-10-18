@@ -52,7 +52,7 @@ def create_db(code, universes=None, conids=None, start_date=None, end_date=None,
         collect history up to this end date (default is to collect up to the present)
 
     vendor : str, optional
-        the vendor to collect data from (default 'ib'. Possible choices: ib, sharadar/sep)
+        the vendor to collect data from (default 'ib'. Possible choices: ib, sharadar)
 
     bar_size : str, required for vendor ib
         the bar size to collect. Possible choices:
