@@ -27,11 +27,11 @@ Examples:
 Upload a new crontab to a service called countdown-australia (replaces
 current crontab):
 
-    quantrocket countdown crontab countdown-australia mycron.crontab
+    quantrocket countdown crontab mycron.crontab -s countdown-australia
 
 Show current crontab for a service called countdown-australia:
 
-    quantrocket countdown crontab countdown-australia
+    quantrocket countdown crontab -s countdown-australia
     """
     parser = _subparsers.add_parser(
         "crontab",
@@ -39,24 +39,32 @@ Show current crontab for a service called countdown-australia:
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "service",
-        metavar="SERVICE_NAME",
-        help="the name of the countdown service, e.g. countdown-usa")
-    parser.add_argument(
         "filename",
         nargs="?",
         metavar="FILENAME",
         help="the crontab file to upload (if omitted, return the current crontab)")
+    parser.add_argument(
+        "-s", "--service",
+        metavar="SERVICE_NAME",
+        help="the name of the countdown service (default 'countdown')")
     parser.set_defaults(func="quantrocket.countdown._load_or_show_crontab")
 
     examples = """
-Show the countdown service timezone.
+Set or show the countdown service timezone.
 
 Examples:
 
+Show the current timezone for countdown:
+
+    quantrocket countdown timezone
+
+Set the timezone to America/New_York:
+
+    quantrocket countdown timezone America/New_York
+
 Show the timezone for a service called countdown-australia:
 
-    quantrocket countdown timezone countdown-australia
+    quantrocket countdown timezone -s countdown-australia
     """
     parser = _subparsers.add_parser(
         "timezone",
@@ -64,7 +72,13 @@ Show the timezone for a service called countdown-australia:
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "service",
+        "tz",
+        nargs="?",
+        metavar="TZ",
+        help="the timezone to set (pass a partial timezone string such as 'newyork' "
+        "or 'europe' to see close matches, or pass '?' to see all choices)")
+    parser.add_argument(
+        "-s", "--service",
         metavar="SERVICE_NAME",
-        help="The name of the countdown service, e.g. countdown-usa")
-    parser.set_defaults(func="quantrocket.countdown._cli_get_timezone")
+        help="the name of the countdown service, (default 'countdown')")
+    parser.set_defaults(func="quantrocket.countdown._cli_get_or_set_timezone")

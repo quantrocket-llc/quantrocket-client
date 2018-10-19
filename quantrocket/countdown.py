@@ -15,69 +15,100 @@
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 
-def _load_or_show_crontab(service, filename=None):
+def _load_or_show_crontab(filename=None, *args, **kwargs):
     if filename:
-        return json_to_cli(load_crontab, service, filename)
+        return json_to_cli(load_crontab, filename, *args, **kwargs)
     else:
         exit_code = 0
-        return get_crontab(service), exit_code
+        return get_crontab(*args, **kwargs), exit_code
 
-def get_crontab(service):
+def get_crontab(service=None):
     """
     Return the current crontab.
 
     Parameters
     ----------
-    service : str, required
-        the name of the service, e.g. ``countdown-usa``
+    service : str, optional
+        the name of the countdown service (default 'countdown')
 
     Returns
     -------
     str
         string representation of crontab
     """
+    service = service or "countdown"
     response = houston.get("/{0}/crontab".format(service))
     houston.raise_for_status_with_json(response)
     return response.text
 
-def load_crontab(service, filename):
+def load_crontab(filename, service=None):
     """
     Upload a new crontab.
 
     Parameters
     ----------
-    service : str, required
-        the name of the service, e.g. ``countdown-usa``
     filename : str, required
         the crontab file to upload to the countdown service
+
+    service : str, optional
+        the name of the countdown service (default 'countdown')
 
     Returns
     -------
     dict
         status message
     """
+    service = service or "countdown"
     with open(filename) as file:
         response = houston.put("/{0}/crontab".format(service), data=file.read())
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def get_timezone(service):
+def get_timezone(service=None):
     """
     Return the service timezone.
 
     Parameters
     ----------
-    service : str, required
-        the name of the service, e.g. ``countdown-usa``
+    service : str, optional
+        the name of the countdown service (default 'countdown')
 
     Returns
     -------
     dict
         dict with key timezone
     """
+    service = service or "countdown"
     response = houston.get("/{0}/timezone".format(service))
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_get_timezone(*args, **kwargs):
-    return json_to_cli(get_timezone, *args, **kwargs)
+def set_timezone(tz, service=None):
+    """
+    Set the countdown service timezone.
+
+    Parameters
+    ----------
+    tz : str, required
+        the timezone to set (pass a partial timezone string such as 'newyork'
+        or 'europe' to see close matches, or pass '?' to see all choices)
+
+    service : str, optional
+        the name of the countdown service (default 'countdown')
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    service = service or "countdown"
+    params = {"tz": tz}
+    response = houston.put("/{0}/timezone".format(service), params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_get_or_set_timezone(tz=None, *args, **kwargs):
+    if tz:
+        return json_to_cli(set_timezone, tz, *args, **kwargs)
+    else:
+        return json_to_cli(get_timezone, *args, **kwargs)
