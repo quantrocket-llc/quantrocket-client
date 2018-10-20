@@ -100,6 +100,12 @@ def set_timezone(tz, service=None):
     -------
     dict
         status message
+
+    Examples
+    --------
+    Set the countdown timezone to America/New_York:
+
+    >>> set_timezone("America/New_York")
     """
     service = service or "countdown"
     params = {"tz": tz}

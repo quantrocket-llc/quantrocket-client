@@ -54,13 +54,13 @@ Set or show the countdown service timezone.
 
 Examples:
 
-Show the current timezone for countdown:
-
-    quantrocket countdown timezone
-
-Set the timezone to America/New_York:
+Set the timezone of the countdown service to America/New_York:
 
     quantrocket countdown timezone America/New_York
+
+Show the current timezone of the countdown service:
+
+    quantrocket countdown timezone
 
 Show the timezone for a service called countdown-australia:
 
@@ -68,7 +68,7 @@ Show the timezone for a service called countdown-australia:
     """
     parser = _subparsers.add_parser(
         "timezone",
-        help="show the countdown service timezone",
+        help="set or show the countdown service timezone",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(

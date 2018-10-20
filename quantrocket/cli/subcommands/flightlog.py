@@ -117,3 +117,29 @@ Log the output from another command:
         default="quantrocket.cli",
         help="the logger name")
     parser.set_defaults(func="quantrocket.flightlog._cli_log_message")
+
+    examples = """
+Set or show the flightlog timezone.
+
+Examples:
+
+Set the flightlog timezone to America/New_York:
+
+    quantrocket flightlog timezone America/New_York
+
+Show the current flightlog timezone:
+
+    quantrocket flightlog timezone
+    """
+    parser = _subparsers.add_parser(
+        "timezone",
+        help="set or show the flightlog timezone",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "tz",
+        nargs="?",
+        metavar="TZ",
+        help="the timezone to set (pass a partial timezone string such as 'newyork' "
+        "or 'europe' to see close matches, or pass '?' to see all choices)")
+    parser.set_defaults(func="quantrocket.flightlog._cli_get_or_set_timezone")

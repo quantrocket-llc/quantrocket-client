@@ -237,3 +237,48 @@ def download_logfile(outfile, detail=False):
 
 def _cli_download_logfile(*args, **kwargs):
     return json_to_cli(download_logfile, *args, **kwargs)
+
+def get_timezone():
+    """
+    Return the flightlog timezone.
+
+    Returns
+    -------
+    dict
+        dict with key timezone
+    """
+    response = houston.get("/flightlog/timezone")
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def set_timezone(tz):
+    """
+    Set the flightlog timezone.
+
+    Parameters
+    ----------
+    tz : str, required
+        the timezone to set (pass a partial timezone string such as 'newyork'
+        or 'europe' to see close matches, or pass '?' to see all choices)
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Set the flightlog timezone to America/New_York:
+
+    >>> set_timezone("America/New_York")
+    """
+    params = {"tz": tz}
+    response = houston.put("/flightlog/timezone", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_get_or_set_timezone(tz=None, *args, **kwargs):
+    if tz:
+        return json_to_cli(set_timezone, tz, *args, **kwargs)
+    else:
+        return json_to_cli(get_timezone, *args, **kwargs)
