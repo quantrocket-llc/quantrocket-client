@@ -282,3 +282,57 @@ def _cli_get_or_set_timezone(tz=None, *args, **kwargs):
         return json_to_cli(set_timezone, tz, *args, **kwargs)
     else:
         return json_to_cli(get_timezone, *args, **kwargs)
+
+def get_papertrail_config():
+    """
+    Return the current Papertrail log configuration, if any.
+
+    See http://qrok.it/h/pt to learn more.
+
+    Returns
+    -------
+    dict
+        config details
+    """
+    response = houston.get("/flightlog/papertrail")
+    houston.raise_for_status_with_json(response)
+    # It's possible to get a 204 empty response
+    if not response.content:
+        return {}
+    return response.json()
+
+def set_papertrail_config(host, port):
+    """
+    Set the Papertrail log configuration.
+
+    See http://qrok.it/h/pt to learn more.
+
+    Parameters
+    ----------
+    host : str, required
+        the Papertrail host to log to
+
+    port : int, required
+        the Papertrail port to log to
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Configure flightlog to log to Papertrail:
+
+    >>> set_papertrail_config("logs.papertrailapp.com", 55555)
+    """
+    params = {"host": host, "port": port}
+    response = houston.put("/flightlog/papertrail", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_get_or_set_papertrail_config(host=None, port=None, *args, **kwargs):
+    if host or port:
+        return json_to_cli(set_papertrail_config, host, port, *args, **kwargs)
+    else:
+        return json_to_cli(get_papertrail_config, *args, **kwargs)

@@ -143,3 +143,34 @@ Show the current flightlog timezone:
         help="the timezone to set (pass a partial timezone string such as 'newyork' "
         "or 'europe' to see close matches, or pass '?' to see all choices)")
     parser.set_defaults(func="quantrocket.flightlog._cli_get_or_set_timezone")
+
+    examples = """
+Set or show the Papertrail log configuration.
+
+See http://qrok.it/h/pt to learn more.
+
+Examples:
+
+Set the Papertrail host and port to log to:
+
+    quantrocket flightlog papertrail --host logs.papertrailapp.com --port 55555
+
+Show the current papertrail config:
+
+    quantrocket flightlog papertrail
+    """
+    parser = _subparsers.add_parser(
+        "papertrail",
+        help="set or show the Papertrail log configuration",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "--host",
+        metavar="HOST",
+        help="the Papertrail host to log to")
+    parser.add_argument(
+        "--port",
+        metavar="PORT",
+        type=int,
+        help="the Papertrail port to log to")
+    parser.set_defaults(func="quantrocket.flightlog._cli_get_or_set_papertrail_config")
