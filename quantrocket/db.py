@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import getpass
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 
@@ -91,9 +92,75 @@ def download_database(database, outfile):
 def _cli_download_database(*args, **kwargs):
     return json_to_cli(download_database, *args, **kwargs)
 
+def get_s3_config():
+    """
+    Return the current S3 configuration, if any.
+
+    See http://qrok.it/h/dbs3 to learn more.
+
+    Returns
+    -------
+    dict
+        configuration details
+    """
+    response = houston.get("/db/s3config")
+    houston.raise_for_status_with_json(response)
+    # It's possible to get a 204 empty response
+    if not response.content:
+        return {}
+    return response.json()
+
+def set_s3_config(access_key_id=None, secret_access_key=None, bucket=None):
+    """
+    Set AWS S3 configuration for pushing and pulling databases to and from
+    S3.
+
+    See http://qrok.it/h/dbs3 to learn more.
+
+    Parameters
+    ----------
+    access_key_id : str, optional
+        AWS access key ID
+
+    secret_access_key : str, optional
+        AWS secret access key (if omitted and access_key_id is provided,
+        will be prompted for secret_access_key)
+
+    bucket : str, optional
+        the S3 bucket name to push to/pull from
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    if access_key_id and not secret_access_key:
+        secret_access_key = getpass.getpass(prompt="Enter AWS Secret Access Key: ")
+
+    data = {}
+    if access_key_id:
+        data["access_key_id"] = access_key_id
+    if secret_access_key:
+        data["secret_access_key"] = secret_access_key
+    if bucket:
+        data["bucket"] = bucket
+
+    response = houston.put("/db/s3config", data=data)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_get_or_set_s3_config(access_key_id=None, secret_access_key=None,
+                                   bucket=None, *args, **kwargs):
+    if access_key_id or secret_access_key or bucket:
+        return json_to_cli(set_s3_config, access_key_id, secret_access_key, bucket, *args, **kwargs)
+    else:
+        return json_to_cli(get_s3_config, *args, **kwargs)
+
 def s3_push_databases(service, codes=None):
     """
     Push database(s) to Amazon S3.
+
+    See http://qrok.it/h/dbs3 to learn more.
 
     Parameters
     ----------
@@ -122,7 +189,9 @@ def _cli_s3_push_databases(*args, **kwargs):
 
 def s3_pull_databases(service, codes=None, force=False):
     """
-    Pull database(s) from Amazon S3 to the db service.
+    Pull database(s) from Amazon S3.
+
+    See http://qrok.it/h/dbs3 to learn more.
 
     Parameters
     ----------
@@ -158,6 +227,9 @@ def _cli_s3_pull_databases(*args, **kwargs):
 def optimize_databases(service, codes=None):
     """
     Optimize database file(s) to improve performance.
+
+    This runs SQLite's 'VACUUM' command, which defragments the .sqlite file
+    and reclaims disk space.
 
     Parameters
     ----------

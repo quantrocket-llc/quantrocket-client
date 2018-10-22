@@ -91,7 +91,47 @@ Download a database called quantrocket.history.nyse.sqlite:
     parser.set_defaults(func="quantrocket.db._cli_download_database")
 
     examples = """
+Set or show Amazon S3 configuration for pushing and pulling databases to and
+from S3.
+
+See http://qrok.it/h/dbs3 to learn more.
+
+Examples:
+
+Configure S3 (will prompt for secret access key):
+
+    quantrocket db s3config --access-key-id XXXXXXXX --bucket my-bucket
+
+Preserve existing credentials but point to a new bucket:
+
+    quantrocket db s3config --bucket my-other-bucket
+
+Show current configuration:
+
+    quantrocket db s3config
+    """
+    parser = _subparsers.add_parser(
+        "s3config",
+        help="set or show Amazon S3 configuration for pushing and "
+        "pulling databases to and from S3",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-a", "--access-key-id",
+        help="AWS access key ID")
+    parser.add_argument(
+        "-s", "--secret-access-key",
+        help="AWS secret access key (if omitted and access-key-id is provided, "
+        "will be prompted for secret-access-key)")
+    parser.add_argument(
+        "-b", "--bucket",
+        help="the S3 bucket name to push to/pull from")
+    parser.set_defaults(func="quantrocket.db._cli_get_or_set_s3_config")
+
+    examples = """
 Push database(s) to Amazon S3.
+
+See http://qrok.it/h/dbs3 to learn more.
 
 Examples:
 
@@ -127,6 +167,8 @@ Push a database called quantrocket.history.nyse.sqlite:
     examples = """
 Pull database(s) from Amazon S3 to the db service.
 
+See http://qrok.it/h/dbs3 to learn more.
+
 Examples:
 
 Pull a database stored on S3 as quantrocket.history.nyse.sqlite.gz:
@@ -135,7 +177,7 @@ Pull a database stored on S3 as quantrocket.history.nyse.sqlite.gz:
     """
     parser = _subparsers.add_parser(
         "s3pull",
-        help="pull database(s) from Amazon S3 to the db service",
+        help="pull database(s) from Amazon S3",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -160,6 +202,9 @@ Pull a database stored on S3 as quantrocket.history.nyse.sqlite.gz:
 
     examples = """
 Optimize database file(s) to improve performance.
+
+This runs SQLite's 'VACUUM' command, which defragments the .sqlite file
+and reclaims disk space.
 
 Examples:
 
