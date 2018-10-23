@@ -211,6 +211,9 @@ def get_credentials(gateway):
 
     response = houston.get("/{0}/credentials".format(gateway))
     houston.raise_for_status_with_json(response)
+    # It's possible to get a 204 empty response
+    if not response.content:
+        return {}
     return response.json()
 
 def set_credentials(gateway, username=None, password=None, trading_mode=None):
