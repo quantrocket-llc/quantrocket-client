@@ -632,7 +632,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     # index
     f = six.StringIO()
     download_master_file(f, conids=list(estimates.ConId.unique()),
-                         delisted=True, fields=["Timezone"])
+                         fields=["Timezone"])
     timezones = pd.read_csv(f, index_col="ConId")
     estimates = estimates.join(timezones, on="ConId")
     if estimates.Timezone.isnull().any():
@@ -1322,7 +1322,7 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
             # try to infer from component securities
             f = six.StringIO()
             download_master_file(f, conids=list(stockloan_data.ConId.unique()),
-                                 delisted=True, fields=["Timezone"])
+                                 fields=["Timezone"])
             security_timezones = pd.read_csv(f, index_col="ConId")
             security_timezones = list(security_timezones.Timezone.unique())
             if len(security_timezones) > 1:

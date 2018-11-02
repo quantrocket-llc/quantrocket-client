@@ -285,7 +285,7 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
                          currencies=None, universes=None, symbols=None, conids=None,
                          exclude_universes=None, exclude_conids=None,
                          sectors=None, industries=None, categories=None,
-                         delisted=False, frontmonth=False, fields=None,
+                         exclude_delisted=False, delisted=True, frontmonth=False, fields=None,
                          domain=None):
     """
     Query security details from the securities master database and download to file.
@@ -331,8 +331,13 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
     categories : list of str, optional
         limit to these categories
 
+    exclude_delisted : bool
+        exclude delisted securities (default is to include them)
+
     delisted : bool
-        include delisted securities (default False)
+        [DEPRECATED] include delisted securities; this parameter is deprecated
+        and will be removed in a future release; it has no effect as delisted
+        securities are included by default
 
     frontmonth : bool
         exclude backmonth and expired futures contracts (default False)
@@ -366,6 +371,10 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
 
     >>> download_master_file("sharadar_securities.csv", domain="sharadar")
     """
+    # Handle legacy param "delisted"
+    if delisted is False and exclude_delisted is None:
+        exclude_delisted = True
+
     params = {}
     if exchanges:
         params["exchanges"] = exchanges
@@ -389,8 +398,8 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         params["industries"] = industries
     if categories:
         params["categories"] = categories
-    if delisted:
-        params["delisted"] = delisted
+    if exclude_delisted:
+        params["exclude_delisted"] = exclude_delisted
     if frontmonth:
         params["frontmonth"] = frontmonth
     if fields:

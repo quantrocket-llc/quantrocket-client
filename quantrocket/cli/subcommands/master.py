@@ -287,10 +287,17 @@ Download a CSV of Sharadar securities from quantrocket.master.sharadar.sqlite:
         metavar="CATEGORY",
         help="limit to these categories")
     filters.add_argument(
-        "-d", "--delisted",
+        "--exclude-delisted",
         action="store_true",
         default=False,
-        help="include delisted securities")
+        help="exclude delisted securities (default is to include them)")
+    filters.add_argument(
+        "-d", "--delisted",
+        action="store_true",
+        default=True,
+        help="[DEPRECATED] include delisted securities; this parameter is "
+        "deprecated and will be removed in a future release; it has no effect "
+        "as delisted securities are included by default")
     filters.add_argument(
         "-m", "--frontmonth",
         action="store_true",
