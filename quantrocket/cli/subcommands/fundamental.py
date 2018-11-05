@@ -376,7 +376,7 @@ List all codes from the income statement:
 Query Sharadar US Fundamentals from the local database and download to file.
 
 The query results can be returned with IB conids or Sharadar conids, depending
-on the `--domain` option, which can be "main" (= IB, the default) or "sharadar".
+on the `--domain` option, which can be "main" (= IB) or "sharadar".
 The `--domain` option also determines whether the `--universes` and `--conids`
 options, if provided, are interpreted as referring to IB conids or Sharadar conids.
 
@@ -385,7 +385,7 @@ Examples:
 Query as-reported trailing twelve month (ART) fundamentals for all indicators for
 a particular IB conid:
 
-    quantrocket fundamental sharadar -i 265598 -d ART -o aapl_fundamentals.csv
+    quantrocket fundamental sharadar -i 265598 --domain main --dimensions ART -o aapl_fundamentals.csv
 
 Query as-reported quarterly (ARQ) fundamentals for select indicators for a universe
 defined in the sharadar domain:
@@ -429,7 +429,7 @@ defined in the sharadar domain:
         metavar="CONID",
         help="exclude these conids")
     filters.add_argument(
-        "-d", "--dimensions",
+        "-m", "--dimensions",
         nargs="*",
         choices=["ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"],
         help="limit to these dimensions. Possible choices: %(choices)s. "
@@ -455,11 +455,12 @@ defined in the sharadar domain:
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields, or see `quantrocket fundamental sharadar-codes`))")
     outputs.add_argument(
-        "--domain",
+        "-d", "--domain",
         choices=["main","sharadar"],
+        required=True,
         help="the domain of the conids in which to return the results, as well as "
         "the domain which the provided universes or conids, if any, refer to. "
-        "Default is 'main', which corresponds to IB conids. Possible choices: %(choices)s")
+        "Domain 'main' corresponds to IB conids. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_sharadar_fundamentals")
 
     examples = """

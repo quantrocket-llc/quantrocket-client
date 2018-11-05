@@ -782,18 +782,18 @@ def list_sharadar_codes(codes=None, indicator_types=None):
 def _cli_list_sharadar_codes(*args, **kwargs):
     return json_to_cli(list_sharadar_codes, *args, **kwargs)
 
-def download_sharadar_fundamentals(filepath_or_buffer,
+def download_sharadar_fundamentals(filepath_or_buffer, domain,
                                    start_date=None, end_date=None,
                                    universes=None, conids=None,
                                    exclude_universes=None, exclude_conids=None,
                                    dimensions=None, fields=None,
-                                   output=None, domain=None):
+                                   output=None):
     """
     Query Sharadar US Fundamentals from the local database and download
     to file.
 
     The query results can be returned with IB conids or Sharadar conids, depending
-    on the `domain` param, which can be "main" (= IB, the default) or "sharadar".
+    on the `domain` param, which can be "main" (= IB) or "sharadar".
     The `domain` param also determines whether the `universes` and `conids`
     params, if provided, are interpreted as referring to IB conids or Sharadar
     conids.
@@ -802,6 +802,12 @@ def download_sharadar_fundamentals(filepath_or_buffer,
     ----------
     filepath_or_buffer : str or file-like object
         filepath to write the data to, or file-like object (defaults to stdout)
+
+    domain : str, required
+        the domain of the conids in which to return the results, as well as
+        the domain which the provided universes or conids, if any, refer to.
+        Domain 'main' corresponds to IB conids. Possible choices:
+        main, sharadar
 
     output : str
         output format (json, csv, default is csv)
@@ -833,12 +839,6 @@ def download_sharadar_fundamentals(filepath_or_buffer,
         only return these fields (pass ['?'] or any invalid fieldname to see
         available fields, or see `list_sharadar_codes`)
 
-    domain : str, optional
-        the domain of the conids in which to return the results, as well as
-        the domain which the provided universes or conids, if any, refer to.
-        Default is 'main', which corresponds to IB conids. Possible choices:
-        main, sharadar
-
     Returns
     -------
     None
@@ -848,16 +848,22 @@ def download_sharadar_fundamentals(filepath_or_buffer,
     Query as-reported trailing twelve month (ART) fundamentals for all indicators
     for a particular IB conid, then load the CSV into Pandas:
 
-    >>> download_sharadar_fundamentals("aapl_fundamentals.csv", conids=265598, dimensions="ART")
-    >>> fundamentals = pd.read_csv("aapl_fundamentals.csv", parse_dates=["REPORTPERIOD", "DATEKEY", "CALENDARDATE])
+    >>> download_sharadar_fundamentals("aapl_fundamentals.csv", domain="main",
+                                       conids=265598, dimensions="ART")
+    >>> fundamentals = pd.read_csv("aapl_fundamentals.csv", parse_dates=["REPORTPERIOD", "DATEKEY", "CALENDARDATE"])
 
     Query as-reported quarterly (ARQ) fundamentals for select indicators for a
     universe defined in the sharadar domain:
 
     >>> download_sharadar_fundamentals("sharadar_fundamentals.csv", universes="sharadar-usa-stk",
-                              domain="sharadar", dimensions="ARQ", fields=["REVENUE", "EPS"])
+                                       domain="sharadar", dimensions="ARQ", fields=["REVENUE", "EPS"])
     """
-    params = {}
+    if not domain:
+        raise ValueError("please specify domain")
+
+    params = {
+        "domain": domain
+    }
     if start_date:
         params["start_date"] = start_date
     if end_date:
@@ -874,8 +880,6 @@ def download_sharadar_fundamentals(filepath_or_buffer,
         params["dimensions"] = dimensions
     if fields:
         params["fields"] = fields
-    if domain:
-        params["domain"] = domain
 
     output = output or "csv"
 
@@ -894,8 +898,8 @@ def download_sharadar_fundamentals(filepath_or_buffer,
 def _cli_download_sharadar_fundamentals(*args, **kwargs):
     return json_to_cli(download_sharadar_fundamentals, *args, **kwargs)
 
-def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
-                           dimension="ART", domain=None):
+def get_sharadar_fundamentals_reindexed_like(reindex_like, domain, fields=None,
+                                             dimension="ART"):
     """
     Return a multiindex (Field, Date) DataFrame of point-in-time
     Sharadar US Fundamentals, reindexed to match the index (dates)
@@ -911,6 +915,11 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
 
+    domain : str, required
+        the domain of the conids in `reindex_like`. Pass 'main' if
+        `reindex_like` contains IB conids, pass "sharadar" if it contains
+        Sharadar conids. Possible choices: main, sharadar
+
     fields : list of str
         a list of fields to include in the resulting DataFrame. Defaults to
         including all fields. For faster performance, limiting fields to
@@ -921,11 +930,6 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
         Month (ART). Possible choices: ARQ, ARY, ART, MRQ,
         MRY, MRT. AR=As Reported, MR=Most Recent Reported, Q=Quarterly,
         Y=Annual, T=Trailing Twelve Month.
-
-    domain : str, optional
-        the domain of the conids in `reindex_like`. Default is 'main', which
-        indicates IB conids. Pass `domain="sharadar"` if `reindex_like` contains
-        Sharadar conids. Possible choices: main, sharadar
 
     Returns
     -------
@@ -947,13 +951,15 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
     from IB:
 
     >>> closes = prices.loc["Close"]
-    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes, fields=["BVPS"], dimension="ARQ")
+    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes, domain="main",
+                                                                fields=["BVPS"], dimension="ARQ")
     >>> bvps = fundamentals.loc["BVPS"]
 
     Query outstanding shares using a DataFrame of historical prices from Sharadar:
 
     >>> closes = prices.loc["Close"]
-    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes, fields=["SHARESWA"], domain="sharadar")
+    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes, domain="sharadar",
+                                                                fields=["SHARESWA"])
     >>> shares_out = fundamentals.loc["SHARESWA"]
     """
     try:
@@ -985,8 +991,8 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
 
     f = six.StringIO()
     download_sharadar_fundamentals(
-        f, conids=conids, start_date=start_date, end_date=end_date,
-        fields=fields, dimensions=dimension, domain=domain)
+        f, domain=domain, conids=conids, start_date=start_date, end_date=end_date,
+        fields=fields, dimensions=dimension)
     financials = pd.read_csv(
         f, parse_dates=["DATEKEY","REPORTPERIOD"])
 
