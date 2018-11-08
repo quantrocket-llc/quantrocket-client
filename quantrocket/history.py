@@ -677,9 +677,8 @@ def get_historical_prices(codes, start_date=None, end_date=None,
             db_universes.update(set(_db_universes))
         bar_size = db_config.get("bar_size")
         db_bar_sizes.add(bar_size)
-        db_domain = db_config.get("domain", None)
-        if db_domain:
-            db_domains.add(db_domain)
+        db_domain = db_config.get("domain", "main")
+        db_domains.add(db_domain)
 
     db_universes = list(db_universes)
     db_bar_sizes = list(db_bar_sizes)

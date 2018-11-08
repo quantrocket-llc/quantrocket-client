@@ -241,7 +241,94 @@ class GetHistoricalPricesTestCase(unittest.TestCase):
         _, args, kwargs = master_call
         self.assertListEqual(kwargs["conids"], [12345,23456,56789])
         self.assertListEqual(kwargs["fields"], ["Symbol"])
+        self.assertEqual(kwargs["domain"], "main")
 
+    @patch("quantrocket.history.get_db_config")
+    @patch("quantrocket.history.download_history_file")
+    @patch("quantrocket.history.download_master_file")
+    def test_use_other_master_domain(self,
+                                     mock_download_master_file,
+                                     mock_download_history_file,
+                                     mock_get_db_config):
+        """
+        Tests that the domain is read from the db config and passed to the
+        master service.
+        """
+        def _mock_get_db_config(db):
+            return {
+                "bar_size": "1 day",
+                "universes": ["nyse-stk"],
+                "vendor": "sharadar",
+                "domain": "sharadar"
+            }
+
+        def _mock_download_history_file(code, f, *args, **kwargs):
+            prices = pd.DataFrame(
+                dict(
+                    ConId=[
+                        12345,
+                        12345,
+                        12345,
+                        23456,
+                        23456,
+                        23456
+                        ],
+                    Date=[
+                        "2018-04-01",
+                        "2018-04-02",
+                        "2018-04-03",
+                        "2018-04-01",
+                        "2018-04-02",
+                        "2018-04-03"
+                        ],
+                    Close=[
+                        20.10,
+                        20.50,
+                        19.40,
+                        50.5,
+                        52.5,
+                        51.59,
+                    ]))
+            prices.to_csv(f, index=False)
+
+        def _mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(ConId=[12345,23456,56789],
+                                           Symbol=["ABC","DEF", "9456"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        mock_download_history_file.side_effect = _mock_download_history_file
+
+        mock_get_db_config.side_effect = _mock_get_db_config
+
+        mock_download_master_file.side_effect = _mock_download_master_file
+
+        get_historical_prices(
+            "sharadar-1d", start_date="2018-04-01", end_date="2018-04-03",
+            conids=[12345,23456,56789], fields=["Close"],
+            master_fields="Symbol")
+
+
+        self.assertEqual(len(mock_get_db_config.mock_calls), 1)
+        db_config_call = mock_get_db_config.mock_calls[0]
+        _, args, kwargs = db_config_call
+        self.assertEqual(args[0], "sharadar-1d")
+
+        self.assertEqual(len(mock_download_history_file.mock_calls), 1)
+        history_call = mock_download_history_file.mock_calls[0]
+        _, args, kwargs = history_call
+        self.assertEqual(args[0], "sharadar-1d")
+        self.assertListEqual(kwargs["conids"], [12345,23456,56789])
+        self.assertEqual(kwargs["start_date"], "2018-04-01")
+        self.assertEqual(kwargs["end_date"], "2018-04-03")
+        self.assertListEqual(kwargs["fields"], ["Close"])
+
+        self.assertEqual(len(mock_download_master_file.mock_calls), 1)
+        master_call = mock_download_master_file.mock_calls[0]
+        _, args, kwargs = master_call
+        self.assertListEqual(kwargs["conids"], [12345,23456,56789])
+        self.assertListEqual(kwargs["fields"], ["Symbol"])
+        self.assertEqual(kwargs["domain"], "sharadar")
 
     @patch("quantrocket.history.get_db_config")
     @patch("quantrocket.history.download_history_file")
@@ -794,6 +881,36 @@ class GetHistoricalPricesTestCase(unittest.TestCase):
         self.assertIn((
             "all databases must contain same bar size but usa-stk-1d, japan-stk-15min have different "
             "bar sizes:"
+            ), str(cm.exception))
+
+    def test_complain_if_multiple_domains(self):
+        """
+        Tests error handling when multiple dbs are queried and they have
+        different domains.
+        """
+        def mock_get_db_config(db):
+            if db == "usa-stk-1d":
+                return {
+                    "bar_size": "1 day",
+                    "universes": ["usa-stk"],
+                    "vendor": "ib"
+                }
+            else:
+                return {
+                    "bar_size": "1 day",
+                    "universes": ["sharadar-stk"],
+                    "vendor": "sharadar",
+                    "domain": "sharadar"
+                }
+
+        with patch('quantrocket.history.get_db_config', new=mock_get_db_config):
+
+            with self.assertRaises(ParameterError) as cm:
+                get_historical_prices(["usa-stk-1d", "sharadar-1d"])
+
+        self.assertIn((
+            "all databases must use the same securities master domain but usa-stk-1d, sharadar-1d use different "
+            "domains:"
             ), str(cm.exception))
 
     def test_intraday_pass_timezone(self):
