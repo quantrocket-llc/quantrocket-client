@@ -27,7 +27,8 @@ from quantrocket.fundamental import (
     get_reuters_estimates_reindexed_like,
     get_reuters_financials_reindexed_like,
     get_borrow_fees_reindexed_like,
-    get_shortable_shares_reindexed_like
+    get_shortable_shares_reindexed_like,
+    get_sharadar_fundamentals_reindexed_like
 )
 from quantrocket.exceptions import ParameterError, MissingData
 
@@ -1732,3 +1733,284 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
                  {'Date': '2018-05-02T00:00:00-0400', 12345: 1.7, 23456: 0.40},
                  {'Date': '2018-05-03T00:00:00-0400', 12345: 1.7, 23456: 0.23}]
             )
+
+class SharadarFundamentalsReindexedLikeTestCase(unittest.TestCase):
+
+    def test_complain_if_time_level_in_index(self):
+        """
+        Tests error handling when reindex_like has a Time level in the index.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=[12345,23456],
+            index=pd.MultiIndex.from_product((
+                pd.date_range(start="2018-01-01", periods=3, freq="D"),
+                ["15:00:00","15:15:00"]), names=["Date", "Time"]))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_sharadar_fundamentals_reindexed_like(closes, "main")
+
+        self.assertIn("reindex_like should not have 'Time' in index", str(cm.exception))
+
+    def test_complain_if_date_level_not_in_index(self):
+        """
+        Tests error handling when reindex_like doesn't have an index named
+        Date.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=[12345,23456],
+            index=pd.date_range(start="2018-01-01", periods=3, freq="D"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_sharadar_fundamentals_reindexed_like(closes, "main")
+
+        self.assertIn("reindex_like must have index called 'Date'", str(cm.exception))
+
+    def test_complain_if_not_datetime_index(self):
+        """
+        Tests error handling when the reindex_like index is named Date but is
+        not a DatetimeIndex.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=[12345,23456],
+            index=pd.Index(["foo","bar","bat"], name="Date"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_sharadar_fundamentals_reindexed_like(closes, "main")
+
+        self.assertIn("reindex_like must have a DatetimeIndex", str(cm.exception))
+
+    @patch("quantrocket.fundamental.download_sharadar_fundamentals")
+    def test_pass_args_correctly(self,
+                                 mock_download_sharadar_fundamentals):
+        """
+        Tests that conids, date ranges, and and other args are correctly
+        passed to download_sharadar_fundamentals.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=[12345,23456],
+            index=pd.date_range(start="2018-03-01", periods=6, freq="MS", name="Date"))
+
+        def _mock_download_sharadar_fundamentals(domain, filepath_or_buffer, *args, **kwargs):
+            fundamentals = pd.DataFrame(
+                dict(
+                    DATEKEY=[
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-06-30",
+                        "2018-06-30"
+                        ],
+                    REPORTPERIOD=[
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-06-30",
+                        "2018-06-30"
+                        ],
+                    ConId=[
+                         12345,
+                         12345,
+                         23456,
+                         23456,
+                         12345,
+                         12345,
+                         ],
+                     EPS=[
+                         565,
+                         89,
+                         235,
+                         73,
+                         580,
+                         92
+                     ]))
+            fundamentals.to_csv(filepath_or_buffer, index=False)
+            filepath_or_buffer.seek(0)
+
+        mock_download_sharadar_fundamentals.side_effect = _mock_download_sharadar_fundamentals
+
+        get_sharadar_fundamentals_reindexed_like(
+            closes, domain="main", fields=["EPS", "DATEKEY"], dimension="ARQ")
+
+        sharadar_fundamentals_call = mock_download_sharadar_fundamentals.mock_calls[0]
+        _, args, kwargs = sharadar_fundamentals_call
+        self.assertEqual(kwargs["domain"], "main")
+        self.assertEqual(kwargs["start_date"], "2016-09-02") # 365+180 days before reindex_like min date
+        self.assertEqual(kwargs["end_date"], "2018-08-01")
+        self.assertEqual(kwargs["fields"], ["EPS", "DATEKEY"])
+        self.assertEqual(kwargs["dimensions"], "ARQ")
+
+    def test_dedupe_datekey(self):
+        """
+        Tests that duplicate DATEKEYS (resulting from reporting several
+        fiscal periods at once) are deduped by keeping the latest record.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,1),
+            columns=[12345],
+            index=pd.date_range(start="2018-03-01", periods=6, freq="MS", name="Date"))
+
+        def mock_download_sharadar_fundamentals(domain, filepath_or_buffer, *args, **kwargs):
+            fundamentals = pd.DataFrame(
+                dict(
+                    REPORTPERIOD=[
+                        "2018-03-30",
+                        "2018-06-30"
+                        ],
+                    DATEKEY=[
+                        "2018-07-23",
+                        "2018-07-23",
+                        ],
+                     ConId=[
+                         12345,
+                         12345,
+                         ],
+                     EPS=[
+                         565,
+                         580
+                     ]))
+            fundamentals.to_csv(filepath_or_buffer, index=False)
+            filepath_or_buffer.seek(0)
+
+        with patch('quantrocket.fundamental.download_sharadar_fundamentals', new=mock_download_sharadar_fundamentals):
+
+            fundamentals = get_sharadar_fundamentals_reindexed_like(
+                closes, domain="main", fields=["EPS"])
+
+        self.assertSetEqual(set(fundamentals.index.get_level_values("Field")), {"EPS"})
+
+        eps = fundamentals.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(closes.index))
+        self.assertListEqual(list(eps.columns), list(eps.columns))
+        self.assertEqual(eps[12345].loc["2018-08-01"], 580)
+
+    def test_ffill_no_lookahead_bias(self):
+        """
+        Tests that financial statement metrics are ffilled and are shifted
+        forward 1 period to avoid lookahead bias.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,1),
+            columns=[12345],
+            index=pd.date_range(start="2018-07-20", periods=6, freq="D", name="Date"))
+
+        def mock_download_sharadar_fundamentals(domain, filepath_or_buffer, *args, **kwargs):
+            fundamentals = pd.DataFrame(
+                dict(
+                    REPORTPERIOD=[
+                        "2018-03-30",
+                        "2018-06-30"
+                        ],
+                    DATEKEY=[
+                        "2018-04-23",
+                        "2018-07-23",
+                        ],
+                     ConId=[
+                         12345,
+                         12345,
+                         ],
+                     EPS=[
+                         565,
+                         580
+                     ]))
+            fundamentals.to_csv(filepath_or_buffer, index=False)
+            filepath_or_buffer.seek(0)
+
+        with patch('quantrocket.fundamental.download_sharadar_fundamentals', new=mock_download_sharadar_fundamentals):
+
+            fundamentals = get_sharadar_fundamentals_reindexed_like(
+                closes, domain="main", fields=["EPS"])
+
+        self.assertSetEqual(set(fundamentals.index.get_level_values("Field")), {"EPS"})
+
+        eps = fundamentals.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(eps.index))
+        self.assertListEqual(list(eps.columns), list(eps.columns))
+        self.assertEqual(eps[12345].loc["2018-07-23"], 565)
+        self.assertEqual(eps[12345].loc["2018-07-24"], 580)
+
+    def test_tz_aware_index(self):
+        """
+        Tests that reindex_like.index can be tz-naive or tz-aware.
+        """
+        def mock_download_sharadar_fundamentals(domain, filepath_or_buffer, *args, **kwargs):
+            fundamentals = pd.DataFrame(
+                dict(
+                    REPORTPERIOD=[
+                        "2018-03-31",
+                        "2018-06-30"
+                        ],
+                    DATEKEY=[
+                        "2018-04-23",
+                        "2018-07-06",
+                        ],
+                     ConId=[
+                         12345,
+                         12345,
+                         ],
+                     REVENUE=[
+                         580,
+                         542
+                     ]))
+            fundamentals.to_csv(filepath_or_buffer, index=False)
+            filepath_or_buffer.seek(0)
+
+        with patch('quantrocket.fundamental.download_sharadar_fundamentals', new=mock_download_sharadar_fundamentals):
+
+            # request with tz_naive
+            closes = pd.DataFrame(
+                np.random.rand(4,1),
+                columns=[12345],
+                index=pd.date_range(start="2018-07-05", periods=4, freq="D", name="Date"))
+
+            fundamentals = get_sharadar_fundamentals_reindexed_like(
+                closes, domain="sharadar", fields=["REVENUE"])
+
+        self.assertSetEqual(set(fundamentals.index.get_level_values("Field")), {"REVENUE"})
+
+        revenues = fundamentals.loc["REVENUE"]
+        self.assertListEqual(list(revenues.index), list(revenues.index))
+        self.assertListEqual(list(revenues.columns), list(revenues.columns))
+        revenues = revenues.reset_index()
+        revenues.loc[:, "Date"] = revenues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            revenues.to_dict(orient="records"),
+            [{'Date': '2018-07-05T00:00:00', 12345: 580.0},
+             {'Date': '2018-07-06T00:00:00', 12345: 580.0},
+             {'Date': '2018-07-07T00:00:00', 12345: 542.0},
+             {'Date': '2018-07-08T00:00:00', 12345: 542.0}]
+        )
+
+        with patch('quantrocket.fundamental.download_sharadar_fundamentals', new=mock_download_sharadar_fundamentals):
+
+            # request with tz-aware
+            closes = pd.DataFrame(
+                np.random.rand(4,1),
+                columns=[12345],
+                index=pd.date_range(start="2018-07-05", periods=4, freq="D", tz="America/New_York", name="Date"))
+
+            fundamentals = get_sharadar_fundamentals_reindexed_like(
+                closes, domain="sharadar", fields=["REVENUE"])
+
+        self.assertSetEqual(set(fundamentals.index.get_level_values("Field")), {"REVENUE"})
+
+        revenues = fundamentals.loc["REVENUE"]
+        self.assertListEqual(list(revenues.index), list(revenues.index))
+        self.assertListEqual(list(revenues.columns), list(revenues.columns))
+        revenues = revenues.reset_index()
+        revenues.loc[:, "Date"] = revenues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            revenues.to_dict(orient="records"),
+            [{'Date': '2018-07-05T00:00:00-0400', 12345: 580.0},
+             {'Date': '2018-07-06T00:00:00-0400', 12345: 580.0},
+             {'Date': '2018-07-07T00:00:00-0400', 12345: 542.0},
+             {'Date': '2018-07-08T00:00:00-0400', 12345: 542.0}]
+        )
