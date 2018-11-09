@@ -782,7 +782,7 @@ def list_sharadar_codes(codes=None, indicator_types=None):
 def _cli_list_sharadar_codes(*args, **kwargs):
     return json_to_cli(list_sharadar_codes, *args, **kwargs)
 
-def download_sharadar_fundamentals(filepath_or_buffer, domain,
+def download_sharadar_fundamentals(domain, filepath_or_buffer=None,
                                    start_date=None, end_date=None,
                                    universes=None, conids=None,
                                    exclude_universes=None, exclude_conids=None,
@@ -800,14 +800,14 @@ def download_sharadar_fundamentals(filepath_or_buffer, domain,
 
     Parameters
     ----------
-    filepath_or_buffer : str or file-like object
-        filepath to write the data to, or file-like object (defaults to stdout)
-
     domain : str, required
         the domain of the conids in which to return the results, as well as
         the domain which the provided universes or conids, if any, refer to.
         Domain 'main' corresponds to IB conids. Possible choices:
         main, sharadar
+
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
 
     output : str
         output format (json, csv, default is csv)
@@ -848,15 +848,16 @@ def download_sharadar_fundamentals(filepath_or_buffer, domain,
     Query as-reported trailing twelve month (ART) fundamentals for all indicators
     for a particular IB conid, then load the CSV into Pandas:
 
-    >>> download_sharadar_fundamentals("aapl_fundamentals.csv", domain="main",
+    >>> download_sharadar_fundamentals(domain="main", filepath_or_buffer="aapl_fundamentals.csv",
                                        conids=265598, dimensions="ART")
     >>> fundamentals = pd.read_csv("aapl_fundamentals.csv", parse_dates=["REPORTPERIOD", "DATEKEY", "CALENDARDATE"])
 
     Query as-reported quarterly (ARQ) fundamentals for select indicators for a
     universe defined in the sharadar domain:
 
-    >>> download_sharadar_fundamentals("sharadar_fundamentals.csv", universes="sharadar-usa-stk",
-                                       domain="sharadar", dimensions="ARQ", fields=["REVENUE", "EPS"])
+    >>> download_sharadar_fundamentals(domain="sharadar", filepath_or_buffer="sharadar_fundamentals.csv",
+                                       universes="sharadar-usa-stk",
+                                       dimensions="ARQ", fields=["REVENUE", "EPS"])
     """
     if not domain:
         raise ValueError("please specify domain")
@@ -991,7 +992,7 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, domain, fields=None,
 
     f = six.StringIO()
     download_sharadar_fundamentals(
-        f, domain=domain, conids=conids, start_date=start_date, end_date=end_date,
+        domain=domain, filepath_or_buffer=f, conids=conids, start_date=start_date, end_date=end_date,
         fields=fields, dimensions=dimension)
     financials = pd.read_csv(
         f, parse_dates=["DATEKEY","REPORTPERIOD"])
