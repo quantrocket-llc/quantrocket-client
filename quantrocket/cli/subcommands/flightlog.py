@@ -60,11 +60,15 @@ Examples:
 
 Download application logs:
 
-    quantrocket flightlog get /path/to/localdir/app.log
+    quantrocket flightlog get app.log
 
 Download detailed logs:
 
-    quantrocket flightlog get --detail /path/to/localdir/system.log
+    quantrocket flightlog get --detail sys.log
+
+Download detailed logs for the history service:
+
+    quantrocket flightlog get --detail --filter quantrocket_history sys.log
     """
     parser = _subparsers.add_parser(
         "get",
@@ -80,6 +84,10 @@ Download detailed logs:
         action="store_true",
         help="download detailed logs from logspout, otherwise download log messages from "
         "flightlog only")
+    parser.add_argument(
+        "-f", "--filter",
+        metavar="STRING",
+        help="filter the logfile to lines containing this string")
     parser.set_defaults(func="quantrocket.flightlog._cli_download_logfile")
 
     examples = """
