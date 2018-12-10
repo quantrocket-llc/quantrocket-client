@@ -16,12 +16,13 @@ import six
 import os
 import sys
 import time
+import requests
 from quantrocket.master import download_master_file
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
-from quantrocket.exceptions import ParameterError
+from quantrocket.exceptions import ParameterError, NoHistoricalData
 from quantrocket.utils.warn import deprecated_replaced_by
 
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", "/tmp")
@@ -509,7 +510,13 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
     response = houston.get("/history/{0}.{1}".format(code, output), params=params,
                            timeout=60*30)
 
-    houston.raise_for_status_with_json(response)
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no history matches the query parameters" in repr(e).lower():
+            raise NoHistoricalData(e)
+        raise
 
     filepath_or_buffer = filepath_or_buffer or sys.stdout
 

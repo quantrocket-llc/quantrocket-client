@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import requests
+
 class ImproperlyConfigured(Exception):
     pass
 
@@ -26,3 +28,9 @@ class ParameterError(ValueError):
 
 class MissingData(ValueError):
     pass
+
+class NoHistoricalData(requests.HTTPError):
+
+    def __init__(self, e):
+        self.__dict__ = e.__dict__
+        super(NoHistoricalData, self).__init__(e.args)
