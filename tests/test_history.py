@@ -271,9 +271,15 @@ class GetHistoricalPricesTestCase(unittest.TestCase):
                         12345,
                         23456,
                         23456,
-                        23456
+                        23456,
+                        56789,
+                        56789,
+                        56789,
                         ],
                     Date=[
+                        "2018-04-01",
+                        "2018-04-02",
+                        "2018-04-03",
                         "2018-04-01",
                         "2018-04-02",
                         "2018-04-03",
@@ -288,6 +294,9 @@ class GetHistoricalPricesTestCase(unittest.TestCase):
                         50.5,
                         52.5,
                         51.59,
+                        42.32,
+                        43.34,
+                        43.12
                     ]))
             prices.to_csv(f, index=False)
 
@@ -412,7 +421,7 @@ class GetHistoricalPricesTestCase(unittest.TestCase):
         self.assertEqual(len(mock_download_master_file.mock_calls), 1)
         master_call = mock_download_master_file.mock_calls[0]
         _, args, kwargs = master_call
-        self.assertListEqual(kwargs["universes"], ["usa-stk"])
+        self.assertListEqual(kwargs["conids"], [12345,23456])
         self.assertListEqual(kwargs["fields"], ["Symbol", "Timezone"])
 
         # pass as tuple
@@ -438,7 +447,7 @@ class GetHistoricalPricesTestCase(unittest.TestCase):
         self.assertEqual(len(mock_download_master_file.mock_calls), 2)
         master_call = mock_download_master_file.mock_calls[1]
         _, args, kwargs = master_call
-        self.assertListEqual(kwargs["universes"], ["usa-stk"])
+        self.assertListEqual(kwargs["conids"], [12345,23456])
         self.assertListEqual(kwargs["fields"], ["Symbol", "Timezone"])
 
         # pass as list
@@ -464,79 +473,7 @@ class GetHistoricalPricesTestCase(unittest.TestCase):
         self.assertEqual(len(mock_download_master_file.mock_calls), 3)
         master_call = mock_download_master_file.mock_calls[2]
         _, args, kwargs = master_call
-        self.assertListEqual(kwargs["universes"], ["usa-stk"])
-        self.assertListEqual(kwargs["fields"], ["Symbol", "Timezone"])
-
-    @patch("quantrocket.history.get_db_config")
-    @patch("quantrocket.history.download_history_file")
-    @patch("quantrocket.history.download_master_file")
-    def test_get_master_universes_from_db(self,
-                                          mock_download_master_file,
-                                          mock_download_history_file,
-                                          mock_get_db_config):
-        """
-        Tests that, if no universes arg is passed, it is taken from the db
-        config and passed to download_master_file.
-        """
-        def _mock_get_db_config(db):
-            return {
-                "bar_size": "15 mins",
-                "universes": ["usa-stk"],
-                "vendor": "ib"
-            }
-
-        def _mock_download_history_file(code, f, *args, **kwargs):
-            prices = pd.DataFrame(
-                dict(
-                    ConId=[
-                        12345,
-                        12345,
-                        12345,
-                        23456,
-                        23456,
-                        23456
-                        ],
-                    Date=[
-                        "2018-04-01T09:30:00-00:00",
-                        "2018-04-02T09:30:00-00:00",
-                        "2018-04-03T09:30:00-00:00",
-                        "2018-04-01T09:30:00-00:00",
-                        "2018-04-02T09:30:00-00:00",
-                        "2018-04-03T09:30:00-00:00"
-                        ],
-                    Close=[
-                        20.10,
-                        20.50,
-                        19.40,
-                        50.5,
-                        52.5,
-                        51.59,
-                    ]))
-            prices.to_csv(f, index=False)
-
-        def _mock_download_master_file(f, *args, **kwargs):
-            securities = pd.DataFrame(dict(ConId=[12345,23456],
-                                           Symbol=["ABC","DEF"],
-                                           Timezone=["America/New_York", "America/New_York"]))
-            securities.to_csv(f, index=False)
-            f.seek(0)
-
-        mock_download_history_file.side_effect = _mock_download_history_file
-
-        mock_get_db_config.side_effect = _mock_get_db_config
-
-        mock_download_master_file.side_effect = _mock_download_master_file
-
-        # No universes passed
-        get_historical_prices(
-            "usa-stk-15min", start_date="2018-04-01", end_date="2018-04-03",
-            fields=["Close"], master_fields="Symbol", times=["09:30:00"])
-
-
-        self.assertEqual(len(mock_download_master_file.mock_calls), 1)
-        master_call = mock_download_master_file.mock_calls[0]
-        _, args, kwargs = master_call
-        self.assertListEqual(kwargs["universes"], ["usa-stk"])
+        self.assertListEqual(kwargs["conids"], [12345,23456])
         self.assertListEqual(kwargs["fields"], ["Symbol", "Timezone"])
 
     @patch("quantrocket.history.get_db_config")
@@ -547,9 +484,8 @@ class GetHistoricalPricesTestCase(unittest.TestCase):
                                            mock_download_history_file,
                                            mock_get_db_config):
         """
-        Tests that, if no universes or conids args are passed and the db
-        defines no universe (which would be atypical), conids are taken from
-        the prices and passed to download_master_file.
+        Tests that conids are taken from the prices and passed to
+        download_master_file.
         """
         def _mock_get_db_config(db):
             return {
@@ -608,7 +544,7 @@ class GetHistoricalPricesTestCase(unittest.TestCase):
         self.assertEqual(len(mock_download_master_file.mock_calls), 1)
         master_call = mock_download_master_file.mock_calls[0]
         _, args, kwargs = master_call
-        self.assertListEqual(kwargs["universes"], [])
+        self.assertNotIn("universes", kwargs)
         self.assertListEqual(kwargs["conids"], [12345,34567])
         self.assertListEqual(kwargs["fields"], ["Symbol", "Timezone"])
 

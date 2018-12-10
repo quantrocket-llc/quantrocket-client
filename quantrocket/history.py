@@ -739,12 +739,7 @@ def get_historical_prices(codes, start_date=None, end_date=None,
 
     # Next, get the master file
     if master_fields:
-        universes = universes
-        conids = conids
-        if not conids and not universes:
-            universes = db_universes
-            if not universes:
-                conids = list(prices.columns)
+        conids = list(prices.columns)
 
         domain = list(db_domains)[0] if db_domains else None
 
@@ -752,9 +747,6 @@ def get_historical_prices(codes, start_date=None, end_date=None,
         download_master_file(
             f,
             conids=conids,
-            universes=universes,
-            exclude_conids=exclude_conids,
-            exclude_universes=exclude_universes,
             fields=master_fields,
             domain=domain
         )
