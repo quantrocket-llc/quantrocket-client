@@ -13,6 +13,35 @@
 # limitations under the License.
 
 def segmented_date_range(start_date, end_date, segment="A"):
+    """
+    Split a date range into smaller segments.
+
+    Parameters
+    ----------
+
+    start_date : str (YYYY-MM-DD), required
+        start date, inclusive
+
+    end_date : str (YYYY-MM-DD), required
+        end date, inclusive
+
+    segment : str, required
+        split date range into segments of this size (use Pandas
+        frequency string, e.g. 'A' for annual segments or 'Q' for quarterly
+        segments; default 'A')
+
+    Returns
+    -------
+    list
+        list of tuples of (start_date, end_date)
+
+    Examples
+    --------
+    >>> segmented_date_range("2013-06-01", "2015-12-15")
+    [('2013-06-01', '2013-12-30'),
+    ('2013-12-31', '2014-12-30'),
+    ('2014-12-31', '2015-12-15')]
+    """
 
     # Import pandas lazily since it can take a moment to import
     try:
