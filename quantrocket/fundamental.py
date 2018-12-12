@@ -15,11 +15,12 @@
 import six
 import sys
 import os
+import requests
 from quantrocket.houston import houston
 from quantrocket.master import download_master_file
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
-from quantrocket.exceptions import ParameterError, MissingData
+from quantrocket.exceptions import ParameterError, MissingData, NoFundamentalData
 from quantrocket.utils.warn import deprecated_replaced_by
 
 def collect_reuters_financials(universes=None, conids=None):
@@ -240,7 +241,13 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
     response = houston.get("/fundamental/reuters/financials.{0}".format(output), params=params,
                            timeout=60*15)
 
-    houston.raise_for_status_with_json(response)
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no financial statements match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
 
     filepath_or_buffer = filepath_or_buffer or sys.stdout
 
@@ -525,7 +532,13 @@ def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
     response = houston.get("/fundamental/reuters/estimates.{0}".format(output), params=params,
                            timeout=60*15)
 
-    houston.raise_for_status_with_json(response)
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no estimates match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
 
     filepath_or_buffer = filepath_or_buffer or sys.stdout
 
@@ -890,7 +903,13 @@ def download_sharadar_fundamentals(domain, filepath_or_buffer=None,
     response = houston.get("/fundamental/sharadar/sf1.{0}".format(output), params=params,
                            timeout=60*15)
 
-    houston.raise_for_status_with_json(response)
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no sharadar fundamentals match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
 
     filepath_or_buffer = filepath_or_buffer or sys.stdout
 
@@ -1182,7 +1201,13 @@ def download_shortable_shares(filepath_or_buffer=None, output="csv",
     response = houston.get("/fundamental/stockloan/shares.{0}".format(output), params=params,
                            timeout=60*5)
 
-    houston.raise_for_status_with_json(response)
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no shortable shares match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
 
     filepath_or_buffer = filepath_or_buffer or sys.stdout
 
@@ -1260,7 +1285,13 @@ def download_borrow_fees(filepath_or_buffer=None, output="csv",
     response = houston.get("/fundamental/stockloan/fees.{0}".format(output), params=params,
                            timeout=60*5)
 
-    houston.raise_for_status_with_json(response)
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no borrow fees match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
 
     filepath_or_buffer = filepath_or_buffer or sys.stdout
 
