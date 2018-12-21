@@ -830,7 +830,7 @@ def get_historical_prices(codes, start_date=None, end_date=None,
             min_date = prices.loc[field].index.min()
             field_idx = pd.MultiIndex.from_tuples([(field,min_date[0], min_date[1])])
         else:
-            field_idx = pd.MultiIndex.from_product([[field], unique_dates, unique_times])
+            field_idx = pd.MultiIndex.from_product([[field], unique_dates, unique_times]).sort_values()
         if interpolated_index is None:
             interpolated_index = field_idx
         else:
