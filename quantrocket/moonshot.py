@@ -17,6 +17,7 @@ from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
+from quantrocket.exceptions import ParameterError
 
 def backtest(strategies, start_date=None, end_date=None, segment=None, allocations=None,
              nlv=None, params=None, details=None, output="csv", csv=None, filepath_or_buffer=None):
@@ -126,6 +127,109 @@ def _cli_backtest(*args, **kwargs):
     if params:
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(backtest, *args, **kwargs)
+
+def read_moonshot_csv(filepath_or_buffer):
+    """
+    Load a Moonshot backtest CSV into a DataFrame.
+
+    Parameters
+    ----------
+    filepath_or_buffer : string or file-like, required
+        path to CSV
+
+    Returns
+    -------
+    DataFrame
+        a multi-index (Field, Date[, Time]) DataFrame of backtest
+        results, with conids or strategy codes as columns
+
+    Examples
+    --------
+    >>> results = read_moonshot_csv("moonshot_backtest.csv")
+    >>> returns = results.loc["Return"]
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    results = pd.read_csv(filepath_or_buffer, parse_dates=["Date"])
+    index_cols = ["Field", "Date"]
+    if "Time" in results.columns:
+        index_cols.append("Time")
+    results = results.set_index(index_cols)
+
+    fields_in_results = results.index.get_level_values("Field").unique()
+
+    # Cast to float
+    float_fields = [
+        "Return",
+        "Signal",
+        "Weight",
+        "Position",
+        "Trade",
+        "Commission",
+        "Slippage",
+        "Benchmark",
+        "AbsWeight",
+        "AbsPosition",
+        "TotalHoldings",
+
+    ]
+    for field in float_fields:
+        if field in fields_in_results:
+            results.loc[[field]] = results.loc[[field]].astype(pd.np.float64)
+
+    return results
+
+def intraday_to_daily(results):
+    """
+    Roll up a DataFrame of intraday performance results to daily, dropping
+    the "Time" level from the multi-index.
+
+    Parameters
+    ----------
+    results : DataFrame, required
+         a DataFrame of intraday Moonshot backtest results, with a "Time" level
+         in the index
+
+    Returns
+    -------
+    DataFrame
+        a DataFrame of daily Moonshot backtest results, without a "Time" level in
+        the index
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    if "Time" not in results.index.names:
+        raise ParameterError("results DataFrame must have 'Time' level in index")
+
+    fields_in_results = results.index.get_level_values("Field").unique()
+
+    daily_results = {}
+
+    # how to aggregate by field
+    aggregation_methods = {
+        "sum": ["Return", "Trade", "Commission", "Slippage"],
+        "max": ["AbsPosition", "TotalHoldings", "Signal", "AbsWeight"],
+        "mean": ["Position", "Weight"],
+        "last": ["Benchmark"],
+    }
+
+    for aggregation_method, fields_to_aggregate in aggregation_methods.items():
+        for field in fields_to_aggregate:
+            if field not in fields_in_results:
+                continue
+
+            field_results = results.loc[field]
+            grouped = field_results.groupby(field_results.index.get_level_values("Date"))
+            daily_results[field] = getattr(grouped, aggregation_method)()
+
+    daily_results = pd.concat(daily_results, names=["Field","Date"])
+    return daily_results
 
 def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
                     param1=None, vals1=None, param2=None, vals2=None,
