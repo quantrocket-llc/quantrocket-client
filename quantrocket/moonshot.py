@@ -229,7 +229,7 @@ def intraday_to_daily(results):
             if field not in fields_in_results:
                 continue
 
-            field_results = results.loc[field]
+            field_results = results.loc[field].astype(pd.np.float64)
             grouped = field_results.groupby(field_results.index.get_level_values("Date"))
             daily_results[field] = getattr(grouped, aggregation_method)()
 
