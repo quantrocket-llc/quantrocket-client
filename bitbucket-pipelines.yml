@@ -5,18 +5,18 @@ pipelines:
         - step:
             script:
                 - pip install -U tox
-                - tox -e py36
+                - tox
     branches:
         master:
             - step:
                 image: python:2.7
                 script:
                     - pip install -U tox
-                    - tox -e py27
+                    - tox
     tags:
         '*':
             - step:
                 script:
                     - pip install -U tox wheel
-                    - tox -e py36
+                    - tox
                     - ./deploy.bash
