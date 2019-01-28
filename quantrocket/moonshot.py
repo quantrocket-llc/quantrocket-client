@@ -167,7 +167,7 @@ def read_moonshot_csv(filepath_or_buffer):
         "Signal",
         "Weight",
         "NetExposure",
-        "Trade",
+        "Turnover",
         "Commission",
         "Slippage",
         "Benchmark",
@@ -218,7 +218,7 @@ def intraday_to_daily(results):
 
     # how to aggregate by field
     aggregation_methods = {
-        "sum": ["Return", "Trade", "Commission", "Slippage"],
+        "sum": ["Return", "Turnover", "Commission", "Slippage"],
         "max": ["AbsExposure", "TotalHoldings", "AbsWeight"],
         "mean": ["NetExposure", "Weight"],
         "last": ["Benchmark"],
