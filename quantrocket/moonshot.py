@@ -166,13 +166,13 @@ def read_moonshot_csv(filepath_or_buffer):
         "Return",
         "Signal",
         "Weight",
-        "Position",
+        "NetExposure",
         "Trade",
         "Commission",
         "Slippage",
         "Benchmark",
         "AbsWeight",
-        "AbsPosition",
+        "AbsExposure",
         "TotalHoldings",
 
     ]
@@ -198,6 +198,11 @@ def intraday_to_daily(results):
     DataFrame
         a DataFrame of daily Moonshot backtest results, without a "Time" level in
         the index
+
+    Examples
+    --------
+    >>> intraday_results = read_moonshot_csv("moonshot_intraday_backtest.csv")
+    >>> daily_results = intraday_to_daily(intraday_results)
     """
     try:
         import pandas as pd
@@ -214,8 +219,8 @@ def intraday_to_daily(results):
     # how to aggregate by field
     aggregation_methods = {
         "sum": ["Return", "Trade", "Commission", "Slippage"],
-        "max": ["AbsPosition", "TotalHoldings", "Signal", "AbsWeight"],
-        "mean": ["Position", "Weight"],
+        "max": ["AbsExposure", "TotalHoldings", "AbsWeight"],
+        "mean": ["NetExposure", "Weight"],
         "last": ["Benchmark"],
     }
 
