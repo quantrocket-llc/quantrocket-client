@@ -202,7 +202,7 @@ def _cli_print_stream(*args, **kwargs):
 def _cli_stream_logs(*args, **kwargs):
     return json_to_cli(_cli_print_stream, *args, **kwargs)
 
-def download_logfile(outfile, detail=False, filter=None):
+def download_logfile(outfile, detail=False, match=None):
     """
     Download the logfile.
 
@@ -215,7 +215,7 @@ def download_logfile(outfile, detail=False, filter=None):
         if True, show detailed logs from logspout, otherwise show log messages
         from flightlog only (default False)
 
-    filter : str, optional
+    match : str, optional
         filter the logfile to lines containing this string
 
     Returns
@@ -228,8 +228,8 @@ def download_logfile(outfile, detail=False, filter=None):
         logtype = "app"
 
     params = {}
-    if filter:
-        params["filter"] = filter
+    if match:
+        params["match"] = match
 
     response = houston.get("/flightlog/logfile/{0}".format(logtype), params=params, stream=True)
     houston.raise_for_status_with_json(response)

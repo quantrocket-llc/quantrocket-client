@@ -68,7 +68,7 @@ Download detailed logs:
 
 Download detailed logs for the history service:
 
-    quantrocket flightlog get --detail --filter quantrocket_history sys.log
+    quantrocket flightlog get --detail --match quantrocket_history sys.log
     """
     parser = _subparsers.add_parser(
         "get",
@@ -85,8 +85,8 @@ Download detailed logs for the history service:
         help="download detailed logs from logspout, otherwise download log messages from "
         "flightlog only")
     parser.add_argument(
-        "-f", "--filter",
-        metavar="STRING",
+        "-m", "--match",
+        metavar="PATTERN",
         help="filter the logfile to lines containing this string")
     parser.set_defaults(func="quantrocket.flightlog._cli_download_logfile")
 
