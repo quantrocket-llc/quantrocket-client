@@ -333,7 +333,7 @@ def wait_for_collections(codes, timeout=None):
     codes : list of str, required
         the database code(s) to wait for
 
-    timeout : list of str, optional
+    timeout : str, optional
         time out if data collection hasn't finished after this much time (use Pandas
         timedelta string, e.g. 30sec or 5min or 2h)
 
