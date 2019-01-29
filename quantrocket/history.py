@@ -324,6 +324,36 @@ def cancel_collections(codes, queues=None):
 def _cli_cancel_collections(*args, **kwargs):
     return json_to_cli(cancel_collections, *args, **kwargs)
 
+def wait_for_collections(codes, timeout=None):
+    """
+    Wait for historical data collection to finish.
+
+    Parameters
+    ----------
+    codes : list of str, required
+        the database code(s) to wait for
+
+    timeout : list of str, optional
+        time out if data collection hasn't finished after this much time (use Pandas
+        timedelta string, e.g. 30sec or 5min or 2h)
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    params["codes"] = codes
+    if timeout:
+        params["timeout"] = timeout
+    response = houston.put("/history/queue", params=params, timeout=60*60*24*365)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_wait_for_collections(*args, **kwargs):
+    return json_to_cli(wait_for_collections, *args, **kwargs)
+
 def download_history_availability_file(code, filepath_or_buffer=None, output="csv"):
     """
     Query historical market data availability from a history database and download to file.

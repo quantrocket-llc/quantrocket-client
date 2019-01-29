@@ -264,6 +264,32 @@ Cancel queued collections for a database called 'jpn-lrg-1d', but only in the st
     parser.set_defaults(func="quantrocket.history._cli_cancel_collections")
 
     examples = """
+Wait for historical data collection to finish.
+
+Examples:
+
+Wait at most 10 minutes for data collection to finish for a database called 'fx-1h':
+
+    quantrocket history wait 'fx-1h' -t 10min
+    """
+    parser = _subparsers.add_parser(
+        "wait",
+        help="wait for historical data collection to finish",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "codes",
+        metavar="CODE",
+        nargs="+",
+        help="the database code(s) to wait for")
+    parser.add_argument(
+        "-t", "--timeout",
+        metavar="TIMEDELTA",
+        help="time out if data collection hasn't finished after this much time (use Pandas "
+        "timedelta string, e.g. 30sec or 5min or 2h)")
+    parser.set_defaults(func="quantrocket.history._cli_wait_for_collections")
+
+    examples = """
 Load market data from a CSV file into a history database.
 
 Examples:
