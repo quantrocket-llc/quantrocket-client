@@ -24,7 +24,7 @@ import pandas as pd
 import pytz
 import numpy as np
 from quantrocket.history import get_historical_prices
-from quantrocket.exceptions import ParameterError, MissingData
+from quantrocket.exceptions import ParameterError, MissingData, NoHistoricalData
 
 class GetHistoricalPricesTestCase(unittest.TestCase):
     """
@@ -789,6 +789,153 @@ class GetHistoricalPricesTestCase(unittest.TestCase):
              {'Date': '2018-04-02T00:00:00', 12345: 7800, 23456: 179000, 56789: 17600},
              {'Date': '2018-04-03T00:00:00', 12345: 12400, 23456: 142500, 56789: 5600}]
         )
+
+    def test_no_complain_no_data_multiple_dbs(self):
+        """
+        Tests that if multiple dbs are queried and one lacks data but the
+        other has data, no error is raised.
+        """
+        def mock_get_db_config(db):
+            if db == "usa-stk-1d":
+                return {
+                    "bar_size": "1 day",
+                    "universes": ["usa-stk"],
+                    "vendor": "ib"
+                }
+            else:
+                return {
+                    "bar_size": "1 day",
+                    "universes": ["japan-stk"],
+                    "vendor": "ib"
+                }
+
+        def mock_download_history_file(code, f, *args, **kwargs):
+            if code == "usa-stk-1d":
+                prices = pd.DataFrame(
+                    dict(
+                        ConId=[
+                            12345,
+                            12345,
+                            12345,
+                            23456,
+                            23456,
+                            23456,
+                            ],
+                        Date=[
+                            "2018-04-01",
+                            "2018-04-02",
+                            "2018-04-03",
+                            "2018-04-01",
+                            "2018-04-02",
+                            "2018-04-03"
+                            ],
+                        Close=[
+                            20.10,
+                            20.50,
+                            19.40,
+                            50.5,
+                            52.5,
+                            51.59,
+                            ],
+                        Volume=[
+                            15000,
+                            7800,
+                            12400,
+                            98000,
+                            179000,
+                            142500
+                        ]
+                    ))
+                prices.to_csv(f, index=False)
+            else:
+                raise NoHistoricalData("no history matches the query parameters")
+
+        with patch('quantrocket.history.get_db_config', new=mock_get_db_config):
+            with patch('quantrocket.history.download_history_file', new=mock_download_history_file):
+
+                prices = get_historical_prices(["usa-stk-1d", "japan-stk-1d"], fields=["Close", "Volume"])
+
+        self.assertListEqual(list(prices.index.names), ["Field", "Date"])
+        self.assertEqual(prices.columns.name, "ConId")
+        dt = prices.index.get_level_values("Date")
+        self.assertTrue(isinstance(dt, pd.DatetimeIndex))
+        self.assertIsNone(dt.tz) # EOD is tz-naive
+        self.assertListEqual(list(prices.columns), [12345,23456])
+        closes = prices.loc["Close"]
+        closes = closes.reset_index()
+        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            closes.to_dict(orient="records"),
+            [{'Date': '2018-04-01T00:00:00', 12345: 20.1, 23456: 50.5},
+             {'Date': '2018-04-02T00:00:00', 12345: 20.5, 23456: 52.5},
+             {'Date': '2018-04-03T00:00:00', 12345: 19.4, 23456: 51.59}]
+        )
+        volumes = prices.loc["Volume"]
+        volumes = volumes.reset_index()
+        volumes.loc[:, "Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            volumes.to_dict(orient="records"),
+            [{'Date': '2018-04-01T00:00:00', 12345: 15000, 23456: 98000},
+             {'Date': '2018-04-02T00:00:00', 12345: 7800, 23456: 179000},
+             {'Date': '2018-04-03T00:00:00', 12345: 12400, 23456: 142500}]
+        )
+
+    def test_complain_no_data_multiple_dbs(self):
+        """
+        Tests that if multiple dbs are queried and all of them lack data, an
+        error is raised.
+        """
+        def mock_get_db_config(db):
+            if db == "usa-stk-1d":
+                return {
+                    "bar_size": "1 day",
+                    "universes": ["usa-stk"],
+                    "vendor": "ib"
+                }
+            else:
+                return {
+                    "bar_size": "1 day",
+                    "universes": ["japan-stk"],
+                    "vendor": "ib"
+                }
+
+        def mock_download_history_file(code, f, *args, **kwargs):
+            raise NoHistoricalData("no history matches the query parameters")
+
+        with patch('quantrocket.history.get_db_config', new=mock_get_db_config):
+            with patch('quantrocket.history.download_history_file', new=mock_download_history_file):
+
+                with self.assertRaises(NoHistoricalData) as cm:
+                    get_historical_prices(["usa-stk-1d", "japan-stk-1d"])
+
+        self.assertIn(
+            "no history matches the query parameters in any of usa-stk-1d, japan-stk-1d",
+            str(cm.exception))
+
+    def test_complain_no_data_single_db(self):
+        """
+        Tests that if a single db is queried and it lacks data, an
+        error is raised.
+        """
+        def mock_get_db_config(db):
+            return {
+                "bar_size": "1 day",
+                "universes": ["usa-stk"],
+                "vendor": "ib"
+            }
+
+        def mock_download_history_file(code, f, *args, **kwargs):
+            raise NoHistoricalData("this error will be passed through as is")
+
+        with patch('quantrocket.history.get_db_config', new=mock_get_db_config):
+            with patch('quantrocket.history.download_history_file', new=mock_download_history_file):
+
+                with self.assertRaises(NoHistoricalData) as cm:
+                    get_historical_prices("usa-stk-1d")
+
+        self.assertIn(
+            "this error will be passed through as is",
+            str(cm.exception))
 
     def test_complain_if_multiple_bar_sizes(self):
         """

@@ -752,12 +752,26 @@ def get_historical_prices(codes, start_date=None, end_date=None,
         tmp_filepath = "{0}/history.{1}.{2}.{3}.csv".format(
             TMP_DIR, db, os.getpid(), time.time()
         )
-        download_history_file(db, tmp_filepath, **kwargs)
+        try:
+            download_history_file(db, tmp_filepath, **kwargs)
+        except NoHistoricalData as e:
+            # don't complain about NoHistoricalData if we're checking
+            # multiple databases, unless none of them have data
+            if len(dbs) == 1:
+                raise
+            else:
+                continue
 
         prices = pd.read_csv(tmp_filepath)
         all_prices.append(prices)
 
         os.remove(tmp_filepath)
+
+    # complain if multiple dbs and none had data
+    if len(dbs) > 1 and not all_prices:
+        raise NoHistoricalData("no history matches the query parameters in any of {0}".format(
+            ", ".join(dbs)
+        ))
 
     prices = pd.concat(all_prices)
 

@@ -32,11 +32,17 @@ class MissingData(ValueError):
 class NoHistoricalData(requests.HTTPError):
 
     def __init__(self, e):
-        self.__dict__ = e.__dict__
-        super(NoHistoricalData, self).__init__(e.args)
+        if isinstance(e, requests.HTTPError):
+            self.__dict__ = e.__dict__
+            super(NoHistoricalData, self).__init__(e.args)
+        else:
+            super(NoHistoricalData, self).__init__(e)
 
 class NoFundamentalData(requests.HTTPError):
 
     def __init__(self, e):
-        self.__dict__ = e.__dict__
-        super(NoFundamentalData, self).__init__(e.args)
+        if isinstance(e, requests.HTTPError):
+            self.__dict__ = e.__dict__
+            super(NoFundamentalData, self).__init__(e.args)
+        else:
+            super(NoFundamentalData, self).__init__(e)
