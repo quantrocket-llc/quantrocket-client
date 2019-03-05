@@ -13,6 +13,9 @@
 # limitations under the License.
 
 import sys
+import os.path
+import six
+from zipfile import ZipFile
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
@@ -77,6 +80,28 @@ def backtest(strategies, start_date=None, end_date=None, segment=None, allocatio
     Returns
     -------
     None
+
+    Examples
+    --------
+    Backtest several HML (High Minus Low) strategies from 2005-2015 and return a
+    CSV of results:
+
+    >>> backtest(["hml-us", "hml-eur", "hml-asia"],
+                 start_date="2005-01-01",
+                 end_date="2015-12-31",
+                 filepath_or_buffer="hml_results.csv")
+
+    Run a backtest in 1-year segments to reduce memory usage:
+
+    >>> backtest("big-strategy",
+                 start_date="2000-01-01",
+                 end_date="2018-01-01",
+                 segment="A",
+                 filepath_or_buffer="results.csv")
+
+    See Also
+    --------
+    read_moonshot_csv : load a Moonshot backtest CSV into a DataFrame
     """
     output = output or "csv"
 
@@ -303,6 +328,35 @@ def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
     Returns
     -------
     None
+
+    Examples
+    --------
+    Run a parameter scan for several different moving averages on a strategy
+    called trend-friend and return a CSV (which can be rendered with Moonchart):
+
+    >>> scan_parameters("trend-friend",
+                        param1="MAVG_WINDOW",
+                        vals1=[20, 50, 100],
+                        filepath_or_buffer="trend_friend_MAVG_WINDOW.csv")
+
+    Run a 2-D parameter scan for multiple strategies and return a CSV:
+
+    >>> scan_parameters(["strat1", "strat2", "strat3"],
+                        param1="MIN_STD",
+                        vals1=[1, 1.5, 2],
+                        param2="STD_WINDOW",
+                        vals2=[20, 50, 100, 200],
+                        filepath_or_buffer="strategies_MIN_STD_and_STD_WINDOW.csv")
+
+    Run a parameter scan in 1-year segments to reduce memory usage:
+
+    >>> scan_parameters("big-strategy",
+                        start_date="2000-01-01",
+                        end_date="2018-01-01",
+                        segment="A",
+                        param1="MAVG_WINDOW",
+                        vals1=[20, 50, 100],
+                        filepath_or_buffer="big_strategy_MAVG_WINDOW.csv")
     """
     output = output or "csv"
 
@@ -357,6 +411,167 @@ def _cli_scan_parameters(*args, **kwargs):
     if params:
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(scan_parameters, *args, **kwargs)
+
+def ml_walkforward(strategy, start_date, end_date, train, min_train=None,
+                   model_filepath=None, segment=None, allocation=None, nlv=None, params=None,
+                   details=None, filepath_or_buffer=None):
+    """
+    Run a walk-forward backtest of a machine learning strategy.
+
+    The date range will be split into segments of `train` size. For each segment,
+    the model's training will be updated with the new data, then the updated model
+    will be backtested on the following segment.
+
+    Returns a backtest results CSV and a joblib dump of the machine learning model
+    as of the end of the analysis.
+
+    Parameters
+    ----------
+    strategy : str, required
+        the strategy code
+
+    start_date : str (YYYY-MM-DD), required
+        the analysis start date (note that model training will start on this date
+        but backtest will not start until after the initial training period)
+
+    end_date : str (YYYY-MM-DD), required
+        the analysis end date
+
+    train : str, required
+        train model this frequently (use Pandas frequency string, e.g. 'A'
+        for annual training or 'Q' for quarterly training)
+
+    min_train : str, optional
+        don't backtest until at least this much model training has occurred;
+        defaults to the length of `train` if not specified (use Pandas frequency
+        string, e.g. '5Y' for 5 years of initial training)
+
+    model_filepath : str, optional
+        filepath of serialized model to use, filename must end in ".joblib" or
+        ".pkl" (if omitted, default model is scikit-learn's StandardScaler+SGDRegressor)
+
+    segment : str, optional
+        train and backtest in date segments of this size, to reduce memory usage;
+        must be smaller than `train`/`min_train` or will have no effect (use Pandas frequency string,
+        e.g. 'A' for annual segments or 'Q' for quarterly segments)
+
+    allocation : float, optional
+        the allocation for the strategy (default 1.0)
+
+    nlv : dict of CURRENCY:NLV, optional
+        the NLV (net liquidation value, i.e. account balance) to assume for
+        the backtest, expressed in each currency represented in the backtest (pass
+        as {currency:nlv})
+
+    params : dict of PARAM:VALUE, optional
+        one or more strategy params to set on the fly before backtesting
+        (pass as {param:value})
+
+    details : bool
+        return detailed results for all securities instead of aggregating
+
+    filepath_or_buffer : str, optional
+        the location to write the ZIP file to; or, if path ends with "*", the
+        pattern to use for extracting the zipped files. For example, if the path is
+        my_ml*, files will extracted to my_ml_results.csv and my_ml_model.joblib.
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Run a walk-forward backtest using the default model and retrain the model
+    annually, writing the backtest results and trained model to demo_ml_results.csv
+    and demo_ml_model.joblib, respectively:
+
+    >>> ml_walkforward(
+            "demo-ml",
+            "2007-01-01",
+            "2018-12-31",
+            train="A",
+            filepath_or_buffer="demo_ml*")
+
+    Run a walk-forward backtest using a custom model (serialized with joblib),
+    retrain the model annually, don't perform backtesting until after 5 years
+    of initial training, and further split the training and backtesting into
+    quarterly segments to reduce memory usage:
+
+    >>> ml_walkforward(
+            "demo-ml",
+            "2007-01-01",
+            "2018-12-31",
+            model_filepath="my_model.joblib",
+            train="A",
+            min_train="5Y",
+            segment="Q",
+            filepath_or_buffer="demo_ml*")
+
+    """
+    _params = {}
+
+    _params["start_date"] = start_date
+    _params["end_date"] = end_date
+    _params["train"] = train
+    if min_train:
+        _params["min_train"] = min_train
+    if segment:
+        _params["segment"] = segment
+    if allocation:
+        _params["allocation"] = allocation
+    if nlv:
+        _params["nlv"] = dict_to_dict_strs(nlv)
+    if details:
+        _params["details"] = details
+    if params:
+        _params["params"] = dict_to_dict_strs(params)
+
+    url = "/moonshot/ml/walkforward/{0}.zip".format(strategy)
+
+    if model_filepath:
+        # Send the filename as a hint how to open it
+        _params["model_filename"] = os.path.basename(model_filepath)
+
+        with open(model_filepath, "rb") as f:
+            response = houston.post(url, data=f, params=_params, timeout=60*60*24)
+    else:
+        response = houston.post(url, params=_params, timeout=60*60*24)
+
+    houston.raise_for_status_with_json(response)
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    auto_extract = isinstance(filepath_or_buffer, six.string_types) and filepath_or_buffer.endswith("*")
+
+    if auto_extract:
+        base_filepath = filepath_or_buffer[:-1]
+        zipfilepath = base_filepath + ".zip"
+        model_filepath = base_filepath + "_model.joblib"
+        csv_filepath = base_filepath + "_results.csv"
+
+        write_response_to_filepath_or_buffer(zipfilepath, response)
+
+        with ZipFile(zipfilepath, mode="r") as zfile:
+
+            with open(csv_filepath, "wb") as csvfile:
+                csvfile.write(zfile.read("results.csv"))
+
+            with open(model_filepath, "wb") as modelfile:
+                modelfile.write(zfile.read("model.joblib"))
+
+        os.remove(zipfilepath)
+
+    else:
+        write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_ml_walkforward(*args, **kwargs):
+    nlv = kwargs.get("nlv", None)
+    if nlv:
+        kwargs["nlv"] = dict_strs_to_dict(*nlv)
+    params = kwargs.get("params", None)
+    if params:
+        kwargs["params"] = dict_strs_to_dict(*params)
+    return json_to_cli(ml_walkforward, *args, **kwargs)
 
 def trade(strategies, accounts=None, review_date=None, output="csv", filepath_or_buffer=None):
     """

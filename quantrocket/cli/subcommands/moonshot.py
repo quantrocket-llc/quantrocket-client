@@ -223,6 +223,111 @@ Run a parameter scan in 1-year segments to reduce memory usage:
     parser.set_defaults(func="quantrocket.moonshot._cli_scan_parameters")
 
     examples = """
+Run a walk-forward backtest of a machine learning strategy.
+
+The date range will be split into segments of `--train` size. For each segment,
+the model's training will be updated with the new data, then the updated model
+will be backtested on the following segment.
+
+Returns a backtest results CSV and a joblib dump of the machine learning model
+as of the end of the analysis.
+
+Examples:
+
+Run a walk-forward backtest using the default model and retrain the model annually,
+writing the backtest results and trained model to demo_ml_results.csv and
+demo_ml_model.joblib, respectively:
+
+    quantrocket moonshot ml-walkforward demo-ml -s 2007-01-01 -e 2018-12-31 --train A -o demo_ml*
+
+Run a walk-forward backtest using a custom model (serialized with joblib), retrain the
+model annually, don't perform backtesting until after 5 years of initial training,
+and further split the training and backtesting into quarterly segments to reduce
+memory usage:
+
+    quantrocket moonshot ml-walkforward demo-ml -s 2007-01-01 -e 2018-12-31 --model my_model.joblib --train A --min-train 5Y --segment Q -o demo_ml*
+    """
+    parser = _subparsers.add_parser(
+        "ml-walkforward",
+        help="run a walk-forward backtest of a machine learning strategy",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "strategy",
+        metavar="CODE",
+        help="the strategy code")
+    walkforward_options = parser.add_argument_group("walk-forward analysis options")
+    walkforward_options.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        required=True,
+        help="the analysis start date (note that model training will start on this date "
+        "but backtest will not start until after the initial training period)")
+    walkforward_options.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        required=True,
+        help="the analysis end date")
+    walkforward_options.add_argument(
+        "-t", "--train",
+        metavar="FREQ",
+        required=True,
+        help="train model this frequently (use Pandas frequency string, e.g. 'A' "
+        "for annual training or 'Q' for quarterly training)")
+    walkforward_options.add_argument(
+        "-m", "--min-train",
+        metavar="FREQ",
+        required=True,
+        help="don't backtest until at least this much model training has occurred; "
+        "defaults to the length of `--train` if not specified (use Pandas frequency "
+        "string, e.g. '5Y' for 5 years of initial training)")
+    walkforward_options.add_argument(
+        "-f", "--model",
+        dest="model_filepath",
+        help="filepath of serialized model to use, filename must end in '.joblib' or "
+        "'.pkl' (if omitted, default model is scikit-learn's StandardScaler+SGDRegressor)")
+    backtest_options = parser.add_argument_group("backtest options")
+    backtest_options.add_argument(
+        "-g", "--segment",
+        metavar="FREQ",
+        help="train and backtest in date segments of this size, to reduce memory "
+        "usage; must be smaller than `--train`/`--min-train` or will have no effect "
+        "(use Pandas frequency string, e.g. 'A' for annual segments or 'Q' for "
+        "quarterly segments)")
+    backtest_options.add_argument(
+        "-l", "--allocation",
+        type=float,
+        metavar="FLOAT",
+        help="the allocation for the strategy (default 1.0)")
+    backtest_options.add_argument(
+        "-n", "--nlv",
+        nargs="*",
+        type=dict_str,
+        metavar="CURRENCY:NLV",
+        help="the NLV (net liquidation value, i.e. account balance) to assume for "
+        "the backtest, expressed in each currency represented in the backtest (pass "
+        "as 'currency:nlv')")
+    backtest_options.add_argument(
+        "-p", "--params",
+        nargs="*",
+        type=dict_str,
+        metavar="PARAM:VALUE",
+        help="one or more strategy params to set on the fly before backtesting "
+        "(pass as 'param:value')")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-d", "--details",
+        action="store_true",
+        help="return detailed results for all securities instead of aggregating")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="FILEPATH",
+        dest="filepath_or_buffer",
+        help="the location to write the ZIP file to; or, if path ends with '*', the "
+        "pattern to use for extracting the zipped files. For example, if the path is "
+        "my_ml*, files will extracted to my_ml_results.csv and my_ml_model.joblib.")
+
+    examples = """
 Run one or more strategies and generate orders.
 
 Allocations are read from configuration (quantrocket.moonshot.allocations.yml).
