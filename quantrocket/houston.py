@@ -43,6 +43,16 @@ Could not connect to houston at {scheme}://{netloc}
 Please verify that the URL is correct and houston is running.
 """
 
+def _get_force_timeout():
+    force_timeout = os.environ.get("QUANTROCKET_TIMEOUT", None)
+    if not force_timeout:
+        return
+
+    try:
+        return int(force_timeout)
+    except:
+        return None
+
 class Houston(requests.Session):
     """
     Subclass of `requests.Session` that provides an interface to the houston
@@ -72,6 +82,7 @@ class Houston(requests.Session):
         super(Houston, self).__init__()
         if "HOUSTON_USERNAME" in os.environ and "HOUSTON_PASSWORD" in os.environ:
             self.auth = (os.environ["HOUSTON_USERNAME"], os.environ["HOUSTON_PASSWORD"])
+        self.force_timeout = _get_force_timeout()
 
     @property
     def base_url(self):
@@ -120,8 +131,13 @@ To set the environment variable on Linux, run:
             url = self.base_url + url
         timeout = kwargs.get("timeout", None)
         stream = kwargs.get("stream", None)
-        if timeout is None and not stream:
-            kwargs["timeout"] = self.DEFAULT_TIMEOUT
+        if not stream:
+            # Use QUANTROCKET_TIMEOUT if set, else the requested
+            # timeout, else the default timeout
+            if self.force_timeout:
+                kwargs["timeout"] = self.force_timeout
+            elif timeout is None:
+                kwargs["timeout"] = self.DEFAULT_TIMEOUT
 
         # Move conids from params to data if too long
         conids = kwargs.get("params", {}).get("conids", None)
