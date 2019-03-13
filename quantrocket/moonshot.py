@@ -412,17 +412,27 @@ def _cli_scan_parameters(*args, **kwargs):
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(scan_parameters, *args, **kwargs)
 
-def ml_walkforward(strategy, start_date, end_date, train, min_train=None,
-                   model_filepath=None, segment=None, allocation=None, nlv=None, params=None,
+def ml_walkforward(strategy, start_date, end_date, train, min_train=None, rolling_train=None,
+                   model_filepath=None, force_nonincremental=None, segment=None,
+                   allocation=None, nlv=None, params=None,
                    details=None, filepath_or_buffer=None):
     """
     Run a walk-forward backtest of a machine learning strategy.
 
-    The date range will be split into segments of `train` size. For each segment,
-    the model's training will be updated with the new data, then the updated model
-    will be backtested on the following segment.
+    The date range will be split into segments of `--train` size. For each
+    segment, the model will be trained with the data, then the trained model will
+    be backtested on the following segment.
 
-    Returns a backtest results CSV and a joblib dump of the machine learning model
+    By default, uses scikit-learn's StandardScaler+SGDRegressor. Also supports other
+    scikit-learn models/pipelines and Keras models. To customize model, instantiate
+    the model locally, serialize it to disk, and pass the filename of the serialized
+    model as `--model`.
+
+    Supports expanding walk-forward backtests (the default), which use an anchored start date
+    for model training, or rolling walk-forward backtests (by specifying `--rolling-train`),
+    which use a rolling or non-anchored start date for model training.
+
+    Returns a backtest results CSV and a dump of the machine learning model
     as of the end of the analysis.
 
     Parameters
@@ -446,9 +456,20 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None,
         defaults to the length of `train` if not specified (use Pandas frequency
         string, e.g. '5Y' for 5 years of initial training)
 
+    rolling_train : str, optional
+        train model with a rolling window of this length; if omitted, train
+        model with an expanding window (use Pandas frequency string, e.g. '3Y' for
+        a 3-year rolling training window)
+
     model_filepath : str, optional
         filepath of serialized model to use, filename must end in ".joblib" or
         ".pkl" (if omitted, default model is scikit-learn's StandardScaler+SGDRegressor)
+
+    force_nonincremental : bool, optional
+        force the model to be trained non-incrementally (i.e. load entire training
+        data set into memory) even if it supports incremental learning. Must be True
+        in order to perform a rolling (as opposed to expanding) walk-forward backtest
+        with a model that supports incremental learning. Default False.
 
     segment : str, optional
         train and backtest in date segments of this size, to reduce memory usage;
@@ -473,7 +494,7 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None,
     filepath_or_buffer : str, optional
         the location to write the ZIP file to; or, if path ends with "*", the
         pattern to use for extracting the zipped files. For example, if the path is
-        my_ml*, files will extracted to my_ml_results.csv and my_ml_model.joblib.
+        my_ml*, files will extracted to my_ml_results.csv and my_ml_trained_model.joblib.
 
     Returns
     -------
@@ -483,13 +504,28 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None,
     --------
     Run a walk-forward backtest using the default model and retrain the model
     annually, writing the backtest results and trained model to demo_ml_results.csv
-    and demo_ml_model.joblib, respectively:
+    and demo_ml_trained_model.joblib, respectively:
 
     >>> ml_walkforward(
             "demo-ml",
             "2007-01-01",
             "2018-12-31",
             train="A",
+            filepath_or_buffer="demo_ml*")
+
+    Create a scikit-learn model, serialize it with joblib, and use it to
+    run the walkforward backtest:
+
+    >>> from sklearn.linear_model import SGDClassifier
+    >>> import joblib
+    >>> clf = SGDClassifier()
+    >>> joblib.dump(clf, "my_model.joblib")
+    >>> ml_walkforward(
+            "demo-ml",
+            "2007-01-01",
+            "2018-12-31",
+            train="A",
+            model_filepath="my_model.joblib",
             filepath_or_buffer="demo_ml*")
 
     Run a walk-forward backtest using a custom model (serialized with joblib),
@@ -507,6 +543,26 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None,
             segment="Q",
             filepath_or_buffer="demo_ml*")
 
+    Create a Keras model, serialize it, and use it to run the walkforward backtest:
+
+    >>> from keras.models import Sequential
+    >>> from keras.layers import Dense
+    >>> model = Sequential()
+    >>> # input_dim should match number of features in training data
+    >>> model.add(Dense(units=4, activation='relu', input_dim=5))
+    >>> # last layer should have a single unit
+    >>> model.add(Dense(units=1, activation='softmax'))
+    >>> model.compile(loss='sparse_categorical_crossentropy',
+                      optimizer='sgd',
+                      metrics=['accuracy'])
+    >>> model.save('my_model.keras.h5')
+    >>> ml_walkforward(
+            "neuralnet-ml",
+            "2007-01-01",
+            "2018-12-31",
+            train="A",
+            model_filepath="my_model.keras.h5",
+            filepath_or_buffer="neuralnet_ml*")
     """
     _params = {}
 
@@ -515,6 +571,10 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None,
     _params["train"] = train
     if min_train:
         _params["min_train"] = min_train
+    if rolling_train:
+        _params["rolling_train"] = rolling_train
+    if force_nonincremental:
+        _params["force_nonincremental"] = force_nonincremental
     if segment:
         _params["segment"] = segment
     if allocation:
@@ -546,18 +606,20 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None,
     if auto_extract:
         base_filepath = filepath_or_buffer[:-1]
         zipfilepath = base_filepath + ".zip"
-        model_filepath = base_filepath + "_model.joblib"
-        csv_filepath = base_filepath + "_results.csv"
 
         write_response_to_filepath_or_buffer(zipfilepath, response)
 
         with ZipFile(zipfilepath, mode="r") as zfile:
 
+            model_filename = [name for name in zfile.namelist() if "model" in name][0]
+            model_filepath = base_filepath + "_" + model_filename
+            csv_filepath = base_filepath + "_results.csv"
+
             with open(csv_filepath, "wb") as csvfile:
                 csvfile.write(zfile.read("results.csv"))
 
             with open(model_filepath, "wb") as modelfile:
-                modelfile.write(zfile.read("model.joblib"))
+                modelfile.write(zfile.read(model_filename))
 
         os.remove(zipfilepath)
 

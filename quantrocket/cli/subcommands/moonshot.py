@@ -225,18 +225,27 @@ Run a parameter scan in 1-year segments to reduce memory usage:
     examples = """
 Run a walk-forward backtest of a machine learning strategy.
 
-The date range will be split into segments of `--train` size. For each segment,
-the model's training will be updated with the new data, then the updated model
-will be backtested on the following segment.
+The date range will be split into segments of `--train` size. For each
+segment, the model will be trained with the data, then the trained model will
+be backtested on the following segment.
 
-Returns a backtest results CSV and a joblib dump of the machine learning model
+By default, uses scikit-learn's StandardScaler+SGDRegressor. Also supports other
+scikit-learn models/pipelines and Keras models. To customize model, instantiate
+the model locally, serialize it to disk, and pass the filename of the serialized
+model as `--model`.
+
+Supports expanding walk-forward backtests (the default), which use an anchored start date
+for model training, or rolling walk-forward backtests (by specifying `--rolling-train`),
+which use a rolling or non-anchored start date for model training.
+
+Returns a backtest results CSV and a dump of the machine learning model
 as of the end of the analysis.
 
 Examples:
 
 Run a walk-forward backtest using the default model and retrain the model annually,
 writing the backtest results and trained model to demo_ml_results.csv and
-demo_ml_model.joblib, respectively:
+demo_ml_trained_model.joblib, respectively:
 
     quantrocket moonshot ml-walkforward demo-ml -s 2007-01-01 -e 2018-12-31 --train A -o demo_ml*
 
@@ -277,15 +286,27 @@ memory usage:
     walkforward_options.add_argument(
         "-m", "--min-train",
         metavar="FREQ",
-        required=True,
         help="don't backtest until at least this much model training has occurred; "
         "defaults to the length of `--train` if not specified (use Pandas frequency "
         "string, e.g. '5Y' for 5 years of initial training)")
+    walkforward_options.add_argument(
+        "-r", "--rolling-train",
+        metavar="FREQ",
+        help="train model with a rolling window of this length; if omitted, train "
+        "model with an expanding window (use Pandas frequency string, e.g. '3Y' for "
+        "a 3-year rolling training window)")
     walkforward_options.add_argument(
         "-f", "--model",
         dest="model_filepath",
         help="filepath of serialized model to use, filename must end in '.joblib' or "
         "'.pkl' (if omitted, default model is scikit-learn's StandardScaler+SGDRegressor)")
+    walkforward_options.add_argument(
+        "--force-nonincremental",
+        action="store_true",
+        help="force the model to be trained non-incrementally (i.e. load entire training "
+        "data set into memory) even if it supports incremental learning. Required "
+        "in order to perform a rolling (as opposed to expanding) walk-forward backtest "
+        "with a model that supports incremental learning.")
     backtest_options = parser.add_argument_group("backtest options")
     backtest_options.add_argument(
         "-g", "--segment",
@@ -325,7 +346,7 @@ memory usage:
         dest="filepath_or_buffer",
         help="the location to write the ZIP file to; or, if path ends with '*', the "
         "pattern to use for extracting the zipped files. For example, if the path is "
-        "my_ml*, files will extracted to my_ml_results.csv and my_ml_model.joblib.")
+        "my_ml*, files will extracted to my_ml_results.csv and my_ml_trained_model.joblib.")
 
     examples = """
 Run one or more strategies and generate orders.
