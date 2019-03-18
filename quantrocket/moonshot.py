@@ -415,7 +415,7 @@ def _cli_scan_parameters(*args, **kwargs):
 def ml_walkforward(strategy, start_date, end_date, train, min_train=None, rolling_train=None,
                    model_filepath=None, force_nonincremental=None, segment=None,
                    allocation=None, nlv=None, params=None,
-                   details=None, filepath_or_buffer=None):
+                   details=None, progress=False, filepath_or_buffer=None):
     """
     Run a walk-forward backtest of a machine learning strategy.
 
@@ -490,6 +490,10 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None, rollin
 
     details : bool
         return detailed results for all securities instead of aggregating
+
+    progress : bool
+        log status and Sharpe ratios of each walk-forward segment during analysis
+        (default False)
 
     filepath_or_buffer : str, optional
         the location to write the ZIP file to; or, if path ends with "*", the
@@ -583,6 +587,8 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None, rollin
         _params["nlv"] = dict_to_dict_strs(nlv)
     if details:
         _params["details"] = details
+    if progress:
+        _params["progress"] = progress
     if params:
         _params["params"] = dict_to_dict_strs(params)
 

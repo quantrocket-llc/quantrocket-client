@@ -341,6 +341,11 @@ memory usage:
         action="store_true",
         help="return detailed results for all securities instead of aggregating")
     outputs.add_argument(
+        "--progress",
+        action="store_true",
+        help="log status and Sharpe ratios of each walk-forward segment during "
+        "analysis (default False)")
+    outputs.add_argument(
         "-o", "--outfile",
         metavar="FILEPATH",
         dest="filepath_or_buffer",
