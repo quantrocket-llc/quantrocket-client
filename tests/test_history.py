@@ -1175,6 +1175,7 @@ class GetHistoricalPricesTestCase(unittest.TestCase):
                         "usa-stk-15min",
                         times=["09:30:00", "10:00:00"],
                         fields=["Close", "Volume"],
+                        master_fields=["Timezone"]
                     )
 
         self.assertListEqual(list(prices.index.names), ["Field", "Date", "Time"])
@@ -1229,6 +1230,121 @@ class GetHistoricalPricesTestCase(unittest.TestCase):
               'Time': '09:30:00',
               12345: 'America/New_York',
               23456: 'America/New_York'}]
+        )
+
+    def test_intraday_infer_timezone_from_securities_but_dont_return_timezone(self):
+        """
+        Tests handling of an intraday db when a timezone is not specified and
+        is therefore inferred from the securities master, but the Timezone
+        field is not requested nor returned.
+        """
+        def mock_get_db_config(db):
+            return {
+                "bar_size": "30 mins",
+                "universes": ["usa-stk"],
+                "vendor": "ib"
+            }
+
+        def mock_download_history_file(code, f, *args, **kwargs):
+            prices = pd.DataFrame(
+                dict(
+                    ConId=[
+                        12345,
+                        12345,
+                        12345,
+                        12345,
+                        23456,
+                        23456,
+                        23456,
+                        23456
+                        ],
+                    Date=[
+                        "2018-04-01T09:30:00-04:00",
+                        "2018-04-01T10:00:00-04:00",
+                        "2018-04-02T09:30:00-04:00",
+                        "2018-04-02T10:00:00-04:00",
+                        "2018-04-01T09:30:00-04:00",
+                        "2018-04-01T10:00:00-04:00",
+                        "2018-04-02T09:30:00-04:00",
+                        "2018-04-02T10:00:00-04:00",
+                        ],
+                    Close=[
+                        20.10,
+                        20.25,
+                        20.50,
+                        20.38,
+                        50.15,
+                        50.59,
+                        51.59,
+                        51.67
+                        ],
+                    Volume=[
+                        1500,
+                        7800,
+                        1400,
+                        800,
+                        9000,
+                        7100,
+                        1400,
+                        1500
+                    ]
+                ))
+            prices.to_csv(f, index=False)
+
+        def mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(ConId=[12345,23456],
+                                           Timezone=["America/New_York", "America/New_York"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.history.get_db_config', new=mock_get_db_config):
+            with patch('quantrocket.history.download_history_file', new=mock_download_history_file):
+                with patch("quantrocket.history.download_master_file", new=mock_download_master_file):
+
+                    prices = get_historical_prices(
+                        "usa-stk-15min",
+                        times=["09:30:00", "10:00:00"],
+                        fields=["Close", "Volume"],
+                    )
+
+        self.assertListEqual(list(prices.index.names), ["Field", "Date", "Time"])
+        self.assertEqual(prices.columns.name, "ConId")
+        dt = prices.index.get_level_values("Date")
+        self.assertTrue(isinstance(dt, pd.DatetimeIndex))
+        self.assertIsNone(dt.tz)
+        self.assertListEqual(list(prices.columns), [12345,23456])
+        self.assertSetEqual(
+            set(prices.index.get_level_values("Field")),
+            {"Close", "Volume"})
+        self.assertSetEqual(
+            set(prices.index.get_level_values("Time")),
+            {"09:30:00", "10:00:00"})
+        closes = prices.loc["Close"]
+        closes_930 = closes.xs("09:30:00", level="Time")
+        closes_930 = closes_930.reset_index()
+        closes_930.loc[:, "Date"] = closes_930.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            closes_930.to_dict(orient="records"),
+            [{'Date': '2018-04-01T00:00:00', 12345: 20.1, 23456: 50.15},
+             {'Date': '2018-04-02T00:00:00', 12345: 20.5, 23456: 51.59}]
+        )
+        closes_1000 = closes.xs("10:00:00", level="Time")
+        closes_1000 = closes_1000.reset_index()
+        closes_1000.loc[:, "Date"] = closes_1000.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            closes_1000.to_dict(orient="records"),
+            [{'Date': '2018-04-01T00:00:00', 12345: 20.25, 23456: 50.59},
+             {'Date': '2018-04-02T00:00:00', 12345: 20.38, 23456: 51.67}]
+        )
+
+        volumes = prices.loc["Volume"]
+        volumes_930 = volumes.xs("09:30:00", level="Time")
+        volumes_930 = volumes_930.reset_index()
+        volumes_930.loc[:, "Date"] = volumes_930.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            volumes_930.to_dict(orient="records"),
+            [{'Date': '2018-04-01T00:00:00', 12345: 1500.0, 23456: 9000.0},
+             {'Date': '2018-04-02T00:00:00', 12345: 1400.0, 23456: 1400.0}]
         )
 
     def test_complain_if_cannot_infer_timezone_from_securities(self):

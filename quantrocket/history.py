@@ -555,25 +555,6 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
 def _cli_download_history_file(*args, **kwargs):
     return json_to_cli(download_history_file, *args, **kwargs)
 
-def _infer_timezone(prices):
-    """
-    Infers the timezone from the component securities if possible.
-    """
-    if "Timezone" not in prices.index.get_level_values("Field"):
-        raise ParameterError(
-            "cannot infer timezone because Timezone field is missing, "
-            "please specify timezone or include Timezone in master_fields")
-
-    timezones = prices.loc["Timezone"].stack().unique()
-
-    if len(timezones) > 1:
-        raise ParameterError(
-            "cannot infer timezone because multiple timezones are present "
-            "in data, please specify timezone explicitly (timezones: {0})".format(
-                ", ".join(timezones)))
-
-    return timezones[0]
-
 def get_historical_prices(codes, start_date=None, end_date=None,
                           universes=None, conids=None,
                           exclude_universes=None, exclude_conids=None,
@@ -698,12 +679,6 @@ def get_historical_prices(codes, start_date=None, end_date=None,
     if not isinstance(dbs, (list, tuple)):
         dbs = [dbs]
 
-    if master_fields:
-        if isinstance(master_fields, tuple):
-            master_fields = list(master_fields)
-        elif not isinstance(master_fields, list):
-            master_fields = [master_fields]
-
     db_universes = set()
     db_bar_sizes = set()
     db_domains = set()
@@ -778,18 +753,26 @@ def get_historical_prices(codes, start_date=None, end_date=None,
     prices = prices.pivot(index="ConId", columns="Date").T
     prices.index.set_names(["Field", "Date"], inplace=True)
 
+    master_fields = master_fields or []
+    if master_fields:
+        if isinstance(master_fields, tuple):
+            master_fields = list(master_fields)
+        elif not isinstance(master_fields, list):
+            master_fields = [master_fields]
+
+    # master fields that are required internally but shouldn't be returned to
+    # the user (potentially Timezone)
+    internal_master_fields = []
 
     is_intraday = db_bar_sizes[0] not in ("1 day", "1 week", "1 month")
 
     if is_intraday and not timezone and infer_timezone is not False:
         infer_timezone = True
-        if not master_fields:
-            master_fields = []
-        if "Timezone" not in master_fields:
-            master_fields.append("Timezone")
+        if not master_fields or "Timezone" not in master_fields:
+            internal_master_fields.append("Timezone")
 
     # Next, get the master file
-    if master_fields:
+    if master_fields or internal_master_fields:
         conids = list(prices.columns)
 
         domain = list(db_domains)[0] if db_domains else None
@@ -798,7 +781,7 @@ def get_historical_prices(codes, start_date=None, end_date=None,
         download_master_file(
             f,
             conids=conids,
-            fields=master_fields,
+            fields=master_fields + internal_master_fields,
             domain=domain
         )
         securities = pd.read_csv(f, index_col="ConId")
@@ -809,21 +792,35 @@ def get_historical_prices(codes, start_date=None, end_date=None,
         if "Etf" in securities.columns:
             securities.loc[:, "Etf"] = securities.Etf.astype(bool)
 
-        # Append securities, indexed to the min date, to allow easy ffill on demand
-        securities = pd.DataFrame(securities.T, columns=prices.columns)
-        securities.index.name = "Field"
-        idx = pd.MultiIndex.from_product(
-            (securities.index, [prices.index.get_level_values("Date").min()]),
-            names=["Field", "Date"])
+        # Infer timezone if needed
+        if not timezone and infer_timezone:
+            timezones = securities.Timezone.unique()
 
-        securities = securities.reindex(index=idx, level="Field")
-        prices = pd.concat((prices, securities))
+            if len(timezones) > 1:
+                raise ParameterError(
+                    "cannot infer timezone because multiple timezones are present "
+                    "in data, please specify timezone explicitly (timezones: {0})".format(
+                        ", ".join(timezones)))
+
+            timezone = timezones[0]
+
+        # Drop any internal-only fields
+        if internal_master_fields:
+            securities = securities.drop(internal_master_fields, axis=1)
+
+        if not securities.empty:
+            # Append securities, indexed to the min date, to allow easy ffill on demand
+            securities = pd.DataFrame(securities.T, columns=prices.columns)
+            securities.index.name = "Field"
+            idx = pd.MultiIndex.from_product(
+                (securities.index, [prices.index.get_level_values("Date").min()]),
+                names=["Field", "Date"])
+
+            securities = securities.reindex(index=idx, level="Field")
+            prices = pd.concat((prices, securities))
 
     if is_intraday:
         dates = pd.to_datetime(prices.index.get_level_values("Date"), utc=True)
-
-        if not timezone and infer_timezone:
-            timezone = _infer_timezone(prices)
 
         if timezone:
             dates = dates.tz_convert(timezone)
