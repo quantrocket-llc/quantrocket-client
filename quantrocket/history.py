@@ -604,8 +604,11 @@ def get_historical_prices(codes, start_date=None, end_date=None,
         available fields)
 
     master_fields : list of str, optional
-        append these fields from the securities master database (pass ['?'] or any
-        invalid fieldname to see available fields)
+        [DEPRECATED] append these fields from the securities master database (pass ['?'] or any
+        invalid fieldname to see available fields). This parameter is deprecated and
+        will be removed in a future release. For better performance, use
+        `quantrocket.master.get_securities_reindexed_like` to get securities master
+        data shaped like prices.
 
     timezone : str, optional
         convert timestamps to this timezone, for example America/New_York (see

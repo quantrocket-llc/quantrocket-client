@@ -425,6 +425,70 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
 def _cli_download_master_file(*args, **kwargs):
     return json_to_cli(download_master_file, *args, **kwargs)
 
+def get_securities_reindexed_like(reindex_like, domain, fields=None):
+    """
+    Return a multiindex DataFrame of securities master data, reindexed to
+    match the index and columns (conids) of `reindex_like`.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and conids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    domain : str, required
+        the domain of the conids in `reindex_like`, and the securities master domain
+        to be queried. Possible choices: main, sharadar
+
+    fields : list of str
+        a list of fields to include in the resulting DataFrame. Defaults to
+        including all fields. For faster performance, limiting fields to
+        those needed is highly recommended, especially for large universes.
+
+    Returns
+    -------
+    DataFrame
+        a multiindex (Field, Date) DataFrame of securities master data, shaped
+        like the input DataFrame
+
+    Examples
+    --------
+    Get symbols, currencies, and primary exchanges using a DataFrame of
+    historical prices from IB:
+
+    >>> closes = prices.loc["Close"]
+    >>> securities = get_securities_reindexed_like(
+            closes, domain="main",
+            fields=["PrimaryExchange"])
+    >>> exchanges = securities.loc["PrimaryExchange"]
+    >>> nyse_closes = closes.where(exchanges == "NYSE")
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    conids = list(reindex_like.columns)
+
+    f = six.StringIO()
+    download_master_file(f, domain=domain, conids=conids, fields=fields)
+    securities = pd.read_csv(f, index_col="ConId")
+
+    all_master_fields = {}
+
+    for col in securities.columns:
+        this_col = securities[col]
+        if col in ("Delisted", "Etf"):
+            this_col = this_col.astype(bool)
+        all_master_fields[col] = reindex_like.apply(lambda x: this_col, axis=1)
+
+    names = list(reindex_like.index.names)
+    names.insert(0, "Field")
+
+    securities = pd.concat(all_master_fields, names=names)
+    return securities
+
 def translate_conids(conids, from_domain=None, to_domain=None):
     """
     Translate conids (contract IDs) from one domain to another.
