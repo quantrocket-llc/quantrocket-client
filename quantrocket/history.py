@@ -559,8 +559,8 @@ def get_historical_prices(codes, start_date=None, end_date=None,
                           universes=None, conids=None,
                           exclude_universes=None, exclude_conids=None,
                           times=None, cont_fut=None, fields=None,
-                          master_fields=None, timezone=None,
-                          infer_timezone=None):
+                          timezone=None, infer_timezone=None,
+                          master_fields=None):
     """
     Query one or more history databases and load prices into a DataFrame.
 
@@ -603,13 +603,6 @@ def get_historical_prices(codes, start_date=None, end_date=None,
         only return these fields (pass ['?'] or any invalid fieldname to see
         available fields)
 
-    master_fields : list of str, optional
-        [DEPRECATED] append these fields from the securities master database (pass ['?'] or any
-        invalid fieldname to see available fields). This parameter is deprecated and
-        will be removed in a future release. For better performance, use
-        `quantrocket.master.get_securities_reindexed_like` to get securities master
-        data shaped like prices.
-
     timezone : str, optional
         convert timestamps to this timezone, for example America/New_York (see
         `pytz.all_timezones` for choices); ignored for non-intraday bar sizes
@@ -618,6 +611,13 @@ def get_historical_prices(codes, start_date=None, end_date=None,
         infer the timezone from the securities master Timezone field; defaults to
         True if using intraday bars and no `timezone` specified; ignored for
         non-intraday bars, or if `timezone` is passed
+
+    master_fields : list of str, optional
+        [DEPRECATED] append these fields from the securities master database (pass ['?'] or any
+        invalid fieldname to see available fields). This parameter is deprecated and
+        will be removed in a future release. For better performance, use
+        `quantrocket.master.get_securities_reindexed_like` to get securities master
+        data shaped like prices.
 
     Returns
     -------
@@ -758,6 +758,16 @@ def get_historical_prices(codes, start_date=None, end_date=None,
 
     master_fields = master_fields or []
     if master_fields:
+        import warnings
+        # DeprecationWarning is ignored by default but we want the user
+        # to see it
+        warnings.simplefilter("always", DeprecationWarning)
+        warnings.warn(
+            "`master_fields` parameter is deprecated and will be removed in a "
+            "future release. For better performance, please use "
+            "`quantrocket.master.get_securities_reindexed_like` "
+            "to get securities master data shaped like prices.", DeprecationWarning)
+
         if isinstance(master_fields, tuple):
             master_fields = list(master_fields)
         elif not isinstance(master_fields, list):
