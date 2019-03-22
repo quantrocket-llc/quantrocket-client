@@ -352,6 +352,7 @@ memory usage:
         help="the location to write the ZIP file to; or, if path ends with '*', the "
         "pattern to use for extracting the zipped files. For example, if the path is "
         "my_ml*, files will extracted to my_ml_results.csv and my_ml_trained_model.joblib.")
+    parser.set_defaults(func="quantrocket.moonshot._cli_ml_walkforward")
 
     examples = """
 Run one or more strategies and generate orders.
