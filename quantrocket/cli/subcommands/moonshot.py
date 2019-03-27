@@ -223,7 +223,7 @@ Run a parameter scan in 1-year segments to reduce memory usage:
     parser.set_defaults(func="quantrocket.moonshot._cli_scan_parameters")
 
     examples = """
-Run a walk-forward backtest of a machine learning strategy.
+Run a walk-forward optimization of a machine learning strategy.
 
 The date range will be split into segments of `--train` size. For each
 segment, the model will be trained with the data, then the trained model will
@@ -234,8 +234,8 @@ scikit-learn models/pipelines and Keras models. To customize model, instantiate
 the model locally, serialize it to disk, and pass the filename of the serialized
 model as `--model`.
 
-Supports expanding walk-forward backtests (the default), which use an anchored start date
-for model training, or rolling walk-forward backtests (by specifying `--rolling-train`),
+Supports expanding walk-forward optimizations (the default), which use an anchored start date
+for model training, or rolling walk-forward optimizations (by specifying `--rolling-train`),
 which use a rolling or non-anchored start date for model training.
 
 Returns a backtest results CSV and a dump of the machine learning model
@@ -243,13 +243,13 @@ as of the end of the analysis.
 
 Examples:
 
-Run a walk-forward backtest using the default model and retrain the model annually,
+Run a walk-forward optimization using the default model and retrain the model annually,
 writing the backtest results and trained model to demo_ml_results.csv and
 demo_ml_trained_model.joblib, respectively:
 
     quantrocket moonshot ml-walkforward demo-ml -s 2007-01-01 -e 2018-12-31 --train A -o demo_ml*
 
-Run a walk-forward backtest using a custom model (serialized with joblib), retrain the
+Run a walk-forward optimization using a custom model (serialized with joblib), retrain the
 model annually, don't perform backtesting until after 5 years of initial training,
 and further split the training and backtesting into quarterly segments to reduce
 memory usage:
@@ -258,7 +258,7 @@ memory usage:
     """
     parser = _subparsers.add_parser(
         "ml-walkforward",
-        help="run a walk-forward backtest of a machine learning strategy",
+        help="run a walk-forward optimization of a machine learning strategy",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -271,7 +271,7 @@ memory usage:
         metavar="YYYY-MM-DD",
         required=True,
         help="the analysis start date (note that model training will start on this date "
-        "but backtest will not start until after the initial training period)")
+        "but backtesting will not start until after the initial training period)")
     walkforward_options.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
@@ -305,7 +305,7 @@ memory usage:
         action="store_true",
         help="force the model to be trained non-incrementally (i.e. load entire training "
         "data set into memory) even if it supports incremental learning. Required "
-        "in order to perform a rolling (as opposed to expanding) walk-forward backtest "
+        "in order to perform a rolling (as opposed to expanding) walk-forward optimization "
         "with a model that supports incremental learning.")
     backtest_options = parser.add_argument_group("backtest options")
     backtest_options.add_argument(

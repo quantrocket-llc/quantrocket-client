@@ -417,19 +417,19 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None, rollin
                    allocation=None, nlv=None, params=None,
                    details=None, progress=False, filepath_or_buffer=None):
     """
-    Run a walk-forward backtest of a machine learning strategy.
+    Run a walk-forward optimization of a machine learning strategy.
 
-    The date range will be split into segments of `--train` size. For each
+    The date range will be split into segments of `train` size. For each
     segment, the model will be trained with the data, then the trained model will
     be backtested on the following segment.
 
     By default, uses scikit-learn's StandardScaler+SGDRegressor. Also supports other
     scikit-learn models/pipelines and Keras models. To customize model, instantiate
-    the model locally, serialize it to disk, and pass the filename of the serialized
-    model as `--model`.
+    the model locally, serialize it to disk, and pass the path of the serialized
+    model as `model_filepath`.
 
-    Supports expanding walk-forward backtests (the default), which use an anchored start date
-    for model training, or rolling walk-forward backtests (by specifying `--rolling-train`),
+    Supports expanding walk-forward optimizations (the default), which use an anchored start date
+    for model training, or rolling walk-forward optimizations (by specifying `rolling_train`),
     which use a rolling or non-anchored start date for model training.
 
     Returns a backtest results CSV and a dump of the machine learning model
@@ -442,7 +442,7 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None, rollin
 
     start_date : str (YYYY-MM-DD), required
         the analysis start date (note that model training will start on this date
-        but backtest will not start until after the initial training period)
+        but backtesting will not start until after the initial training period)
 
     end_date : str (YYYY-MM-DD), required
         the analysis end date
@@ -468,7 +468,7 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None, rollin
     force_nonincremental : bool, optional
         force the model to be trained non-incrementally (i.e. load entire training
         data set into memory) even if it supports incremental learning. Must be True
-        in order to perform a rolling (as opposed to expanding) walk-forward backtest
+        in order to perform a rolling (as opposed to expanding) walk-forward optimization
         with a model that supports incremental learning. Default False.
 
     segment : str, optional
@@ -506,7 +506,7 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None, rollin
 
     Examples
     --------
-    Run a walk-forward backtest using the default model and retrain the model
+    Run a walk-forward optimization using the default model and retrain the model
     annually, writing the backtest results and trained model to demo_ml_results.csv
     and demo_ml_trained_model.joblib, respectively:
 
@@ -532,7 +532,7 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None, rollin
             model_filepath="my_model.joblib",
             filepath_or_buffer="demo_ml*")
 
-    Run a walk-forward backtest using a custom model (serialized with joblib),
+    Run a walk-forward optimization using a custom model (serialized with joblib),
     retrain the model annually, don't perform backtesting until after 5 years
     of initial training, and further split the training and backtesting into
     quarterly segments to reduce memory usage:
