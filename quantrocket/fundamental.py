@@ -590,12 +590,12 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
 
     shift : bool
         shift values forward one day from the UpdatedDate to avoid lookahead bias.
-        Shifting forward one day may be overly cautious as updates may occur early
-        in the day, for example before the market open, and thus may be actionable
-        the same day. Set 'shift=False' to return all values on the UpdatedDate, in
-        which case you can also request UpdatedDate in the list of fields to return
-        and shift values yourself based on UpdatedDate (which contains UTC
-        timestamps). Default True.
+        Shifting forward one day may be overly cautious as announcements may occur
+        early in the day, for example before the market open, and thus may be actionable
+        the same day. Set 'shift=False' to index values to the UpdatedDate rather
+        than the day after, in which case you may also want to query UpdatedDate and/or
+        AnnounceDate (both timestamped in UTC) and use them to selectively shift estimates
+        and actuals yourself. Default True.
 
     max_lag : str, optional
         maximum amount of time a data point can be used after the
