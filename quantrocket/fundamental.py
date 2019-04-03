@@ -348,6 +348,12 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
     start_date = start_date.isoformat()
     end_date = reindex_like.index.max().date().isoformat()
 
+    if not isinstance(fields, (list,tuple)):
+        fields = [fields]
+
+    if not isinstance(coa_codes, (list, tuple)):
+        coa_codes = [coa_codes]
+
     f = six.StringIO()
     download_reuters_financials(
         coa_codes, f, conids=conids, start_date=start_date, end_date=end_date,
@@ -548,14 +554,15 @@ def _cli_download_reuters_estimates(*args, **kwargs):
     return json_to_cli(download_reuters_estimates, *args, **kwargs)
 
 def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
-                                         period_types=["Q"], max_lag=None):
+                                         period_types=["Q"], ffill=True, shift=True,
+                                         max_lag=None):
     """
     Return a multiindex (Indicator, Field, Date) DataFrame of point-in-time
     Reuters estimates and actuals for one or more indicator codes, reindexed
     to match the index (dates) and columns (conids) of `reindex_like`.
     Estimates and actuals are forward-filled in order to provide the latest
     reading at any given date, indexed to the UpdatedDate field.
-    UpdatedDate is shifted forward 1 day to avoid lookahead bias.
+    By default UpdatedDate is shifted forward 1 day to avoid lookahead bias.
 
     Parameters
     ----------
@@ -575,6 +582,20 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     period_types : list of str, optional
         limit to these fiscal period types. Possible choices: A, Q, S, where
         A=Annual, Q=Quarterly, S=Semi-Annual. Default is Q/Quarterly.
+
+    ffill : bool
+        forward-fill values in the resulting DataFrame so that each date reflects
+        the latest available value as of that date. If False, values appear only
+        on the first date they were available, followed by NaNs. Default True.
+
+    shift : bool
+        shift values forward one day from the UpdatedDate to avoid lookahead bias.
+        Shifting forward one day may be overly cautious as updates may occur early
+        in the day, for example before the market open, and thus may be actionable
+        the same day. Set 'shift=False' to return all values on the UpdatedDate, in
+        which case you can also request UpdatedDate in the list of fields to return
+        and shift values yourself based on UpdatedDate (which contains UTC
+        timestamps). Default True.
 
     max_lag : str, optional
         maximum amount of time a data point can be used after the
@@ -597,6 +618,17 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     >>> closes = prices.loc["Close"]
     >>> estimates = get_reuters_estimates_reindexed_like(closes, codes=["BVPS"])
     >>> book_values_per_share = estimates.loc["BVPS"].loc["Actual"]
+
+    Query the AnnounceDate field without shifting or forward-filling, convert UTC
+    to New York time, and determine whether the earnings were announced before 9 AM
+    or after 4 PM:
+
+    >>> estimates = get_reuters_estimates_reindexed_like(
+                        closes, codes="EPS", fields="AnnounceDate", ffill=False, shift=False)
+    >>> announce_dates = estimates.loc["EPS"].loc["AnnounceDate"]
+    >>> announce_hours = announce_dates.stack(dropna=False).dt.tz_localize("UTC").dt.tz_convert("America/New_York").dt.hour.unstack()
+    >>> announced_before_market_opens = announce_hours < 9
+    >>> announced_after_market_closes = announce_hours >= 16
     """
     try:
         import pandas as pd
@@ -625,6 +657,15 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     start_date = start_date.isoformat()
     end_date = reindex_like.index.max().date().isoformat()
 
+    if not isinstance(fields, (list,tuple)):
+        fields = [fields]
+
+    if period_types and not isinstance(period_types, (list, tuple)):
+        period_types = [period_types]
+
+    if not isinstance(codes, (list, tuple)):
+        codes = [codes]
+
     f = six.StringIO()
     query_fields = list(fields) # copy fields on Py2 or 3: https://stackoverflow.com/a/2612815/417414
     if "UpdatedDate" not in query_fields:
@@ -632,7 +673,9 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     download_reuters_estimates(
         codes, f, conids=conids, start_date=start_date, end_date=end_date,
         fields=query_fields, period_types=period_types)
-    parse_dates = ["UpdatedDate","FiscalPeriodEndDate"]
+    parse_dates = ["UpdatedDate"]
+    if "FiscalPeriodEndDate" in fields or max_lag:
+        parse_dates.append("FiscalPeriodEndDate")
     if "AnnounceDate" in fields:
         parse_dates.append("AnnounceDate")
     estimates = pd.read_csv(
@@ -671,14 +714,18 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     needed_fields.update(set(("ConId", "Date", "Indicator")))
     if max_lag:
         needed_fields.add("FiscalPeriodEndDate")
+    # If not ffilling, cast UpdatedDate to int for faster fiscal period boundary detection
+    if not ffill:
+        estimates["UpdatedDateInt"] = estimates.UpdatedDate.astype(int)
+        needed_fields.add("UpdatedDateInt")
+
     unneeded_fields = set(estimates.columns) - needed_fields
     if unneeded_fields:
         estimates = estimates.drop(unneeded_fields, axis=1)
 
-    # if reindex_like.index is tz-aware, make financials tz-aware so they can
-    # be joined (tz-aware or tz-naive are both fine, as SourceDate represents
-    # dates which are assumed to be in the local timezone of the reported
-    # company)
+    # if reindex_like.index is tz-aware, make estimates tz-aware so they can
+    # be joined (tz-aware or tz-naive are both fine, as UpdatedDate was
+    # already converted above to the local timezone of the reported company)
     if reindex_like.index.tz:
         estimates.loc[:, "Date"] = estimates.Date.dt.tz_localize(reindex_like.index.tz.zone)
         deduped_updated_dates = estimates.Date.drop_duplicates()
@@ -713,7 +760,8 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
             field_for_code = estimates_for_code.loc[field].fillna(method="ffill")
 
             # Shift to avoid lookahead bias
-            field_for_code = field_for_code.shift()
+            if shift:
+                field_for_code = field_for_code.shift()
 
             all_fields_for_code[field] = field_for_code
 
@@ -741,6 +789,14 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
         extra_dates = union_date_idx.difference(reindex_like.index)
         if not extra_dates.empty:
             estimates_for_code.drop(extra_dates, axis=0, level="Date", inplace=True)
+
+        # If not ffilling, mask any values that aren't the newest for that
+        # update (must be done after removing extra dates in case the
+        # UpdatedDate got dropped due to not being in reindex_like)
+        if not ffill:
+            are_new_updates = estimates_for_code.loc["UpdatedDateInt"].fillna(0).diff().abs() > 0
+            estimates_for_code.drop("UpdatedDateInt", level="Field", inplace=True)
+            estimates_for_code = estimates_for_code.where(are_new_updates, level="Date")
 
         all_estimates[code] = estimates_for_code
 
@@ -1008,6 +1064,9 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, domain, fields=None,
     start_date -= pd.Timedelta(days=365+180)
     start_date = start_date.isoformat()
     end_date = reindex_like.index.max().date().isoformat()
+
+    if fields and not isinstance(fields, (list,tuple)):
+        fields = [fields]
 
     f = six.StringIO()
     download_sharadar_fundamentals(

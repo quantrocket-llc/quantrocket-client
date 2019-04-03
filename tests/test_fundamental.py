@@ -233,7 +233,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
             with patch('quantrocket.fundamental.download_master_file', new=mock_download_master_file):
 
                 estimates = get_reuters_estimates_reindexed_like(
-                    closes, ["EPS"])
+                    closes, "EPS", period_types="Q")
 
         self.assertSetEqual(set(estimates.index.get_level_values("Indicator")), {"EPS"})
         self.assertSetEqual(set(estimates.index.get_level_values("Field")), {"Actual"})
@@ -300,6 +300,280 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
         self.assertEqual(eps[12345].loc["2018-07-23"], 13.45)
         self.assertEqual(eps[12345].loc["2018-07-24"], 16.34)
 
+    def test_no_shift(self):
+        """
+        Tests that indicators are not shifted forward 1 period if shift=False.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,1),
+            columns=[12345],
+            index=pd.date_range(start="2018-07-20", periods=6, freq="D", name="Date"))
+
+        def mock_download_reuters_estimates(codes, f, *args, **kwargs):
+            estimates = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-03-30",
+                        "2018-06-30"
+                        ],
+                    UpdatedDate=[
+                        "2018-04-23T10:00:00",
+                        "2018-07-23T10:00:00",
+                        ],
+                     ConId=[
+                         12345,
+                         12345,
+                         ],
+                     Indicator=[
+                         "EPS",
+                         "EPS",
+                         ],
+                     Actual=[
+                         13.45,
+                         16.34
+                     ]))
+            estimates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(ConId=[12345],
+                                           Timezone=["America/New_York"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_reuters_estimates', new=mock_download_reuters_estimates):
+            with patch('quantrocket.fundamental.download_master_file', new=mock_download_master_file):
+
+                estimates = get_reuters_estimates_reindexed_like(
+                    closes, ["EPS"], shift=False)
+
+        self.assertSetEqual(set(estimates.index.get_level_values("Indicator")), {"EPS"})
+        self.assertSetEqual(set(estimates.index.get_level_values("Field")), {"Actual"})
+
+        eps = estimates.loc["EPS"].loc["Actual"]
+        self.assertListEqual(list(eps.index), list(closes.index))
+        self.assertListEqual(list(eps.columns), list(closes.columns))
+        self.assertEqual(eps[12345].loc["2018-07-22"], 13.45)
+        self.assertEqual(eps[12345].loc["2018-07-23"], 16.34)
+
+    def test_no_ffill(self):
+        """
+        Tests that indicators are not forward-filled if ffill=False.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,3),
+            columns=[12345, 23456, 34567],
+            index=pd.DatetimeIndex(["2018-07-22", "2018-07-23","2018-07-24",
+                                    "2018-07-27","2018-07-28","2018-07-29"], name="Date"))
+
+        def mock_download_reuters_estimates(codes, f, *args, **kwargs):
+            estimates = pd.DataFrame(
+                dict(
+                    FiscalPeriodEndDate=[
+                        "2018-03-30",
+                        "2018-06-30",
+                        "2018-03-30",
+                        "2018-06-30",
+                        "2018-06-30",
+                        "2018-06-30",
+                        "2018-06-30"
+                        ],
+                    UpdatedDate=[
+                        "2018-04-23T10:00:00",
+                        "2018-07-23T10:00:00",
+                        "2018-04-25T10:00:00",
+                        "2018-07-25T10:00:00",
+                        "2018-07-26T10:00:00",
+                        "2018-07-26T10:00:00",
+                        "2018-07-28T10:00:00",
+                        ],
+                     ConId=[
+                         12345,
+                         12345,
+                         23456,
+                         23456,
+                         34567,
+                         12345,
+                         23456
+                         ],
+                     Indicator=[
+                         "EPS",
+                         "EPS",
+                         "EPS",
+                         "EPS",
+                         "EPS",
+                         "BVPS",
+                         "BVPS",
+                         ],
+                     Mean=[
+                         13.50,
+                         15.67,
+                         None,
+                         10.03,
+                         1.00,
+                         42.34,
+                         24.56
+                         ],
+                     Actual=[
+                         13.45,
+                         16.34,
+                         9.45,
+                         10.04,
+                         0.56,
+                         45.34,
+                         21.34
+                     ]))
+            estimates.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(ConId=[12345,23456,34567],
+                                           Timezone=["America/New_York","America/New_York",
+                                                     "America/New_York"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_reuters_estimates', new=mock_download_reuters_estimates):
+            with patch('quantrocket.fundamental.download_master_file', new=mock_download_master_file):
+
+                estimates = get_reuters_estimates_reindexed_like(
+                    closes, ["EPS", "BVPS"], fields=["Mean","Actual"],
+                    ffill=False, shift=False)
+
+        self.assertSetEqual(set(estimates.index.get_level_values("Indicator")), {"EPS", "BVPS"})
+        self.assertSetEqual(set(estimates.index.get_level_values("Field")), {"Actual", "Mean"})
+
+        eps_actuals = estimates.loc["EPS"].loc["Actual"]
+        self.assertListEqual(list(eps_actuals.index), list(closes.index))
+        self.assertListEqual(list(eps_actuals.columns), list(closes.columns))
+
+        # replace Nan with "nan" to allow equality comparisons
+        eps_actuals = eps_actuals.fillna("nan")
+
+        self.maxDiff = None
+
+        self.assertDictEqual(
+            eps_actuals.to_dict(),
+            {12345: {
+                pd.Timestamp('2018-07-22 00:00:00'): "nan",
+                pd.Timestamp('2018-07-23 00:00:00'): 16.34,
+                pd.Timestamp('2018-07-24 00:00:00'): "nan",
+                pd.Timestamp('2018-07-27 00:00:00'): "nan",
+                pd.Timestamp('2018-07-28 00:00:00'): "nan",
+                pd.Timestamp('2018-07-29 00:00:00'): "nan"
+                },
+             23456: {
+                 pd.Timestamp('2018-07-22 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-23 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-24 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-27 00:00:00'): 10.04,
+                 pd.Timestamp('2018-07-28 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-29 00:00:00'): "nan"
+             },
+            34567: {
+                pd.Timestamp('2018-07-22 00:00:00'): "nan",
+                pd.Timestamp('2018-07-23 00:00:00'): "nan",
+                pd.Timestamp('2018-07-24 00:00:00'): "nan",
+                pd.Timestamp('2018-07-27 00:00:00'): 0.56,
+                pd.Timestamp('2018-07-28 00:00:00'): "nan",
+                pd.Timestamp('2018-07-29 00:00:00'): "nan"}
+            })
+
+        eps_estimates = estimates.loc["EPS"].loc["Mean"]
+
+        # replace Nan with "nan" to allow equality comparisons
+        eps_estimates = eps_estimates.fillna("nan")
+
+        self.assertDictEqual(
+            eps_estimates.to_dict(),
+            {12345: {
+                pd.Timestamp('2018-07-22 00:00:00'): "nan",
+                pd.Timestamp('2018-07-23 00:00:00'): 15.67,
+                pd.Timestamp('2018-07-24 00:00:00'): "nan",
+                pd.Timestamp('2018-07-27 00:00:00'): "nan",
+                pd.Timestamp('2018-07-28 00:00:00'): "nan",
+                pd.Timestamp('2018-07-29 00:00:00'): "nan"
+                },
+             23456: {
+                 pd.Timestamp('2018-07-22 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-23 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-24 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-27 00:00:00'): 10.03,
+                 pd.Timestamp('2018-07-28 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-29 00:00:00'): "nan"
+             },
+            34567: {
+                pd.Timestamp('2018-07-22 00:00:00'): "nan",
+                pd.Timestamp('2018-07-23 00:00:00'): "nan",
+                pd.Timestamp('2018-07-24 00:00:00'): "nan",
+                pd.Timestamp('2018-07-27 00:00:00'): 1.00,
+                pd.Timestamp('2018-07-28 00:00:00'): "nan",
+                pd.Timestamp('2018-07-29 00:00:00'): "nan"}
+            })
+
+        bvps_actuals = estimates.loc["BVPS"].loc["Actual"]
+
+        # replace Nan with "nan" to allow equality comparisons
+        bvps_actuals = bvps_actuals.fillna("nan")
+        self.assertDictEqual(
+            bvps_actuals.to_dict(),
+            {12345: {
+                pd.Timestamp('2018-07-22 00:00:00'): "nan",
+                pd.Timestamp('2018-07-23 00:00:00'): "nan",
+                pd.Timestamp('2018-07-24 00:00:00'): "nan",
+                pd.Timestamp('2018-07-27 00:00:00'): 45.34,
+                pd.Timestamp('2018-07-28 00:00:00'): "nan",
+                pd.Timestamp('2018-07-29 00:00:00'): "nan"
+                },
+             23456: {
+                 pd.Timestamp('2018-07-22 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-23 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-24 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-27 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-28 00:00:00'): 21.34,
+                 pd.Timestamp('2018-07-29 00:00:00'): "nan"
+             },
+            34567: {
+                pd.Timestamp('2018-07-22 00:00:00'): "nan",
+                pd.Timestamp('2018-07-23 00:00:00'): "nan",
+                pd.Timestamp('2018-07-24 00:00:00'): "nan",
+                pd.Timestamp('2018-07-27 00:00:00'): "nan",
+                pd.Timestamp('2018-07-28 00:00:00'): "nan",
+                pd.Timestamp('2018-07-29 00:00:00'): "nan"}
+            })
+
+        bvps_estimates = estimates.loc["BVPS"].loc["Mean"]
+
+        # replace Nan with "nan" to allow equality comparisons
+        bvps_estimates = bvps_estimates.fillna("nan")
+
+        self.assertDictEqual(
+            bvps_estimates.to_dict(),
+            {12345: {
+                pd.Timestamp('2018-07-22 00:00:00'): "nan",
+                pd.Timestamp('2018-07-23 00:00:00'): "nan",
+                pd.Timestamp('2018-07-24 00:00:00'): "nan",
+                pd.Timestamp('2018-07-27 00:00:00'): 42.34,
+                pd.Timestamp('2018-07-28 00:00:00'): "nan",
+                pd.Timestamp('2018-07-29 00:00:00'): "nan"
+                },
+             23456: {
+                 pd.Timestamp('2018-07-22 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-23 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-24 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-27 00:00:00'): "nan",
+                 pd.Timestamp('2018-07-28 00:00:00'): 24.56,
+                 pd.Timestamp('2018-07-29 00:00:00'): "nan"
+             },
+            34567: {
+                pd.Timestamp('2018-07-22 00:00:00'): "nan",
+                pd.Timestamp('2018-07-23 00:00:00'): "nan",
+                pd.Timestamp('2018-07-24 00:00:00'): "nan",
+                pd.Timestamp('2018-07-27 00:00:00'): "nan",
+                pd.Timestamp('2018-07-28 00:00:00'): "nan",
+                pd.Timestamp('2018-07-29 00:00:00'): "nan"}
+            })
+
     def test_max_lag(self):
         """
         Tests that max_lag works as expected.
@@ -341,7 +615,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
 
                 # request without max_lag
                 estimates = get_reuters_estimates_reindexed_like(
-                    closes, ["BVPS"])
+                    closes, "BVPS")
 
         self.assertSetEqual(set(estimates.index.get_level_values("Indicator")), {"BVPS"})
         self.assertSetEqual(set(estimates.index.get_level_values("Field")), {"Actual"})
@@ -410,7 +684,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                     index=pd.date_range(start="2018-07-05", periods=4, freq="D", name="Date"))
 
                 estimates = get_reuters_estimates_reindexed_like(
-                    closes, ["ROA"])
+                    closes, "ROA", fields="Actual")
 
         self.assertSetEqual(set(estimates.index.get_level_values("Indicator")), {"ROA"})
         self.assertSetEqual(set(estimates.index.get_level_values("Field")), {"Actual"})
@@ -847,7 +1121,7 @@ class ReutersFinancialsReindexedLikeTestCase(unittest.TestCase):
         with patch('quantrocket.fundamental.download_reuters_financials', new=mock_download_reuters_financials):
 
             financials = get_reuters_financials_reindexed_like(
-                closes, ["ATOT"], interim=True)
+                closes, "ATOT", interim=True)
 
         self.assertSetEqual(set(financials.index.get_level_values("CoaCode")), {"ATOT"})
         self.assertSetEqual(set(financials.index.get_level_values("Field")), {"Amount"})
@@ -1002,7 +1276,7 @@ class ReutersFinancialsReindexedLikeTestCase(unittest.TestCase):
                 index=pd.date_range(start="2018-07-05", periods=4, freq="D", name="Date"))
 
             financials = get_reuters_financials_reindexed_like(
-                closes, ["ATOT"], interim=True)
+                closes, "ATOT", fields="Amount", interim=True)
 
         self.assertSetEqual(set(financials.index.get_level_values("CoaCode")), {"ATOT"})
         self.assertSetEqual(set(financials.index.get_level_values("Field")), {"Amount"})
@@ -1883,7 +2157,7 @@ class SharadarFundamentalsReindexedLikeTestCase(unittest.TestCase):
         with patch('quantrocket.fundamental.download_sharadar_fundamentals', new=mock_download_sharadar_fundamentals):
 
             fundamentals = get_sharadar_fundamentals_reindexed_like(
-                closes, domain="main", fields=["EPS"])
+                closes, domain="main", fields="EPS")
 
         self.assertSetEqual(set(fundamentals.index.get_level_values("Field")), {"EPS"})
 
@@ -1972,7 +2246,7 @@ class SharadarFundamentalsReindexedLikeTestCase(unittest.TestCase):
                 index=pd.date_range(start="2018-07-05", periods=4, freq="D", name="Date"))
 
             fundamentals = get_sharadar_fundamentals_reindexed_like(
-                closes, domain="sharadar", fields=["REVENUE"])
+                closes, domain="sharadar", fields="REVENUE")
 
         self.assertSetEqual(set(fundamentals.index.get_level_values("Field")), {"REVENUE"})
 
@@ -1998,7 +2272,7 @@ class SharadarFundamentalsReindexedLikeTestCase(unittest.TestCase):
                 index=pd.date_range(start="2018-07-05", periods=4, freq="D", tz="America/New_York", name="Date"))
 
             fundamentals = get_sharadar_fundamentals_reindexed_like(
-                closes, domain="sharadar", fields=["REVENUE"])
+                closes, domain="sharadar", fields="REVENUE")
 
         self.assertSetEqual(set(fundamentals.index.get_level_values("Field")), {"REVENUE"})
 
