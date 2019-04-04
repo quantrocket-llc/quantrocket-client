@@ -89,6 +89,38 @@ def collect_reuters_estimates(universes=None, conids=None):
 def _cli_collect_reuters_estimates(*args, **kwargs):
     return json_to_cli(collect_reuters_estimates, *args, **kwargs)
 
+def collect_wsh_earnings_dates(universes=None, conids=None):
+    """
+    Collect Wall Street Horizon upcoming earnings announcement dates from IB
+    and save to database.
+
+    Parameters
+    ----------
+    universes : list of str, optional
+        limit to these universes (must provide universes, conids, or both)
+
+    conids : list of int, optional
+        limit to these conids (must provide universes, conids, or both)
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    if universes:
+        params["universes"] = universes
+    if conids:
+        params["conids"] = conids
+    response = houston.post("/fundamental/wsh/calendar", params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_wsh_earnings_dates(*args, **kwargs):
+    return json_to_cli(collect_wsh_earnings_dates, *args, **kwargs)
+
 def list_reuters_codes(codes=None, report_types=None, statement_types=None):
     """
     List available Chart of Account (COA) codes from the Reuters financials database

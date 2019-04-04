@@ -86,6 +86,39 @@ Collect Reuters estimates and actuals for a particular security:
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_reuters_estimates")
 
     examples = """
+Collect Wall Street Horizon upcoming earnings announcement dates from IB
+and save to database.
+
+Examples:
+
+Collect upcoming earnings dates for a universe of US stocks:
+
+    quantrocket fundamental collect-wsh --universes 'usa-stk'
+
+Collect upcoming earnings dates for a particular security:
+
+    quantrocket fundamental collect-wsh --conids 123456
+    """
+    parser = _subparsers.add_parser(
+        "collect-wsh",
+        help=("collect Wall Street Horizon upcoming earnings announcement dates from "
+        "IB save to database"),
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes (must provide universes, conids, or both)")
+    parser.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids (must provide universes, conids, or both)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_wsh_earnings_dates")
+
+    examples = """
 List available Chart of Account (COA) codes from the Reuters financials database
 and/or indicator codes from the Reuters estimates/actuals database
 
