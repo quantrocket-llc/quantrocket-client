@@ -28,7 +28,8 @@ from quantrocket.fundamental import (
     get_reuters_financials_reindexed_like,
     get_borrow_fees_reindexed_like,
     get_shortable_shares_reindexed_like,
-    get_sharadar_fundamentals_reindexed_like
+    get_sharadar_fundamentals_reindexed_like,
+    get_wsh_earnings_dates_reindexed_like
 )
 from quantrocket.exceptions import ParameterError, MissingData
 
@@ -1314,6 +1315,232 @@ class ReutersFinancialsReindexedLikeTestCase(unittest.TestCase):
              {'Date': '2018-07-06T00:00:00-0400', 12345: 580.0},
              {'Date': '2018-07-07T00:00:00-0400', 12345: 542.0},
              {'Date': '2018-07-08T00:00:00-0400', 12345: 542.0}]
+        )
+
+class WSHEarningsDatesReindexedLikeTestCase(unittest.TestCase):
+
+    def test_complain_if_time_level_in_index(self):
+        """
+        Tests error handling when reindex_like has a Time level in the index.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=[12345,23456],
+            index=pd.MultiIndex.from_product((
+                pd.date_range(start="2018-01-01", periods=3, freq="D"),
+                ["15:00:00","15:15:00"]), names=["Date", "Time"]))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_wsh_earnings_dates_reindexed_like(closes)
+
+        self.assertIn("reindex_like should not have 'Time' in index", str(cm.exception))
+
+    def test_complain_if_date_level_not_in_index(self):
+        """
+        Tests error handling when reindex_like doesn't have an index named
+        Date.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=[12345,23456],
+            index=pd.date_range(start="2018-01-01", periods=3, freq="D"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_wsh_earnings_dates_reindexed_like(closes)
+
+        self.assertIn("reindex_like must have index called 'Date'", str(cm.exception))
+
+    def test_complain_if_not_datetime_index(self):
+        """
+        Tests error handling when the reindex_like index is named Date but is
+        not a DatetimeIndex.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=[12345,23456],
+            index=pd.Index(["foo","bar","bat"], name="Date"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_wsh_earnings_dates_reindexed_like(closes)
+
+        self.assertIn("reindex_like must have a DatetimeIndex", str(cm.exception))
+
+    @patch("quantrocket.fundamental.download_wsh_earnings_dates")
+    def test_pass_conids_and_dates_based_on_reindex_like(self,
+                                                         mock_download_wsh_earnings_dates):
+        """
+        Tests that conids and date ranges are correctly passed to the
+        download_wsh_earnings_dates function based on reindex_like.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=[12345,23456],
+            index=pd.date_range(start="2018-05-01", periods=3, freq="D", name="Date"))
+
+        def _mock_download_wsh_earnings_dates(f, *args, **kwargs):
+            announcements = pd.DataFrame(
+                dict(Date=["2018-05-01",
+                           "2018-05-02"],
+                     ConId=[12345,
+                            23456],
+                     Time=["Before Market",
+                            "After Market"],
+                     Status=["Unconfirmed",
+                             "Unconfirmed"]))
+            announcements.to_csv(f, index=False)
+            f.seek(0)
+
+        mock_download_wsh_earnings_dates.side_effect = _mock_download_wsh_earnings_dates
+
+        get_wsh_earnings_dates_reindexed_like(closes, fields=["Time","Status"], statuses="Unconfirmed")
+
+        wsh_call = mock_download_wsh_earnings_dates.mock_calls[0]
+        _, args, kwargs = wsh_call
+        self.assertListEqual(kwargs["conids"], [12345,23456])
+        self.assertEqual(kwargs["start_date"], "2018-05-01")
+        self.assertEqual(kwargs["end_date"], "2018-05-03")
+        self.assertListEqual(kwargs["fields"], ["Time","Status"])
+        self.assertListEqual(kwargs["statuses"], ["Unconfirmed"])
+
+    @patch("quantrocket.fundamental.download_wsh_earnings_dates")
+    def test_dedupe_status(self, mock_download_wsh_earnings_dates):
+        """
+        Tests that the resulting DataFrame is correct when deduping on
+        confirmed/unconfirmed status, favoring the confirmed record.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=[12345,23456],
+            index=pd.date_range(start="2018-05-01", periods=3, freq="D", name="Date"))
+
+        def _mock_download_wsh_earnings_dates(f, *args, **kwargs):
+            announcements = pd.DataFrame(
+                dict(Date=["2018-05-01",
+                           "2018-05-01",
+                           "2018-05-02"],
+                     ConId=[12345,
+                            12345,
+                            23456],
+                     Time=["Before Market",
+                           "After Market",
+                            "After Market"],
+                     Status=["Unconfirmed",
+                             "Confirmed",
+                             "Confirmed"]))
+            announcements.to_csv(f, index=False)
+            f.seek(0)
+
+        mock_download_wsh_earnings_dates.side_effect = _mock_download_wsh_earnings_dates
+
+        announcements = get_wsh_earnings_dates_reindexed_like(closes,
+                                                              statuses=["Confirmed","Unconfirmed"])
+
+        # Make sure we passed Status field, even though not requested
+        wsh_call = mock_download_wsh_earnings_dates.mock_calls[0]
+        _, args, kwargs = wsh_call
+        self.assertListEqual(kwargs["conids"], [12345,23456])
+        self.assertEqual(kwargs["start_date"], "2018-05-01")
+        self.assertEqual(kwargs["end_date"], "2018-05-03")
+        self.assertListEqual(kwargs["fields"], ["Time","Status"])
+        self.assertListEqual(kwargs["statuses"], ["Confirmed", "Unconfirmed"])
+
+        # but only Time is returned, as requested
+        self.assertSetEqual(set(announcements.index.get_level_values("Field").unique()), {"Time"})
+
+        announce_times = announcements.loc["Time"]
+        announce_times = announce_times.reset_index()
+        announce_times.loc[:, "Date"] = announce_times.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        announce_times = announce_times.fillna("nan")
+
+        self.assertListEqual(
+            announce_times.to_dict(orient="records"),
+            [
+                {'Date': '2018-05-01T00:00:00',
+                 12345: 'After Market',
+                 23456: 'nan'},
+                {'Date': '2018-05-02T00:00:00',
+                 12345: 'nan',
+                 23456: 'After Market'},
+                {'Date': '2018-05-03T00:00:00',
+                 12345: 'nan',
+                 23456: 'nan'}]
+        )
+
+        # Repeat but request Status field so we can check the output of that too
+        announcements = get_wsh_earnings_dates_reindexed_like(closes,
+                                                              fields=["Time","Status"],
+                                                              statuses=["Confirmed","Unconfirmed"])
+
+        announce_statuses = announcements.loc["Status"]
+        announce_statuses = announce_statuses.reset_index()
+        announce_statuses.loc[:, "Date"] = announce_statuses.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        announce_statuses = announce_statuses.fillna("nan")
+
+        self.assertListEqual(
+            announce_statuses.to_dict(orient="records"),
+            [
+                {'Date': '2018-05-01T00:00:00',
+                 12345: 'Confirmed',
+                 23456: 'nan'},
+                {'Date': '2018-05-02T00:00:00',
+                 12345: 'nan',
+                 23456: 'Confirmed'},
+                {'Date': '2018-05-03T00:00:00',
+                 12345: 'nan',
+                 23456: 'nan'}]
+        )
+
+    def test_tz_aware_index(self):
+        """
+        Tests that a tz-aware index in the input DataFrame can be handled.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=[12345,23456],
+            index=pd.date_range(start="2018-05-01", periods=3, freq="D", tz="America/New_York",
+                                name="Date"))
+
+        def mock_download_wsh_earnings_dates(f, *args, **kwargs):
+            announcements = pd.DataFrame(
+                dict(Date=["2018-05-01",
+                           "2018-05-02"],
+                     ConId=[12345,
+                            23456],
+                     Time=["Before Market",
+                           "After Market"]))
+            announcements.to_csv(f, index=False)
+            f.seek(0)
+
+
+        with patch('quantrocket.fundamental.download_wsh_earnings_dates', new=mock_download_wsh_earnings_dates):
+
+            announcements = get_wsh_earnings_dates_reindexed_like(closes)
+
+        self.assertSetEqual(set(announcements.index.get_level_values("Field").unique()), {"Time"})
+
+        announce_times = announcements.loc["Time"]
+        self.assertEqual(announce_times.index.tz.zone, "America/New_York")
+        announce_times = announce_times.reset_index()
+        announce_times.loc[:, "Date"] = announce_times.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        announce_times = announce_times.fillna("nan")
+
+        self.assertListEqual(
+            announce_times.to_dict(orient="records"),
+            [
+                {'Date': '2018-05-01T00:00:00-0400',
+                 12345: 'Before Market',
+                 23456: 'nan'},
+                {'Date': '2018-05-02T00:00:00-0400',
+                 12345: 'nan',
+                 23456: 'After Market'},
+                {'Date': '2018-05-03T00:00:00-0400',
+                 12345: 'nan',
+                 23456: 'nan'}]
         )
 
 class StockloanDataReindexedLikeTestCase(unittest.TestCase):

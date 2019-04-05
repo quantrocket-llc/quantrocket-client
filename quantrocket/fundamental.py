@@ -836,6 +836,235 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
 
     return estimates
 
+def download_wsh_earnings_dates(filepath_or_buffer=None, output="csv",
+                                start_date=None, end_date=None,
+                                universes=None, conids=None,
+                                exclude_universes=None, exclude_conids=None,
+                                statuses=None, fields=None):
+    """
+    Query earnings announcement dates from the Wall Street Horizon
+    announcements database and download to file.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, txt, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to announcements on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to announcements on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    conids : list of int, optional
+        limit to these conids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_conids : list of int, optional
+        exclude these conids
+
+    statuses : list of str, optional
+        limit to these confirmation statuses. Possible choices: Confirmed, Unconfirmed
+
+    fields : list of str, optional
+        only return these fields (pass ['?'] or any invalid fieldname to see
+        available fields)
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query earnings dates for a universe of US stocks:
+
+    >>> download_wsh_earnings_dates("announcements.csv", universes=["usa-stk"],
+                                    start_date="2019-01-01"
+                                    end_date="2019-04-01")
+    >>> announcements = pd.read_csv("announcements.csv", parse_dates=["Date"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if conids:
+        params["conids"] = conids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_conids:
+        params["exclude_conids"] = exclude_conids
+    if statuses:
+        params["statuses"] = statuses
+    if fields:
+        params["fields"] = fields
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/wsh/calendar.{0}".format(output), params=params,
+                           timeout=60*5)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no earnings dates match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_wsh_earnings_dates(*args, **kwargs):
+    return json_to_cli(download_wsh_earnings_dates, *args, **kwargs)
+
+def get_wsh_earnings_dates_reindexed_like(reindex_like, fields=["Time"],
+                                          statuses=["Confirmed"]):
+    """
+    Return a multiindex (Field, Date) DataFrame of earnings announcement dates,
+    reindexed to match the index (dates) and columns (conids) of `reindex_like`.
+
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and conids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    fields : list of str
+        a list of fields to include in the resulting DataFrame. Defaults to
+        including the Time field.
+
+    statuses : list of str, optional
+        limit to these confirmation statuses. By default only confirmed
+        announcements are returned. Possible choices: Confirmed, Unconfirmed.
+
+    Returns
+    -------
+    DataFrame
+        a multiindex (Field, Date) DataFrame of earnings dates, shaped like the
+        input DataFrame
+
+    Examples
+    --------
+    Get a boolean DataFrame indicating announcements that occurred since the prior
+    close:
+
+    >>> closes = prices.loc["Close"]
+    >>> announcements = get_wsh_earnings_dates_reindexed_like(closes)
+    >>> announce_times = announcements.loc["Time"]
+    >>> announced_since_prior_close = (announce_times == "Before Market") | (announce_times.shift() == "After Market")
+
+    For live trading, to get a boolean DataFrame indicating announcements that will occur
+    before the next session's open, first extend the index of the input DataFrame to include
+    the next session:
+
+    >>> from ib_trading_calendars import get_calendar
+    >>> nyse_cal = get_calendar("NYSE")
+    >>> latest_session = closes.index.max()
+    >>> # wind latest session to end of day and use calendar to get next session
+    >>> next_session = nyse_cal.next_open(latest_session.replace(hour=23, minute=59)).date()
+    >>> closes = closes.reindex(closes.index.union([next_session]))
+    >>> closes.index.name = "Date" # reindex loses name attribute
+
+    Then get the announcements, shifting pre-market announcements backward:
+
+    >>> announcements = get_wsh_earnings_dates_reindexed_like(closes)
+    >>> announce_times = announcements.loc["Time"]
+    >>> announces_before_next_open = (announce_times == "After Market") | (announce_times.shift(-1) == "Before Market")
+
+    Finally, if needed, restore the DataFrame indexes to their original shape:
+
+    >>> closes = closes.drop(next_session)
+    >>> announces_before_next_open = announces_before_next_open.drop(next_session)
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join([str(name) for name in index_levels])))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    conids = list(reindex_like.columns)
+    start_date = reindex_like.index.min().date()
+    start_date = start_date.isoformat()
+    end_date = reindex_like.index.max().date().isoformat()
+
+    if not isinstance(fields, (list,tuple)):
+        fields = [fields]
+
+    if statuses and not isinstance(statuses, (list, tuple)):
+        statuses = [statuses]
+
+    # if getting confirmed and unconfirmed announcements, we will need to
+    # de-dupe on status
+    dedupe_status = (not statuses) or ("Confirmed" in statuses and "Unconfirmed" in statuses)
+
+    f = six.StringIO()
+    query_fields = list(fields) # copy fields on Py2 or 3: https://stackoverflow.com/a/2612815/417414
+    if dedupe_status:
+        query_fields.append("Status")
+    download_wsh_earnings_dates(
+        f, conids=conids, start_date=start_date, end_date=end_date,
+        fields=query_fields, statuses=statuses)
+    parse_dates = ["Date"]
+    if "LastUpdated" in fields:
+        parse_dates.append("LastUpdated")
+    announcements = pd.read_csv(f, parse_dates=parse_dates)
+
+    # if reindex_like.index is tz-aware, make announcements tz-aware too
+    if reindex_like.index.tz:
+        announcements.loc[:, "Date"] = announcements.Date.dt.tz_localize(reindex_like.index.tz.zone)
+
+    # There might be duplicate Dates for confirmed and unconfirmed announcements. In this case we keep
+    # only the confirmed announcement (which sorts before unconfirmed)
+    if dedupe_status:
+        announcements = announcements.sort_values(["ConId","Date","Status"]).drop_duplicates(subset=["ConId","Date"], keep="first")
+
+    # Drop any fields we don't need
+    needed_fields = set(fields)
+    needed_fields.update(set(("ConId", "Date")))
+
+    unneeded_fields = set(announcements.columns) - needed_fields
+    if unneeded_fields:
+        announcements = announcements.drop(unneeded_fields, axis=1)
+
+    announcements = announcements.pivot(index="ConId",columns="Date").T
+
+    multiidx = pd.MultiIndex.from_product(
+        (announcements.index.get_level_values(0).unique(), reindex_like.index),
+        names=["Field", "Date"])
+    announcements = announcements.reindex(index=multiidx, columns=reindex_like.columns)
+
+    return announcements
+
 def collect_sharadar_fundamentals():
     """
     Collect Sharadar US Fundamentals and save to database.

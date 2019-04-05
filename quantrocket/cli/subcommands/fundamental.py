@@ -102,7 +102,7 @@ Collect upcoming earnings dates for a particular security:
     parser = _subparsers.add_parser(
         "collect-wsh",
         help=("collect Wall Street Horizon upcoming earnings announcement dates from "
-        "IB save to database"),
+        "IB and save to database"),
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -356,6 +356,79 @@ Query EPS estimates and actuals for a universe of Australian stocks:
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields)")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_estimates")
+
+    examples = """
+Query earnings announcement dates from the Wall Street Horizon
+announcements database and download to file.
+
+Examples:
+
+Query earnings dates for a universe of US stocks:
+
+    quantrocket fundamental wsh -u usa-stk -s 2019-01-01 -e 2019-04-01 -o announcements.csv
+    """
+    parser = _subparsers.add_parser(
+        "wsh",
+        help="query earnings announcement dates from the Wall Street Horizon announcements database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to announcements on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to announcements on or before this date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="exclude these conids")
+    filters.add_argument(
+        "-t", "--statuses",
+        nargs="*",
+        choices=["Confirmed", "Unconfirmed"],
+        metavar="STATUS",
+        help="limit to these confirmation statuses. Possible choices: %(choices)s")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_wsh_earnings_dates")
 
     examples = """
 Collect Sharadar US Fundamentals and save to database.
