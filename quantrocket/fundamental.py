@@ -23,7 +23,7 @@ from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.exceptions import ParameterError, MissingData, NoFundamentalData
 from quantrocket.utils.warn import deprecated_replaced_by
 
-def collect_reuters_financials(universes=None, conids=None):
+def collect_reuters_financials(universes=None, conids=None, force=True):
     """
     Collect Reuters financial statements from IB and save to database.
 
@@ -37,6 +37,10 @@ def collect_reuters_financials(universes=None, conids=None):
     conids : list of int, optional
         limit to these conids (must provide universes, conids, or both)
 
+    force : bool
+        collect financials for all securities even if they were collected recently
+        (default is to skip securities that were updated in the last 12 hours)
+
     Returns
     -------
     dict
@@ -48,6 +52,8 @@ def collect_reuters_financials(universes=None, conids=None):
         params["universes"] = universes
     if conids:
         params["conids"] = conids
+    if force:
+        params["force"] = force
     response = houston.post("/fundamental/reuters/financials", params=params)
 
     houston.raise_for_status_with_json(response)
@@ -56,7 +62,7 @@ def collect_reuters_financials(universes=None, conids=None):
 def _cli_collect_reuters_financials(*args, **kwargs):
     return json_to_cli(collect_reuters_financials, *args, **kwargs)
 
-def collect_reuters_estimates(universes=None, conids=None):
+def collect_reuters_estimates(universes=None, conids=None, force=False):
     """
     Collect Reuters estimates and actuals from IB and save to database.
 
@@ -70,6 +76,10 @@ def collect_reuters_estimates(universes=None, conids=None):
     conids : list of int, optional
         limit to these conids (must provide universes, conids, or both)
 
+    force : bool
+        collect estimates for all securities even if they were collected recently
+        (default is to skip securities that were updated in the last 12 hours)
+
     Returns
     -------
     dict
@@ -81,6 +91,8 @@ def collect_reuters_estimates(universes=None, conids=None):
         params["universes"] = universes
     if conids:
         params["conids"] = conids
+    if force:
+        params["force"] = force
     response = houston.post("/fundamental/reuters/estimates", params=params)
 
     houston.raise_for_status_with_json(response)
@@ -89,7 +101,7 @@ def collect_reuters_estimates(universes=None, conids=None):
 def _cli_collect_reuters_estimates(*args, **kwargs):
     return json_to_cli(collect_reuters_estimates, *args, **kwargs)
 
-def collect_wsh_earnings_dates(universes=None, conids=None):
+def collect_wsh_earnings_dates(universes=None, conids=None, force=False):
     """
     Collect Wall Street Horizon upcoming earnings announcement dates from IB
     and save to database.
@@ -102,6 +114,11 @@ def collect_wsh_earnings_dates(universes=None, conids=None):
     conids : list of int, optional
         limit to these conids (must provide universes, conids, or both)
 
+    force : bool
+        collect earnings dates for all securities even if they were collected
+        recently (default is to skip securities that were updated in the last
+        12 hours)
+
     Returns
     -------
     dict
@@ -113,6 +130,8 @@ def collect_wsh_earnings_dates(universes=None, conids=None):
         params["universes"] = universes
     if conids:
         params["conids"] = conids
+    if force:
+        params["force"] = force
     response = houston.post("/fundamental/wsh/calendar", params=params)
 
     houston.raise_for_status_with_json(response)

@@ -50,6 +50,12 @@ Collect Reuters financial statements for a particular security:
         nargs="*",
         metavar="CONID",
         help="limit to these conids (must provide universes, conids, or both)")
+    parser.add_argument(
+        "-f", "--force",
+        action="store_true",
+        help="collect financials for all securities even if they were collected "
+        "recently (default is to skip securities that were updated in the last "
+        "12 hours)")
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_reuters_financials")
 
     examples = """
@@ -83,6 +89,12 @@ Collect Reuters estimates and actuals for a particular security:
         nargs="*",
         metavar="CONID",
         help="limit to these conids (must provide universes, conids, or both)")
+    parser.add_argument(
+        "-f", "--force",
+        action="store_true",
+        help="collect estimates for all securities even if they were collected "
+        "recently (default is to skip securities that were updated in the last "
+        "12 hours)")
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_reuters_estimates")
 
     examples = """
@@ -116,6 +128,12 @@ Collect upcoming earnings dates for a particular security:
         nargs="*",
         metavar="CONID",
         help="limit to these conids (must provide universes, conids, or both)")
+    parser.add_argument(
+        "-f", "--force",
+        action="store_true",
+        help="collect earnings dates for all securities even if they were collected "
+        "recently (default is to skip securities that were updated in the last "
+        "12 hours)")
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_wsh_earnings_dates")
 
     examples = """
