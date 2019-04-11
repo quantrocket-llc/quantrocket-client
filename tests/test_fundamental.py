@@ -1389,7 +1389,10 @@ class WSHEarningsDatesReindexedLikeTestCase(unittest.TestCase):
                      Time=["Before Market",
                             "After Market"],
                      Status=["Unconfirmed",
-                             "Unconfirmed"]))
+                             "Unconfirmed"],
+                     LastUpdated=["2018-04-11T07:48:20",
+                                  "2018-04-09T07:48:20"]
+                     ))
             announcements.to_csv(f, index=False)
             f.seek(0)
 
@@ -1402,14 +1405,14 @@ class WSHEarningsDatesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(kwargs["conids"], [12345,23456])
         self.assertEqual(kwargs["start_date"], "2018-05-01")
         self.assertEqual(kwargs["end_date"], "2018-05-03")
-        self.assertListEqual(kwargs["fields"], ["Time","Status"])
+        self.assertListEqual(kwargs["fields"], ["Time","Status","LastUpdated"])
         self.assertListEqual(kwargs["statuses"], ["Unconfirmed"])
 
     @patch("quantrocket.fundamental.download_wsh_earnings_dates")
-    def test_dedupe_status(self, mock_download_wsh_earnings_dates):
+    def test_dedupe(self, mock_download_wsh_earnings_dates):
         """
         Tests that the resulting DataFrame is correct when deduping on
-        confirmed/unconfirmed status, favoring the confirmed record.
+        LastUpdated.
         """
 
         closes = pd.DataFrame(
@@ -1421,16 +1424,24 @@ class WSHEarningsDatesReindexedLikeTestCase(unittest.TestCase):
             announcements = pd.DataFrame(
                 dict(Date=["2018-05-01",
                            "2018-05-01",
+                           "2018-05-02",
                            "2018-05-02"],
                      ConId=[12345,
                             12345,
+                            23456,
                             23456],
                      Time=["Before Market",
                            "After Market",
-                            "After Market"],
+                            "After Market",
+                            "Unspecified"],
                      Status=["Unconfirmed",
                              "Confirmed",
-                             "Confirmed"]))
+                             "Confirmed",
+                             "Confirmed"],
+                     LastUpdated=["2018-03-11T07:48:20",
+                                  "2018-04-09T07:48:20",
+                                  "2018-04-11T07:48:20",
+                                  "2018-04-09T07:48:20"]))
             announcements.to_csv(f, index=False)
             f.seek(0)
 
@@ -1439,13 +1450,12 @@ class WSHEarningsDatesReindexedLikeTestCase(unittest.TestCase):
         announcements = get_wsh_earnings_dates_reindexed_like(closes,
                                                               statuses=["Confirmed","Unconfirmed"])
 
-        # Make sure we passed Status field, even though not requested
         wsh_call = mock_download_wsh_earnings_dates.mock_calls[0]
         _, args, kwargs = wsh_call
         self.assertListEqual(kwargs["conids"], [12345,23456])
         self.assertEqual(kwargs["start_date"], "2018-05-01")
         self.assertEqual(kwargs["end_date"], "2018-05-03")
-        self.assertListEqual(kwargs["fields"], ["Time","Status"])
+        self.assertListEqual(kwargs["fields"], ["Time", "LastUpdated"])
         self.assertListEqual(kwargs["statuses"], ["Confirmed", "Unconfirmed"])
 
         # but only Time is returned, as requested
@@ -1512,7 +1522,9 @@ class WSHEarningsDatesReindexedLikeTestCase(unittest.TestCase):
                      ConId=[12345,
                             23456],
                      Time=["Before Market",
-                           "After Market"]))
+                           "After Market"],
+                     LastUpdated=["2018-04-11T07:48:20",
+                                  "2018-04-09T07:48:20"]))
             announcements.to_csv(f, index=False)
             f.seek(0)
 

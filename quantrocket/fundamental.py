@@ -1042,30 +1042,23 @@ def get_wsh_earnings_dates_reindexed_like(reindex_like, fields=["Time"],
     if statuses and not isinstance(statuses, (list, tuple)):
         statuses = [statuses]
 
-    # if getting confirmed and unconfirmed announcements, we will need to
-    # de-dupe on status
-    dedupe_status = (not statuses) or ("Confirmed" in statuses and "Unconfirmed" in statuses)
-
     f = six.StringIO()
     query_fields = list(fields) # copy fields on Py2 or 3: https://stackoverflow.com/a/2612815/417414
-    if dedupe_status:
-        query_fields.append("Status")
+    if "LastUpdated" not in fields:
+        query_fields.append("LastUpdated")
     download_wsh_earnings_dates(
         f, conids=conids, start_date=start_date, end_date=end_date,
         fields=query_fields, statuses=statuses)
-    parse_dates = ["Date"]
-    if "LastUpdated" in fields:
-        parse_dates.append("LastUpdated")
-    announcements = pd.read_csv(f, parse_dates=parse_dates)
+    announcements = pd.read_csv(f, parse_dates=["Date", "LastUpdated"])
 
     # if reindex_like.index is tz-aware, make announcements tz-aware too
     if reindex_like.index.tz:
         announcements.loc[:, "Date"] = announcements.Date.dt.tz_localize(reindex_like.index.tz.zone)
 
-    # There might be duplicate Dates for confirmed and unconfirmed announcements. In this case we keep
-    # only the confirmed announcement (which sorts before unconfirmed)
-    if dedupe_status:
-        announcements = announcements.sort_values(["ConId","Date","Status"]).drop_duplicates(subset=["ConId","Date"], keep="first")
+    # There might be duplicate Dates for confirmed vs unconfirmed announcements (or other changes to
+    # confirmed or unconfirmed announcements). In this case we keep only the most recently updated
+    # record
+    announcements = announcements.sort_values(["LastUpdated"]).drop_duplicates(subset=["ConId","Date"], keep="last")
 
     # Drop any fields we don't need
     needed_fields = set(fields)
