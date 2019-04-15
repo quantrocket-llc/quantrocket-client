@@ -42,7 +42,7 @@ def list_exchanges(regions=None, sec_types=None):
     if regions:
         params["regions"] = regions
 
-    response = houston.get("/master/exchanges", params=params, timeout=60)
+    response = houston.get("/master/exchanges", params=params, timeout=180)
     houston.raise_for_status_with_json(response)
     return response.json()
 
