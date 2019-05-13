@@ -139,13 +139,13 @@ To set the environment variable on Linux, run:
             elif timeout is None:
                 kwargs["timeout"] = self.DEFAULT_TIMEOUT
 
-        # Move conids from params to data if too long
-        conids = kwargs.get("params", {}).get("conids", None)
-        if conids and isinstance(conids, list) and len(conids) > 10:
-            data = kwargs.get("data", {}) or {}
-            data["conids"] = conids
-            kwargs["params"].pop("conids")
-            kwargs["data"] = data
+        # Move params to data if too long
+        for param_name, param_vals in kwargs.get("params", {}).copy().items():
+            if isinstance(param_vals, list) and len(param_vals) > 50:
+                data = kwargs.get("data", {}) or {}
+                data[param_name] = param_vals
+                kwargs["params"].pop(param_name)
+                kwargs["data"] = data
 
         try:
             return super(Houston, self).request(method, url, *args, **kwargs)
