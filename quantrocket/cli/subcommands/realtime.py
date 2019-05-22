@@ -248,3 +248,79 @@ Cancel all market data collection:
         dest="cancel_all",
         help="cancel all market data collection")
     parser.set_defaults(func="quantrocket.realtime._cli_cancel_market_data")
+
+    examples = """
+Query market data from a real-time database and download to file.
+
+Examples:
+
+Download a CSV of futures market data since 08:00 AM Chicago time:
+
+    quantrocket realtime get globex-fut-taq --start-date '08:00:00 America/Chicago' -o globex_taq.csv
+    """
+    parser = _subparsers.add_parser(
+        "get",
+        help="query market data from a real-time database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the code of the database to query")
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to market data on or after this datetime. Can pass a date (YYYY-MM-DD), "
+        "datetime with optional timezone (YYYY-MM-DD HH:MM:SS TZ), or time with "
+        "optional timezone. A time without date will be interpreted as referring to "
+        "today if the time is earlier than now, or yesterday if the time is later than "
+        "now.")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to market data on or before this datetime. Can pass a date (YYYY-MM-DD), "
+        "datetime with optional timezone (YYYY-MM-DD HH:MM:SS TZ), or time with "
+        "optional timezone.")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-conids",
+        type=int,
+        nargs="*",
+        metavar="CONID",
+        help="exclude these conids")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
+    parser.set_defaults(func="quantrocket.realtime._cli_download_market_data_file")

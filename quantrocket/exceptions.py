@@ -38,6 +38,15 @@ class NoHistoricalData(requests.HTTPError):
         else:
             super(NoHistoricalData, self).__init__(e)
 
+class NoRealtimeData(requests.HTTPError):
+
+    def __init__(self, e):
+        if isinstance(e, requests.HTTPError):
+            self.__dict__ = e.__dict__
+            super(NoRealtimeData, self).__init__(e.args)
+        else:
+            super(NoRealtimeData, self).__init__(e)
+
 class NoFundamentalData(requests.HTTPError):
 
     def __init__(self, e):

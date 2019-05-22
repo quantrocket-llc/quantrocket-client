@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+import requests
+from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.houston import houston
+from quantrocket.exceptions import NoRealtimeData
 from quantrocket.cli.utils.output import json_to_cli
 
 def create_db(code, universes=None, conids=None, vendor=None,
@@ -295,3 +299,102 @@ def cancel_market_data(codes=None, conids=None, universes=None, cancel_all=False
 
 def _cli_cancel_market_data(*args, **kwargs):
     return json_to_cli(cancel_market_data, *args, **kwargs)
+
+def download_market_data_file(code, filepath_or_buffer=None, output="csv",
+                              start_date=None, end_date=None,
+                              universes=None, conids=None,
+                              exclude_universes=None, exclude_conids=None,
+                              fields=None):
+    """
+    Query market data from a real-time database and download to file.
+
+    Parameters
+    ----------
+    code : str, required
+        the code of the database to query
+
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD HH:MM:SS), optional
+        limit to market data on or after this datetime. Can pass a date (YYYY-MM-DD),
+        datetime with optional timezone (YYYY-MM-DD HH:MM:SS TZ), or time with
+        optional timezone. A time without date will be interpreted as referring to
+        today if the time is earlier than now, or yesterday if the time is later than
+        now.
+
+    end_date : str (YYYY-MM-DD HH:MM:SS), optional
+        limit to market data on or before this datetime. Can pass a date (YYYY-MM-DD),
+        datetime with optional timezone (YYYY-MM-DD HH:MM:SS TZ), or time with
+        optional timezone.
+
+    universes : list of str, optional
+        limit to these universes (default is to return all securities in database)
+
+    conids : list of int, optional
+        limit to these conids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_conids : list of int, optional
+        exclude these conids
+
+    fields : list of str, optional
+        only return these fields (pass '?' or any invalid fieldname to see
+        available fields)
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Download a CSV of futures market data since 08:00 AM Chicago time:
+
+    >>> download_market_data_file("globex-fut-taq",
+                                 start_date="08:00:00 America/Chicago",
+                                 filepath_or_buffer="globex_taq.csv")
+    >>> market_data = pd.read_csv("globex_taq.csv", parse_dates=["Date"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if conids:
+        params["conids"] = conids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_conids:
+        params["exclude_conids"] = exclude_conids
+    if fields:
+        params["fields"] = fields
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/realtime/{0}.{1}".format(code, output), params=params,
+                           timeout=60*30)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no market data matches the query parameters" in repr(e).lower():
+            raise NoRealtimeData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_market_data_file(*args, **kwargs):
+    return json_to_cli(download_market_data_file, *args, **kwargs)
