@@ -19,11 +19,10 @@ from quantrocket.houston import houston
 from quantrocket.exceptions import NoRealtimeData
 from quantrocket.cli.utils.output import json_to_cli
 
-def create_db(code, universes=None, conids=None, vendor=None,
-              fields=None, primary_exchange=False):
+def create_tick_db(code, universes=None, conids=None, vendor=None,
+                   fields=None, primary_exchange=False):
     """
-    Create a new real-time database.
-
+    Create a new database for collecting real-time tick data.
 
     The market data requirements you specify when you create a new database are
     applied each time you collect data for that database.
@@ -58,12 +57,12 @@ def create_db(code, universes=None, conids=None, vendor=None,
     --------
     Create a database for collecting real-time trades and volume for US stocks:
 
-    >>> create_db("usa-stk-trades", universes="usa-stk")
+    >>> create_tick_db("usa-stk-trades", universes="usa-stk", fields=["last", "volume"])
 
     Create a database for collecting trades and quotes for a universe of futures:
 
-    >>> create_db("globex-fut-taq", universes="globex-fut",
-                  fields=["last", "volume", "bid", "ask", "bid_size", "ask_size"])
+    >>> create_tick_db("globex-fut-taq", universes="globex-fut",
+                       fields=["last", "volume", "bid", "ask", "bid_size", "ask_size"])
     """
     params = {}
     if universes:
@@ -82,17 +81,101 @@ def create_db(code, universes=None, conids=None, vendor=None,
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_create_db(*args, **kwargs):
-    return json_to_cli(create_db, *args, **kwargs)
+def _cli_create_tick_db(*args, **kwargs):
+    return json_to_cli(create_tick_db, *args, **kwargs)
 
-def get_db_config(code):
+def create_agg_db(code, from_code, bar_size,
+                  close_fields=None, open_fields=None,
+                  high_fields=None, low_fields=None,
+                  mean_fields=None):
     """
-    Return the configuration for a real-time database.
+    Create an aggregate database from a tick database.
+
+    Aggregate databases provide rolled-up views of the underlying tick data,
+    aggregated to a desired frequency (such as 1-minute bars).
 
     Parameters
     ----------
     code : str, required
-        the database code
+        the code to assign to the aggregate database (lowercase alphanumerics and hyphens only)
+
+    from_code : str, required
+        the code of the tick database to aggregate
+
+    bar_size : str, required
+        the time frequency to aggregate to (use a PostgreSQL interval string, for example
+        10s or 1m or 2h or 1d)
+
+    close_fields : list of str, optional
+        include closing tick for these fields
+
+    open_fields : list of str, optional
+        include opening tick for these fields
+
+    high_fields : list of str, optional
+        include high tick for these fields
+
+    low_fields : list of str, optional
+        include low tick for these fields
+
+    mean_fields : list of str, optional
+        include mean tick for these fields
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Create an aggregate database of 1 minute bars consisting of OHLC trades and volume,
+    from a tick database of US stocks:
+
+    >>> create_agg_db("usa-stk-trades-1min", from_code="usa-stk-trades",
+                      bar_size="1m",
+                      close_fields=["last","volume"],
+                      open_fields="last",
+                      high_fields="last",
+                      low_fields="last")
+
+    Create an aggregate database of 1 second bars containing the last bid and ask and
+    the mean bid size and ask size, from a tick database of futures trades and
+    quotes:
+
+    >>> create_agg_db("globex-fut-taq-1sec", from_code="globex-fut-taq",
+                      bar_size="1s",
+                      close_fields=["bid", "ask"],
+                      mean_fields=["bid_size","ask_size"])
+    """
+    params = {}
+    params["bar_size"] = bar_size
+    if close_fields:
+        params["close_fields"] = close_fields
+    if open_fields:
+        params["open_fields"] = open_fields
+    if high_fields:
+        params["high_fields"] = high_fields
+    if low_fields:
+        params["low_fields"] = low_fields
+    if mean_fields:
+        params["mean_fields"] = mean_fields
+
+    response = houston.put("/realtime/databases/{0}/aggregates/{1}".format(from_code, code), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_create_agg_db(*args, **kwargs):
+    return json_to_cli(create_agg_db, *args, **kwargs)
+
+def get_db_config(code):
+    """
+    Return the configuration for a tick database or aggregate database.
+
+    Parameters
+    ----------
+    code : str, required
+        the tick database code or aggregate database code
 
     Returns
     -------
@@ -107,21 +190,28 @@ def get_db_config(code):
 def _cli_get_db_config(*args, **kwargs):
     return json_to_cli(get_db_config, *args, **kwargs)
 
-def drop_db(code, confirm_by_typing_db_code_again=None):
+def drop_db(code, confirm_by_typing_db_code_again=None, cascade=False):
     """
-    Delete a real-time database.
+    Delete a tick database or aggregate database.
 
-    Deleting a real-time database deletes its configuration and data and is
-    irreversible.
+    Deleting a tick database deletes its configuration and data and any
+    associated aggregate databases. Deleting an aggregate database does not
+    delete the tick database from which it is derived.
+
+    Deleting databases is irreversible.
 
     Parameters
     ----------
     code : str, required
-        the database code
+        the tick database code or aggregate database code
 
     confirm_by_typing_db_code_again : str, required
        enter the db code again to confirm you want to drop the database, its config,
        and all its data
+
+    cascade : bool
+       also delete associated aggregated databases, if any. Only applicable when
+       deleting a tick database.
 
     Returns
     -------
@@ -130,6 +220,8 @@ def drop_db(code, confirm_by_typing_db_code_again=None):
 
     """
     params = {"confirm_by_typing_db_code_again": confirm_by_typing_db_code_again}
+    if cascade:
+        params["cascade"] = cascade
     response = houston.delete("/realtime/databases/{0}".format(code), params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
@@ -140,7 +232,7 @@ def _cli_drop_db(*args, **kwargs):
 def collect_market_data(codes, conids=None, universes=None, fields=None, until=None,
                         snapshot=False, wait=False):
     """
-    Collect real-time market data and save it to a real-time database.
+    Collect real-time market data and save it to a tick database.
 
     A single snapshot of market data or a continuous stream of market data can
     be collected, depending on the `snapshot` parameter.
@@ -221,17 +313,16 @@ def collect_market_data(codes, conids=None, universes=None, fields=None, until=N
 def _cli_collect_market_data(*args, **kwargs):
     return json_to_cli(collect_market_data, *args, **kwargs)
 
-def get_active_subscriptions(detail=False):
+def get_active_collections(detail=False):
     """
-    Return the number of currently subscribed tickers by vendor and
+    Return the number of tickers currently being collected, by vendor and
     database.
 
     Parameters
     ----------
 
     detail : bool
-        return lists of subscribed tickers (default is to return
-        counts of subscribed tickers)
+        return lists of tickers (default is to return counts of tickers)
 
     Returns
     -------
@@ -247,8 +338,8 @@ def get_active_subscriptions(detail=False):
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_get_active_subscriptions(*args, **kwargs):
-    return json_to_cli(get_active_subscriptions, *args, **kwargs)
+def _cli_get_active_collections(*args, **kwargs):
+    return json_to_cli(get_active_collections, *args, **kwargs)
 
 def cancel_market_data(codes=None, conids=None, universes=None, cancel_all=False):
     """
@@ -306,7 +397,7 @@ def download_market_data_file(code, filepath_or_buffer=None, output="csv",
                               exclude_universes=None, exclude_conids=None,
                               fields=None):
     """
-    Query market data from a real-time database and download to file.
+    Query market data from a tick database and download to file.
 
     Parameters
     ----------

@@ -20,7 +20,7 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Create a new real-time database.
+Create a new database for collecting real-time tick data.
 
 The market data requirements you specify when you create a new database are
 applied each time you collect data for that database.
@@ -29,15 +29,15 @@ Examples:
 
 Create a database for collecting real-time trades and volume for US stocks:
 
-    quantrocket realtime create-db usa-stk-trades -u usa-stk
+    quantrocket realtime create-tick-db usa-stk-trades -u usa-stk --fields last volume
 
 Create a database for collecting trades and quotes for a universe of futures:
 
-    quantrocket realtime create-db globex-fut-taq -u globex-fut --fields last volume bid ask bid_size ask_size
+    quantrocket realtime create-tick-db globex-fut-taq -u globex-fut --fields last volume bid ask bid_size ask_size
     """
     parser = _subparsers.add_parser(
-        "create-db",
-        help="create a new real-time database",
+        "create-tick-db",
+        help="create a new database for collecting real-time tick data",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -70,58 +70,141 @@ Create a database for collecting trades and quotes for a universe of futures:
         "-p", "--primary-exchange",
         action="store_true",
         help="limit to data from the primary exchange")
-    parser.set_defaults(func="quantrocket.realtime._cli_create_db")
+    parser.set_defaults(func="quantrocket.realtime._cli_create_tick_db")
 
     examples = """
-Return the configuration for a real-time database.
+Create an aggregate database from a tick database.
+
+Aggregate databases provide rolled-up views of the underlying tick data,
+aggregated to a desired frequency (such as 1-minute bars).
 
 Examples:
 
-Return the configuration for a database called "globex-fut-taq":
+Create an aggregate database of 1 minute bars consisting of OHLC trades and volume,
+from a tick database of US stocks:
 
-    quantrocket realtime config 'globex-fut-taq'
+    quantrocket realtime create-agg-db usa-stk-trades-1min --from usa-stk-trades -z 1m --close last volume --open last --high last --low last
+
+Create an aggregate database of 1 second bars containing the last bid and ask and
+the mean bid size and ask size, from a tick database of futures trades and
+quotes:
+
+    quantrocket realtime create-agg-db globex-fut-taq-1sec --from globex-fut-taq -z 1s --close bid ask --mean bid_size ask_size
     """
     parser = _subparsers.add_parser(
-        "config",
-        help="return the configuration for a real-time database",
+        "create-agg-db",
+        help="create an aggregate database from a tick database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "code",
-        help="the database code")
+        metavar="CODE",
+        help="the code to assign to the aggregate database (lowercase alphanumerics and hyphens only)")
+    parser.add_argument(
+        "-f", "--from",
+        metavar="CODE",
+        required=True,
+        dest="from_code",
+        help="the code of the tick database to aggregate")
+    parser.add_argument(
+        "-z", "--bar-size",
+        metavar="BAR_SIZE",
+        required=True,
+        help="the time frequency to aggregate to (use a PostgreSQL interval string, for example "
+        "10s or 1m or 2h or 1d)")
+    parser.add_argument(
+        "-c", "--close",
+        metavar="FIELD",
+        nargs="*",
+        dest="close_fields",
+        help="include closing tick for these fields")
+    parser.add_argument(
+        "-o", "--open",
+        metavar="FIELD",
+        nargs="*",
+        dest="open_fields",
+        help="include opening tick for these fields")
+    parser.add_argument(
+        "-g", "--high",
+        metavar="FIELD",
+        nargs="*",
+        dest="high_fields",
+        help="include high tick for these fields")
+    parser.add_argument(
+        "-l", "--low",
+        metavar="FIELD",
+        nargs="*",
+        dest="low_fields",
+        help="include low tick for these fields")
+    parser.add_argument(
+        "-m", "--mean",
+        metavar="FIELD",
+        nargs="*",
+        dest="mean_fields",
+        help="include mean tick for these fields")
+    parser.set_defaults(func="quantrocket.realtime._cli_create_agg_db")
+
+    examples = """
+Return the configuration for a tick database or aggregate database.
+
+Examples:
+
+Return the configuration for a tick database called "globex-fut-taq":
+
+    quantrocket realtime config 'globex-fut-taq'
+
+Return the configuration for an aggregate database called "globex-fut-taq-1s":
+
+    quantrocket realtime config 'globex-fut-taq-1s'
+    """
+    parser = _subparsers.add_parser(
+        "config",
+        help="return the configuration for a tick database or aggregate database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        help="the tick database code or aggregate database code")
     parser.set_defaults(func="quantrocket.realtime._cli_get_db_config")
 
     examples = """
-Delete a real-time database.
+Delete a tick database or aggregate database.
 
-Deleting a real-time database deletes its configuration and data and is
-irreversible.
+Deleting a tick database deletes its configuration and data and any
+associated aggregate databases. Deleting an aggregate database does not
+delete the tick database from which it is derived.
+
+Deleting databases is irreversible.
 
 Examples:
 
 Delete a database called "usa-stk-trades":
 
     quantrocket realtime drop-db 'usa-stk-trades' --confirm-by-typing-db-code-again 'usa-stk-trades'
-
     """
     parser = _subparsers.add_parser(
         "drop-db",
-        help="delete a real-time database",
+        help="delete a tick database or aggregate database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "code",
-        help="the database code")
+        help="the tick database code or aggregate database code")
     parser.add_argument(
         "--confirm-by-typing-db-code-again",
         metavar="CODE",
         required=True,
         help="enter the db code again to confirm you want to drop the database, its config, "
         "and all its data")
+    parser.add_argument(
+        "--cascade",
+        action="store_true",
+        help="also delete associated aggregated databases, if any. Only applicable when "
+       "deleting a tick database.")
     parser.set_defaults(func="quantrocket.realtime._cli_drop_db")
 
     examples = """
-Collect real-time market data and save it to a real-time database.
+Collect real-time market data and save it to a tick database.
 
 A single snapshot of market data or a continuous stream of market data can
 be collected, depending on the `--snapshot` parameter.
@@ -146,7 +229,7 @@ Collect a market data snapshot and wait until it completes:
     """
     parser = _subparsers.add_parser(
         "collect",
-        help="collect real-time market data and save it to a real-time database",
+        help="collect real-time market data and save it to a tick database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -191,7 +274,7 @@ Collect a market data snapshot and wait until it completes:
     parser.set_defaults(func="quantrocket.realtime._cli_collect_market_data")
 
     examples = """
-Return the number of currently subscribed tickers by vendor and database.
+Return the number of tickers currently being collected, by vendor and database.
 
 Examples:
 
@@ -199,15 +282,14 @@ Examples:
     """
     parser = _subparsers.add_parser(
         "active",
-        help="return the number of currently subscribed tickers by vendor and database",
+        help="return the number of tickers currently being collected, by vendor and database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-d", "--detail",
         action="store_true",
-        help="return lists of subscribed tickers (default is to return "
-        "counts of subscribed tickers)")
-    parser.set_defaults(func="quantrocket.realtime._cli_get_active_subscriptions")
+        help="return lists of tickers (default is to return counts of tickers)")
+    parser.set_defaults(func="quantrocket.realtime._cli_get_active_collections")
 
     examples = """
 Cancel market data collection.
@@ -250,7 +332,7 @@ Cancel all market data collection:
     parser.set_defaults(func="quantrocket.realtime._cli_cancel_market_data")
 
     examples = """
-Query market data from a real-time database and download to file.
+Query market data from a tick database and download to file.
 
 Examples:
 
@@ -260,7 +342,7 @@ Download a CSV of futures market data since 08:00 AM Chicago time:
     """
     parser = _subparsers.add_parser(
         "get",
-        help="query market data from a real-time database and download to file",
+        help="query market data from a tick database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
