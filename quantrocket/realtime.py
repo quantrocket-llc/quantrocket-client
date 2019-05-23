@@ -397,12 +397,12 @@ def download_market_data_file(code, filepath_or_buffer=None, output="csv",
                               exclude_universes=None, exclude_conids=None,
                               fields=None):
     """
-    Query market data from a tick database and download to file.
+    Query market data from a tick database or aggregate database and download to file.
 
     Parameters
     ----------
     code : str, required
-        the code of the database to query
+        the code of the tick database or aggregate database to query
 
     filepath_or_buffer : str or file-like object
         filepath to write the data to, or file-like object (defaults to stdout)

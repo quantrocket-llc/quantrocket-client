@@ -332,7 +332,7 @@ Cancel all market data collection:
     parser.set_defaults(func="quantrocket.realtime._cli_cancel_market_data")
 
     examples = """
-Query market data from a tick database and download to file.
+Query market data from a tick database or aggregate database and download to file.
 
 Examples:
 
@@ -342,13 +342,13 @@ Download a CSV of futures market data since 08:00 AM Chicago time:
     """
     parser = _subparsers.add_parser(
         "get",
-        help="query market data from a tick database and download to file",
+        help="query market data from a tick database or aggregate database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
-        help="the code of the database to query")
+        help="the code of the tick database or aggregate database to query")
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",
