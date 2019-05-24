@@ -305,7 +305,7 @@ def collect_market_data(codes, conids=None, universes=None, fields=None, until=N
         params["snapshot"] = snapshot
     if wait:
         params["wait"] = wait
-    response = houston.post("/realtime/subscriptions", params=params, timeout=3600 if wait else 30)
+    response = houston.post("/realtime/collections", params=params, timeout=3600 if wait else 30)
 
     houston.raise_for_status_with_json(response)
     return response.json()
@@ -334,7 +334,7 @@ def get_active_collections(detail=False):
     if detail:
         params["detail"] = detail
 
-    response = houston.get("/realtime/subscriptions", params=params)
+    response = houston.get("/realtime/collections", params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
 
@@ -384,7 +384,7 @@ def cancel_market_data(codes=None, conids=None, universes=None, cancel_all=False
     if cancel_all:
         params["cancel_all"] = cancel_all
 
-    response = houston.delete("/realtime/subscriptions", params=params)
+    response = houston.delete("/realtime/collections", params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
 
