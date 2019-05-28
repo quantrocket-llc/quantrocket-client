@@ -225,6 +225,23 @@ def drop_db(code, confirm_by_typing_db_code_again=None, cascade=False):
 def _cli_drop_db(*args, **kwargs):
     return json_to_cli(drop_db, *args, **kwargs)
 
+def list_databases():
+    """
+    List tick databases and associated aggregate databases.
+
+    Returns
+    -------
+    dict
+        dict of {tick_db: [agg_dbs]}
+
+    """
+    response = houston.get("/realtime/databases")
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_list_databases(*args, **kwargs):
+    return json_to_cli(list_databases, *args, **kwargs)
+
 def collect_market_data(codes, conids=None, universes=None, fields=None, until=None,
                         snapshot=False, wait=False):
     """

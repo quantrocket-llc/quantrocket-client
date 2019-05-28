@@ -184,6 +184,20 @@ Delete a database called "usa-stk-trades":
     parser.set_defaults(func="quantrocket.realtime._cli_drop_db")
 
     examples = """
+List tick databases and associated aggregate databases.
+
+Examples:
+
+    quantrocket realtime list
+    """
+    parser = _subparsers.add_parser(
+        "list",
+        help="list tick databases and associated aggregate databases",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.set_defaults(func="quantrocket.realtime._cli_list_databases")
+
+    examples = """
 Collect real-time market data and save it to a tick database.
 
 A single snapshot of market data or a continuous stream of market data can
