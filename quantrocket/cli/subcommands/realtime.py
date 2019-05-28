@@ -366,6 +366,11 @@ Download a CSV of futures market data since 08:00 AM Chicago time:
         nargs="*",
         metavar="CONID",
         help="exclude these conids")
+    filters.add_argument(
+        "-t", "--times",
+        nargs="*",
+        metavar="HH:MM:SS",
+        help="limit to these times (only supported for aggregate databases)")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
