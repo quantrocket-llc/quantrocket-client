@@ -16,8 +16,9 @@ import sys
 import requests
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.houston import houston
-from quantrocket.exceptions import NoRealtimeData
+from quantrocket.exceptions import NoRealtimeData, ParameterError
 from quantrocket.cli.utils.output import json_to_cli
+from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 
 def create_tick_db(code, universes=None, conids=None, vendor=None,
                    fields=None, primary_exchange=False):
@@ -43,7 +44,7 @@ def create_tick_db(code, universes=None, conids=None, vendor=None,
 
     fields : list of str
         collect these fields (pass '?' or any invalid fieldname to see
-        available fields, default fields are 'last' and 'volume')
+        available fields, default fields are 'Last' and 'Volume')
 
     primary_exchange : bool
         limit to data from the primary exchange (default False)
@@ -57,12 +58,12 @@ def create_tick_db(code, universes=None, conids=None, vendor=None,
     --------
     Create a database for collecting real-time trades and volume for US stocks:
 
-    >>> create_tick_db("usa-stk-trades", universes="usa-stk", fields=["last", "volume"])
+    >>> create_tick_db("usa-stk-trades", universes="usa-stk", fields=["Last", "Volume"])
 
     Create a database for collecting trades and quotes for a universe of futures:
 
     >>> create_tick_db("globex-fut-taq", universes="globex-fut",
-                       fields=["last", "volume", "bid", "ask", "bid_size", "ask_size"])
+                       fields=["Last", "Volume", "Bid", "Ask", "BidSize", "AskSize"])
     """
     params = {}
     if universes:
@@ -84,10 +85,7 @@ def create_tick_db(code, universes=None, conids=None, vendor=None,
 def _cli_create_tick_db(*args, **kwargs):
     return json_to_cli(create_tick_db, *args, **kwargs)
 
-def create_agg_db(code, from_code, bar_size,
-                  close_fields=None, open_fields=None,
-                  high_fields=None, low_fields=None,
-                  mean_fields=None):
+def create_agg_db(code, tick_db_code, bar_size, fields=None):
     """
     Create an aggregate database from a tick database.
 
@@ -99,27 +97,19 @@ def create_agg_db(code, from_code, bar_size,
     code : str, required
         the code to assign to the aggregate database (lowercase alphanumerics and hyphens only)
 
-    from_code : str, required
+    tick_db_code : str, required
         the code of the tick database to aggregate
 
     bar_size : str, required
         the time frequency to aggregate to (use a PostgreSQL interval string, for example
         10s or 1m or 2h or 1d)
 
-    close_fields : list of str, optional
-        include closing tick for these fields
-
-    open_fields : list of str, optional
-        include opening tick for these fields
-
-    high_fields : list of str, optional
-        include high tick for these fields
-
-    low_fields : list of str, optional
-        include low tick for these fields
-
-    mean_fields : list of str, optional
-        include mean tick for these fields
+    fields : dict of list of str, optional
+        include these fields in aggregate database, aggregated in these ways. Provide a dict
+        mapping tick db fields to lists of aggregate functions to apply to the field. Available
+        aggregate functions are "Close", "Open", "High", "Low", "Mean", "Sum", and "Count".
+        See examples section. If not specified, defaults to including the "Close" for each tick
+        db field.
 
     Returns
     -------
@@ -129,43 +119,49 @@ def create_agg_db(code, from_code, bar_size,
     Examples
     --------
     Create an aggregate database of 1 minute bars consisting of OHLC trades and volume,
-    from a tick database of US stocks:
+    from a tick database of US stocks, resulting in fields called LastOpen, LastHigh,
+    LastLow, LastClose, and VolumeClose:
 
-    >>> create_agg_db("usa-stk-trades-1min", from_code="usa-stk-trades",
+    >>> create_agg_db("usa-stk-trades-1min", tick_db_code="usa-stk-trades",
                       bar_size="1m",
-                      close_fields=["last","volume"],
-                      open_fields="last",
-                      high_fields="last",
-                      low_fields="last")
+                      fields={"Last":["Open","High","Low","Close"],
+                              "Volume": ["Close"]})
 
     Create an aggregate database of 1 second bars containing the last bid and ask and
     the mean bid size and ask size, from a tick database of futures trades and
-    quotes:
+    quotes, resulting in fields called BidClose, AskClose, BidSizeMean, and AskSizeMean:
 
-    >>> create_agg_db("globex-fut-taq-1sec", from_code="globex-fut-taq",
+    >>> create_agg_db("globex-fut-taq-1sec", tick_db_code="globex-fut-taq",
                       bar_size="1s",
-                      close_fields=["bid", "ask"],
-                      mean_fields=["bid_size","ask_size"])
+                      fields={"Bid":["Close"],
+                              "Ask": ["Close"],
+                              "BidSize": ["Mean"],
+                              "AskSize": ["Mean"]
+                              })
     """
     params = {}
     params["bar_size"] = bar_size
-    if close_fields:
-        params["close_fields"] = close_fields
-    if open_fields:
-        params["open_fields"] = open_fields
-    if high_fields:
-        params["high_fields"] = high_fields
-    if low_fields:
-        params["low_fields"] = low_fields
-    if mean_fields:
-        params["mean_fields"] = mean_fields
+    if fields:
+        if not isinstance(fields, dict):
+            raise ParameterError("fields must be a dict")
 
-    response = houston.put("/realtime/databases/{0}/aggregates/{1}".format(from_code, code), params=params)
+        # convert lists to comma-separated strings
+        _fields = {}
+        for k, v in fields.items():
+            if isinstance(v, (list, tuple)):
+                v = ",".join(v)
+            _fields[k] = v
+        params["fields"] = dict_to_dict_strs(_fields)
+
+    response = houston.put("/realtime/databases/{0}/aggregates/{1}".format(tick_db_code, code), params=params)
 
     houston.raise_for_status_with_json(response)
     return response.json()
 
 def _cli_create_agg_db(*args, **kwargs):
+    fields = kwargs.get("fields", None)
+    if fields:
+        kwargs["fields"] = dict_strs_to_dict(*fields)
     return json_to_cli(create_agg_db, *args, **kwargs)
 
 def get_db_config(code):

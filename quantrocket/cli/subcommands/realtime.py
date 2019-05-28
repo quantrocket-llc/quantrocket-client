@@ -29,11 +29,11 @@ Examples:
 
 Create a database for collecting real-time trades and volume for US stocks:
 
-    quantrocket realtime create-tick-db usa-stk-trades -u usa-stk --fields last volume
+    quantrocket realtime create-tick-db usa-stk-trades -u usa-stk --fields Last Volume
 
 Create a database for collecting trades and quotes for a universe of futures:
 
-    quantrocket realtime create-tick-db globex-fut-taq -u globex-fut --fields last volume bid ask bid_size ask_size
+    quantrocket realtime create-tick-db globex-fut-taq -u globex-fut --fields Last Volume Bid Ask BidSize AskSize
     """
     parser = _subparsers.add_parser(
         "create-tick-db",
@@ -65,7 +65,7 @@ Create a database for collecting trades and quotes for a universe of futures:
         metavar="FIELD",
         nargs="*",
         help="collect these fields (pass '?' or any invalid fieldname to see "
-        "available fields, default fields are 'last' and 'volume')")
+        "available fields, default fields are 'Last' and 'Volume')")
     parser.add_argument(
         "-p", "--primary-exchange",
         action="store_true",
@@ -81,15 +81,16 @@ aggregated to a desired frequency (such as 1-minute bars).
 Examples:
 
 Create an aggregate database of 1 minute bars consisting of OHLC trades and volume,
-from a tick database of US stocks:
+from a tick database of US stocks, resulting in fields called LastOpen, LastHigh,
+LastLow, LastClose, and VolumeClose:
 
-    quantrocket realtime create-agg-db usa-stk-trades-1min --from usa-stk-trades -z 1m --close last volume --open last --high last --low last
+    quantrocket realtime create-agg-db usa-stk-trades-1min --tick-db usa-stk-trades -z 1m -f Last:Open,High,Low,Close Volume:Close
 
 Create an aggregate database of 1 second bars containing the last bid and ask and
 the mean bid size and ask size, from a tick database of futures trades and
-quotes:
+quotes, resulting in fields called BidClose, AskClose, BidSizeMean, and AskSizeMean:
 
-    quantrocket realtime create-agg-db globex-fut-taq-1sec --from globex-fut-taq -z 1s --close bid ask --mean bid_size ask_size
+    quantrocket realtime create-agg-db globex-fut-taq-1sec --tick-db globex-fut-taq -z 1s -f Bid:Close Ask:Close BidSize:Mean AskSize:Mean
     """
     parser = _subparsers.add_parser(
         "create-agg-db",
@@ -101,10 +102,10 @@ quotes:
         metavar="CODE",
         help="the code to assign to the aggregate database (lowercase alphanumerics and hyphens only)")
     parser.add_argument(
-        "-f", "--from",
+        "-t", "--tick-db",
         metavar="CODE",
         required=True,
-        dest="from_code",
+        dest="tick_db_code",
         help="the code of the tick database to aggregate")
     parser.add_argument(
         "-z", "--bar-size",
@@ -113,35 +114,14 @@ quotes:
         help="the time frequency to aggregate to (use a PostgreSQL interval string, for example "
         "10s or 1m or 2h or 1d)")
     parser.add_argument(
-        "-c", "--close",
+        "-f", "--fields",
         metavar="FIELD",
         nargs="*",
-        dest="close_fields",
-        help="include closing tick for these fields")
-    parser.add_argument(
-        "-o", "--open",
-        metavar="FIELD",
-        nargs="*",
-        dest="open_fields",
-        help="include opening tick for these fields")
-    parser.add_argument(
-        "-g", "--high",
-        metavar="FIELD",
-        nargs="*",
-        dest="high_fields",
-        help="include high tick for these fields")
-    parser.add_argument(
-        "-l", "--low",
-        metavar="FIELD",
-        nargs="*",
-        dest="low_fields",
-        help="include low tick for these fields")
-    parser.add_argument(
-        "-m", "--mean",
-        metavar="FIELD",
-        nargs="*",
-        dest="mean_fields",
-        help="include mean tick for these fields")
+        help="include these fields in aggregate database, aggregated in these ways. Specify as a "
+        "list of strings mapping tick db fields to a comma-separated list of aggregate functions "
+        "to apply to the field. Format strings as 'FIELD:FUNC1,FUNC2'. Available aggregate functions "
+        "are 'Close', 'Open', 'High', 'Low', 'Mean', 'Sum', and 'Count'. See examples. If not "
+        "specified, defaults to including the 'Close' for each tick db field.")
     parser.set_defaults(func="quantrocket.realtime._cli_create_agg_db")
 
     examples = """
