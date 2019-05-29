@@ -15,14 +15,12 @@
 import six
 import os
 import sys
-import time
 import requests
-from quantrocket.master import download_master_file
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
-from quantrocket.exceptions import ParameterError, NoHistoricalData
+from quantrocket.exceptions import NoHistoricalData
 from quantrocket.utils.warn import deprecated_replaced_by
 
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", "/tmp")
@@ -525,7 +523,7 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
 
     See Also
     --------
-    get_historical_prices : load historical prices into DataFrame
+    quantrocket.get_prices : load prices into a DataFrame
     """
     params = {}
     if start_date:
@@ -572,6 +570,7 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
 def _cli_download_history_file(*args, **kwargs):
     return json_to_cli(download_history_file, *args, **kwargs)
 
+@deprecated_replaced_by("from quantrocket import get_prices")
 def get_historical_prices(codes, start_date=None, end_date=None,
                           universes=None, conids=None,
                           exclude_universes=None, exclude_conids=None,
@@ -579,338 +578,21 @@ def get_historical_prices(codes, start_date=None, end_date=None,
                           timezone=None, infer_timezone=None,
                           master_fields=None):
     """
-    Query one or more history databases and load prices into a DataFrame.
-
-    For bar sizes smaller than 1-day, the resulting DataFrame will have a MultiIndex
-    with levels (Field, Date, Time). For bar sizes of 1-day or larger, the MultiIndex
-    will have levels (Field, Date).
-
-    Parameters
-    ----------
-    codes : str or list of str, required
-        the code(s) of one or more databases to query. If multiple databases
-        are specified, they must have the same bar size.
-
-    start_date : str (YYYY-MM-DD), optional
-        limit to history on or after this date
-
-    end_date : str (YYYY-MM-DD), optional
-        limit to history on or before this date
-
-    universes : list of str, optional
-        limit to these universes (default is to return all securities in database)
-
-    conids : list of int, optional
-        limit to these conids
-
-    exclude_universes : list of str, optional
-        exclude these universes
-
-    exclude_conids : list of int, optional
-        exclude these conids
-
-    times: list of str (HH:MM:SS), optional
-        limit to these times
-
-    cont_fut : str
-        stitch futures into continuous contracts using this method (default is not
-        to stitch together). Possible choices: concat
-
-    fields : list of str, optional
-        only return these fields (pass ['?'] or any invalid fieldname to see
-        available fields)
-
-    timezone : str, optional
-        convert timestamps to this timezone, for example America/New_York (see
-        `pytz.all_timezones` for choices); ignored for non-intraday bar sizes
-
-    infer_timezone : bool
-        infer the timezone from the securities master Timezone field; defaults to
-        True if using intraday bars and no `timezone` specified; ignored for
-        non-intraday bars, or if `timezone` is passed
-
-    master_fields : list of str, optional
-        [DEPRECATED] append these fields from the securities master database (pass ['?'] or any
-        invalid fieldname to see available fields). This parameter is deprecated and
-        will be removed in a future release. For better performance, use
-        `quantrocket.master.get_securities_reindexed_like` to get securities master
-        data shaped like prices.
-
-    Returns
-    -------
-    DataFrame
-        a MultiIndex
-
-    Examples
-    --------
-    Load intraday prices:
-
-    >>> prices = get_historical_prices('stk-sample-5min', fields=["Close", "Volume"], timezone="America/New_York")
-    >>> prices.head()
-                                ConId   	265598	38708077
-    Field	Date	        Time
-    Close	2017-07-26      09:30:00	153.62	2715.0
-                                09:35:00	153.46	2730.0
-                                09:40:00	153.21	2725.0
-                                09:45:00	153.28	2725.0
-                                09:50:00	153.18	2725.0
-
-    Isolate the closes:
-
-    >>> closes = prices.loc["Close"]
-    >>> closes.head()
-                ConId	        265598  38708077
-    Date        Time
-    2017-07-26	09:30:00	153.62	2715.0
-                09:35:00	153.46	2730.0
-                09:40:00	153.21	2725.0
-                09:45:00	153.28	2725.0
-                09:50:00	153.18	2725.0
-
-    Isolate the 15:45:00 prices:
-
-    >>> session_closes = closes.xs("15:45:00", level="Time")
-    >>> session_closes.head()
-        ConId	265598	38708077
-    Date
-    2017-07-26	153.29	2700.00
-    2017-07-27 	150.10	2660.00
-    2017-07-28	149.43	2650.02
-    2017-07-31 	148.99	2650.34
-    2017-08-01 	149.72	2675.50
+    [DEPRECATED] This function is deprecated and will be removed in a future release.
+    Please use `from quantrocket import get_prices` instead. `get_prices` is more flexible
+    as it supports querying of both history databases and real-time aggregate databases.
     """
-    # Import pandas lazily since it can take a moment to import
-    try:
-        import pandas as pd
-    except ImportError:
-        raise ImportError("pandas must be installed to use this function")
+    from quantrocket import get_prices
 
-    try:
-        import pytz
-    except ImportError:
-        raise ImportError("pytz must be installed to use this function")
-
-    if timezone and timezone not in pytz.all_timezones:
-        raise ParameterError(
-            "invalid timezone: {0} (see `pytz.all_timezones` for choices)".format(
-                timezone))
-
-    dbs = codes
-    if not isinstance(dbs, (list, tuple)):
-        dbs = [dbs]
-
-    db_universes = set()
-    db_bar_sizes = set()
-    db_domains = set()
-    for db in dbs:
-        db_config = get_db_config(db)
-        _db_universes = db_config.get("universes", None)
-        if _db_universes:
-            db_universes.update(set(_db_universes))
-        bar_size = db_config.get("bar_size")
-        db_bar_sizes.add(bar_size)
-        db_domain = db_config.get("domain", "main")
-        db_domains.add(db_domain)
-
-    db_universes = list(db_universes)
-    db_bar_sizes = list(db_bar_sizes)
-
-    if len(db_bar_sizes) > 1:
-        raise ParameterError(
-            "all databases must contain same bar size but {0} have different "
-            "bar sizes: {1}".format(", ".join(dbs), ", ".join(db_bar_sizes))
-        )
-
-    if len(db_domains) > 1:
-        raise ParameterError(
-            "all databases must use the same securities master domain but {0} "
-            "use different domains: {1}".format(", ".join(dbs), ", ".join(db_domains))
-        )
-
-    all_prices = []
-
-    for db in dbs:
-
-        kwargs = dict(
-            start_date=start_date,
-            end_date=end_date,
-            universes=universes,
-            conids=conids,
-            exclude_universes=exclude_universes,
-            exclude_conids=exclude_conids,
-            times=times,
-            cont_fut=cont_fut,
-            fields=fields,
-            tz_naive=False
-        )
-
-        tmp_filepath = "{0}/history.{1}.{2}.{3}.csv".format(
-            TMP_DIR, db, os.getpid(), time.time()
-        )
-        try:
-            download_history_file(db, tmp_filepath, **kwargs)
-        except NoHistoricalData as e:
-            # don't complain about NoHistoricalData if we're checking
-            # multiple databases, unless none of them have data
-            if len(dbs) == 1:
-                raise
-            else:
-                continue
-
-        prices = pd.read_csv(tmp_filepath)
-        all_prices.append(prices)
-
-        os.remove(tmp_filepath)
-
-    # complain if multiple dbs and none had data
-    if len(dbs) > 1 and not all_prices:
-        raise NoHistoricalData("no history matches the query parameters in any of {0}".format(
-            ", ".join(dbs)
-        ))
-
-    prices = pd.concat(all_prices)
-
-    prices = prices.pivot(index="ConId", columns="Date").T
-    prices.index.set_names(["Field", "Date"], inplace=True)
-
-    master_fields = master_fields or []
-    if master_fields:
-        import warnings
-        # DeprecationWarning is ignored by default but we want the user
-        # to see it
-        warnings.simplefilter("always", DeprecationWarning)
-        warnings.warn(
-            "`master_fields` parameter is deprecated and will be removed in a "
-            "future release. For better performance, please use "
-            "`quantrocket.master.get_securities_reindexed_like` "
-            "to get securities master data shaped like prices.", DeprecationWarning)
-
-        if isinstance(master_fields, tuple):
-            master_fields = list(master_fields)
-        elif not isinstance(master_fields, list):
-            master_fields = [master_fields]
-
-    # master fields that are required internally but shouldn't be returned to
-    # the user (potentially Timezone)
-    internal_master_fields = []
-
-    is_intraday = db_bar_sizes[0] not in ("1 day", "1 week", "1 month")
-
-    if is_intraday and not timezone and infer_timezone is not False:
-        infer_timezone = True
-        if not master_fields or "Timezone" not in master_fields:
-            internal_master_fields.append("Timezone")
-
-    # Next, get the master file
-    if master_fields or internal_master_fields:
-        conids = list(prices.columns)
-
-        domain = list(db_domains)[0] if db_domains else None
-
-        f = six.StringIO()
-        download_master_file(
-            f,
-            conids=conids,
-            fields=master_fields + internal_master_fields,
-            domain=domain
-        )
-        securities = pd.read_csv(f, index_col="ConId")
-
-        if "Delisted" in securities.columns:
-            securities.loc[:, "Delisted"] = securities.Delisted.astype(bool)
-
-        if "Etf" in securities.columns:
-            securities.loc[:, "Etf"] = securities.Etf.astype(bool)
-
-        # Infer timezone if needed
-        if not timezone and infer_timezone:
-            timezones = securities.Timezone.unique()
-
-            if len(timezones) > 1:
-                raise ParameterError(
-                    "cannot infer timezone because multiple timezones are present "
-                    "in data, please specify timezone explicitly (timezones: {0})".format(
-                        ", ".join(timezones)))
-
-            timezone = timezones[0]
-
-        # Drop any internal-only fields
-        if internal_master_fields:
-            securities = securities.drop(internal_master_fields, axis=1)
-
-        if not securities.empty:
-            # Append securities, indexed to the min date, to allow easy ffill on demand
-            securities = pd.DataFrame(securities.T, columns=prices.columns)
-            securities.index.name = "Field"
-            idx = pd.MultiIndex.from_product(
-                (securities.index, [prices.index.get_level_values("Date").min()]),
-                names=["Field", "Date"])
-
-            securities = securities.reindex(index=idx, level="Field")
-            prices = pd.concat((prices, securities))
-
-    if is_intraday:
-        dates = pd.to_datetime(prices.index.get_level_values("Date"), utc=True)
-
-        if timezone:
-            dates = dates.tz_convert(timezone)
-    else:
-        dates = pd.to_datetime(prices.index.get_level_values("Date"))
-
-    prices.index = pd.MultiIndex.from_arrays((
-        prices.index.get_level_values("Field"),
-        dates
-        ), names=("Field", "Date"))
-
-    # Split date and time
-    dts = prices.index.get_level_values("Date")
-    dates = pd.to_datetime(dts.date).tz_localize(None) # drop tz-aware in Date index
-    prices.index = pd.MultiIndex.from_arrays(
-        (prices.index.get_level_values("Field"),
-         dates,
-         dts.strftime("%H:%M:%S")),
-        names=["Field", "Date", "Time"]
-    )
-
-    # Align dates if there are any duplicate. Explanation: Suppose there are
-    # two timezones represented in the data. After parsing these dates into a
-    # common timezone, they will align properly, but we pivoted before
-    # parsing the dates (for performance reasons), so they may not be
-    # aligned. Thus we need to dedupe the index.
-    prices = prices.groupby(prices.index).first()
-    prices.index = pd.MultiIndex.from_tuples(prices.index)
-    prices.index.set_names(["Field", "Date", "Time"], inplace=True)
-
-    # Drop time if not intraday
-    if not is_intraday:
-        prices.index = prices.index.droplevel("Time")
-        return prices
-
-    # If intraday, fill missing times so that each date has the same set of
-    # times, allowing easier comparisons. Example implications:
-    # - if history is retrieved intraday, this ensures that today will have NaN
-    #   entries for future times
-    # - early close dates will have a full set of times, with NaNs after the
-    #   early close
-    unique_fields = prices.index.get_level_values("Field").unique()
-    unique_dates = prices.index.get_level_values("Date").unique()
-    unique_times = prices.index.get_level_values("Time").unique()
-    interpolated_index = None
-    for field in unique_fields:
-        if master_fields and field in master_fields:
-            min_date = prices.loc[field].index.min()
-            field_idx = pd.MultiIndex.from_tuples([(field,min_date[0], min_date[1])])
-        else:
-            field_idx = pd.MultiIndex.from_product([[field], unique_dates, unique_times]).sort_values()
-        if interpolated_index is None:
-            interpolated_index = field_idx
-        else:
-            interpolated_index = interpolated_index.append(field_idx)
-
-    prices = prices.reindex(interpolated_index)
-    prices.index.set_names(["Field", "Date", "Time"], inplace=True)
-
-    return prices
+    return get_prices(codes,
+                      start_date=start_date, end_date=end_date,
+                      universes=universes, conids=conids,
+                      exclude_universes=exclude_universes,
+                      exclude_conids=exclude_conids,
+                      times=times, cont_fut=cont_fut,
+                      fields=fields, timezone=timezone,
+                      infer_timezone=infer_timezone,
+                      master_fields=master_fields)
 
 def load_history_from_file(code, infilepath_or_buffer):
     """
