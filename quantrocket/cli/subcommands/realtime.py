@@ -111,7 +111,7 @@ quotes, resulting in fields called BidClose, AskClose, BidSizeMean, and AskSizeM
         "-z", "--bar-size",
         metavar="BAR_SIZE",
         required=True,
-        help="the time frequency to aggregate to (use a PostgreSQL interval string, for example "
+        help="the time frequency to aggregate to (use a Pandas timedelta string, for example "
         "10s or 1m or 2h or 1d)")
     parser.add_argument(
         "-f", "--fields",

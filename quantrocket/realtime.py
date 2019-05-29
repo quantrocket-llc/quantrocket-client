@@ -101,7 +101,7 @@ def create_agg_db(code, tick_db_code, bar_size, fields=None):
         the code of the tick database to aggregate
 
     bar_size : str, required
-        the time frequency to aggregate to (use a PostgreSQL interval string, for example
+        the time frequency to aggregate to (use a Pandas timedelta string, for example
         10s or 1m or 2h or 1d)
 
     fields : dict of list of str, optional
