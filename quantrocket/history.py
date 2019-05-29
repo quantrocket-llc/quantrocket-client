@@ -210,6 +210,23 @@ def drop_db(code, confirm_by_typing_db_code_again=None):
 def _cli_drop_db(*args, **kwargs):
     return json_to_cli(drop_db, *args, **kwargs)
 
+def list_databases():
+    """
+    List history databases.
+
+    Returns
+    -------
+    list
+        list of database codes
+
+    """
+    response = houston.get("/history/databases")
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_list_databases(*args, **kwargs):
+    return json_to_cli(list_databases, *args, **kwargs)
+
 def collect_history(codes, priority=False, conids=None, universes=None,
                     start_date=None, end_date=None, availability_only=False,
                     delist_missing=False):

@@ -153,6 +153,20 @@ Create a database for collecting Sharadar prices:
     parser.set_defaults(func="quantrocket.history._cli_create_db")
 
     examples = """
+List history databases.
+
+Examples:
+
+    quantrocket history list
+    """
+    parser = _subparsers.add_parser(
+        "list",
+        help="list history databases",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.set_defaults(func="quantrocket.history._cli_list_databases")
+
+    examples = """
 Collect historical market data from IB and save it to a history database. The request is queued
 and the data is collected asynchronously.
 
