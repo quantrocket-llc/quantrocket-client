@@ -15,7 +15,7 @@
 import argparse
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("db", description="QuantRocket database service CLI", help="Manage, download, and backup databases")
+    _parser = subparsers.add_parser("db", description="QuantRocket database service CLI", help="Backup, restore, and manage databases")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
@@ -24,18 +24,18 @@ List databases.
 
 Examples:
 
-List all databases as a flat list:
+List all databases:
 
     quantrocket db list
 
 List all history databases and include details such as file size:
 
-    quantrocket db list history --detail
+    quantrocket db list --services history --detail
 
 List details for a sharded history database called usa-stk-15min
 and list each shard individually:
 
-    quantrocket db list history usa-stk-15min --detail --expand
+    quantrocket db list --services history --codes usa-stk-15min --detail --expand
     """
     parser = _subparsers.add_parser(
         "list",
@@ -43,17 +43,21 @@ and list each shard individually:
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "service",
-        nargs="?",
-        metavar="SERVICE",
-        help="only list databases for this service")
+        "service_and_codes",
+        metavar="SERVICE_OR_CODE",
+        nargs="*",
+        help="DEPRECATED, this option will be removed in a future release, please use "
+        "`--services` and `--codes` instead")
     parser.add_argument(
-        "codes",
+        "-s", "--services",
+        nargs="*",
+        metavar="SERVICE",
+        help="limit to these services")
+    parser.add_argument(
+        "-c", "--codes",
         nargs="*",
         metavar="DATABASE_CODE",
-        help="only list databases identified by these codes (omit "
-        "to list all databases "
-        "for service)")
+        help="limit to these codes")
     parser.add_argument(
         "-d", "--detail",
         action="store_true",
@@ -65,30 +69,6 @@ and list each shard individually:
         help="expand sharded databases to include individual shards "
         "(default is to list sharded databases as a single database)")
     parser.set_defaults(func="quantrocket.db._cli_list_databases")
-
-    examples = """
-Download a database from the db service and write to a local file.
-
-Examples:
-
-Download a database called quantrocket.history.nyse.sqlite:
-
-    quantrocket db get quantrocket.history.nyse.sqlite /path/to/localdir/quantrocket.history.nyse.sqlite
-    """
-    parser = _subparsers.add_parser(
-        "get",
-        help="download a database from the db service and write to a local file",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "database",
-        metavar="DATABASE",
-        help="the filename of the database (as returned by the list command)")
-    parser.add_argument(
-        "outfile",
-        metavar="OUTFILE",
-        help="filename to write the database to")
-    parser.set_defaults(func="quantrocket.db._cli_download_database")
 
     examples = """
 Set or show Amazon S3 configuration for pushing and pulling databases to and
@@ -137,15 +117,15 @@ Examples:
 
 Push all databases:
 
-    quantrocket db s3push all
+    quantrocket db s3push
 
 Push all databases for the history service:
 
-    quantrocket db s3push history
+    quantrocket db s3push --services history
 
 Push a database called quantrocket.history.nyse.sqlite:
 
-    quantrocket db s3push history nyse
+    quantrocket db s3push --services history --codes nyse
     """
     parser = _subparsers.add_parser(
         "s3push",
@@ -153,15 +133,21 @@ Push a database called quantrocket.history.nyse.sqlite:
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "service",
-        metavar="SERVICE",
-        help="only push databases for this service (specify 'all' to push all services)")
+        "service_and_codes",
+        metavar="SERVICE_OR_CODE",
+        nargs="*",
+        help="DEPRECATED, this option will be removed in a future release, please use "
+        "`--services` and `--codes` instead")
     parser.add_argument(
-        "codes",
+        "-s", "--services",
+        nargs="*",
+        metavar="SERVICE",
+        help="limit to these services")
+    parser.add_argument(
+        "-c", "--codes",
         nargs="*",
         metavar="DATABASE_CODE",
-        help="only push databases identified by these codes (omit to push all databases "
-        "for service)")
+        help="limit to these codes")
     parser.set_defaults(func="quantrocket.db._cli_s3_push_databases")
 
     examples = """
@@ -173,7 +159,7 @@ Examples:
 
 Pull a database stored on S3 as quantrocket.history.nyse.sqlite.gz:
 
-    quantrocket db s3pull history nyse
+    quantrocket db s3pull --services history --codes nyse
     """
     parser = _subparsers.add_parser(
         "s3pull",
@@ -181,17 +167,21 @@ Pull a database stored on S3 as quantrocket.history.nyse.sqlite.gz:
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "service",
-        metavar="SERVICE",
-        help="only pull databases for this service (specify 'all' "
-        "to pull all services)")
+        "service_and_codes",
+        metavar="SERVICE_OR_CODE",
+        nargs="*",
+        help="DEPRECATED, this option will be removed in a future release, please use "
+        "`--services` and `--codes` instead")
     parser.add_argument(
-        "codes",
+        "-s", "--services",
+        nargs="*",
+        metavar="SERVICE",
+        help="limit to these services")
+    parser.add_argument(
+        "-c", "--codes",
         nargs="*",
         metavar="DATABASE_CODE",
-        help="only pull databases identified by these codes (omit to "
-        "pull all databases "
-        "for service)")
+        help="limit to these codes")
     parser.add_argument(
         "-f", "--force",
         action="store_true",
@@ -201,32 +191,60 @@ Pull a database stored on S3 as quantrocket.history.nyse.sqlite.gz:
     parser.set_defaults(func="quantrocket.db._cli_s3_pull_databases")
 
     examples = """
-Optimize database file(s) to improve performance.
+Optimize databases to improve performance.
 
-This runs SQLite's 'VACUUM' command, which defragments the .sqlite file
-and reclaims disk space.
+This runs the 'VACUUM' command, which defragments the database and
+reclaims disk space.
 
 Examples:
 
-Optimize all databases:
+Optimize all blotter databases:
 
-    quantrocket db optimize all
+    quantrocket db optimize --services blotter
     """
     parser = _subparsers.add_parser(
         "optimize",
-        help="optimize database file(s) to improve performance",
+        help="optimize databases to improve performance",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "service",
-        metavar="SERVICE",
-        help="only optimize databases for this service (specify 'all' "
-        "to optimize all services)")
+        "service_and_codes",
+        metavar="SERVICE_OR_CODE",
+        nargs="*",
+        help="DEPRECATED, this option will be removed in a future release, please use "
+        "`--services` and `--codes` instead")
     parser.add_argument(
-        "codes",
+        "-s", "--services",
+        nargs="*",
+        metavar="SERVICE",
+        help="limit to these services")
+    parser.add_argument(
+        "-c", "--codes",
         nargs="*",
         metavar="DATABASE_CODE",
-        help="only optimize databases identified by these codes (omit "
-        "to optimize all databases "
-        "for service)")
+        help="limit to these codes")
     parser.set_defaults(func="quantrocket.db._cli_optimize_databases")
+
+    examples = """
+[DEPRECATED] Download a database from the db service and write to a local file.
+
+Examples:
+
+Download a database called quantrocket.history.nyse.sqlite:
+
+    quantrocket db get quantrocket.history.nyse.sqlite /path/to/localdir/quantrocket.history.nyse.sqlite
+    """
+    parser = _subparsers.add_parser(
+        "get",
+        help="[DEPRECATED] download a database from the db service and write to a local file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "database",
+        metavar="DATABASE",
+        help="the filename of the database (as returned by the list command)")
+    parser.add_argument(
+        "outfile",
+        metavar="OUTFILE",
+        help="filename to write the database to")
+    parser.set_defaults(func="quantrocket.db._cli_download_database")
