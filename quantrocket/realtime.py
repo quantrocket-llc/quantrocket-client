@@ -408,7 +408,7 @@ def download_market_data_file(code, filepath_or_buffer=None, output="csv",
                               start_date=None, end_date=None,
                               universes=None, conids=None,
                               exclude_universes=None, exclude_conids=None,
-                              times=None, fields=None):
+                              fields=None):
     """
     Query market data from a tick database or aggregate database and download to file.
 
@@ -447,9 +447,6 @@ def download_market_data_file(code, filepath_or_buffer=None, output="csv",
     exclude_conids : list of int, optional
         exclude these conids
 
-    times: list of str (HH:MM:SS), optional
-        limit to these times (only supported for aggregate databases)
-
     fields : list of str, optional
         only return these fields (pass '?' or any invalid fieldname to see
         available fields)
@@ -480,8 +477,6 @@ def download_market_data_file(code, filepath_or_buffer=None, output="csv",
         params["exclude_universes"] = exclude_universes
     if exclude_conids:
         params["exclude_conids"] = exclude_conids
-    if times:
-        params["times"] = times
     if fields:
         params["fields"] = fields
 
