@@ -30,8 +30,8 @@ def list_databases(services=None, codes=None, detail=False, expand=False,
         limit to these codes
 
     detail : bool
-        return database statistics (default is to return a flat list of database
-        names). Currently only supported for SQLite databases.
+        return database statistics (default is to return a
+        flat list of database names)
 
     expand : bool
         expand sharded databases to include individual shards
@@ -50,11 +50,12 @@ def list_databases(services=None, codes=None, detail=False, expand=False,
 
     Examples
     --------
-    Load database details for SQLite databases in a pandas DataFrame:
+    Load database details in a pandas DataFrame:
 
     >>> from quantrocket.db import list_databases
+    >>> import itertools
     >>> databases = list_databases(detail=True)
-    >>> databases = pd.DataFrame.from_records(databases["sqlite"])
+    >>> databases = pd.DataFrame.from_records(itertools.chain(databases["sqlite"], databases["postgres"]))
     """
     params = {}
     if services:
