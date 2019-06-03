@@ -30,8 +30,8 @@ def list_databases(services=None, codes=None, detail=False, expand=False,
         limit to these codes
 
     detail : bool
-        return database statistics (default is to return a
-        flat list of database names)
+        return database statistics (default is to return a flat list of database
+        names). Currently only supported for SQLite databases.
 
     expand : bool
         expand sharded databases to include individual shards

@@ -61,8 +61,8 @@ and list each shard individually:
     parser.add_argument(
         "-d", "--detail",
         action="store_true",
-        help="return database statistics (default is to return a "
-        "flat list of database names)")
+        help="return database statistics (default is to return a flat list of database "
+        "names). Currently only supported for SQLite databases.")
     parser.add_argument(
         "-e", "--expand",
         action="store_true",
