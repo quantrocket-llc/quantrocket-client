@@ -44,7 +44,7 @@ def create_tick_db(code, universes=None, conids=None, vendor=None,
 
     fields : list of str
         collect these fields (pass '?' or any invalid fieldname to see
-        available fields, default fields are 'Last' and 'Volume')
+        available fields, default fields are 'LastPrice' and 'Volume')
 
     primary_exchange : bool
         limit to data from the primary exchange (default False)
@@ -58,12 +58,12 @@ def create_tick_db(code, universes=None, conids=None, vendor=None,
     --------
     Create a database for collecting real-time trades and volume for US stocks:
 
-    >>> create_tick_db("usa-stk-trades", universes="usa-stk", fields=["Last", "Volume"])
+    >>> create_tick_db("usa-stk-trades", universes="usa-stk", fields=["LastPrice", "Volume"])
 
     Create a database for collecting trades and quotes for a universe of futures:
 
     >>> create_tick_db("globex-fut-taq", universes="globex-fut",
-                       fields=["Last", "Volume", "Bid", "Ask", "BidSize", "AskSize"])
+                       fields=["LastPrice", "Volume", "BidPrice", "AskPrice", "BidSize", "AskSize"])
     """
     params = {}
     if universes:
@@ -119,22 +119,22 @@ def create_agg_db(code, tick_db_code, bar_size, fields=None):
     Examples
     --------
     Create an aggregate database of 1 minute bars consisting of OHLC trades and volume,
-    from a tick database of US stocks, resulting in fields called LastOpen, LastHigh,
-    LastLow, LastClose, and VolumeClose:
+    from a tick database of US stocks, resulting in fields called LastPriceOpen, LastPriceHigh,
+    LastPriceLow, LastPriceClose, and VolumeClose:
 
     >>> create_agg_db("usa-stk-trades-1min", tick_db_code="usa-stk-trades",
                       bar_size="1m",
-                      fields={"Last":["Open","High","Low","Close"],
+                      fields={"LastPrice":["Open","High","Low","Close"],
                               "Volume": ["Close"]})
 
-    Create an aggregate database of 1 second bars containing the last bid and ask and
+    Create an aggregate database of 1 second bars containing the closing bid and ask and
     the mean bid size and ask size, from a tick database of futures trades and
-    quotes, resulting in fields called BidClose, AskClose, BidSizeMean, and AskSizeMean:
+    quotes, resulting in fields called BidPriceClose, AskPriceClose, BidSizeMean, and AskSizeMean:
 
     >>> create_agg_db("globex-fut-taq-1sec", tick_db_code="globex-fut-taq",
                       bar_size="1s",
-                      fields={"Bid":["Close"],
-                              "Ask": ["Close"],
+                      fields={"BidPrice":["Close"],
+                              "AskPrice": ["Close"],
                               "BidSize": ["Mean"],
                               "AskSize": ["Mean"]
                               })
@@ -256,7 +256,7 @@ def collect_market_data(codes, conids=None, universes=None, fields=None, until=N
     Parameters
     ----------
     codes : list of str, required
-        the database code(s) to collect data for
+        the tick database code(s) to collect data for
 
     conids : list of int, optional
         collect market data for these conids, overriding db config (typically
@@ -290,11 +290,11 @@ def collect_market_data(codes, conids=None, universes=None, fields=None, until=N
 
     Examples
     --------
-    Collect market data for all securities in a database called 'japan-banks-trades':
+    Collect market data for all securities in a tick database called 'japan-banks-trades':
 
     >>> collect_market_data("japan-banks-trades")
 
-    Collect market data for a subset of securities in a database called 'usa-stk-trades'
+    Collect market data for a subset of securities in a tick database called 'usa-stk-trades'
     and automatically cancel the data collection in 30 minutes:
 
     >>> collect_market_data("usa-stk-trades", conids=[12345,23456,34567], until="30m")
@@ -361,7 +361,7 @@ def cancel_market_data(codes=None, conids=None, universes=None, cancel_all=False
     Parameters
     ----------
     codes : list of str, optional
-        the database code(s) to cancel collection for
+        the tick database code(s) to cancel collection for
 
     conids : list of int, optional
         cancel market data for these conids, overriding db config
@@ -379,7 +379,7 @@ def cancel_market_data(codes=None, conids=None, universes=None, cancel_all=False
 
     Examples
     --------
-    Cancel market data collection for a database called 'globex-fut-taq':
+    Cancel market data collection for a tick database called 'globex-fut-taq':
 
     >>> cancel_market_data("globex-fut-taq")
 
@@ -463,6 +463,10 @@ def download_market_data_file(code, filepath_or_buffer=None, output="csv",
                                  start_date="08:00:00 America/Chicago",
                                  filepath_or_buffer="globex_taq.csv")
     >>> market_data = pd.read_csv("globex_taq.csv", parse_dates=["Date"])
+
+    See Also
+    --------
+    quantrocket.get_prices : load prices into a DataFrame
     """
     params = {}
     if start_date:

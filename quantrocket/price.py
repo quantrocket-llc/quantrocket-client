@@ -49,7 +49,7 @@ def get_prices(codes, start_date=None, end_date=None,
         the code(s) of one or more databases to query. If multiple databases
         are specified, they must have the same bar size. List databses in order of
         priority (highest priority first). If multiple databases provide the same
-        field for the same conid on the same date, the first database's value will
+        field for the same conid on the same datetime, the first database's value will
         be used.
 
     start_date : str (YYYY-MM-DD), optional

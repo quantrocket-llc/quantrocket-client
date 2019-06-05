@@ -29,11 +29,11 @@ Examples:
 
 Create a database for collecting real-time trades and volume for US stocks:
 
-    quantrocket realtime create-tick-db usa-stk-trades -u usa-stk --fields Last Volume
+    quantrocket realtime create-tick-db usa-stk-trades -u usa-stk --fields LastPrice Volume
 
 Create a database for collecting trades and quotes for a universe of futures:
 
-    quantrocket realtime create-tick-db globex-fut-taq -u globex-fut --fields Last Volume Bid Ask BidSize AskSize
+    quantrocket realtime create-tick-db globex-fut-taq -u globex-fut --fields LastPrice Volume BidPrice AskPrice BidSize AskSize
     """
     parser = _subparsers.add_parser(
         "create-tick-db",
@@ -65,7 +65,7 @@ Create a database for collecting trades and quotes for a universe of futures:
         metavar="FIELD",
         nargs="*",
         help="collect these fields (pass '?' or any invalid fieldname to see "
-        "available fields, default fields are 'Last' and 'Volume')")
+        "available fields, default fields are 'LastPrice' and 'Volume')")
     parser.add_argument(
         "-p", "--primary-exchange",
         action="store_true",
@@ -81,16 +81,16 @@ aggregated to a desired frequency (such as 1-minute bars).
 Examples:
 
 Create an aggregate database of 1 minute bars consisting of OHLC trades and volume,
-from a tick database of US stocks, resulting in fields called LastOpen, LastHigh,
-LastLow, LastClose, and VolumeClose:
+from a tick database of US stocks, resulting in fields called LastPriceOpen, LastPriceHigh,
+LastPriceLow, LastPriceClose, and VolumeClose:
 
-    quantrocket realtime create-agg-db usa-stk-trades-1min --tick-db usa-stk-trades -z 1m -f Last:Open,High,Low,Close Volume:Close
+    quantrocket realtime create-agg-db usa-stk-trades-1min --tick-db usa-stk-trades -z 1m -f LastPrice:Open,High,Low,Close Volume:Close
 
-Create an aggregate database of 1 second bars containing the last bid and ask and
+Create an aggregate database of 1 second bars containing the closing bid and ask and
 the mean bid size and ask size, from a tick database of futures trades and
-quotes, resulting in fields called BidClose, AskClose, BidSizeMean, and AskSizeMean:
+quotes, resulting in fields called BidPriceClose, AskPriceClose, BidSizeMean, and AskSizeMean:
 
-    quantrocket realtime create-agg-db globex-fut-taq-1sec --tick-db globex-fut-taq -z 1s -f Bid:Close Ask:Close BidSize:Mean AskSize:Mean
+    quantrocket realtime create-agg-db globex-fut-taq-1sec --tick-db globex-fut-taq -z 1s -f BidPrice:Close AskPrice:Close BidSize:Mean AskSize:Mean
     """
     parser = _subparsers.add_parser(
         "create-agg-db",
@@ -131,11 +131,11 @@ Examples:
 
 Return the configuration for a tick database called "globex-fut-taq":
 
-    quantrocket realtime config 'globex-fut-taq'
+    quantrocket realtime config globex-fut-taq
 
 Return the configuration for an aggregate database called "globex-fut-taq-1s":
 
-    quantrocket realtime config 'globex-fut-taq-1s'
+    quantrocket realtime config globex-fut-taq-1s
     """
     parser = _subparsers.add_parser(
         "config",
@@ -160,7 +160,7 @@ Examples:
 
 Delete a database called "usa-stk-trades":
 
-    quantrocket realtime drop-db 'usa-stk-trades' --confirm-by-typing-db-code-again 'usa-stk-trades'
+    quantrocket realtime drop-db usa-stk-trades --confirm-by-typing-db-code-again usa-stk-trades
     """
     parser = _subparsers.add_parser(
         "drop-db",
@@ -208,11 +208,11 @@ for cancellation using the `--until` parameter.
 
 Examples:
 
-Collect market data for all securities in a database called 'japan-banks-trades':
+Collect market data for all securities in a tick database called 'japan-banks-trades':
 
     quantrocket realtime collect japan-banks-trades
 
-Collect market data for a subset of securities in a database called 'usa-stk-trades'
+Collect market data for a subset of securities in a tick database called 'usa-stk-trades'
 and automatically cancel the data collection in 30 minutes:
 
     quantrocket realtime collect usa-stk-trades --conids 12345 23456 34567 --until 30m
@@ -230,7 +230,7 @@ Collect a market data snapshot and wait until it completes:
         "codes",
         metavar="CODE",
         nargs="+",
-        help="the database code(s) to collect data for")
+        help="the tick database code(s) to collect data for")
     parser.add_argument(
         "-i", "--conids",
         nargs="*",
@@ -290,9 +290,9 @@ Cancel market data collection.
 
 Examples:
 
-Cancel market data collection for a database called 'globex-fut-taq':
+Cancel market data collection for a tick database called 'globex-fut-taq':
 
-    quantrocket realtime cancel 'globex-fut-taq'
+    quantrocket realtime cancel globex-fut-taq
 
 Cancel all market data collection:
 
@@ -307,7 +307,7 @@ Cancel all market data collection:
         "codes",
         metavar="CODE",
         nargs="*",
-        help="the database code(s) to cancel collection for")
+        help="the tick database code(s) to cancel collection for")
     parser.add_argument(
         "-i", "--conids",
         nargs="*",
