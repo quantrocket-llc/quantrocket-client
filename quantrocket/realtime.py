@@ -14,6 +14,8 @@
 
 import sys
 import requests
+import urllib.parse
+import subprocess
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoRealtimeData, ParameterError
@@ -506,3 +508,36 @@ def download_market_data_file(code, filepath_or_buffer=None, output="csv",
 
 def _cli_download_market_data_file(*args, **kwargs):
     return json_to_cli(download_market_data_file, *args, **kwargs)
+
+def _cli_stream_market_data(conids, exclude_conids, fields):
+
+    url = houston.base_url + "/realtime/stream"
+
+    params = {}
+
+    if conids:
+        params["conids"] = conids
+    if exclude_conids:
+        params["exclude_conids"] = exclude_conids
+    if fields:
+        params["fields"] = fields
+
+    if params:
+        url += "?" + urllib.parse.urlencode(params, doseq=True)
+
+    try:
+        with subprocess.Popen(["wscat", "-c", url],
+                              stdout=subprocess.PIPE,
+                              bufsize=1,
+                              universal_newlines=True) as p:
+            for line in p.stdout:
+                print(line, end='')
+    except FileNotFoundError as e:
+        if "wscat" in repr(e):
+            return json_to_cli(lambda: {
+                "status": "error",
+                "msg": "wscat must be installed to stream data "
+                "(install with `npm install -g wscat`)"})
+        raise
+    except KeyboardInterrupt:
+        return None, 0

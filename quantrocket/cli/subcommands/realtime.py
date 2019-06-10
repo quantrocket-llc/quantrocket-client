@@ -400,3 +400,41 @@ Download a CSV of futures market data since 08:00 AM Chicago time:
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields)")
     parser.set_defaults(func="quantrocket.realtime._cli_download_market_data_file")
+
+    examples = """
+Stream incoming market data.
+
+This command does not cause data to be collected but connects to the stream of
+data already being collected.
+
+Examples:
+
+Stream all incoming market data:
+
+    quantrocket realtime stream
+
+Stream a subset of fields and conids:
+
+    quantrocket realtime stream --conids 265598 --fields BidPrice AskPrice
+    """
+    parser = _subparsers.add_parser(
+        "stream",
+        help="stream incoming market data",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-i", "--conids",
+        nargs="*",
+        metavar="CONID",
+        help="limit to these conids")
+    parser.add_argument(
+        "--exclude-conids",
+        nargs="*",
+        metavar="CONID",
+        help="exclude these conids")
+    parser.add_argument(
+        "-f", "--fields",
+        nargs="*",
+        metavar="FIELD",
+        help="limit to these fields")
+    parser.set_defaults(func="quantrocket.realtime._cli_stream_market_data")
