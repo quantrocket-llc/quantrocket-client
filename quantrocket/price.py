@@ -16,6 +16,7 @@ import six
 import os
 import time
 import itertools
+import tempfile
 from quantrocket.master import download_master_file
 from quantrocket.exceptions import ParameterError, NoHistoricalData, NoRealtimeData
 from quantrocket.history import (
@@ -27,7 +28,7 @@ from quantrocket.realtime import (
     get_db_config as get_realtime_db_config,
     list_databases as list_realtime_databases)
 
-TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", "/tmp")
+TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", tempfile.gettempdir())
 
 def get_prices(codes, start_date=None, end_date=None,
                universes=None, conids=None,
@@ -273,9 +274,9 @@ def get_prices(codes, start_date=None, end_date=None,
                 tz_naive=False
             )
 
-            tmp_filepath = "{0}/history.{1}.{2}.{3}.csv".format(
-                TMP_DIR, db, os.getpid(), time.time()
-            )
+            tmp_filepath = "{dir}{sep}history.{db}.{pid}.{time}.csv".format(
+                dir=TMP_DIR, sep=os.path.sep, db=db, pid=os.getpid(), time=time.time())
+
             try:
                 download_history_file(db, tmp_filepath, **kwargs)
             except NoHistoricalData as e:
@@ -304,9 +305,9 @@ def get_prices(codes, start_date=None, end_date=None,
                 exclude_conids=exclude_conids,
                 fields=list(fields_for_db))
 
-            tmp_filepath = "{0}/realtime.{1}.{2}.{3}.csv".format(
-                TMP_DIR, db, os.getpid(), time.time()
-            )
+            tmp_filepath = "{dir}{sep}realtime.{db}.{pid}.{time}.csv".format(
+                dir=TMP_DIR, sep=os.path.sep, db=db, pid=os.getpid(), time=time.time())
+
             try:
                 download_market_data_file(db, tmp_filepath, **kwargs)
             except NoRealtimeData as e:
