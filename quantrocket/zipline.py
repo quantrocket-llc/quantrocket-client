@@ -405,9 +405,10 @@ class ZiplineBacktestResult(object):
         zipline_result.transactions = transactions.apply(pd.to_numeric, errors='ignore')
 
         # Extract benchmark returns
-        benchmark_returns = results.loc["benchmark"].unstack()
-        benchmark_returns.index = benchmark_returns.index.droplevel(0).tz_localize("UTC")
-        zipline_result.benchmark_returns = benchmark_returns["benchmark"].astype(float)
+        if "benchmark" in results.index.get_level_values("dataframe"):
+            benchmark_returns = results.loc["benchmark"].unstack()
+            benchmark_returns.index = benchmark_returns.index.droplevel(0).tz_localize("UTC")
+            zipline_result.benchmark_returns = benchmark_returns["benchmark"].astype(float)
 
         # Extract performance dataframe
         perf = results.loc["perf"].unstack()
