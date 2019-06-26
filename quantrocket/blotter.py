@@ -533,7 +533,7 @@ def _cli_download_executions(*args, **kwargs):
 
 def download_pnl(filepath_or_buffer=None,
                  order_refs=None, accounts=None, conids=None,
-                 start_date=None, end_date=None, time=None,
+                 start_date=None, end_date=None,
                  details=False, output="csv"):
     """
     Query trading performance and return a CSV of results or PDF tearsheet.
@@ -561,10 +561,6 @@ def download_pnl(filepath_or_buffer=None,
     end_date : str (YYYY-MM-DD), optional
         limit to pnl on or before this date
 
-    time : str (HH:MM:SS [TZ]), optional
-        time of day (with optional timezone) for which to calculate daily PNL (default is
-        11:59:59 UTC)
-
     details : bool
         return detailed results for all securities instead of aggregating to
         account/order ref level (only supported for a single account and order ref
@@ -588,8 +584,6 @@ def download_pnl(filepath_or_buffer=None,
         params["start_date"] = start_date
     if end_date:
         params["end_date"] = end_date
-    if time:
-        params["time"] = time
     if details:
         params["details"] = details
 

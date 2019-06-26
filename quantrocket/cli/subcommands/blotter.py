@@ -405,10 +405,6 @@ Get a PDF for a single account and order ref, broken down by conid:
 Get a CSV of performance results for a particular date range:
 
     quantrocket blotter pnl -s 2018-03-01 -e 2018-06-30 -o pnl_2018Q2.csv
-
-Calculate daily performance as of 4PM Eastern time (instead of the default 11:59:59 UTC):
-
-    quantrocket blotter pnl --time '16:00:00 America/New_York' --pdf -o pnl.pdf
     """
     parser = _subparsers.add_parser(
         "pnl",
@@ -440,11 +436,6 @@ Calculate daily performance as of 4PM Eastern time (instead of the default 11:59
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
         help="limit to pnl on or before this date")
-    filters.add_argument(
-        "-t", "--time",
-        metavar="HH:MM:SS [TZ]",
-        help="time of day (with optional timezone) for which to calculate daily "
-        "PNL (default is 11:59:59 UTC)")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-d", "--details",
@@ -464,9 +455,3 @@ Calculate daily performance as of 4PM Eastern time (instead of the default 11:59
         dest="filepath_or_buffer",
         help="filename to write the data to (default is stdout)")
     parser.set_defaults(func="quantrocket.blotter._cli_download_pnl")
-
-    #parser = _subparsers.add_parser("rollover", help="generate orders to rollover futures contracts based on rollover rules")
-    #parser.add_argument("-s", "--strategies", nargs="*", metavar="CODE", help="limit to these strategies")
-    #parser.add_argument("-a", "--accounts", nargs="*", metavar="ACCOUNT", help="limit to these accounts")
-    #parser.add_argument("-r", "--rules", nargs="*", metavar="KEY:VALUE", help="rollover rules as multiple key-value pairs in relativedelta format (e.g. days=-8) (omit to use rollover rules defined in master service)")
-    #parser.set_defaults(func="quantrocket.blotter.rollover_positions")
