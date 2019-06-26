@@ -444,6 +444,9 @@ Get a CSV of performance results for a particular date range:
         "account/order ref level (only supported for a single account and order ref "
         "at a time)")
     outputs.add_argument(
+        "-t", "--timezone",
+        help="return execution times in this timezone (default UTC)")
+    outputs.add_argument(
         "--pdf",
         action="store_const",
         const="pdf",

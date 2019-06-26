@@ -533,7 +533,7 @@ def _cli_download_executions(*args, **kwargs):
 
 def download_pnl(filepath_or_buffer=None,
                  order_refs=None, accounts=None, conids=None,
-                 start_date=None, end_date=None,
+                 start_date=None, end_date=None, timezone=None,
                  details=False, output="csv"):
     """
     Query trading performance and return a CSV of results or PDF tearsheet.
@@ -566,6 +566,9 @@ def download_pnl(filepath_or_buffer=None,
         account/order ref level (only supported for a single account and order ref
         at a time)
 
+    timezone : str, optional
+        return execution times in this timezone (default UTC)
+
     output : str, required
         the output format (choices are csv or pdf, default is csv)
 
@@ -586,6 +589,8 @@ def download_pnl(filepath_or_buffer=None,
         params["end_date"] = end_date
     if details:
         params["details"] = details
+    if timezone:
+        params["timezone"] = timezone
 
     output = output or "csv"
 
