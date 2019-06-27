@@ -1,4 +1,4 @@
-# Copyright 2018 QuantRocket - All Rights Reserved
+# Copyright 2019 QuantRocket - All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket.utils.parse import _read_moonshot_or_pnl_csv
 
 def place_orders(orders=None, infilepath_or_buffer=None):
     """
@@ -607,3 +608,28 @@ def download_pnl(filepath_or_buffer=None,
 
 def _cli_download_pnl(*args, **kwargs):
     return json_to_cli(download_pnl, *args, **kwargs)
+
+def read_pnl_csv(filepath_or_buffer):
+    """
+    Load a PNL CSV into a DataFrame.
+
+    This is a light wrapper around pd.read_csv that handles setting index
+    columns and casting to proper data types.
+
+    Parameters
+    ----------
+    filepath_or_buffer : string or file-like, required
+        path to CSV
+
+    Returns
+    -------
+    DataFrame
+        a multi-index (Field, Date[, Time]) DataFrame of backtest
+        results, with conids or strategy codes as columns
+
+    Examples
+    --------
+    >>> results = read_pnl_csv("pnl.csv")
+    >>> returns = results.loc["Return"]
+    """
+    return _read_moonshot_or_pnl_csv(filepath_or_buffer)

@@ -1,4 +1,4 @@
-# Copyright 2017 QuantRocket - All Rights Reserved
+# Copyright 2019 QuantRocket - All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,8 @@ from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
-from quantrocket.exceptions import ParameterError
+from quantrocket.utils.parse import _read_moonshot_or_pnl_csv
+from quantrocket.utils.warn import deprecated_replaced_by
 
 def backtest(strategies, start_date=None, end_date=None, segment=None, allocations=None,
              nlv=None, params=None, details=None, output="csv", csv=None, filepath_or_buffer=None):
@@ -157,6 +158,9 @@ def read_moonshot_csv(filepath_or_buffer):
     """
     Load a Moonshot backtest CSV into a DataFrame.
 
+    This is a light wrapper around pd.read_csv that handles setting index
+    columns and casting to proper data types.
+
     Parameters
     ----------
     filepath_or_buffer : string or file-like, required
@@ -173,93 +177,12 @@ def read_moonshot_csv(filepath_or_buffer):
     >>> results = read_moonshot_csv("moonshot_backtest.csv")
     >>> returns = results.loc["Return"]
     """
-    try:
-        import pandas as pd
-    except ImportError:
-        raise ImportError("pandas must be installed to use this function")
+    return _read_moonshot_or_pnl_csv(filepath_or_buffer)
 
-    results = pd.read_csv(filepath_or_buffer, parse_dates=["Date"])
-    index_cols = ["Field", "Date"]
-    if "Time" in results.columns:
-        index_cols.append("Time")
-    results = results.set_index(index_cols)
-
-    fields_in_results = results.index.get_level_values("Field").unique()
-
-    # Cast to float
-    float_fields = [
-        "Return",
-        "Signal",
-        "Weight",
-        "NetExposure",
-        "Turnover",
-        "Commission",
-        "Slippage",
-        "Benchmark",
-        "AbsWeight",
-        "AbsExposure",
-        "TotalHoldings",
-
-    ]
-    for field in float_fields:
-        if field in fields_in_results:
-            results.loc[[field]] = results.loc[[field]].astype(pd.np.float64)
-
-    return results
-
+@deprecated_replaced_by("from moonchart.utils import intraday_to_daily")
 def intraday_to_daily(results):
-    """
-    Roll up a DataFrame of intraday performance results to daily, dropping
-    the "Time" level from the multi-index.
-
-    Parameters
-    ----------
-    results : DataFrame, required
-         a DataFrame of intraday Moonshot backtest results, with a "Time" level
-         in the index
-
-    Returns
-    -------
-    DataFrame
-        a DataFrame of daily Moonshot backtest results, without a "Time" level in
-        the index
-
-    Examples
-    --------
-    >>> intraday_results = read_moonshot_csv("moonshot_intraday_backtest.csv")
-    >>> daily_results = intraday_to_daily(intraday_results)
-    """
-    try:
-        import pandas as pd
-    except ImportError:
-        raise ImportError("pandas must be installed to use this function")
-
-    if "Time" not in results.index.names:
-        raise ParameterError("results DataFrame must have 'Time' level in index")
-
-    fields_in_results = results.index.get_level_values("Field").unique()
-
-    daily_results = {}
-
-    # how to aggregate by field
-    aggregation_methods = {
-        "sum": ["Return", "Turnover", "Commission", "Slippage"],
-        "max": ["AbsExposure", "TotalHoldings", "AbsWeight"],
-        "mean": ["NetExposure", "Weight"],
-        "last": ["Benchmark"],
-    }
-
-    for aggregation_method, fields_to_aggregate in aggregation_methods.items():
-        for field in fields_to_aggregate:
-            if field not in fields_in_results:
-                continue
-
-            field_results = results.loc[field].astype(pd.np.float64)
-            grouped = field_results.groupby(field_results.index.get_level_values("Date"))
-            daily_results[field] = getattr(grouped, aggregation_method)()
-
-    daily_results = pd.concat(daily_results, names=["Field","Date"])
-    return daily_results
+    from moonchart.utils import intraday_to_daily as _intraday_to_daily
+    return _intraday_to_daily(results)
 
 def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
                     param1=None, vals1=None, param2=None, vals2=None,
