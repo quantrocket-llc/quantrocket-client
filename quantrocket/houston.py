@@ -85,12 +85,13 @@ class Houston(requests.Session):
         if "HOUSTON_USERNAME" in os.environ and "HOUSTON_PASSWORD" in os.environ:
             self.auth = (os.environ["HOUSTON_USERNAME"], os.environ["HOUSTON_PASSWORD"])
         self.force_timeout = _get_force_timeout()
-        self.base_url = None
+        self._base_url = None
         self.headers = {}
         self._set_base_url()
 
-    def _set_base_url(self):
-        if "HOUSTON_URL" not in os.environ:
+    @property
+    def base_url(self):
+        if self._base_url is None:
             raise ImproperlyConfigured("""HOUSTON_URL is not set
 
 --------------------------------------------------------------------------------
@@ -128,8 +129,14 @@ To set the environment variable on Linux, run:
     echo 'export HOUSTON_URL=http://localhost:1969' >> ~/.bashrc
     source ~/.bashrc
 """)
-        self.base_url = os.environ["HOUSTON_URL"]
-        if self.base_url.startswith("https"):
+        return self._base_url
+
+    def _set_base_url(self):
+        if "HOUSTON_URL" not in os.environ:
+            return
+
+        self._base_url = os.environ["HOUSTON_URL"]
+        if self._base_url.startswith("https"):
             self.headers["X-DEV"] = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
 
     def request(self, method, url, *args, **kwargs):
