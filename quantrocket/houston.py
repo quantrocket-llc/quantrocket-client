@@ -1,4 +1,4 @@
-# Copyright 2017 QuantRocket - All Rights Reserved
+# Copyright 2019 QuantRocket - All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 import os
 import six
 import requests
+import re
+import uuid
 from .exceptions import ImproperlyConfigured, CannotConnectToHouston
 from quantrocket.cli.utils.output import json_to_cli
 
@@ -83,9 +85,11 @@ class Houston(requests.Session):
         if "HOUSTON_USERNAME" in os.environ and "HOUSTON_PASSWORD" in os.environ:
             self.auth = (os.environ["HOUSTON_USERNAME"], os.environ["HOUSTON_PASSWORD"])
         self.force_timeout = _get_force_timeout()
+        self.base_url = None
+        self.headers = {}
+        self._set_base_url()
 
-    @property
-    def base_url(self):
+    def _set_base_url(self):
         if "HOUSTON_URL" not in os.environ:
             raise ImproperlyConfigured("""HOUSTON_URL is not set
 
@@ -124,7 +128,9 @@ To set the environment variable on Linux, run:
     echo 'export HOUSTON_URL=http://localhost:1969' >> ~/.bashrc
     source ~/.bashrc
 """)
-        return os.environ["HOUSTON_URL"]
+        self.base_url = os.environ["HOUSTON_URL"]
+        if self.base_url.startswith("https"):
+            self.headers["X-DEV"] = ':'.join(re.findall('..', '%012x' % uuid.getnode()))
 
     def request(self, method, url, *args, **kwargs):
         if url.startswith('/'):
@@ -148,7 +154,8 @@ To set the environment variable on Linux, run:
                 kwargs["data"] = data
 
         try:
-            return super(Houston, self).request(method, url, *args, **kwargs)
+            return super(Houston, self).request(
+                method, url, *args, headers=self.headers, **kwargs)
         except requests.ConnectionError as error:
             if "Failed to establish a new connection" not in str(error):
                 raise
