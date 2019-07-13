@@ -109,7 +109,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                         "2018-06-30",
                         "2018-06-30"
                         ],
-                    UpdatedDate=[
+                    AnnounceDate=[
                         "2018-04-06T10:00:00",
                         "2018-04-06T10:00:00",
                         "2018-04-23T13:00:00",
@@ -164,7 +164,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(kwargs["conids"], [12345,23456])
         self.assertEqual(kwargs["start_date"], "2016-09-02") # 365+180 days before reindex_like min date
         self.assertEqual(kwargs["end_date"], "2018-08-01")
-        self.assertEqual(kwargs["fields"], ["Actual", "FiscalPeriodEndDate", "UpdatedDate"])
+        self.assertEqual(kwargs["fields"], ["Actual", "FiscalPeriodEndDate", "AnnounceDate"])
         self.assertEqual(kwargs["period_types"], ["Q"])
 
         master_call = mock_download_master_file.mock_calls[0]
@@ -181,16 +181,16 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(kwargs["conids"], [12345,23456])
         self.assertEqual(kwargs["start_date"], "2016-09-02") # 365+180 days before reindex_like min date
         self.assertEqual(kwargs["end_date"], "2018-08-01")
-        self.assertEqual(kwargs["fields"], ["Actual", "Mean","UpdatedDate"])
+        self.assertEqual(kwargs["fields"], ["Actual", "Mean","AnnounceDate"])
         self.assertEqual(kwargs["period_types"], ["A","S"])
 
         master_call = mock_download_master_file.mock_calls[1]
         _, args, kwargs = master_call
         self.assertEqual(kwargs["conids"], [12345,23456])
 
-    def test_dedupe_updated_date(self):
+    def test_dedupe_announce_date(self):
         """
-        Tests that duplicate UpdatedDates (resulting from reporting several
+        Tests that duplicate AnnounceDates (resulting from reporting several
         fiscal periods at once) are deduped by keeping the latest record.
         """
         closes = pd.DataFrame(
@@ -205,7 +205,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                         "2018-03-31",
                         "2018-06-30",
                         ],
-                    UpdatedDate=[
+                    AnnounceDate=[
                         "2018-07-23T10:00:00",
                         "2018-07-23T10:00:00",
                         ],
@@ -261,7 +261,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                         "2018-03-30",
                         "2018-06-30"
                         ],
-                    UpdatedDate=[
+                    AnnounceDate=[
                         "2018-04-23T10:00:00",
                         "2018-07-23T10:00:00",
                         ],
@@ -317,7 +317,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                         "2018-03-30",
                         "2018-06-30"
                         ],
-                    UpdatedDate=[
+                    AnnounceDate=[
                         "2018-04-23T10:00:00",
                         "2018-07-23T10:00:00",
                         ],
@@ -379,7 +379,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                         "2018-06-30",
                         "2018-06-30"
                         ],
-                    UpdatedDate=[
+                    AnnounceDate=[
                         "2018-04-23T10:00:00",
                         "2018-07-23T10:00:00",
                         "2018-04-25T10:00:00",
@@ -590,7 +590,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                     FiscalPeriodEndDate=[
                         "2018-06-30"
                         ],
-                    UpdatedDate=[
+                    AnnounceDate=[
                         "2018-07-06T18:00:35",
                         ],
                      ConId=[
@@ -650,7 +650,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                         "2018-03-31",
                         "2018-06-30"
                         ],
-                    UpdatedDate=[
+                    AnnounceDate=[
                         "2018-04-23T14:00:00",
                         "2018-07-06T17:34:00",
                         ],
@@ -748,7 +748,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                         "2018-06-30",
                         "2018-06-30"
                         ],
-                    UpdatedDate=[
+                    AnnounceDate=[
                         "2018-04-06T10:00:00",
                         "2018-04-06T10:00:00",
                         "2018-04-23T13:00:00",
@@ -803,7 +803,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
 
     def test_convert_utc_to_security_timezone(self):
         """
-        Tests that estimate UpdatedDates are converted from UTC to the
+        Tests that estimate AnnounceDates are converted from UTC to the
         security timezone for the purpose of date alignment.
         """
         closes = pd.DataFrame(
@@ -820,7 +820,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                         "2018-06-30",
                         "2018-06-30",
                         ],
-                    UpdatedDate=[
+                    AnnounceDate=[
                         "2018-04-06T08:00:00",
                         "2018-04-07T09:35:00",
                         "2018-07-23T17:00:00", # = 2018-07-23 America/New_York
@@ -887,7 +887,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                         "2018-03-31",
                         "2018-06-30",
                         ],
-                    UpdatedDate=[
+                    AnnounceDate=[
                         "2018-04-23T14:00:00",
                         "2018-07-06T17:34:00",
                         "2018-04-23T14:00:00",

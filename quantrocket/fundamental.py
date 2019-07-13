@@ -612,8 +612,8 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     Reuters estimates and actuals for one or more indicator codes, reindexed
     to match the index (dates) and columns (conids) of `reindex_like`.
     Estimates and actuals are forward-filled in order to provide the latest
-    reading at any given date, indexed to the UpdatedDate field.
-    By default UpdatedDate is shifted forward 1 day to avoid lookahead bias.
+    reading at any given date, indexed to the AnnounceDate field.
+    By default AnnounceDate is shifted forward 1 day to avoid lookahead bias.
 
     Parameters
     ----------
@@ -640,12 +640,12 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
         on the first date they were available, followed by NaNs. Default True.
 
     shift : bool
-        shift values forward one day from the UpdatedDate to avoid lookahead bias.
+        shift values forward one day from the AnnounceDate to avoid lookahead bias.
         Shifting forward one day may be overly cautious as announcements may occur
         early in the day, for example before the market open, and thus may be actionable
-        the same day. Set 'shift=False' to index values to the UpdatedDate rather
-        than the day after, in which case you may also want to query UpdatedDate and/or
-        AnnounceDate (both timestamped in UTC) and use them to selectively shift estimates
+        the same day. Set 'shift=False' to index values to the AnnounceDate rather
+        than the day after, in which case you may also want to query AnnounceDate
+        (timestamped in UTC) and use it to selectively shift estimates
         and actuals yourself. Default True.
 
     max_lag : str, optional
@@ -719,23 +719,23 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
 
     f = six.StringIO()
     query_fields = list(fields) # copy fields on Py2 or 3: https://stackoverflow.com/a/2612815/417414
-    if "UpdatedDate" not in query_fields:
-        query_fields.append("UpdatedDate")
+    if "AnnounceDate" not in query_fields:
+        query_fields.append("AnnounceDate")
     download_reuters_estimates(
         codes, f, conids=conids, start_date=start_date, end_date=end_date,
         fields=query_fields, period_types=period_types)
-    parse_dates = ["UpdatedDate"]
+    parse_dates = ["AnnounceDate"]
     if "FiscalPeriodEndDate" in fields or max_lag:
         parse_dates.append("FiscalPeriodEndDate")
-    if "AnnounceDate" in fields:
-        parse_dates.append("AnnounceDate")
+    if "UpdatedDate" in fields:
+        parse_dates.append("UpdatedDate")
     estimates = pd.read_csv(
         f, parse_dates=parse_dates)
 
     # Drop records with no actuals
-    estimates = estimates.loc[estimates.UpdatedDate.notnull()]
+    estimates = estimates.loc[estimates.AnnounceDate.notnull()]
 
-    # Convert UTC UpdatedDate to security timezone, and cast to date for
+    # Convert UTC AnnounceDate to security timezone, and cast to date for
     # index
     f = six.StringIO()
     download_master_file(f, conids=list(estimates.ConId.unique()),
@@ -752,9 +752,9 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     # If only 1 timezone in data, use a faster method
     if len(estimates.Timezone.unique()) == 1:
         timezone = list(estimates.Timezone.unique())[0]
-        estimates["Date"] = pd.to_datetime(estimates.UpdatedDate.values).tz_localize("UTC").tz_convert(timezone)
+        estimates["Date"] = pd.to_datetime(estimates.AnnounceDate.values).tz_localize("UTC").tz_convert(timezone)
     else:
-        estimates["Date"] = estimates.apply(lambda row: row.UpdatedDate.tz_localize("UTC").tz_convert(row.Timezone), axis=1)
+        estimates["Date"] = estimates.apply(lambda row: row.AnnounceDate.tz_localize("UTC").tz_convert(row.Timezone), axis=1)
 
     # Convert to dates (i.e. time = 00:00:00)
     estimates.loc[:, "Date"] = pd.to_datetime(estimates.Date.apply(
@@ -765,28 +765,24 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     needed_fields.update(set(("ConId", "Date", "Indicator")))
     if max_lag:
         needed_fields.add("FiscalPeriodEndDate")
-    # If not ffilling, cast UpdatedDate to int for faster fiscal period boundary detection
-    if not ffill:
-        estimates["UpdatedDateInt"] = estimates.UpdatedDate.astype(int)
-        needed_fields.add("UpdatedDateInt")
 
     unneeded_fields = set(estimates.columns) - needed_fields
     if unneeded_fields:
         estimates = estimates.drop(unneeded_fields, axis=1)
 
     # if reindex_like.index is tz-aware, make estimates tz-aware so they can
-    # be joined (tz-aware or tz-naive are both fine, as UpdatedDate was
+    # be joined (tz-aware or tz-naive are both fine, as AnnounceDate was
     # already converted above to the local timezone of the reported company)
     if reindex_like.index.tz:
         estimates.loc[:, "Date"] = estimates.Date.dt.tz_localize(reindex_like.index.tz.zone)
-        deduped_updated_dates = estimates.Date.drop_duplicates()
+        deduped_announce_dates = estimates.Date.drop_duplicates()
     else:
         # joining to tz-naive requires using values, whereas joining to
         # tz-aware requires not using it. Why?
-        deduped_updated_dates = estimates.Date.drop_duplicates().values
+        deduped_announce_dates = estimates.Date.drop_duplicates().values
 
-    # Create a unioned index of input DataFrame and UpdatedDate
-    union_date_idx = reindex_like.index.union(deduped_updated_dates).sort_values()
+    # Create a unioned index of input DataFrame and AnnounceDate
+    union_date_idx = reindex_like.index.union(deduped_announce_dates).sort_values()
 
     all_estimates = {}
     for code in codes:
@@ -795,7 +791,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
             continue
         if "Indicator" not in fields:
             estimates_for_code = estimates_for_code.drop("Indicator", axis=1)
-        # There might be duplicate UpdatedDates if a company announced
+        # There might be duplicate AnnounceDates if a company announced
         # reports for several fiscal periods at once. In this case we keep
         # only the last value (i.e. latest fiscal period)
         estimates_for_code = estimates_for_code.drop_duplicates(subset=["ConId","Date"], keep="last")
@@ -808,7 +804,10 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
         # estimates are sparse so ffill (one field at a time)
         all_fields_for_code = {}
         for field in estimates_for_code.index.get_level_values("Field").unique():
-            field_for_code = estimates_for_code.loc[field].fillna(method="ffill")
+            field_for_code = estimates_for_code.loc[field]
+
+            if ffill:
+                field_for_code = field_for_code.fillna(method="ffill")
 
             # Shift to avoid lookahead bias
             if shift:
@@ -840,14 +839,6 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
         extra_dates = union_date_idx.difference(reindex_like.index)
         if not extra_dates.empty:
             estimates_for_code.drop(extra_dates, axis=0, level="Date", inplace=True)
-
-        # If not ffilling, mask any values that aren't the newest for that
-        # update (must be done after removing extra dates in case the
-        # UpdatedDate got dropped due to not being in reindex_like)
-        if not ffill:
-            are_new_updates = estimates_for_code.loc["UpdatedDateInt"].fillna(0).diff().abs() > 0
-            estimates_for_code.drop("UpdatedDateInt", level="Field", inplace=True)
-            estimates_for_code = estimates_for_code.where(are_new_updates, level="Date")
 
         all_estimates[code] = estimates_for_code
 
