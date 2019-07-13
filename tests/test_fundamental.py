@@ -383,9 +383,9 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                         "2018-04-23T10:00:00",
                         "2018-07-23T10:00:00",
                         "2018-04-25T10:00:00",
-                        "2018-07-25T10:00:00",
-                        "2018-07-26T10:00:00",
-                        "2018-07-26T10:00:00",
+                        "2018-07-25T10:00:00", # in the unlikely event of an announcement on the weekend, it will be dropped if no ffill
+                        "2018-07-27T10:00:00",
+                        "2018-07-27T10:00:00",
                         "2018-07-28T10:00:00",
                         ],
                      ConId=[
@@ -467,7 +467,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                  pd.Timestamp('2018-07-22 00:00:00'): "nan",
                  pd.Timestamp('2018-07-23 00:00:00'): "nan",
                  pd.Timestamp('2018-07-24 00:00:00'): "nan",
-                 pd.Timestamp('2018-07-27 00:00:00'): 10.04,
+                 pd.Timestamp('2018-07-27 00:00:00'): "nan",
                  pd.Timestamp('2018-07-28 00:00:00'): "nan",
                  pd.Timestamp('2018-07-29 00:00:00'): "nan"
              },
@@ -499,7 +499,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
                  pd.Timestamp('2018-07-22 00:00:00'): "nan",
                  pd.Timestamp('2018-07-23 00:00:00'): "nan",
                  pd.Timestamp('2018-07-24 00:00:00'): "nan",
-                 pd.Timestamp('2018-07-27 00:00:00'): 10.03,
+                 pd.Timestamp('2018-07-27 00:00:00'): "nan",
                  pd.Timestamp('2018-07-28 00:00:00'): "nan",
                  pd.Timestamp('2018-07-29 00:00:00'): "nan"
              },
