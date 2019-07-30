@@ -237,7 +237,7 @@ Download a CSV of Sharadar securities from quantrocket.master.sharadar.sqlite:
         "-t", "--sec-types",
         nargs="*",
         metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP"],
+        choices=["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG"],
         help="limit to these security types. Possible choices: %(choices)s")
     filters.add_argument(
         "-c", "--currencies",
@@ -580,6 +580,42 @@ Delete a universe from the sharadar domain (quantrocket.master.sharadar.sqlite):
         "'main', which runs against quantrocket.master.main.sqlite. "
         "Possible choices: %(choices)s)")
     parser.set_defaults(func="quantrocket.master._cli_delete_universe")
+
+    examples = """
+Create a combo (aka spread), which is a composite instrument consisting
+of two or more individual instruments (legs) that are traded as a single
+instrument.
+
+Each user-defined combo is stored in the securities master database with a
+SecType of "BAG". The combo legs are stored in the ComboLegs field as a JSON
+array. QuantRocket assigns a negative integer as the conid for the combo. The
+negative integer consists of a prefix of -11 followed by an autoincrementing
+digit, for example: -111, -112, -113, ...
+
+If the combo already exists, its conid will be returned instead of creating a
+duplicate record.
+
+Examples:
+
+Create a spread from a JSON file:
+
+    cat spread.json
+    [["BUY", 1, 12345],
+     ["SELL", 1, 23456]]
+
+    quantrocket master create-combo spread.json
+    """
+    parser = _subparsers.add_parser(
+        "create-combo",
+        help="Create a combo (aka spread)",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "combo_filepath",
+        metavar="PATH",
+        help="a JSON file containing an array of the combo legs, where each "
+        "leg is an array specifying action, quantity, and conid")
+    parser.set_defaults(func="quantrocket.master._cli_create_combo")
 
     examples = """
 Upload a new rollover rules config, or return the current rollover rules.

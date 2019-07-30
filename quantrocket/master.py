@@ -14,6 +14,7 @@
 
 import sys
 import six
+import json
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
@@ -302,7 +303,7 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         limit to these exchanges
 
     sec_types : list of str, optional
-        limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND, OPT, FOP
+        limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND, OPT, FOP, BAG
 
     currencies : list of str, optional
         limit to these currencies
@@ -750,6 +751,64 @@ def delist_security(conid=None, symbol=None, exchange=None, currency=None, sec_t
 
 def _cli_delist_security(*args, **kwargs):
     return json_to_cli(delist_security, *args, **kwargs)
+
+def create_combo(combo_legs):
+    """
+    Create a combo (aka spread), which is a composite instrument consisting
+    of two or more individual instruments (legs) that are traded as a single
+    instrument.
+
+    Each user-defined combo is stored in the securities master database with a
+    SecType of "BAG". The combo legs are stored in the ComboLegs field as a JSON
+    array. QuantRocket assigns a negative integer as the conid for the combo. The
+    negative integer consists of a prefix of -11 followed by an autoincrementing
+    digit, for example: -111, -112, -113, ...
+
+    If the combo already exists, its conid will be returned instead of creating a
+    duplicate record.
+
+    Parameters
+    ----------
+    combo_legs : list, required
+        a list of the combo legs, where each leg is a list specifying action, quantity,
+        and conid
+
+    Returns
+    -------
+    dict
+        returns a dict containing the generated conid of the combo, and whether a new
+        record was created
+
+    Examples
+    --------
+    To create a calendar spread on VX, first retrieve the conids of the legs:
+
+    >>> from quantrocket.master import download_master_file
+    >>> download_master_file("vx.csv", symbols="VIX", exchanges="CFE", sec_types="FUT")
+    >>> vx_conids = pd.read_csv("vx.csv", index_col="LocalSymbol").ConId.to_dict()
+
+    Then create the combo:
+
+    >>> create_combo([
+            ["BUY", 1, vx_conids["VXV9"]],
+            ["SELL", 1, vx_conids["VXQ9"]]
+        ])
+        {"conid": -111, "created": True}
+    """
+
+    f = six.StringIO()
+    json.dump(combo_legs, f)
+    f.seek(0)
+
+    response = houston.put("/master/combos", data=f)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_create_combo(combo_filepath):
+    with open(combo_filepath) as f:
+        combo_legs = json.load(f)
+    return json_to_cli(create_combo, combo_legs)
 
 def load_rollrules_config(filename):
     """
