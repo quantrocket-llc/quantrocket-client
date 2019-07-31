@@ -614,7 +614,7 @@ Create a spread from a JSON file:
         "combo_filepath",
         metavar="PATH",
         help="a JSON file containing an array of the combo legs, where each "
-        "leg is an array specifying action, quantity, and conid")
+        "leg is an array specifying action, ratio, and conid")
     parser.set_defaults(func="quantrocket.master._cli_create_combo")
 
     examples = """

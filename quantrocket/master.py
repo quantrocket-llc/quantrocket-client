@@ -770,7 +770,7 @@ def create_combo(combo_legs):
     Parameters
     ----------
     combo_legs : list, required
-        a list of the combo legs, where each leg is a list specifying action, quantity,
+        a list of the combo legs, where each leg is a list specifying action, ratio,
         and conid
 
     Returns
