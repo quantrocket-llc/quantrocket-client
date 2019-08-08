@@ -93,6 +93,12 @@ Run a backtest in 1-year segments to reduce memory usage:
         metavar="PARAM:VALUE",
         help="one or more strategy params to set on the fly before backtesting "
         "(pass as 'param:value')")
+    backtest_options.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="don't use cached files even if available. Using cached files speeds "
+        "up backtests but may be undesirable if underlying data has changed. "
+        "See http://qrok.it/h/mcache to learn more about caching in Moonshot.")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-d", "--details",
@@ -208,6 +214,12 @@ Run a parameter scan in 1-year segments to reduce memory usage:
         metavar="PARAM:VALUE",
         help="one or more strategy params to set on the fly before backtesting "
         "(pass as 'param:value')")
+    backtest_options.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="don't use cached files even if available. Using cached files speeds "
+        "up backtests but may be undesirable if underlying data has changed. "
+        "See http://qrok.it/h/mcache to learn more about caching in Moonshot.")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "--pdf",
@@ -335,6 +347,12 @@ memory usage:
         metavar="PARAM:VALUE",
         help="one or more strategy params to set on the fly before backtesting "
         "(pass as 'param:value')")
+    backtest_options.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="don't use cached files even if available. Using cached files speeds "
+        "up backtests but may be undesirable if underlying data has changed. "
+        "See http://qrok.it/h/mcache to learn more about caching in Moonshot.")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-d", "--details",

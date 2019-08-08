@@ -24,7 +24,8 @@ from quantrocket.utils.parse import _read_moonshot_or_pnl_csv
 from quantrocket.utils.warn import deprecated_replaced_by
 
 def backtest(strategies, start_date=None, end_date=None, segment=None, allocations=None,
-             nlv=None, params=None, details=None, output="csv", csv=None, filepath_or_buffer=None):
+             nlv=None, params=None, details=None, output="csv", csv=None, filepath_or_buffer=None,
+             no_cache=False):
     """
     Backtest one or more strategies.
 
@@ -77,6 +78,11 @@ def backtest(strategies, start_date=None, end_date=None, segment=None, allocatio
 
     filepath_or_buffer : str, optional
         the location to write the results file (omit to write to stdout)
+
+    no_cache : bool
+        don't use cached files even if available. Using cached files speeds
+        up backtests but may be undesirable if underlying data has changed.
+        See http://qrok.it/h/mcache to learn more about caching in Moonshot.
 
     Returns
     -------
@@ -133,6 +139,8 @@ def backtest(strategies, start_date=None, end_date=None, segment=None, allocatio
         _params["details"] = details
     if params:
         _params["params"] = dict_to_dict_strs(params)
+    if no_cache:
+        _params["no_cache"] = no_cache
 
     response = houston.post("/moonshot/backtests.{0}".format(output),
                             params=_params, timeout=60*60*24)
@@ -187,7 +195,7 @@ def intraday_to_daily(results):
 def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
                     param1=None, vals1=None, param2=None, vals2=None,
                     allocations=None, nlv=None, params=None, output="csv",
-                    csv=None, filepath_or_buffer=None):
+                    csv=None, filepath_or_buffer=None, no_cache=False):
     """
     Run a parameter scan for one or more strategies.
 
@@ -247,6 +255,11 @@ def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
 
     filepath_or_buffer : str, optional
         the location to write the results file (omit to write to stdout)
+
+    no_cache : bool
+        don't use cached files even if available. Using cached files speeds
+        up backtests but may be undesirable if underlying data has changed.
+        See http://qrok.it/h/mcache to learn more about caching in Moonshot.
 
     Returns
     -------
@@ -315,6 +328,8 @@ def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
         _params["nlv"] = dict_to_dict_strs(nlv)
     if params:
         _params["params"] = dict_to_dict_strs(params)
+    if no_cache:
+        _params["no_cache"] = no_cache
 
     response = houston.post("/moonshot/paramscans.{0}".format(output), params=_params, timeout=60*60*24)
 
@@ -338,7 +353,8 @@ def _cli_scan_parameters(*args, **kwargs):
 def ml_walkforward(strategy, start_date, end_date, train, min_train=None, rolling_train=None,
                    model_filepath=None, force_nonincremental=None, segment=None,
                    allocation=None, nlv=None, params=None,
-                   details=None, progress=False, filepath_or_buffer=None):
+                   details=None, progress=False, filepath_or_buffer=None,
+                   no_cache=False):
     """
     Run a walk-forward optimization of a machine learning strategy.
 
@@ -422,6 +438,11 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None, rollin
         the location to write the ZIP file to; or, if path ends with "*", the
         pattern to use for extracting the zipped files. For example, if the path is
         my_ml*, files will extracted to my_ml_results.csv and my_ml_trained_model.joblib.
+
+    no_cache : bool
+        don't use cached files even if available. Using cached files speeds
+        up backtests but may be undesirable if underlying data has changed.
+        See http://qrok.it/h/mcache to learn more about caching in Moonshot.
 
     Returns
     -------
@@ -514,6 +535,8 @@ def ml_walkforward(strategy, start_date, end_date, train, min_train=None, rollin
         _params["progress"] = progress
     if params:
         _params["params"] = dict_to_dict_strs(params)
+    if no_cache:
+        _params["no_cache"] = no_cache
 
     url = "/moonshot/ml/walkforward/{0}.zip".format(strategy)
 
