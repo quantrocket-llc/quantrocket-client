@@ -92,10 +92,11 @@ def create_db(code, universes=None, conids=None, start_date=None, end_date=None,
     shard : str, optional
         whether and how to shard the database, i.e. break it into smaller pieces.
         Required for intraday databases. Possible choices are `year` (separate
-        database for each year), `time` (separate database for each bar time),
-        `conid` (separate database for each security), `conid,time` (duplicate copies
-        of database, one sharded by conid and the other by time), or `off` (no
-        sharding). See http://qrok.it/h/shard for more help.
+        database for each year), `month` (separate database for each year+month),
+        `time` (separate database for each bar time), `conid` (separate database
+        for each security), `conid,time` (duplicate copies of database, one sharded
+        by conid and the other by time),or `off` (no sharding). See
+        http://qrok.it/h/shard for more help.
 
     no_config : bool
         create a database with no config (data can be loaded manually instead of collected
