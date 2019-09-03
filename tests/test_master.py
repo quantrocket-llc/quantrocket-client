@@ -153,6 +153,64 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
                   23456: 'DEF'}]
             )
 
+    def test_securities_reindexed_like_intraday(self):
+        """
+        Tests get_securities_reindexed_like with Date and Time in the index.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(4,2),
+            columns=[12345,23456],
+            index=pd.MultiIndex.from_product([
+                pd.date_range(start="2018-05-01",
+                              periods=2,
+                              freq="D",
+                              tz="America/New_York",
+                              name="Date"),
+                ["09:30:00", "09:31:00"],
+                ], names=["Date", "Time"]))
+
+        def mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(
+                dict(ConId=[12345,
+                            23456],
+                     Symbol=["ABC",
+                             "DEF"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.master.download_master_file', new=mock_download_master_file):
+
+            securities = get_securities_reindexed_like(
+                closes,
+                domain="main",
+                fields="Symbol")
+
+            securities = securities.reset_index()
+            securities.loc[:, "Date"] = securities.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+            self.assertListEqual(
+                securities.to_dict(orient="records"),
+                [{12345: 'ABC',
+                  23456: 'DEF',
+                  'Date': '2018-05-01T00:00:00-0400',
+                  'Field': 'Symbol',
+                  'Time': '09:30:00'},
+                 {12345: 'ABC',
+                  23456: 'DEF',
+                  'Date': '2018-05-01T00:00:00-0400',
+                  'Field': 'Symbol',
+                  'Time': '09:31:00'},
+                 {12345: 'ABC',
+                  23456: 'DEF',
+                  'Date': '2018-05-02T00:00:00-0400',
+                  'Field': 'Symbol',
+                  'Time': '09:30:00'},
+                 {12345: 'ABC',
+                  23456: 'DEF',
+                  'Date': '2018-05-02T00:00:00-0400',
+                  'Field': 'Symbol',
+                  'Time': '09:31:00'}]
+            )
 class ContractNumsReindexedLikeTestCase(unittest.TestCase):
 
     @patch("quantrocket.master.download_master_file")
@@ -472,4 +530,129 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
                  45678: 'nan',
                  56789: 'nan',
                  67890: 2.0}}
+        )
+
+    def test_contract_nums_reindexed_like_intraday(self):
+        """
+        Tests get_contract_nums_reindexed_like when the input DataFrame includes
+        Dates and Times.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(8,6),
+            columns=[12345,23456, 34567, 45678, 56789, 67890],
+            index=pd.MultiIndex.from_product([
+                pd.date_range(start="2018-05-01",
+                              periods=4,
+                              freq="D",
+                              tz="America/New_York",
+                              name="Date"),
+                ["09:30:00","09:31:00"],
+            ], names=["Date","Time"]))
+
+        def mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(
+                dict(ConId=[12345,
+                            23456,
+                            34567,
+                            45678,
+                            56789,
+                            67890],
+                     UnderConId=[1,
+                                 2,
+                                 1,
+                                 2,
+                                 None,
+                                 2],
+                     SecType=["FUT",
+                              "FUT",
+                              "FUT",
+                              "FUT",
+                              "STK",
+                              "FUT"],
+                     RolloverDate=[
+                         "2018-05-02",
+                         "2018-06-02",
+                         "2018-06-03",
+                         "2018-05-03",
+                         None,
+                         "2018-07-03"
+                     ]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.master.download_master_file', new=mock_download_master_file):
+
+            contract_nums = get_contract_nums_reindexed_like(closes)
+
+        self.assertEqual(list(contract_nums.index.names), ["Date","Time"])
+
+        contract_nums = contract_nums.reset_index().fillna("nan")
+        contract_nums.loc[:, "Date"] = contract_nums.Date.dt.strftime("%Y-%m-%d")
+
+        self.assertListEqual(
+            contract_nums.to_dict(orient="records"),
+            [{12345: 1.0,
+              23456: 2.0,
+              34567: 2.0,
+              45678: 1.0,
+              56789: 'nan',
+              67890: 3.0,
+              'Date': '2018-05-01',
+              'Time': '09:30:00'},
+             {12345: 1.0,
+              23456: 2.0,
+              34567: 2.0,
+              45678: 1.0,
+              56789: 'nan',
+              67890: 3.0,
+              'Date': '2018-05-01',
+              'Time': '09:31:00'},
+             {12345: 1.0,
+              23456: 2.0,
+              34567: 2.0,
+              45678: 1.0,
+              56789: 'nan',
+              67890: 3.0,
+              'Date': '2018-05-02',
+              'Time': '09:30:00'},
+             {12345: 1.0,
+              23456: 2.0,
+              34567: 2.0,
+              45678: 1.0,
+              56789: 'nan',
+              67890: 3.0,
+              'Date': '2018-05-02',
+              'Time': '09:31:00'},
+             {12345: 'nan',
+              23456: 2.0,
+              34567: 1.0,
+              45678: 1.0,
+              56789: 'nan',
+              67890: 3.0,
+              'Date': '2018-05-03',
+              'Time': '09:30:00'},
+             {12345: 'nan',
+              23456: 2.0,
+              34567: 1.0,
+              45678: 1.0,
+              56789: 'nan',
+              67890: 3.0,
+              'Date': '2018-05-03',
+              'Time': '09:31:00'},
+             {12345: 'nan',
+              23456: 1.0,
+              34567: 1.0,
+              45678: 'nan',
+              56789: 'nan',
+              67890: 2.0,
+              'Date': '2018-05-04',
+              'Time': '09:30:00'},
+             {12345: 'nan',
+              23456: 1.0,
+              34567: 1.0,
+              45678: 'nan',
+              56789: 'nan',
+              67890: 2.0,
+              'Date': '2018-05-04',
+              'Time': '09:31:00'}]
         )

@@ -471,20 +471,6 @@ def get_securities_reindexed_like(reindex_like, domain, fields=None):
     except ImportError:
         raise ImportError("pandas must be installed to use this function")
 
-    index_levels = reindex_like.index.names
-    if "Time" in index_levels:
-        raise ParameterError(
-            "reindex_like should not have 'Time' in index, please take a cross-section first, "
-            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
-
-    if index_levels != ["Date"]:
-        raise ParameterError(
-            "reindex_like must have index called 'Date', but has {0}".format(
-                ",".join([str(name) for name in index_levels])))
-
-    if not hasattr(reindex_like.index, "date"):
-        raise ParameterError("reindex_like must have a DatetimeIndex")
-
     conids = list(reindex_like.columns)
 
     f = six.StringIO()
@@ -546,17 +532,15 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
         raise ImportError("pandas must be installed to use this function")
 
     index_levels = reindex_like.index.names
-    if "Time" in index_levels:
-        raise ParameterError(
-            "reindex_like should not have 'Time' in index, please take a cross-section first, "
-            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
 
-    if index_levels != ["Date"]:
+    if "Date" not in index_levels:
         raise ParameterError(
             "reindex_like must have index called 'Date', but has {0}".format(
                 ",".join([str(name) for name in index_levels])))
 
-    if not hasattr(reindex_like.index, "date"):
+    reindex_like_dt_index = reindex_like.index.get_level_values("Date")
+
+    if not hasattr(reindex_like_dt_index, "date"):
         raise ParameterError("reindex_like must have a DatetimeIndex")
 
     f = six.StringIO()
@@ -568,12 +552,12 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
     if rollover_dates.empty:
         raise ParameterError("input DataFrame does not appear to contain any futures contracts")
 
-    if reindex_like.index.tz:
-        rollover_dates.loc[:, "RolloverDate"] = rollover_dates.RolloverDate.dt.tz_localize(reindex_like.index.tz.zone)
+    if reindex_like_dt_index.tz:
+        rollover_dates.loc[:, "RolloverDate"] = rollover_dates.RolloverDate.dt.tz_localize(reindex_like_dt_index.tz.zone)
 
-    min_date = reindex_like.index.min()
+    min_date = reindex_like_dt_index.min()
     max_date = max([rollover_dates.RolloverDate.max(),
-                    reindex_like.index.max()])
+                    reindex_like_dt_index.max()])
 
     # Stack conids by underlying (1 column per underlying)
     rollover_dates = rollover_dates.set_index(["RolloverDate","UnderConId"]).ConId.unstack()
@@ -602,7 +586,15 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
         _rollover_dates["ContractNum"] = i + 1
         _rollover_dates = _rollover_dates.set_index(["Date","ConId"])
         _contract_nums = _rollover_dates.ContractNum.unstack()
-        _contract_nums = _contract_nums.reindex(index=reindex_like.index, columns=reindex_like.columns)
+
+        # If MultiIndex input, broadcast across Time level
+        if len(index_levels) > 1:
+            _contract_nums = _contract_nums.reindex(index=reindex_like.index,
+                                                level="Date")
+            _contract_nums = _contract_nums.reindex(columns=reindex_like.columns)
+        else:
+            _contract_nums = _contract_nums.reindex(index=reindex_like_dt_index,
+                                                    columns=reindex_like.columns)
 
         if contract_nums is None:
             contract_nums = _contract_nums
