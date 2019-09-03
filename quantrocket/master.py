@@ -20,6 +20,7 @@ from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.utils.warn import deprecated_replaced_by
+from quantrocket.exceptions import ParameterError
 
 def list_exchanges(regions=None, sec_types=None):
     """
@@ -470,6 +471,20 @@ def get_securities_reindexed_like(reindex_like, domain, fields=None):
     except ImportError:
         raise ImportError("pandas must be installed to use this function")
 
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join([str(name) for name in index_levels])))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
     conids = list(reindex_like.columns)
 
     f = six.StringIO()
@@ -489,6 +504,112 @@ def get_securities_reindexed_like(reindex_like, domain, fields=None):
 
     securities = pd.concat(all_master_fields, names=names)
     return securities
+
+def get_contract_nums_reindexed_like(reindex_like, limit=5):
+    """
+    From a DataFrame of futures (with dates as the index and conids as columns),
+    return a DataFrame of integers representing each conid's sequence in the
+    futures chain as of each date, where 1 is the front contract, 2 is the second
+    nearest contract, etc.
+
+    Sequences are based on the RolloverDate field in the securities master
+    file, which is based on configurable rollover rules.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and conids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    limit : int
+        how many contracts ahead to sequence. For example, assuming quarterly
+        contracts, a limit of 5 will sequence 5 quarters out. Default 5.
+
+    Returns
+    -------
+    DataFrame
+        a DataFrame of futures chain sequence numbers, shaped like the input
+        DataFrame
+
+    Examples
+    --------
+    Get a Boolean mask of front-month contracts:
+
+    >>> closes = prices.loc["Close"]
+    >>> contract_nums = get_contract_nums_reindexed_like(closes)
+    >>> are_front_months = contract_nums == 1
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join([str(name) for name in index_levels])))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    f = six.StringIO()
+    download_master_file(f, conids=list(reindex_like.columns),
+                         fields=["RolloverDate","UnderConId","SecType"])
+    rollover_dates = pd.read_csv(f, parse_dates=["RolloverDate"])
+    rollover_dates = rollover_dates[rollover_dates.SecType=="FUT"].drop("SecType", axis=1)
+
+    if rollover_dates.empty:
+        raise ParameterError("input DataFrame does not appear to contain any futures contracts")
+
+    if reindex_like.index.tz:
+        rollover_dates.loc[:, "RolloverDate"] = rollover_dates.RolloverDate.dt.tz_localize(reindex_like.index.tz.zone)
+
+    min_date = reindex_like.index.min()
+    max_date = max([rollover_dates.RolloverDate.max(),
+                    reindex_like.index.max()])
+
+    # Stack conids by underlying (1 column per underlying)
+    rollover_dates = rollover_dates.set_index(["RolloverDate","UnderConId"]).ConId.unstack()
+
+    contract_nums = None
+
+    for i in range(limit):
+
+        # backshift conids
+        _rollover_dates = rollover_dates.apply(lambda col: col.dropna().shift(-i))
+
+        # Reindex to daily frequency
+        _rollover_dates = _rollover_dates.reindex(
+            index=pd.date_range(start=min_date, end=max_date))
+
+        # RolloverDate is when we roll out of the contract, hence we backfill
+        _rollover_dates = _rollover_dates.fillna(method="bfill")
+
+        # Stack to Series of Date, nth conid
+        _rollover_dates = _rollover_dates.stack()
+        _rollover_dates.index = _rollover_dates.index.droplevel("UnderConId")
+        _rollover_dates.index.name = "Date"
+
+        # Pivot Series to DataFrame
+        _rollover_dates = _rollover_dates.reset_index(name="ConId")
+        _rollover_dates["ContractNum"] = i + 1
+        _rollover_dates = _rollover_dates.set_index(["Date","ConId"])
+        _contract_nums = _rollover_dates.ContractNum.unstack()
+        _contract_nums = _contract_nums.reindex(index=reindex_like.index, columns=reindex_like.columns)
+
+        if contract_nums is None:
+            contract_nums = _contract_nums
+        else:
+            contract_nums = contract_nums.fillna(_contract_nums)
+
+    return contract_nums
 
 def translate_conids(conids, from_domain=None, to_domain=None):
     """
