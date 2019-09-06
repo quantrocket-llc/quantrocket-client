@@ -290,7 +290,7 @@ Download a CSV of Sharadar securities from quantrocket.master.sharadar.sqlite:
         "--exclude-delisted",
         action="store_true",
         default=False,
-        help="exclude delisted securities (default is to include them)")
+        help="exclude delisted securities and expired contracts (default is to include them)")
     filters.add_argument(
         "--delisted",
         action="store_true",
@@ -530,7 +530,7 @@ Create a universe of all listings in quantrocket.master.sharadar.sqlite:
     parser.add_argument(
         "--exclude-delisted",
         action="store_true",
-        help="exclude delisted securities that would otherwise be included (default is to "
+        help="exclude delisted securities and expired contracts that would otherwise be included (default is to "
         "include them)")
     on_conflict_group = parser.add_mutually_exclusive_group()
     on_conflict_group.add_argument(

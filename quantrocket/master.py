@@ -334,7 +334,7 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         limit to these categories
 
     exclude_delisted : bool
-        exclude delisted securities (default is to include them)
+        exclude delisted securities and expired contracts (default is to include them)
 
     delisted : bool
         [DEPRECATED] include delisted securities; this parameter is deprecated
@@ -684,8 +684,8 @@ def create_universe(code, infilepath_or_buffer=None, from_universes=None,
         create the universe from these existing universes
 
     exclude_delisted : bool
-        exclude delisted securities that would otherwise be included (default
-        is not to exclude them)
+        exclude delisted securities and expired contracts that would otherwise be
+        included (default is not to exclude them)
 
     append : bool
         append to universe if universe already exists (default False)
