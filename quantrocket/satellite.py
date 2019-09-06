@@ -16,21 +16,28 @@ import sys
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 
-def execute_command(cmd, return_file=None, filepath_or_buffer=None, service="satellite"):
+def execute_command(cmd, return_file=None, filepath_or_buffer=None,
+                    params=None,
+                    service="satellite"):
     """
-    Execute an abitrary command on a satellite service and optionally return a file.
+    Execute a Python function or abitrary shell command on a satellite service.
 
     Parameters
     ----------
     cmd: str, required
-        the command to run
+        the shell command to run, or the Python function in dot notation (must
+        start with "codeload." to be interpreted as a Python function).
 
     return_file : str, optional
         the path of a file to be returned after the command completes
 
     filepath_or_buffer : str, optional
         the location to write the return_file (omit to write to stdout)
+
+    params : dict of PARAM:VALUE, optional
+        one or more params to pass to the Python function (pass as {param:value})
 
     service : str, optional
         the service name (default 'satellite')
@@ -39,20 +46,36 @@ def execute_command(cmd, return_file=None, filepath_or_buffer=None, service="sat
     -------
     dict or None
         None if return_file, otherwise status message
+
+    Examples
+    --------
+    Run a Python function called 'create_combos' defined in '/codeload/scripts/combos.py'
+    and pass it arguments:
+
+    >>> execute_command("codeload.scripts.combos.create_combos",
+                        params={"universe":"cl-fut", "contract_months":[1,2]})
+
+    Run a backtrader backtest and save the performance chart to file:
+
+    >>> execute_command("python /codeload/backtrader/dual_moving_average.py",
+                        return_file="/tmp/backtrader-plot.pdf"
+                        outfile="backtrader-plot.pdf")
     """
-    params = {}
+    _params = {}
     if not service:
         raise ValueError("a service is required")
     if not cmd:
         raise ValueError("a command is required")
-    params["cmd"] = cmd
+    _params["cmd"] = cmd
+    if params:
+        _params["params"] = dict_to_dict_strs(params)
     if return_file:
-        params["return_file"] = return_file
+        _params["return_file"] = return_file
 
     if not service.startswith("satellite"):
         raise ValueError("service must start with 'satellite'")
 
-    response = houston.post("/{0}/commands".format(service), params=params, timeout=60*60*24)
+    response = houston.post("/{0}/commands".format(service), params=_params, timeout=60*60*24)
 
     houston.raise_for_status_with_json(response)
 
@@ -63,4 +86,7 @@ def execute_command(cmd, return_file=None, filepath_or_buffer=None, service="sat
         return response.json()
 
 def _cli_execute_command(*args, **kwargs):
+    params = kwargs.get("params", None)
+    if params:
+        kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(execute_command, *args, **kwargs)

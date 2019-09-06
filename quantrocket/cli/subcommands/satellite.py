@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+from quantrocket.cli.utils.parse import dict_str
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("satellite", description="QuantRocket Satellite CLI", help="Run custom scripts")
@@ -20,9 +21,14 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Execute an abitrary command on a satellite service and optionally return a file.
+Execute a Python function or abitrary shell command on a satellite service.
 
 Examples:
+
+Run a Python function called 'create_combos' defined in '/codeload/scripts/combos.py'
+and pass it arguments:
+
+    quantrocket satellte exec 'codeload.scripts.combos.create_combos' --params 'universe:cl-fut' 'contract_months:[1,2]'
 
 Run a backtrader backtest and save the performance chart to file:
 
@@ -30,13 +36,14 @@ Run a backtrader backtest and save the performance chart to file:
     """
     parser = _subparsers.add_parser(
         "exec",
-        help="execute an abitrary command on a satellite service and optionally return a file",
+        help="execute a Python function or abitrary shell command on a satellite service",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "cmd",
         metavar="CMD",
-        help="the command to run")
+        help="the shell command to run, or the Python function in dot notation (must "
+        "start with 'codeload.' to be interpreted as a Python function)")
     parser.add_argument(
         "-r", "--return-file",
         metavar="FILEPATH",
@@ -46,6 +53,12 @@ Run a backtrader backtest and save the performance chart to file:
         metavar="FILEPATH",
         dest="filepath_or_buffer",
         help="the location to write the return_file (omit to write to stdout)")
+    parser.add_argument(
+        "-p", "--params",
+        nargs="*",
+        type=dict_str,
+        metavar="PARAM:VALUE",
+        help="one or more params to pass to the Python function (pass as {param:value})")
     parser.add_argument(
         "-s", "--service",
         metavar="SERVICE_NAME",
