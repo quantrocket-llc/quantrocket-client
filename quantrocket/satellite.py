@@ -49,10 +49,10 @@ def execute_command(cmd, return_file=None, filepath_or_buffer=None,
 
     Examples
     --------
-    Run a Python function called 'create_combos' defined in '/codeload/scripts/combos.py'
+    Run a Python function called 'create_calendar_spread' defined in '/codeload/scripts/combos.py'
     and pass it arguments:
 
-    >>> execute_command("codeload.scripts.combos.create_combos",
+    >>> execute_command("codeload.scripts.combos.create_calendar_spread",
                         params={"universe":"cl-fut", "contract_months":[1,2]})
 
     Run a backtrader backtest and save the performance chart to file:
