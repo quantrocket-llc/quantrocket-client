@@ -53,43 +53,97 @@ List stock exchanges in North America:
     parser.set_defaults(func="quantrocket.master._cli_list_exchanges")
 
     examples = """
-Collect securities listings from IB and store in securities master database
-(quantrocket.master.main.sqlite).
+Collect securities listings from EDI and store in securities master
+database.
 
-Specify an exchange (optionally filtering by security type, currency, and/or
-symbol) to collect listings from the IB website and collect associated contract
-details from the IB API. Or, specify universes or conids to collect details from
-the IB API, bypassing the website.
+Examples:
+
+Collect listings for all permitted exchanges
+
+    quantrocket master collect-edi
+
+Collect all Toronto Stock Exchange stock listings:
+
+    quantrocket master collect-edi -e XTSE
+    """
+    parser = _subparsers.add_parser(
+        "collect-edi",
+        help="collect securities listings from EDI and store in securities master database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-e", "--exchanges",
+        nargs="*",
+        metavar="MIC",
+        help="limit to these exchanges (identified by MICs). By default "
+        "collects listings for all permitted exchanges.")
+    parser.set_defaults(func="quantrocket.master._cli_collect_edi_listings")
+
+    examples = """
+Collect securities listings from Bloomberg OpenFIGI and store
+in securities master database.
+
+OpenFIGI provides several useful security attributes including
+market sector and a detailed security type, as well as exchange-level,
+country-level, and share class-level FIGI identifiers.
+
+The collected data fields show up in the master file under the
+prefix FIGI_.
+
+This command does not directly query the OpenFIGI API but rather
+downloads a dump of all FIGIs which QuantRocket has previously
+mapped to securities from other vendors.
+
+Examples:
+
+    quantrocket master collect-figi
+    """
+    parser = _subparsers.add_parser(
+        "collect-figi",
+        help="collect securities listings from Bloomberg OpenFIGI and store in securities master database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.set_defaults(func="quantrocket.master._cli_collect_figi_listings")
+
+    examples = """
+Collect securities listings from Interactive Brokers and store in
+securities master database.
+
+Specify an exchange (optionally filtering by security type, currency,
+and/or symbol) to collect listings from the IBKR website and collect
+associated contract details from the IBKR API. Or, specify universes or
+sids to collect details from the IBKR API, bypassing the website.
 
 Examples:
 
 Collect all Toronto Stock Exchange stock listings:
 
-    quantrocket master collect --exchanges TSE --sec-types STK
+    quantrocket master collect-ibkr --exchanges TSE --sec-types STK
 
 Collect all NYSE ARCA ETF listings:
 
-    quantrocket master collect -e ARCA --sec-types ETF
+    quantrocket master collect-ibkr -e ARCA --sec-types ETF
 
 Collect specific symbols from Nasdaq:
 
-    quantrocket master collect -e NASDAQ --symbols AAPL GOOG NFLX
+    quantrocket master collect-ibkr -e NASDAQ --symbols AAPL GOOG NFLX
 
 Re-collect contract details for an existing universe called "japan-fin":
 
-    quantrocket master collect --universes "japan-fin"
+    quantrocket master collect-ibkr --universes japan-fin
     """
     parser = _subparsers.add_parser(
-        "collect",
-        help="collect securities listings from IB and store in securities master database",
+        "collect-ibkr",
+        help="collect securities listings from Interactive Brokers and store "
+        "in securities master database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-e", "--exchanges",
         nargs="*",
         metavar="EXCHANGE",
-        help="one or more exchange codes to collect listings for (required unless providing universes "
-        "or conids)")
+        help="one or more exchange codes to collect listings for (required unless "
+        "providing universes or sids)")
     parser.add_argument(
         "-t", "--sec-types",
         nargs="*",
@@ -112,18 +166,11 @@ Re-collect contract details for an existing universe called "japan-fin":
         metavar="UNIVERSE",
         help="limit to these universes")
     parser.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
-    parser.add_argument(
-        "--exchange",
-        metavar="EXCHANGE",
-        help="DEPRECATED, this option will be removed in a future release, please use "
-        "`exchanges` instead (previously only a single exchange was supported but "
-        "now multiple exchanges are supported)")
-    parser.set_defaults(func="quantrocket.master._cli_collect_listings")
+        metavar="SID",
+        help="limit to these sids")
+    parser.set_defaults(func="quantrocket.master._cli_collect_ibkr_listings")
 
     examples = """
 Collect securities listings from Sharadar and save to
@@ -203,10 +250,15 @@ file.
 
 Examples:
 
-Download a CSV of all securities in a universe called "mexi-fut" to a file
-called mexi.csv:
+Download NYSE and NASDAQ securities to file, using MICs to specify
+the exchanges:
 
-    quantrocket master get --universes "mexi-fut" -o mexi.csv
+    quantrocket master get --exchanges XNYS XNAS -o securities.csv
+
+Download NYSE and NASDAQ securities to file, using IBKR exchange codes
+to specify the exchanges, and include all IBKR fields:
+
+    quantrocket master get --exchanges NYSE NASDAQ -f 'IBKR*' -o securities.csv
 
 Download a CSV of all ARCA ETFs and use it to create a universe called
 "arca-etf":
@@ -216,11 +268,7 @@ Download a CSV of all ARCA ETFs and use it to create a universe called
 Query the exchange and currency for all listings of AAPL and format for
 terminal display:
 
-    quantrocket master get --symbols AAPL --fields PrimaryExchange Currency | csvlook -I
-
-Download a CSV of Sharadar securities from quantrocket.master.sharadar.sqlite:
-
-    quantrocket master get --domain sharadar -o sharadar_securities.csv
+    quantrocket master get --symbols AAPL --fields Exchange Currency | csvlook -I
     """
     parser = _subparsers.add_parser(
         "get",
@@ -232,7 +280,8 @@ Download a CSV of Sharadar securities from quantrocket.master.sharadar.sqlite:
         "-e", "--exchanges",
         nargs="*",
         metavar="EXCHANGE",
-        help="limit to these exchanges")
+        help="limit to these exchanges. You can specify exchange using the MIC or the "
+        "vendor's exchange code.")
     filters.add_argument(
         "-t", "--sec-types",
         nargs="*",
@@ -255,49 +304,25 @@ Download a CSV of Sharadar securities from quantrocket.master.sharadar.sqlite:
         metavar="SYMBOL",
         help="limit to these symbols")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
         help="exclude these universes")
     filters.add_argument(
-        "--exclude-conids",
-        type=int,
+        "--exclude-sids",
         nargs="*",
-        metavar="CONID",
-        help="exclude these conids")
-    filters.add_argument(
-        "--sectors",
-        nargs="*",
-        metavar="SECTOR",
-        help="limit to these sectors")
-    filters.add_argument(
-        "--industries",
-        nargs="*",
-        metavar="INDUSTRY",
-        help="limit to these industries")
-    filters.add_argument(
-        "--categories",
-        nargs="*",
-        metavar="CATEGORY",
-        help="limit to these categories")
+        metavar="SID",
+        help="exclude these sids")
     filters.add_argument(
         "--exclude-delisted",
         action="store_true",
         default=False,
         help="exclude delisted securities (default is to include them)")
-    filters.add_argument(
-        "--delisted",
-        action="store_true",
-        default=True,
-        help="[DEPRECATED] include delisted securities; this parameter is "
-        "deprecated and will be removed in a future release; it has no effect "
-        "as delisted securities are included by default")
     filters.add_argument(
         "--exclude-expired",
         action="store_true",
@@ -321,24 +346,18 @@ Download a CSV of Sharadar securities from quantrocket.master.sharadar.sqlite:
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
-    output_format_group.add_argument(
-        "-p", "--pretty",
-        action="store_const",
-        const="txt",
-        dest="output",
-        help="format output in human-readable format (default is CSV)")
     outputs.add_argument(
         "-f", "--fields",
         metavar="FIELD",
         nargs="*",
-        help="only return these fields (pass '?' or any invalid fieldname to see "
-        "available fields)")
-    domains = parser.add_argument_group("domain options")
-    domains.add_argument(
-        "-d", "--domain",
-        choices=["main", "sharadar"],
-        help="query against this domain (default is 'main', which runs against "
-        "quantrocket.master.main.sqlite. Possible choices: %(choices)s)")
+        help='return specific fields. By default a core set of fields is '
+        'returned, but additional vendor-specific fields are also available. '
+        'To return non-core fields, you can reference them by name, or pass "*" '
+        'to return all available fields. To return all fields for a specific '
+        'vendor, pass the vendor prefix followed by *, for example "IBKR*" '
+        'for all IBKR fields. Pass "?*" (or any invalid vendor prefix plus *) '
+        'to see available vendor prefixes. Pass "?" or any invalid fieldname '
+        'to see all available fields.')
     parser.set_defaults(func="quantrocket.master._cli_download_master_file")
 
     examples = """
@@ -961,66 +980,3 @@ Round the LmtPrice column in a CSV of Moonshot orders then place the orders:
         dest="outfilepath_or_buffer",
         help="filename to write the data to (default is stdout)")
     parser.set_defaults(func="quantrocket.master._cli_round_to_tick_sizes")
-
-    examples = """
-Collect upcoming trading hours for exchanges and save to securites master database.
-
-[DEPRECATED] `fetch-calendar` is deprecated and will be removed in a future release,
-please use `collect-calendar` instead.
-    """
-    parser = _subparsers.add_parser(
-        "fetch-calendar",
-        help="[DEPRECATED] collect upcoming trading hours for exchanges and save to securites master database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-e", "--exchanges",
-        nargs="*",
-        metavar="EXCHANGE",
-        help="limit to these exchanges")
-    parser.set_defaults(func="quantrocket.master._cli_fetch_calendar")
-
-    examples = """
-Collect securities listings from IB and store in securities master database.
-
-[DEPRECATED] `listings` is deprecated and will be removed in a future release,
-please use `collect` instead.
-    """
-    parser = _subparsers.add_parser(
-        "listings",
-        help="[DEPRECATED] collect securities listings from IB and store in securities master database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-e", "--exchange",
-        metavar="EXCHANGE",
-        help="the exchange code to collect listings for (required unless providing universes "
-        "or conids)")
-    parser.add_argument(
-        "-t", "--sec-types",
-        nargs="*",
-        metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "IND"],
-        help="limit to these security types. Possible choices: %(choices)s")
-    parser.add_argument(
-        "-c", "--currencies",
-        nargs="*",
-        metavar="CURRENCY",
-        help="limit to these currencies")
-    parser.add_argument(
-        "-s", "--symbols",
-        nargs="*",
-        metavar="SYMBOL",
-        help="limit to these symbols")
-    parser.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes")
-    parser.add_argument(
-        "-i", "--conids",
-        type=int,
-        nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
-    parser.set_defaults(func="quantrocket.master._cli_listings")

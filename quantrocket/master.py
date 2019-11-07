@@ -51,22 +51,93 @@ def list_exchanges(regions=None, sec_types=None):
 def _cli_list_exchanges(*args, **kwargs):
     return json_to_cli(list_exchanges, *args, **kwargs)
 
-def collect_listings(exchanges=None, sec_types=None, currencies=None, symbols=None,
-                     universes=None, conids=None, exchange=None):
+def collect_edi_listings(exchanges=None):
     """
-    Collect securities listings from IB and store in securities master
-    database (quantrocket.master.main.sqlite).
-
-    Specify an exchange (optionally filtering by security type, currency,
-    and/or symbol) to collect listings from the IB website and collect
-    associated contract details from the IB API. Or, specify universes or
-    conids to collect details from the IB API, bypassing the website.
+    Collect securities listings from EDI and store in securities master
+    database.
 
     Parameters
     ----------
     exchanges : list or str
-        one or more exchange codes to collect listings for (required unless providing
-        universes or conids)
+        limit to these exchanges (identified by MICs). By default
+        collects listings for all permitted exchanges.
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Collect listings for all permitted exchanges:
+
+    >>> collect_edi_listings()
+
+    Collect all Toronto Stock Exchange stock listings:
+
+    >>> collect_edi_listings(exchanges="XTSE")
+    """
+    params = {}
+    if exchanges:
+        params["exchanges"] = exchanges
+
+    response = houston.post("/master/securities/edi", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_edi_listings(*args, **kwargs):
+    return json_to_cli(collect_edi_listings, *args, **kwargs)
+
+def collect_figi_listings():
+    """
+    Collect securities listings from Bloomberg OpenFIGI and store
+    in securities master database.
+
+    OpenFIGI provides several useful security attributes including
+    market sector and a detailed security type, as well as exchange-level,
+    country-level, and share class-level FIGI identifiers.
+
+    The collected data fields show up in the master file under the
+    prefix FIGI_.
+
+    This function does not directly query the OpenFIGI API but rather
+    downloads a dump of all FIGIs which QuantRocket has previously
+    mapped to securities from other vendors.
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Collect all available FIGI listings:
+
+    >>> collect_figi_listings()
+    """
+    response = houston.post("/master/securities/figi")
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_figi_listings(*args, **kwargs):
+    return json_to_cli(collect_figi_listings, *args, **kwargs)
+
+def collect_ibkr_listings(exchanges=None, sec_types=None, currencies=None,
+                          symbols=None, universes=None, sids=None):
+    """
+    Collect securities listings from Interactive Brokers and store in
+    securities master database.
+
+    Specify an exchange (optionally filtering by security type, currency,
+    and/or symbol) to collect listings from the IBKR website and collect
+    associated contract details from the IBKR API. Or, specify universes or
+    sids to collect details from the IBKR API, bypassing the website.
+
+    Parameters
+    ----------
+    exchanges : list or str
+        one or more IBKR exchange codes to collect listings for (required
+        unless providing universes or sids)
 
     sec_types : list of str, optional
         limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND
@@ -80,19 +151,31 @@ def collect_listings(exchanges=None, sec_types=None, currencies=None, symbols=No
     universes : list of str, optional
         limit to these universes
 
-    conids : list of int, optional
-        limit to these conids
-
-    exchange : str
-        DEPRECATED, this option will be removed in a future release, please use
-        `exchanges` instead (previously only a single exchange was supported but
-        now multiple exchanges are supported)
+    sids : list of str, optional
+        limit to these sids
 
     Returns
     -------
     dict
         status message
 
+    Examples
+    --------
+    Collect all Toronto Stock Exchange stock listings:
+
+    >>> collect_ibkr_listings(exchanges="TSE", sec_types="STK")
+
+    Collect all NYSE ARCA ETF listings:
+
+    >>> collect_ibkr_listings(exchanges="ARCA", sec_types="ETF")
+
+    Collect specific symbols from Nasdaq:
+
+    >>> collect_ibkr_listings(exchanges="NASDAQ", symbols=["AAPL", "GOOG", "NFLX"])
+
+    Re-collect contract details for an existing universe called "japan-fin":
+
+    >>> collect_ibkr_listings(universes="japan-fin")
     """
     params = {}
     if exchanges:
@@ -105,26 +188,15 @@ def collect_listings(exchanges=None, sec_types=None, currencies=None, symbols=No
         params["symbols"] = symbols
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
-    if exchange:
-        import warnings
-        # DeprecationWarning is ignored by default but we want the user
-        # to see it
-        warnings.simplefilter("always", DeprecationWarning)
-        warnings.warn(
-            "the `exchange` option is deprecated and will be removed in a "
-            "future release, please use `exchanges` instead (previously only "
-            "a single exchange was supported but now multiple exchanges are "
-            "supported)", DeprecationWarning)
-        params["exchange"] = exchange
+    if sids:
+        params["sids"] = sids
 
-    response = houston.post("/master/securities", params=params)
+    response = houston.post("/master/securities/ibkr", params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_collect_listings(*args, **kwargs):
-    return json_to_cli(collect_listings, *args, **kwargs)
+def _cli_collect_ibkr_listings(*args, **kwargs):
+    return json_to_cli(collect_ibkr_listings, *args, **kwargs)
 
 def collect_sharadar_listings():
     """
@@ -284,13 +356,10 @@ def _cli_diff_securities(*args, **kwargs):
     return json_to_cli(diff_securities, *args, **kwargs)
 
 def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, sec_types=None,
-                         currencies=None, universes=None, symbols=None, conids=None,
-                         exclude_universes=None, exclude_conids=None,
-                         sectors=None, industries=None, categories=None,
-                         exclude_delisted=False, delisted=True,
-                         exclude_expired=False, frontmonth=False,
-                         fields=None,
-                         domain=None):
+                         currencies=None, universes=None, symbols=None, sids=None,
+                         exclude_universes=None, exclude_sids=None,
+                         exclude_delisted=False, exclude_expired=False,
+                         frontmonth=False, fields=None):
     """
     Query security details from the securities master database and download to file.
 
@@ -300,10 +369,11 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         filepath to write the data to, or file-like object (defaults to stdout)
 
     output : str
-        output format (json, csv, txt, default is csv)
+        output format (csv or json, default is csv)
 
     exchanges : list of str, optional
-        limit to these exchanges
+        limit to these exchanges. You can specify exchange using the MIC or the
+        vendor's exchange code.
 
     sec_types : list of str, optional
         limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND, OPT, FOP, BAG
@@ -317,31 +387,17 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
     symbols : list of str, optional
         limit to these symbols
 
-    conids : list of int, optional
-        limit to these conids
+    sids : list of str, optional
+        limit to these sids
 
     exclude_universes : list of str, optional
         exclude these universes
 
-    exclude_conids : list of int, optional
-        exclude these conids
-
-    sectors : list of str, optional
-        limit to these sectors
-
-    industries : list of str, optional
-        limit to these industries
-
-    categories : list of str, optional
-        limit to these categories
+    exclude_sids : list of str, optional
+        exclude these sids
 
     exclude_delisted : bool
         exclude delisted securities (default is to include them)
-
-    delisted : bool
-        [DEPRECATED] include delisted securities; this parameter is deprecated
-        and will be removed in a future release; it has no effect as delisted
-        securities are included by default
 
     exclude_expired : bool
         exclude expired contracts (default is to include them)
@@ -350,12 +406,14 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         exclude backmonth and expired futures contracts (default False)
 
     fields : list of str, optional
-        only return these fields (pass ['?'] or any invalid fieldname to see
-        available fields)
-
-    domain : str, optional
-        query against this domain (default is 'main', which runs against
-        quantrocket.master.main.sqlite. Possible choices: main, sharadar)
+        Return specific fields. By default a core set of fields is
+        returned, but additional vendor-specific fields are also available.
+        To return non-core fields, you can reference them by name, or pass "*"
+        to return all available fields. To return all fields for a specific
+        vendor, pass the vendor prefix followed by *, for example "IBKR*"
+        for all IBKR fields. Pass "?*" (or any invalid vendor prefix plus *)
+        to see available vendor prefixes. Pass "?" or any invalid fieldname
+        to see all available fields.
 
     Returns
     -------
@@ -363,25 +421,23 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
 
     Examples
     --------
-    Download several exchanges to file:
+    Download NYSE and NASDAQ securities to file, using MICs to specify
+    the exchanges:
 
-    >>> download_master_file("securities.csv", exchanges=["NYSE","NASDAQ"])
+    >>> download_master_file("securities.csv", exchanges=["XNYS","XNAS"])
 
-    Download securities for a particular universe to in-memory file and
-    load the CSV into pandas.
+    Download NYSE and NASDAQ securities to file, using IBKR exchange codes
+    to specify the exchanges, and include all IBKR fields:
+
+    >>> download_master_file("securities.csv", exchanges=["NYSE","NASDAQ"], fields="IBKR*")
+
+    Download securities for a particular universe to in-memory file, including
+    all possible fields, and load the CSV into pandas.
 
     >>> f = io.StringIO()
-    >>> download_master_file(f, universes=["my-universe"])
+    >>> download_master_file(f, fields="*", universes="my-universe")
     >>> securities = pd.read_csv(f)
-
-    Download Sharadar securities from quantrocket.master.sharadar.sqlite:
-
-    >>> download_master_file("sharadar_securities.csv", domain="sharadar")
     """
-    # Handle legacy param "delisted"
-    if delisted is False and exclude_delisted is None:
-        exclude_delisted = True
-
     params = {}
     if exchanges:
         params["exchanges"] = exchanges
@@ -393,18 +449,12 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         params["universes"] = universes
     if symbols:
         params["symbols"] = symbols
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if exclude_universes:
         params["exclude_universes"] = exclude_universes
-    if exclude_conids:
-        params["exclude_conids"] = exclude_conids
-    if sectors:
-        params["sectors"] = sectors
-    if industries:
-        params["industries"] = industries
-    if categories:
-        params["categories"] = categories
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
     if exclude_delisted:
         params["exclude_delisted"] = exclude_delisted
     if exclude_expired:
@@ -416,11 +466,9 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
 
     output = output or "csv"
 
-    url = "/master/{0}securities.{1}".format(
-        "{0}/".format(domain) if domain else "",
-        output)
+    url = "/master/securities.{0}".format(output)
 
-    if output not in ("csv", "json", "txt"):
+    if output not in ("csv", "json"):
         raise ValueError("Invalid ouput: {0}".format(output))
 
     response = houston.get(url, params=params)
@@ -609,69 +657,6 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
             contract_nums = contract_nums.fillna(_contract_nums)
 
     return contract_nums
-
-def translate_conids(conids, from_domain=None, to_domain=None):
-    """
-    Translate conids (contract IDs) from one domain to another.
-
-    Only translations to and from the "main" domain (that is, the
-    IB domain) are supported.
-
-    Parameters
-    ----------
-    conids : list of int, required
-        the conids to translate
-
-    from_domain : str, optional
-        the domain to translate from. This is the domain of the provided
-        conids. Possible choices: main, sharadar
-
-    to_domain : str, optional
-        the domain to translate to. Possible choices: main, sharadar
-
-    Returns
-    -------
-    dict
-        dict of <from_domain conid>:<to_domain conid>
-
-    Examples
-    --------
-    Translate a DataFrame with IB conids as columns to one with Sharadar
-    conids as columns, and mask columns that can't be translated:
-
-    >>> ib_conids = list(df_with_ib_cols.columns)
-    >>> ib_to_sharadar = translate_conids(ib_conids, to_domain="sharadar")
-    >>> df_with_sharadar_cols = df_with_ib_cols.rename(columns=ib_to_sharadar)
-    >>> # Mask columns where no Sharadar conid was available
-    >>> no_translations = set(ib_conids) - set(ib_to_sharadar)
-    >>> df_with_sharadar_cols.loc[:, no_translations] = None
-
-    Translate a DataFrame with Sharadar conids as columns to one with IB
-    conids as columns, and drop columns that can't be translated:
-
-    >>> sharadar_conids = list(df_with_sharadar_cols.columns)
-    >>> sharadar_to_ib = translate_conids(sharadar_conids, from_domain="sharadar")
-    >>> df_with_ib_cols = df_with_sharadar_cols.rename(columns=sharadar_to_ib)
-    >>> # Drop columns where no IB conid was available
-    >>> no_translations = set(sharadar_conids) - set(sharadar_to_ib)
-    >>> df_with_ib_cols = df_with_ib_cols.drop(no_translations, axis=1)
-    """
-    params = {}
-    params["conids"] = conids
-    if from_domain:
-        params["from_domain"] = from_domain
-    if to_domain:
-        params["to_domain"] = to_domain
-
-    response = houston.get("/master/translations", params=params)
-    houston.raise_for_status_with_json(response)
-    translations = response.json()
-    # JSON requires dict keys to be strings, re-cast to int
-    translations = dict([(int(k),v) for k,v in translations.items()])
-    return translations
-
-def _cli_translate_conids(*args, **kwargs):
-    return json_to_cli(translate_conids, *args, **kwargs)
 
 def create_universe(code, infilepath_or_buffer=None, from_universes=None,
                     exclude_delisted=False, append=False, replace=False,
@@ -1210,42 +1195,3 @@ def round_to_tick_sizes(infilepath_or_buffer, round_fields,
 
 def _cli_round_to_tick_sizes(*args, **kwargs):
     return json_to_cli(round_to_tick_sizes, *args, **kwargs)
-
-@deprecated_replaced_by(collect_listings)
-def fetch_listings(*args, **kwargs):
-    """
-    Collect securities listings from IB into securities master database, either by exchange or by universes/conids.
-
-    [DEPRECATED] `fetch_listings` is deprecated and will be removed
-    in a future release, please use `collect_listings` instead.
-    """
-    return collect_listings(*args, **kwargs)
-
-@deprecated_replaced_by(collect_option_chains)
-def fetch_option_chains(*args, **kwargs):
-    """
-    Collect option chains for underlying securities.
-
-    [DEPRECATED] `fetch_option_chains` is deprecated and will be removed
-    in a future release, please use `collect_option_chains` instead.
-    """
-    return collect_option_chains(*args, **kwargs)
-
-@deprecated_replaced_by(collect_calendar)
-def fetch_calendar(*args, **kwargs):
-    """
-    Collect upcoming trading hours for exchanges and save to securites
-    master database.
-
-    [DEPRECATED] `fetch_calendar` is deprecated and will be removed
-    in a future release, please use `collect_calendar` instead.
-    """
-    return collect_calendar(*args, **kwargs)
-
-@deprecated_replaced_by("collect-calendar", old_name="fetch-calendar")
-def _cli_fetch_calendar(*args, **kwargs):
-    return json_to_cli(collect_calendar, *args, **kwargs)
-
-@deprecated_replaced_by("collect", old_name="listings")
-def _cli_listings(*args, **kwargs):
-    return json_to_cli(collect_listings, *args, **kwargs)
