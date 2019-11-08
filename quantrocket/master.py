@@ -22,9 +22,9 @@ from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.utils.warn import deprecated_replaced_by
 from quantrocket.exceptions import ParameterError
 
-def list_exchanges(regions=None, sec_types=None):
+def list_ibkr_exchanges(regions=None, sec_types=None):
     """
-    List exchanges by security type and country as found on the IB website.
+    List exchanges by security type and country as found on the IBKR website.
 
     Parameters
     ----------
@@ -44,12 +44,29 @@ def list_exchanges(regions=None, sec_types=None):
     if regions:
         params["regions"] = regions
 
-    response = houston.get("/master/exchanges", params=params, timeout=180)
+    response = houston.get("/master/exchanges/ibkr", params=params, timeout=180)
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_list_exchanges(*args, **kwargs):
-    return json_to_cli(list_exchanges, *args, **kwargs)
+def _cli_list_ibkr_exchanges(*args, **kwargs):
+    return json_to_cli(list_ibkr_exchanges, *args, **kwargs)
+
+def collect_atomic_listings():
+    """
+    Collect securities listings from AtomicFin and store in securities master
+    database.
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    response = houston.post("/master/securities/atomicfin")
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_atomic_listings(*args, **kwargs):
+    return json_to_cli(collect_atomic_listings, *args, **kwargs)
 
 def collect_edi_listings(exchanges=None):
     """
@@ -198,35 +215,9 @@ def collect_ibkr_listings(exchanges=None, sec_types=None, currencies=None,
 def _cli_collect_ibkr_listings(*args, **kwargs):
     return json_to_cli(collect_ibkr_listings, *args, **kwargs)
 
-def collect_sharadar_listings():
+def collect_ibkr_option_chains(universes=None, sids=None, infilepath_or_buffer=None):
     """
-    Collect securities listings from Sharadar and save to
-    quantrocket.master.sharadar.sqlite.
-
-    Requires a Sharadar data plan. Collects NYSE, NASDAQ, or all US stock
-    listings, depending on your plan.
-
-    Sharadar listings have their own ConIds which are distinct from IB ConIds.
-    To facilitate using Sharadar and IB data together or separately, this command
-    also collects a list of IB<->Sharadar ConId translations and saves them
-    to quantrocket.master.translations.sqlite. They can be queried via
-    `translate_conids`.
-
-    Returns
-    -------
-    dict
-        status message
-    """
-    response = houston.post("/master/sharadar/securities")
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_sharadar_listings(*args, **kwargs):
-    return json_to_cli(collect_sharadar_listings, *args, **kwargs)
-
-def collect_option_chains(universes=None, conids=None, infilepath_or_buffer=None):
-    """
-    Collect option chains for underlying securities.
+    Collect IBKR option chains for underlying securities.
 
     Note: option chains often consist of hundreds, sometimes thousands of
     options per underlying security. Be aware that requesting option chains
@@ -241,11 +232,11 @@ def collect_option_chains(universes=None, conids=None, infilepath_or_buffer=None
     universes : list of str, optional
         collect options for these universes of underlying securities
 
-    conids : list of int, optional
-        collect options for these underlying conids
+    sids : list of str, optional
+        collect options for these underlying sids
 
     infilepath_or_buffer : str or file-like object, optional
-        collect options for the conids in this file (specify '-' to read file
+        collect options for the sids in this file (specify '-' to read file
         from stdin)
 
     Returns
@@ -256,34 +247,34 @@ def collect_option_chains(universes=None, conids=None, infilepath_or_buffer=None
     params = {}
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
 
     if infilepath_or_buffer == "-":
-        response = houston.post("/master/options", params=params, data=to_bytes(sys.stdin))
+        response = houston.post("/master/options/ibkr", params=params, data=to_bytes(sys.stdin))
 
     elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
         if infilepath_or_buffer.seekable():
             infilepath_or_buffer.seek(0)
-        response = houston.post("/master/options", params=params, data=to_bytes(infilepath_or_buffer))
+        response = houston.post("/master/options/ibkr", params=params, data=to_bytes(infilepath_or_buffer))
 
     elif infilepath_or_buffer:
         with open(infilepath_or_buffer, "rb") as f:
-            response = houston.post("/master/options", params=params, data=f)
+            response = houston.post("/master/options/ibkr", params=params, data=f)
     else:
-        response = houston.post("/master/options", params=params)
+        response = houston.post("/master/options/ibkr", params=params)
 
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_collect_option_chains(*args, **kwargs):
-    return json_to_cli(collect_option_chains, *args, **kwargs)
+def _cli_collect_ibkr_option_chains(*args, **kwargs):
+    return json_to_cli(collect_ibkr_option_chains, *args, **kwargs)
 
-def diff_securities(universes=None, conids=None, infilepath_or_buffer=None,
-                    fields=None, delist_missing=False, delist_exchanges=None,
-                    wait=False):
+def diff_ibkr_securities(universes=None, sids=None, infilepath_or_buffer=None,
+                         fields=None, delist_missing=False, delist_exchanges=None,
+                         wait=False):
     """
-    Flag security details that have changed in IB's system since the time they
+    Flag security details that have changed in IBKR's system since the time they
     were last collected into the securities master database.
 
     Diff can be run synchronously or asynchronously (asynchronous is the default
@@ -294,14 +285,14 @@ def diff_securities(universes=None, conids=None, infilepath_or_buffer=None,
     universes : list of str, optional
         limit to these universes
 
-    conids : list of int, optional
-        limit to these conids
+    sids : list of str, optional
+        limit to these sids
 
     infilepath_or_buffer : str or file-like object, optional
-        limit to the conids in this file (specify '-' to read file from stdin)
+        limit to the sids in this file (specify '-' to read file from stdin)
 
     fields : list of str, optional
-        only diff these fields
+        only diff these fields (field name should start with IBKR_)
 
     delist_missing : bool
         auto-delist securities that are no longer available from IB
@@ -316,14 +307,14 @@ def diff_securities(universes=None, conids=None, infilepath_or_buffer=None,
     Returns
     -------
     dict
-        dict of conids and fields that have changed (if wait), or status message
+        dict of sids and fields that have changed (if wait), or status message
 
     """
     params = {}
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if fields:
         params["fields"] = fields
     if delist_missing:
@@ -336,24 +327,24 @@ def diff_securities(universes=None, conids=None, infilepath_or_buffer=None,
     # if run synchronously use a high timeout
     timeout = 60*60*10 if wait else None
     if infilepath_or_buffer == "-":
-        response = houston.get("/master/diff", params=params, data=to_bytes(sys.stdin), timeout=timeout)
+        response = houston.get("/master/diff/ibkr", params=params, data=to_bytes(sys.stdin), timeout=timeout)
 
     elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
         if infilepath_or_buffer.seekable():
             infilepath_or_buffer.seek(0)
-        response = houston.get("/master/diff", params=params, data=to_bytes(infilepath_or_buffer), timeout=timeout)
+        response = houston.get("/master/diff/ibkr", params=params, data=to_bytes(infilepath_or_buffer), timeout=timeout)
 
     elif infilepath_or_buffer:
         with open(infilepath_or_buffer, "rb") as f:
-            response = houston.get("/master/diff", params=params, data=f, timeout=timeout)
+            response = houston.get("/master/diff/ibkr", params=params, data=f, timeout=timeout)
     else:
-        response = houston.get("/master/diff", params=params, timeout=timeout)
+        response = houston.get("/master/diff/ibkr", params=params, timeout=timeout)
 
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_diff_securities(*args, **kwargs):
-    return json_to_cli(diff_securities, *args, **kwargs)
+def _cli_diff_ibkr_securities(*args, **kwargs):
+    return json_to_cli(diff_ibkr_securities, *args, **kwargs)
 
 def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, sec_types=None,
                          currencies=None, universes=None, symbols=None, sids=None,

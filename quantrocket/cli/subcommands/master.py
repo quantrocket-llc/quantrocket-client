@@ -19,38 +19,20 @@ def add_subparser(subparsers):
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
-
     examples = """
-List exchanges by security type and country as found on the IB website.
+Collect securities listings from AtomicFin and store in securities master
+database.
 
 Examples:
 
-List all exchanges:
-
-    quantrocket master exchanges
-
-List stock exchanges in North America:
-
-    quantrocket master exchanges --regions north_america --sec-types STK
+    quantrocket master collect-atomic
     """
     parser = _subparsers.add_parser(
-        "exchanges",
-        help="list exchanges by security type and country as found on the IB website",
+        "collect-atomic",
+        help="collect securities listings from AtomicFin and store in securities master database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-r", "--regions",
-        nargs="*",
-        choices=["north_america", "europe", "asia", "global"],
-        metavar="REGION",
-        help="limit to these regions. Possible choices: %(choices)s")
-    parser.add_argument(
-        "-t", "--sec-types",
-        nargs="*",
-        choices=["STK", "ETF", "FUT", "CASH", "IND"],
-        metavar="SEC_TYPE",
-        help="limit to these security types. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.master._cli_list_exchanges")
+    parser.set_defaults(func="quantrocket.master._cli_collect_atomic_listings")
 
     examples = """
 Collect securities listings from EDI and store in securities master
@@ -173,31 +155,7 @@ Re-collect contract details for an existing universe called "japan-fin":
     parser.set_defaults(func="quantrocket.master._cli_collect_ibkr_listings")
 
     examples = """
-Collect securities listings from Sharadar and save to
-quantrocket.master.sharadar.sqlite.
-
-Requires a Sharadar data plan. Collects NYSE, NASDAQ, or all US stock
-listings, depending on your plan.
-
-Sharadar listings have their own ConIds which are distinct from IB ConIds.
-To facilitate using Sharadar and IB data together or separately, this command
-also collects a list of IB<->Sharadar ConId translations and saves them
-to quantrocket.master.translations.sqlite. They can be queried via
-`quantrocket master translate`.
-
-Examples:
-
-    quantrocket master collect-sharadar
-    """
-    parser = _subparsers.add_parser(
-        "collect-sharadar",
-        help="collect securities listings from Sharadar and save to quantrocket.master.sharadar.sqlite",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.set_defaults(func="quantrocket.master._cli_collect_sharadar_listings")
-
-    examples = """
-Collect option chains for underlying securities.
+Collect IBKR option chains for underlying securities.
 
 Note: option chains often consist of hundreds, sometimes thousands of options
 per underlying security. Be aware that requesting option chains for large
@@ -210,19 +168,19 @@ Examples:
 
 Collect option chains for several underlying securities:
 
-    quantrocket master options --conids 8314 208813720 107113386
+    quantrocket master collect-ibkr-options --sids FIBBG000LV0836 FIBBG000B9XRY4
 
 Collect option chains for NQ futures:
 
-    quantrocket master get -e GLOBEX -s NQ -t FUT | quantrocket master options -f -
+    quantrocket master get -e GLOBEX -s NQ -t FUT | quantrocket master collect-ibkr-options -f -
 
 Collect option chains for a large universe of stocks called "nyse-stk" (see note above):
 
-    quantrocket master options -u "nyse-stk"
+    quantrocket master collect-ibkr-options -u "nyse-stk"
     """
     parser = _subparsers.add_parser(
-        "options",
-        help="collect option chains for underlying securities",
+        "collect-ibkr-options",
+        help="collect IBKR option chains for underlying securities",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -231,18 +189,17 @@ Collect option chains for a large universe of stocks called "nyse-stk" (see note
         metavar="UNIVERSE",
         help="collect options for these universes of underlying securities")
     parser.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="collect options for these underlying conids")
+        metavar="SID",
+        help="collect options for these underlying sids")
     parser.add_argument(
         "-f", "--infile",
         metavar="INFILE",
         dest="infilepath_or_buffer",
-        help="collect options for the conids in this file (specify '-' to read "
+        help="collect options for the sids in this file (specify '-' to read "
         "file from stdin)")
-    parser.set_defaults(func="quantrocket.master._cli_collect_option_chains")
+    parser.set_defaults(func="quantrocket.master._cli_collect_ibkr_option_chains")
 
     examples = """
 Query security details from the securities master database and download to
@@ -361,7 +318,39 @@ terminal display:
     parser.set_defaults(func="quantrocket.master._cli_download_master_file")
 
     examples = """
-Flag security details that have changed in IB's system since the time they
+List exchanges by security type and country as found on the IBKR website.
+
+Examples:
+
+List all exchanges:
+
+    quantrocket master exchanges-ibkr
+
+List stock exchanges in North America:
+
+    quantrocket master exchanges-ibkr --regions north_america --sec-types STK
+    """
+    parser = _subparsers.add_parser(
+        "exchanges-ibkr",
+        help="list exchanges by security type and country as found on the IBKR website",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-r", "--regions",
+        nargs="*",
+        choices=["north_america", "europe", "asia", "global"],
+        metavar="REGION",
+        help="limit to these regions. Possible choices: %(choices)s")
+    parser.add_argument(
+        "-t", "--sec-types",
+        nargs="*",
+        choices=["STK", "ETF", "FUT", "CASH", "IND"],
+        metavar="SEC_TYPE",
+        help="limit to these security types. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.master._cli_list_ibkr_exchanges")
+
+    examples = """
+Flag security details that have changed in IBKR's system since the time they
 were last collected into the securities master database.
 
 Diff can be run synchronously or asynchronously (asynchronous is the default
@@ -372,30 +361,30 @@ Examples:
 Asynchronously generate a diff for all securities in a universe called
 "italy-stk" and log the results, if any, to flightlog:
 
-    quantrocket master diff -u "italy-stk"
+    quantrocket master diff-ibkr -u "italy-stk"
 
 Asynchronously generate a diff for all securities in a universe called
 "italy-stk", looking only for sector or industry changes:
 
-    quantrocket master diff -u "italy-stk" --fields Sector Industry
+    quantrocket master diff-ibkr -u "italy-stk" --fields IBKR_Sector IBKR_Industry
 
-Synchronously get a diff for specific securities by conid:
+Synchronously get a diff for specific securities by sid:
 
-    quantrocket master diff --conids 123456 234567 --wait
+    quantrocket master diff-ibkr --sids FIBBG000LV0836 FIBBG000B9XRY4 --wait
 
 Synchronously get a diff for specific securities without knowing their conids:
 
-    quantrocket master get -e NASDAQ -t STK -s AAPL FB GOOG | quantrocket master diff --wait --infile -
+    quantrocket master get -e NASDAQ -t STK -s AAPL FB GOOG | quantrocket master diff-ibkr --wait --infile -
 
 Asynchronously generate a diff for all securities in a universe called
-"nasdaq-sml" and auto-delist any symbols that are no longer available from IB
+"nasdaq-sml" and auto-delist any symbols that are no longer available from IBKR
 or that are now associated with the PINK exchange:
 
-    quantrocket master diff -u "nasdaq-sml" --delist-missing --delist-exchanges PINK
+    quantrocket master diff-ibkr -u "nasdaq-sml" --delist-missing --delist-exchanges PINK
     """
     parser = _subparsers.add_parser(
-        "diff",
-        help="flag security details that have changed in IB's system since the time "
+        "diff-ibkr",
+        help="flag security details that have changed in IBKR's system since the time "
         "they were last collected into the securities master database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -405,26 +394,25 @@ or that are now associated with the PINK exchange:
         metavar="UNIVERSE",
         help="limit to these universes")
     parser.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     parser.add_argument(
         "-n", "--infile",
         metavar="INFILE",
         dest="infilepath_or_buffer",
-        help="limit to the conids in this file (specify '-' to read file from stdin)")
+        help="limit to the sids in this file (specify '-' to read file from stdin)")
     parser.add_argument(
         "-f", "--fields",
         nargs="*",
         metavar="FIELD",
-        help="only diff these fields")
+        help="only diff these fields (field name should start with IBKR_)")
     parser.add_argument(
         "--delist-missing",
         action="store_true",
         default=False,
-        help="auto-delist securities that are no longer available from IB")
+        help="auto-delist securities that are no longer available from IBKR")
     parser.add_argument(
         "--delist-exchanges",
         metavar="EXCHANGE",
@@ -436,46 +424,7 @@ or that are now associated with the PINK exchange:
         default=False,
         help="run the diff synchronously and return the diff (otherwise run "
         "asynchronously and log the results, if any, to flightlog")
-    parser.set_defaults(func="quantrocket.master._cli_diff_securities")
-
-    examples = """
-Translate conids (contract IDs) from one domain to another.
-
-Only translations to and from the "main" domain (that is, the
-IB domain) are supported.
-
-Examples:
-
-Translate IB conids to Sharadar conids:
-
-    quantrocket master translate 12345 23456 --to sharadar
-
-Translate Sharadar conids to IB conids:
-
-    quantrocket master translate 98765 87654 --from sharadar
-    """
-    parser = _subparsers.add_parser(
-        "translate",
-        help="translate conids from one domain to another",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "conids",
-        nargs="+",
-        metavar="CONID",
-        help="the conids to translate")
-    parser.add_argument(
-        "--from",
-        choices=["main","sharadar"],
-        dest="from_domain",
-        help="the domain to translate from. This is the domain of the provided "
-        "conids. Possible choices: %(choices)s")
-    parser.add_argument(
-        "--to",
-        choices=["main","sharadar"],
-        dest="to_domain",
-        help="the domain to translate to. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.master._cli_translate_conids")
+    parser.set_defaults(func="quantrocket.master._cli_diff_ibkr_securities")
 
     examples = """
 List universes and their size.
