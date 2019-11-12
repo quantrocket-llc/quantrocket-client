@@ -51,7 +51,7 @@ def list_ibkr_exchanges(regions=None, sec_types=None):
 def _cli_list_ibkr_exchanges(*args, **kwargs):
     return json_to_cli(list_ibkr_exchanges, *args, **kwargs)
 
-def collect_atomic_listings():
+def collect_atomicfin_listings():
     """
     Collect securities listings from AtomicFin and store in securities master
     database.
@@ -65,8 +65,8 @@ def collect_atomic_listings():
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_collect_atomic_listings(*args, **kwargs):
-    return json_to_cli(collect_atomic_listings, *args, **kwargs)
+def _cli_collect_atomicfin_listings(*args, **kwargs):
+    return json_to_cli(collect_atomicfin_listings, *args, **kwargs)
 
 def collect_edi_listings(exchanges=None):
     """
@@ -473,26 +473,27 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
 def _cli_download_master_file(*args, **kwargs):
     return json_to_cli(download_master_file, *args, **kwargs)
 
-def get_securities_reindexed_like(reindex_like, domain, fields=None):
+def get_securities_reindexed_like(reindex_like, fields=None):
     """
     Return a multiindex DataFrame of securities master data, reindexed to
-    match the index and columns (conids) of `reindex_like`.
+    match the index and columns (sids) of `reindex_like`.
 
     Parameters
     ----------
     reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and conids
+        a DataFrame (usually of prices) with dates for the index and sids
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
 
-    domain : str, required
-        the domain of the conids in `reindex_like`, and the securities master domain
-        to be queried. Possible choices: main, sharadar
-
     fields : list of str
-        a list of fields to include in the resulting DataFrame. Defaults to
-        including all fields. For faster performance, limiting fields to
-        those needed is highly recommended, especially for large universes.
+        a list of fields to include in the resulting DataFrame. By default a
+        core set of fields is returned, but additional vendor-specific fields
+        are also available. To return non-core fields, you can reference them
+        by name, or pass "*" to return all available fields. To return all
+        fields for a specific vendor, pass the vendor prefix followed by *,
+        for example "IBKR*" for all IBKR fields. Pass "?*" (or any invalid
+        vendor prefix plus *) to see available vendor prefixes. Pass "?" or
+        any invalid fieldname to see all available fields.
 
     Returns
     -------
@@ -502,32 +503,30 @@ def get_securities_reindexed_like(reindex_like, domain, fields=None):
 
     Examples
     --------
-    Get symbols, currencies, and primary exchanges using a DataFrame of
-    historical prices from IB:
+    Get exchanges (MICs) using a DataFrame of prices:
 
     >>> closes = prices.loc["Close"]
     >>> securities = get_securities_reindexed_like(
-            closes, domain="main",
-            fields=["PrimaryExchange"])
-    >>> exchanges = securities.loc["PrimaryExchange"]
-    >>> nyse_closes = closes.where(exchanges == "NYSE")
+            closes, fields=["Exchange"])
+    >>> exchanges = securities.loc["Exchange"]
+    >>> nyse_closes = closes.where(exchanges == "XNYS")
     """
     try:
         import pandas as pd
     except ImportError:
         raise ImportError("pandas must be installed to use this function")
 
-    conids = list(reindex_like.columns)
+    sids = list(reindex_like.columns)
 
     f = six.StringIO()
-    download_master_file(f, domain=domain, conids=conids, fields=fields)
-    securities = pd.read_csv(f, index_col="ConId")
+    download_master_file(f, sids=sids, fields=fields)
+    securities = pd.read_csv(f, index_col="Sid")
 
     all_master_fields = {}
 
     for col in securities.columns:
         this_col = securities[col]
-        if col in ("Delisted", "Etf"):
+        if col in ("Delisted", "Etf", "IBKR_Etf", "IBKR_Delisted"):
             this_col = this_col.astype(bool)
         all_master_fields[col] = reindex_like.apply(lambda x: this_col, axis=1)
 
@@ -539,8 +538,8 @@ def get_securities_reindexed_like(reindex_like, domain, fields=None):
 
 def get_contract_nums_reindexed_like(reindex_like, limit=5):
     """
-    From a DataFrame of futures (with dates as the index and conids as columns),
-    return a DataFrame of integers representing each conid's sequence in the
+    From a DataFrame of futures (with dates as the index and sids as columns),
+    return a DataFrame of integers representing each sid's sequence in the
     futures chain as of each date, where 1 is the front contract, 2 is the second
     nearest contract, etc.
 
@@ -550,7 +549,7 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
     Parameters
     ----------
     reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and conids
+        a DataFrame (usually of prices) with dates for the index and sids
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
 
@@ -590,8 +589,8 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
         raise ParameterError("reindex_like must have a DatetimeIndex")
 
     f = six.StringIO()
-    download_master_file(f, conids=list(reindex_like.columns),
-                         fields=["RolloverDate","UnderConId","SecType"])
+    download_master_file(f, sids=list(reindex_like.columns),
+                         fields=["RolloverDate","IBKR_UnderConId","SecType"])
     rollover_dates = pd.read_csv(f, parse_dates=["RolloverDate"])
     rollover_dates = rollover_dates[rollover_dates.SecType=="FUT"].drop("SecType", axis=1)
 
@@ -605,8 +604,8 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
     max_date = max([rollover_dates.RolloverDate.max(),
                     reindex_like_dt_index.max()])
 
-    # Stack conids by underlying (1 column per underlying)
-    rollover_dates = rollover_dates.set_index(["RolloverDate","UnderConId"]).ConId.unstack()
+    # Stack sids by underlying (1 column per underlying)
+    rollover_dates = rollover_dates.set_index(["RolloverDate","IBKR_UnderConId"]).Sid.unstack()
 
     contract_nums = None
 
@@ -622,15 +621,15 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
         # RolloverDate is when we roll out of the contract, hence we backfill
         _rollover_dates = _rollover_dates.fillna(method="bfill")
 
-        # Stack to Series of Date, nth conid
+        # Stack to Series of Date, nth sid
         _rollover_dates = _rollover_dates.stack()
-        _rollover_dates.index = _rollover_dates.index.droplevel("UnderConId")
+        _rollover_dates.index = _rollover_dates.index.droplevel("IBKR_UnderConId")
         _rollover_dates.index.name = "Date"
 
         # Pivot Series to DataFrame
-        _rollover_dates = _rollover_dates.reset_index(name="ConId")
+        _rollover_dates = _rollover_dates.reset_index(name="Sid")
         _rollover_dates["ContractNum"] = i + 1
-        _rollover_dates = _rollover_dates.set_index(["Date","ConId"])
+        _rollover_dates = _rollover_dates.set_index(["Date","Sid"])
         _contract_nums = _rollover_dates.ContractNum.unstack()
 
         # If MultiIndex input, broadcast across Time level
@@ -798,21 +797,25 @@ def list_universes(domain=None):
 def _cli_list_universes(*args, **kwargs):
     return json_to_cli(list_universes, *args, **kwargs)
 
-def delist_security(conid=None, symbol=None, exchange=None, currency=None, sec_type=None):
+def delist_ibkr_security(sid=None, symbol=None, exchange=None, currency=None, sec_type=None):
     """
-    Mark a security as delisted.
+    Mark an IBKR security as delisted.
 
-    The security can be specified by conid or a combination of other
+    This does not remove any data but simply marks the security as delisted so
+    that data services won't attempt to collect data for the security and so
+    that the security can be optionally excluded from query results.
+
+    The security can be specified by sid or a combination of other
     parameters (for example, symbol + exchange). As a precaution, the request
     will fail if the parameters match more than one security.
 
     Parameters
     ----------
-    conid : int, optional
-        the conid of the security to be delisted
+    sid : str, optional
+        the sid of the security to be delisted
 
     symbol : str, optional
-        the symbol to be delisted (if conid not provided)
+        the symbol to be delisted (if sid not provided)
 
     exchange : str, optional
         the exchange of the security to be delisted (if needed to disambiguate)
@@ -830,8 +833,8 @@ def delist_security(conid=None, symbol=None, exchange=None, currency=None, sec_t
         status message
     """
     params = {}
-    if conid:
-        params["conids"] = conid
+    if sid:
+        params["sids"] = sid
     if symbol:
         params["symbols"] = symbol
     if exchange:
@@ -841,70 +844,69 @@ def delist_security(conid=None, symbol=None, exchange=None, currency=None, sec_t
     if sec_type:
         params["sec_types"] = sec_type
 
-    response = houston.delete("/master/securities", params=params)
+    response = houston.delete("/master/securities/ibkr", params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_delist_security(*args, **kwargs):
-    return json_to_cli(delist_security, *args, **kwargs)
+def _cli_delist_ibkr_security(*args, **kwargs):
+    return json_to_cli(delist_ibkr_security, *args, **kwargs)
 
-def create_combo(combo_legs):
+def create_ibkr_combo(combo_legs):
     """
-    Create a combo (aka spread), which is a composite instrument consisting
+    Create an IBKR combo (aka spread), which is a composite instrument consisting
     of two or more individual instruments (legs) that are traded as a single
     instrument.
 
     Each user-defined combo is stored in the securities master database with a
     SecType of "BAG". The combo legs are stored in the ComboLegs field as a JSON
-    array. QuantRocket assigns a negative integer as the conid for the combo. The
-    negative integer consists of a prefix of -11 followed by an autoincrementing
-    digit, for example: -111, -112, -113, ...
+    array. QuantRocket assigns a sid for the combo consisting of a prefix 'IC'
+    followed by an autoincrementing digit, for example: IC1, IC2, IC3, ...
 
-    If the combo already exists, its conid will be returned instead of creating a
+    If the combo already exists, its sid will be returned instead of creating a
     duplicate record.
 
     Parameters
     ----------
     combo_legs : list, required
         a list of the combo legs, where each leg is a list specifying action, ratio,
-        and conid
+        and sid
 
     Returns
     -------
     dict
-        returns a dict containing the generated conid of the combo, and whether a new
+        returns a dict containing the generated sid of the combo, and whether a new
         record was created
 
     Examples
     --------
-    To create a calendar spread on VX, first retrieve the conids of the legs:
+    To create a calendar spread on VX, first retrieve the sids of the legs:
 
     >>> from quantrocket.master import download_master_file
     >>> download_master_file("vx.csv", symbols="VIX", exchanges="CFE", sec_types="FUT")
-    >>> vx_conids = pd.read_csv("vx.csv", index_col="LocalSymbol").ConId.to_dict()
+    >>> vx_sids = pd.read_csv("vx.csv", index_col="Symbol").Sid.to_dict()
 
     Then create the combo:
 
-    >>> create_combo([
-            ["BUY", 1, vx_conids["VXV9"]],
-            ["SELL", 1, vx_conids["VXQ9"]]
+    >>> create_ibkr_combo([
+            ["BUY", 1, vx_sids["VXV9"]],
+            ["SELL", 1, vx_sids["VXQ9"]]
         ])
-        {"conid": -111, "created": True}
+        {"sid": IC1, "created": True}
     """
 
     f = six.StringIO()
     json.dump(combo_legs, f)
     f.seek(0)
 
-    response = houston.put("/master/combos", data=f)
+    response = houston.put("/master/combos/ibkr", data=f)
 
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_create_combo(combo_filepath):
+def _cli_create_ibkr_combo(combo_filepath):
     with open(combo_filepath) as f:
         combo_legs = json.load(f)
-    return json_to_cli(create_combo, combo_legs)
+    return json_to_cli(create_ibkr_combo, combo_legs)
 
 def load_rollrules_config(filename):
     """
@@ -947,10 +949,10 @@ def _cli_load_or_show_rollrules(filename=None):
     else:
         return json_to_cli(get_rollrules_config)
 
-def collect_calendar(exchanges=None):
+def collect_ibkr_calendar(exchanges=None):
     """
-    Collect upcoming trading hours for exchanges and save to securites
-    master database.
+    Collect upcoming trading hours from IBKR for exchanges and save to
+    securites master database.
 
     Parameters
     ----------
@@ -966,12 +968,12 @@ def collect_calendar(exchanges=None):
     if exchanges:
         params["exchanges"] = exchanges
 
-    response = houston.post("/master/calendar", params=params)
+    response = houston.post("/master/calendar/ibkr", params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_collect_calendar(*args, **kwargs):
-    return json_to_cli(collect_calendar, *args, **kwargs)
+def _cli_collect_ibkr_calendar(*args, **kwargs):
+    return json_to_cli(collect_ibkr_calendar, *args, **kwargs)
 
 def list_calendar_statuses(exchanges, sec_type=None, in_=None, ago=None, outside_rth=False):
     """
@@ -1124,7 +1126,7 @@ def round_to_tick_sizes(infilepath_or_buffer, round_fields,
     """
     Round prices in a CSV file to valid tick sizes.
 
-    CSV should contain columns `ConId`, `Exchange`, and the columns to be rounded
+    CSV should contain columns `Sid`, `Exchange`, and the columns to be rounded
     (e.g. `LmtPrice`). Additional columns will be ignored and returned unchanged.
 
     Parameters

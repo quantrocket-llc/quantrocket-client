@@ -25,14 +25,14 @@ database.
 
 Examples:
 
-    quantrocket master collect-atomic
+    quantrocket master collect-atomicfin
     """
     parser = _subparsers.add_parser(
-        "collect-atomic",
+        "collect-atomicfin",
         help="collect securities listings from AtomicFin and store in securities master database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.set_defaults(func="quantrocket.master._cli_collect_atomic_listings")
+    parser.set_defaults(func="quantrocket.master._cli_collect_atomicfin_listings")
 
     examples = """
 Collect securities listings from EDI and store in securities master
@@ -427,6 +427,51 @@ or that are now associated with the PINK exchange:
     parser.set_defaults(func="quantrocket.master._cli_diff_ibkr_securities")
 
     examples = """
+Mark an IBKR security as delisted.
+
+This does not remove any data but simply marks the security as delisted so
+that data services won't attempt to collect data for the security and so
+that the security can be optionally excluded from query results.
+
+The security can be specified by sid or a combination of other
+parameters (for example, symbol + exchange). As a precaution, the request
+will fail if the parameters match more than one security.
+
+Examples:
+
+Delist a security by sid:
+
+    quantrocket master delist-ibkr -i FIBBG1234567890
+
+Delist a security by symbol + exchange:
+
+    quantrocket master delist-ibkr -s ABC -e NYSE
+    """
+    parser = _subparsers.add_parser(
+        "delist-ibkr",
+        help="mark an IBKR security as delisted",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-i", "--sid",
+        help="the sid of the security to be delisted")
+    parser.add_argument(
+        "-s", "--symbol",
+        help="the symbol to be delisted (if sid not provided)")
+    parser.add_argument(
+        "-e", "--exchange",
+        help="the exchange of the security to be delisted (if needed to disambiguate)")
+    parser.add_argument(
+        "-c", "--currency",
+        help="the currency of the security to be delisted (if needed to disambiguate)")
+    parser.add_argument(
+        "-t", "--sec-type",
+        metavar="SEC_TYPE",
+        choices=["STK", "ETF", "FUT", "CASH", "IND"],
+        help="the security type of the security to be delisted (if needed to disambiguate). Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.master._cli_delist_ibkr_security")
+
+    examples = """
 List universes and their size.
 
 Examples:
@@ -555,17 +600,16 @@ Delete a universe from the sharadar domain (quantrocket.master.sharadar.sqlite):
     parser.set_defaults(func="quantrocket.master._cli_delete_universe")
 
     examples = """
-Create a combo (aka spread), which is a composite instrument consisting
+Create an IBKR combo (aka spread), which is a composite instrument consisting
 of two or more individual instruments (legs) that are traded as a single
 instrument.
 
 Each user-defined combo is stored in the securities master database with a
 SecType of "BAG". The combo legs are stored in the ComboLegs field as a JSON
-array. QuantRocket assigns a negative integer as the conid for the combo. The
-negative integer consists of a prefix of -11 followed by an autoincrementing
-digit, for example: -111, -112, -113, ...
+array. QuantRocket assigns a sid for the combo consisting of a prefix 'IC'
+followed by an autoincrementing digit, for example: IC1, IC2, IC3, ...
 
-If the combo already exists, its conid will be returned instead of creating a
+If the combo already exists, its sid will be returned instead of creating a
 duplicate record.
 
 Examples:
@@ -573,22 +617,22 @@ Examples:
 Create a spread from a JSON file:
 
     cat spread.json
-    [["BUY", 1, 12345],
-     ["SELL", 1, 23456]]
+    [["BUY", 1, QF12345],
+     ["SELL", 1, QF23456]]
 
-    quantrocket master create-combo spread.json
+    quantrocket master create-ibkr-combo spread.json
     """
     parser = _subparsers.add_parser(
-        "create-combo",
-        help="Create a combo (aka spread)",
+        "create-ibkr-combo",
+        help="Create an IBKR combo (aka spread)",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "combo_filepath",
         metavar="PATH",
         help="a JSON file containing an array of the combo legs, where each "
-        "leg is an array specifying action, ratio, and conid")
-    parser.set_defaults(func="quantrocket.master._cli_create_combo")
+        "leg is an array specifying action, ratio, and sid")
+    parser.set_defaults(func="quantrocket.master._cli_create_ibkr_combo")
 
     examples = """
 Upload a new rollover rules config, or return the current rollover rules.
@@ -616,59 +660,18 @@ Show current rollover config:
     parser.set_defaults(func="quantrocket.master._cli_load_or_show_rollrules")
 
     examples = """
-Mark a security as delisted.
-
-The security can be specified by conid or a combination of other parameters
-(for example, symbol + exchange). As a precaution, the request will fail if
-the parameters match more than one security.
+Collect upcoming trading hours from IBKR for exchanges and save to securites
+master database.
 
 Examples:
 
-Delist a security by conid:
+Collect trading hours for ARCA:
 
-    quantrocket master delist -i 123456
-
-Delist a security by symbol + exchange:
-
-    quantrocket master delist -s ABC -e NYSE
+    quantrocket master collect-ibkr-calendar -e ARCA
     """
     parser = _subparsers.add_parser(
-        "delist",
-        help="mark a security as delisted",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-i", "--conid",
-        type=int,
-        help="the conid of the security to be delisted")
-    parser.add_argument(
-        "-s", "--symbol",
-        help="the symbol to be delisted (if conid not provided)")
-    parser.add_argument(
-        "-e", "--exchange",
-        help="the exchange of the security to be delisted (if needed to disambiguate)")
-    parser.add_argument(
-        "-c", "--currency",
-        help="the currency of the security to be delisted (if needed to disambiguate)")
-    parser.add_argument(
-        "-t", "--sec-type",
-        metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "IND"],
-        help="the security type of the security to be delisted (if needed to disambiguate). Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.master._cli_delist_security")
-
-    examples = """
-Collect upcoming trading hours for exchanges and save to securites master database.
-
-Examples:
-
-Collect trading hours for all exchanges in securities master database:
-
-    quantrocket master collect-calendar
-    """
-    parser = _subparsers.add_parser(
-        "collect-calendar",
-        help="collect upcoming trading hours for exchanges and save to securites master database",
+        "collect-ibkr-calendar",
+        help="collect upcoming trading hours from IBKR for exchanges and save to securites master database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -676,7 +679,7 @@ Collect trading hours for all exchanges in securities master database:
         nargs="*",
         metavar="EXCHANGE",
         help="limit to these exchanges")
-    parser.set_defaults(func="quantrocket.master._cli_collect_calendar")
+    parser.set_defaults(func="quantrocket.master._cli_collect_ibkr_calendar")
 
     examples = """
 Check whether exchanges are open or closed.
@@ -877,7 +880,7 @@ Place Moonshot orders if the NYSE will be closed in 1 hour and remain closed thr
     examples = """
 Round prices in a CSV file to valid tick sizes.
 
-CSV should contain columns `ConId`, `Exchange`, and the columns to be rounded
+CSV should contain columns `Sid`, `Exchange`, and the columns to be rounded
 (e.g. `LmtPrice`). Additional columns will be ignored and returned unchanged.
 
 Examples:
