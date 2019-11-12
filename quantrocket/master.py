@@ -649,8 +649,7 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
     return contract_nums
 
 def create_universe(code, infilepath_or_buffer=None, from_universes=None,
-                    exclude_delisted=False, append=False, replace=False,
-                    domain=None):
+                    exclude_delisted=False, append=False, replace=False):
     """
     Create a universe of securities.
 
@@ -660,7 +659,7 @@ def create_universe(code, infilepath_or_buffer=None, from_universes=None,
         the code to assign to the universe (lowercase alphanumerics and hyphens only)
 
     infilepath_or_buffer : str or file-like object, optional
-        create the universe from the conids in this file (specify '-' to read file from stdin)
+        create the universe from the sids in this file (specify '-' to read file from stdin)
 
     from_universes : list of str, optional
         create the universe from these existing universes
@@ -674,10 +673,6 @@ def create_universe(code, infilepath_or_buffer=None, from_universes=None,
 
     replace : bool
         replace universe if universe already exists (default False)
-
-    domain : str, optional
-        create universe in this domain (default is 'main', which runs against
-        quantrocket.master.main.sqlite. Possible choices: main, sharadar)
 
     Returns
     -------
@@ -708,9 +703,7 @@ def create_universe(code, infilepath_or_buffer=None, from_universes=None,
     if replace:
         params["replace"] = replace
 
-    url = "/master/{0}universes/{1}".format(
-        "{0}/".format(domain) if domain else "",
-        code)
+    url = "/master/universes/{0}".format(code)
 
     if append:
         method = "PATCH"
@@ -737,7 +730,7 @@ def create_universe(code, infilepath_or_buffer=None, from_universes=None,
 def _cli_create_universe(*args, **kwargs):
     return json_to_cli(create_universe, *args, **kwargs)
 
-def delete_universe(code, domain=None):
+def delete_universe(code):
     """
     Delete a universe.
 
@@ -749,20 +742,13 @@ def delete_universe(code, domain=None):
     code : str, required
         the universe code
 
-    domain : str, optional
-        the domain from which to delete the universe (default is 'main', which
-        runs against quantrocket.master.main.sqlite. Possible choices:
-        main, sharadar)
-
     Returns
     -------
     dict
         status message
     """
 
-    url = "/master/{0}universes/{1}".format(
-        "{0}/".format(domain) if domain else "",
-        code)
+    url = "/master/universes/{0}".format(code)
 
     response = houston.delete(url)
     houston.raise_for_status_with_json(response)
@@ -771,26 +757,16 @@ def delete_universe(code, domain=None):
 def _cli_delete_universe(*args, **kwargs):
     return json_to_cli(delete_universe, *args, **kwargs)
 
-def list_universes(domain=None):
+def list_universes():
     """
     List universes and their size.
-
-    Parameters
-    ----------
-    domain : str, optional
-        the domain to list universes for (default is 'main', which
-        runs against quantrocket.master.main.sqlite. Possible choices:
-        main, sharadar)
 
     Returns
     -------
     dict
         dict of universe:size
     """
-    url = "/master/{0}universes".format(
-        "{0}/".format(domain) if domain else "")
-
-    response = houston.get(url)
+    response = houston.get("/master/universes")
     houston.raise_for_status_with_json(response)
     return response.json()
 

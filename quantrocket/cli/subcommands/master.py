@@ -476,25 +476,13 @@ List universes and their size.
 
 Examples:
 
-List all universes and their size:
-
     quantrocket master list-universes
-
-List universes in quantrocket.master.sharadar.sqlite:
-
-    quantrocket master list-universes --domain sharadar
     """
     parser = _subparsers.add_parser(
         "list-universes",
         help="list universes and their size",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-d", "--domain",
-        choices=["main","sharadar"],
-        help="the domain to list universes for (default is 'main', which "
-        "runs against quantrocket.master.main.sqlite. Possible choices: "
-        "%(choices)s)")
     parser.set_defaults(func="quantrocket.master._cli_list_universes")
 
     examples = """
@@ -520,10 +508,6 @@ Create a universe consisting of several existing universes:
 Copy a universe but exclude delisted securities:
 
     quantrocket master universe "hong-kong-active" --from-universes "hong-kong" --exclude-delisted
-
-Create a universe of all listings in quantrocket.master.sharadar.sqlite:
-
-    quantrocket master get --domain sharadar | quantrocket master universe "sharadar-stk" --domain sharadar -f -
     """
     parser = _subparsers.add_parser(
         "universe",
@@ -559,11 +543,6 @@ Create a universe of all listings in quantrocket.master.sharadar.sqlite:
         "-r", "--replace",
         action="store_true",
         help="replace universe if universe already exists")
-    parser.add_argument(
-        "-d", "--domain",
-        choices=["main", "sharadar"],
-        help="create universe in this domain (default is 'main', which runs against "
-        "quantrocket.master.main.sqlite. Possible choices: %(choices)s)")
     parser.set_defaults(func="quantrocket.master._cli_create_universe")
 
     examples = """
@@ -574,14 +553,9 @@ grouping as a universe.
 
 Examples:
 
-Delete the universe called "italy-stk" (the listings details of the member
-securities won't be deleted, only their grouping as a universe):
+Delete the universe called "italy-stk":
 
     quantrocket master delete-universe 'italy-stk'
-
-Delete a universe from the sharadar domain (quantrocket.master.sharadar.sqlite):
-
-    quantrocket master delete-universe 'sharadar-nyse-delisted' --domain sharadar
     """
     parser = _subparsers.add_parser(
         "delete-universe",
@@ -591,12 +565,6 @@ Delete a universe from the sharadar domain (quantrocket.master.sharadar.sqlite):
     parser.add_argument(
         "code",
         help="the universe code")
-    parser.add_argument(
-        "-d", "--domain",
-        choices=["main","sharadar"],
-        help="the domain from which to delete the universe (default is "
-        "'main', which runs against quantrocket.master.main.sqlite. "
-        "Possible choices: %(choices)s)")
     parser.set_defaults(func="quantrocket.master._cli_delete_universe")
 
     examples = """
