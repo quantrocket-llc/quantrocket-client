@@ -20,7 +20,52 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Create a new history database.
+Create a new database for collecting historical data from AtomicFin.
+
+Examples:
+
+Create a database for AtomicFin data and call it "atomicfin-1d":
+
+    quantrocket history create-atomicfin-db atomicfin-1d
+"""
+    parser = _subparsers.add_parser(
+        "create-atomicfin-db",
+        help="create a new database for collecting historical data from AtomicFin",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
+    parser.set_defaults(func="quantrocket.history._cli_create_atomicfin_db")
+
+    examples = """
+Create a new database for collecting historical data from EDI.
+
+Examples:
+
+Create a database for end-of-day China stock prices from EDI:
+
+    quantrocket history create-edi-db china-1d -e XSHG XSHE
+"""
+    parser = _subparsers.add_parser(
+        "create-edi-db",
+        help="create a new database for collecting historical data from EDI",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
+    parser.add_argument(
+        "-e", "--exchanges",
+        metavar="MIC",
+        nargs="*",
+        help="one or more exchange codes (MICs) which should be collected")
+    parser.set_defaults(func="quantrocket.history._cli_create_edi_db")
+
+    examples = """
+Create a new database for collecting historical data from Interactive Brokers.
 
 The historical data requirements you specify when you create a new database (bar size,
 universes, etc.) are applied each time you collect data for that database.
@@ -29,30 +74,26 @@ Examples:
 
 Create an end-of-day database called "arca-etf-eod" for a universe called "arca-etf":
 
-    quantrocket history create-db 'arca-etf-eod' --universes 'arca-etf' --bar-size '1 day'
+    quantrocket history create-ibkr-db 'arca-etf-eod' --universes 'arca-etf' --bar-size '1 day'
 
 Create a similar end-of-day database, but collect primary exchange prices instead of
 consolidated prices, adjust prices for dividends (=ADJUSTED_LAST), and use an explicit
 start date:
 
-    quantrocket history create-db 'arca-etf-eod' -u 'arca-etf' -z '1 day' --primary-exchange --bar-type 'ADJUSTED_LAST' -s 2010-01-01
+    quantrocket history create-ibkr-db 'arca-etf-eod' -u 'arca-etf' -z '1 day' --primary-exchange --bar-type 'ADJUSTED_LAST' -s 2010-01-01
 
-Create a database of 1-minute bars showing the midpoint for a universe of forex pairs:
+Create a database of 1-minute bars showing the midpoint for a universe of FX pairs:
 
-    quantrocket history create-db 'fx-1m' -u 'fx' -z '1 min' --bar-type MIDPOINT
+    quantrocket history create-ibkr-db 'fx-1m' -u 'fx' -z '1 min' --bar-type MIDPOINT
 
 Create a database of 1-second bars just before the open for a universe of Canadian energy
 stocks in 2016:
 
-    quantrocket history create-db 'tse-enr-929' -u 'tse-enr' -z '1 secs' --outside-rth --times 09:29:55 09:29:56 09:29:57 09:29:58 09:29:59 -s 2016-01-01 -e 2016-12-31
-
-Create a database for collecting Sharadar prices:
-
-    quantrocket history create-db 'sharadar-1d' --vendor 'sharadar'
+    quantrocket history create-ibkr-db 'tse-enr-929' -u 'tse-enr' -z '1 secs' --outside-rth --times 09:29:55 09:29:56 09:29:57 09:29:58 09:29:59 -s 2016-01-01 -e 2016-12-31
     """
     parser = _subparsers.add_parser(
-        "create-db",
-        help="create a new history database",
+        "create-ibkr-db",
+        help="create a new database for collecting historical data from Interactive Brokers",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -65,10 +106,10 @@ Create a database for collecting Sharadar prices:
         nargs="*",
         help="include these universes")
     parser.add_argument(
-        "-i", "--conids",
-        metavar="CONID",
+        "-i", "--sids",
+        metavar="SID",
         nargs="*",
-        help="include these conids")
+        help="include these sids")
     parser.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
@@ -78,12 +119,6 @@ Create a database for collecting Sharadar prices:
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
         help="collect history up to this end date (default is to collect up to the present)")
-    parser.add_argument(
-        "-v", "--vendor",
-        metavar="VENDOR",
-        choices=["ib", "sharadar"],
-        help="the vendor to collect data from (default 'ib'. Possible choices: "
-        "%(choices)s)")
     parser.add_argument(
         "-z", "--bar-size",
         metavar="BAR_SIZE",
@@ -106,7 +141,7 @@ Create a database for collecting Sharadar prices:
                  "BID_ASK",
                  "HISTORICAL_VOLATILITY",
                  "OPTION_IMPLIED_VOLATILITY"],
-        help="the bar type to collect (if not specified, defaults to MIDPOINT for forex and "
+        help="the bar type to collect (if not specified, defaults to MIDPOINT for FX and "
         "TRADES for everything else). Possible choices: %(choices)s")
     parser.add_argument(
         "-o", "--outside-rth",
@@ -133,25 +168,15 @@ Create a database for collecting Sharadar prices:
     parser.add_argument(
         "--shard",
         metavar="HOW",
-        choices=["year", "month", "day", "time", "conid", "conid,time", "off"],
+        choices=["year", "month", "day", "time", "sid", "sid,time", "off"],
         help="whether and how to shard the database, i.e. break it into smaller pieces. "
         "Required for intraday databases. Possible choices are `year` (separate "
         "database for each year), `month` (separate database for each year+month), "
         "`day` (separate database for each day), `time` (separate database for each bar "
-        "time), `conid` (separate database for each security), `conid,time` (duplicate "
-        "copies of database, one sharded by conid and the other by time),or `off` (no "
+        "time), `sid` (separate database for each security), `sid,time` (duplicate "
+        "copies of database, one sharded by sid and the other by time),or `off` (no "
         "sharding). See http://qrok.it/h/shard for more help.")
-    parser.add_argument(
-        "-n", "--no-config",
-        action="store_true",
-        help="create a database with no config (data can be loaded manually instead of collected "
-        "from a vendor)")
-    parser.add_argument(
-        "-f", "--config-file",
-        dest="config_filepath_or_buffer",
-        metavar="CONFIG_FILE",
-        help="the path to a YAML config file defining the historical data requirements")
-    parser.set_defaults(func="quantrocket.history._cli_create_db")
+    parser.set_defaults(func="quantrocket.history._cli_create_ibkr_db")
 
     examples = """
 List history databases.
@@ -168,27 +193,73 @@ Examples:
     parser.set_defaults(func="quantrocket.history._cli_list_databases")
 
     examples = """
-Collect historical market data from IB and save it to a history database. The request is queued
-and the data is collected asynchronously.
+Return the configuration for a history database.
 
 Examples:
 
-Collect historical data for 3 history databases of Japanese stocks:
+Return the configuration for a database called "jpn-lrg-15m":
 
-    quantrocket history collect 'jpn-lrg-1d' 'jpn-mid-1d' 'jpn-sml-1d'
+    quantrocket history config jpn-lrg-15m
+    """
+    parser = _subparsers.add_parser(
+        "config",
+        help="return the configuration for a history database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        help="the database code")
+    parser.set_defaults(func="quantrocket.history._cli_get_db_config")
 
-Collect how far back data is available but don't yet collect the data:
+    examples = """
+Delete a history database.
 
-    quantrocket history collect 'usa-stk-15min' --availability
+Deleting a history database deletes its configuration and data and is irreversible.
 
-Collect historical data for a database of US futures, using the priority queue to jump
-in front of other queued collections:
+Examples:
 
-    quantrocket history collect 'globex-10m' --priority
+Delete a database called "jpn-lrg-15m":
+
+    quantrocket history drop-db jpn-lrg-15m --confirm-by-typing-db-code-again jpn-lrg-15m
+
+    """
+    parser = _subparsers.add_parser(
+        "drop-db",
+        help="delete a history database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        help="the database code")
+    parser.add_argument(
+        "--confirm-by-typing-db-code-again",
+        metavar="CODE",
+        required=True,
+        help="enter the db code again to confirm you want to drop the database, its config, "
+        "and all its data")
+    parser.set_defaults(func="quantrocket.history._cli_drop_db")
+
+    examples = """
+Collect historical market data from a vendor and save it to a history database.
+
+The vendor and collection parameters are determined by the stored database
+configuration as defined at the time the database was created. For certain
+vendors, collection parameters can be overridden at the time of data collection.
+
+Examples:
+
+Collect historical data for a database of Chinese stock prices:
+
+    quantrocket history collect china-1d
+
+Collect historical data for an IBKR database of US futures, using the priority
+queue to jump in front of other queued IBKR collections:
+
+    quantrocket history collect globex-10m --priority
     """
     parser = _subparsers.add_parser(
         "collect",
-        help="collect historical market data from IB and save it to a history database",
+        help="collect historical market data from a vendor and save it to a history database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -197,21 +268,19 @@ in front of other queued collections:
         nargs="+",
         help="the database code(s) to collect data for")
     parser.add_argument(
-        "-p", "--priority",
-        action="store_true",
-        help="use the priority queue (default is to use the standard queue)")
-    parser.add_argument(
-        "-i", "--conids",
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="collect history for these conids, overriding config "
-        "(typically used to collect a subset of securities)")
+        metavar="SID",
+        help="collect history for these sids, overriding config "
+        "(typically used to collect a subset of securities). Only "
+        "supported for IBKR databases.")
     parser.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
         help="collect history for these universes, overriding config "
-        "(typically used to collect a subset of securities)")
+        "(typically used to collect a subset of securities). Only "
+        "supported for IBKR databases.")
     parser.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
@@ -219,18 +288,13 @@ in front of other queued collections:
     parser.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="collect history up to this end date, overriding config")
+        help="collect history up to this end date, overriding config. Only "
+        "supported for IBKR databases.")
     parser.add_argument(
-        "-a", "--availability",
+        "-p", "--priority",
         action="store_true",
-        dest="availability_only",
-        help="determine and store how far back data is available but "
-        "don't yet collect the data")
-    parser.add_argument(
-        "--delist-missing",
-        action="store_true",
-        default=False,
-        help="auto-delist securities that are no longer available from IB")
+        help="use the priority queue (default is to use the standard queue). "
+        "Only applicable to IBKR databases.")
     parser.set_defaults(func="quantrocket.history._cli_collect_history")
 
     examples = """
@@ -252,13 +316,9 @@ Cancel running or pending historical data collections.
 
 Examples:
 
-Cancel all queued collections for a database called 'jpn-lrg-1d':
+Cancel collections for a database called japan-1d:
 
-    quantrocket history cancel 'jpn-lrg-1d'
-
-Cancel queued collections for a database called 'jpn-lrg-1d', but only in the standard queue:
-
-    quantrocket history cancel 'jpn-lrg-1d' --queues standard
+    quantrocket history cancel japan-1d
     """
     parser = _subparsers.add_parser(
         "cancel",
@@ -270,11 +330,6 @@ Cancel queued collections for a database called 'jpn-lrg-1d', but only in the st
         metavar="CODE",
         nargs="+",
         help="the database code(s) to cancel collections for")
-    parser.add_argument(
-        "-q", "--queues",
-        metavar="QUEUE",
-        choices=["standard", "priority"],
-        help="only cancel collections in these queues. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.history._cli_cancel_collections")
 
     examples = """
@@ -302,35 +357,6 @@ Wait at most 10 minutes for data collection to finish for a database called 'fx-
         help="time out if data collection hasn't finished after this much time (use Pandas "
         "timedelta string, e.g. 30sec or 5min or 2h)")
     parser.set_defaults(func="quantrocket.history._cli_wait_for_collections")
-
-    examples = """
-Load market data from a CSV file into a history database.
-
-Examples:
-
-Load market data from a CSV into a database called "lse-bid-ask":
-
-    quantrocket history load lse-bid-ask bidask.csv
-
-Copy a subset of market data from one history database to another.
-
-    quantrocket history get nyse-eod --universes nyse-sml | quantrocket history load nyse-sml-eod
-    """
-    parser = _subparsers.add_parser(
-        "load",
-        help="load market data from a CSV file into a history database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "code",
-        help="the database code to load into")
-    parser.add_argument(
-        "infilepath_or_buffer",
-        metavar="infile",
-        nargs="?",
-        default="-",
-        help="CSV file containing market data (omit to read file from stdin)")
-    parser.set_defaults(func="quantrocket.history._cli_load_history_from_file")
 
     examples = """
 Query historical market data from a history database and download to file.
@@ -366,22 +392,20 @@ Download a CSV of all historical market data since 2015 from a database called
         metavar="UNIVERSE",
         help="limit to these universes")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
         help="exclude these universes")
     filters.add_argument(
-        "--exclude-conids",
-        type=int,
+        "--exclude-sids",
         nargs="*",
-        metavar="CONID",
-        help="exclude these conids")
+        metavar="SID",
+        help="exclude these sids")
     filters.add_argument(
         "-t", "--times",
         nargs="*",
@@ -400,12 +424,6 @@ Download a CSV of all historical market data since 2015 from a database called
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
-    output_format_group.add_argument(
-        "-p", "--pretty",
-        action="store_const",
-        const="txt",
-        dest="output",
-        help="format output in human-readable format (default is CSV)")
     outputs.add_argument(
         "-f", "--fields",
         metavar="FIELD",
@@ -424,143 +442,3 @@ Download a CSV of all historical market data since 2015 from a database called
         help="stitch futures into continuous contracts using this method "
         "(default is not to stitch together). Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.history._cli_download_history_file")
-
-    examples = """
-Query historical market data availability from a history database and download
-to file.
-
-This command is normally called after running:
-
-    quantrocket history collect [DB] --availability
-
-Examples:
-
-Download a CSV of available start dates by ticker from a database called
-"usa-stk" to a file called start_dates.csv:
-
-    quantrocket history availability usa-stk -o start_dates.csv
-    """
-    parser = _subparsers.add_parser(
-        "availability",
-        help="query historical market data availability from a history database "
-        "and download to file",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "code",
-        metavar="CODE",
-        help="the code of the database to query")
-    outputs = parser.add_argument_group("output options")
-    outputs.add_argument(
-        "-o", "--outfile",
-        metavar="OUTFILE",
-        dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
-    output_format_group = outputs.add_mutually_exclusive_group()
-    output_format_group.add_argument(
-        "-j", "--json",
-        action="store_const",
-        const="json",
-        dest="output",
-        help="format output as JSON (default is CSV)")
-    parser.set_defaults(func="quantrocket.history._cli_download_history_availability_file")
-
-    examples = """
-Return the configuration for a history database.
-
-Examples:
-
-Return the configuration for a database called "jpn-lrg-15m":
-
-    quantrocket history config 'jpn-lrg-15m'
-    """
-    parser = _subparsers.add_parser(
-        "config",
-        help="return the configuration for a history database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "code",
-        help="the database code")
-    parser.set_defaults(func="quantrocket.history._cli_get_db_config")
-
-    examples = """
-Delete a history database.
-
-Deleting a history database deletes its configuration and data and is irreversible.
-
-Examples:
-
-Delete a database called "jpn-lrg-15m":
-
-    quantrocket history drop-db 'jpn-lrg-15m' --confirm-by-typing-db-code-again 'jpn-lrg-15m'
-
-    """
-    parser = _subparsers.add_parser(
-        "drop-db",
-        help="delete a history database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "code",
-        help="the database code")
-    parser.add_argument(
-        "--confirm-by-typing-db-code-again",
-        metavar="CODE",
-        required=True,
-        help="enter the db code again to confirm you want to drop the database, its config, "
-        "and all its data")
-    parser.set_defaults(func="quantrocket.history._cli_drop_db")
-
-    examples = """
-Collect historical market data from IB and save it to a history database.
-
-[DEPRECATED] `fetch` is deprecated and will be removed in a future release,
-please use `collect` instead.
-    """
-    parser = _subparsers.add_parser(
-        "fetch",
-        help="[DEPRECATED] collect historical market data from IB and save it to a history database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "codes",
-        metavar="CODE",
-        nargs="+",
-        help="the database code(s) to collect data for")
-    parser.add_argument(
-        "-p", "--priority",
-        action="store_true",
-        help="use the priority queue (default is to use the standard queue)")
-    parser.add_argument(
-        "-i", "--conids",
-        nargs="*",
-        metavar="CONID",
-        help="collect history for these conids, overriding config "
-        "(typically used to collect a subset of securities)")
-    parser.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="collect history for these universes, overriding config "
-        "(typically used to collect a subset of securities)")
-    parser.add_argument(
-        "-s", "--start-date",
-        metavar="YYYY-MM-DD",
-        help="collect history back to this start date, overriding config")
-    parser.add_argument(
-        "-e", "--end-date",
-        metavar="YYYY-MM-DD",
-        help="collect history up to this end date, overriding config")
-    parser.add_argument(
-        "-a", "--availability",
-        action="store_true",
-        dest="availability_only",
-        help="determine and store how far back data is available but "
-        "don't yet collect the data")
-    parser.add_argument(
-        "--delist-missing",
-        action="store_true",
-        default=False,
-        help="auto-delist securities that are no longer available from IB")
-    parser.set_defaults(func="quantrocket.history._cli_fetch_history")

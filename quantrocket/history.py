@@ -25,12 +25,69 @@ from quantrocket.utils.warn import deprecated_replaced_by
 
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", "/tmp")
 
-def create_db(code, universes=None, conids=None, start_date=None, end_date=None,
-              vendor=None, bar_size=None, bar_type=None, outside_rth=False,
-              primary_exchange=False, times=None, between_times=None,
-              shard=None, no_config=False, config_filepath_or_buffer=None):
+def create_atomicfin_db(code):
     """
-    Create a new history database.
+    Create a new database for collecting historical data from AtomicFin.
+
+    Parameters
+    ----------
+    code : str, required
+        the code to assign to the database (lowercase alphanumerics and hyphens only)
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {"vendor": "atomicfin"}
+    response = houston.put("/history/databases/{0}".format(code), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_create_atomicfin_db(*args, **kwargs):
+    return json_to_cli(create_atomicfin_db, *args, **kwargs)
+
+def create_edi_db(code, exchanges):
+    """
+    Create a new database for collecting historical data from EDI.
+
+    Parameters
+    ----------
+    code : str, required
+        the code to assign to the database (lowercase alphanumerics and hyphens only)
+
+    exchanges : list of str, required
+        one or more exchange codes (MICs) which should be collected
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {
+        "vendor": "edi",
+        "exchanges": exchanges
+    }
+    response = houston.put("/history/databases/{0}".format(code), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_create_edi_db(*args, **kwargs):
+    return json_to_cli(create_edi_db, *args, **kwargs)
+
+def create_ibkr_db(code, universes=None, sids=None, start_date=None, end_date=None,
+                   bar_size=None, bar_type=None, outside_rth=False,
+                   primary_exchange=False, times=None, between_times=None,
+                   shard=None):
+    """
+    Create a new database for collecting historical data from Interactive Brokers.
+
+    The historical data requirements you specify when you create a new database (bar
+    size, universes, etc.) are applied each time you collect data for that database.
 
     Parameters
     ----------
@@ -40,8 +97,8 @@ def create_db(code, universes=None, conids=None, start_date=None, end_date=None,
     universes : list of str
         include these universes
 
-    conids : list of int
-        include these conids
+    sids : list of str
+        include these sids
 
     start_date : str (YYYY-MM-DD), optional
         collect history back to this start date (default is to collect as far back as data
@@ -49,9 +106,6 @@ def create_db(code, universes=None, conids=None, start_date=None, end_date=None,
 
     end_date : str (YYYY-MM-DD), optional
         collect history up to this end date (default is to collect up to the present)
-
-    vendor : str, optional
-        the vendor to collect data from (default 'ib'. Possible choices: ib, sharadar)
 
     bar_size : str, required for vendor ib
         the bar size to collect. Possible choices:
@@ -63,7 +117,7 @@ def create_db(code, universes=None, conids=None, start_date=None, end_date=None,
         "1 month"
 
     bar_type : str, optional
-        the bar type to collect (if not specified, defaults to MIDPOINT for forex and
+        the bar type to collect (if not specified, defaults to MIDPOINT for FX and
         TRADES for everything else). Possible choices:
         "TRADES",
         "ADJUSTED_LAST",
@@ -98,13 +152,6 @@ def create_db(code, universes=None, conids=None, start_date=None, end_date=None,
         (duplicate copies of database, one sharded by conid and the other by time),
         or `off` (no sharding). See http://qrok.it/h/shard for more help.
 
-    no_config : bool
-        create a database with no config (data can be loaded manually instead of collected
-        from a vendor)
-
-    config_filepath_or_buffer : str or file-like object, optional
-        a YAML config file defining the historical data requirements (specify '-' to read file from stdin)
-
     Returns
     -------
     dict
@@ -114,14 +161,12 @@ def create_db(code, universes=None, conids=None, start_date=None, end_date=None,
     params = {}
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if start_date:
         params["start_date"] = start_date
     if end_date:
         params["end_date"] = end_date
-    if vendor:
-        params["vendor"] = vendor
     if bar_size:
         params["bar_size"] = bar_size
     if bar_type:
@@ -136,29 +181,16 @@ def create_db(code, universes=None, conids=None, start_date=None, end_date=None,
         params["between_times"] = between_times
     if shard:
         params["shard"] = shard
-    if no_config:
-        params["no_config"] = True
 
-    if config_filepath_or_buffer == "-":
-        response = houston.put("/history/databases/{0}".format(code), params=params,
-                               data=to_bytes(sys.stdin))
+    params["vendor"] = "ibkr"
 
-    elif config_filepath_or_buffer and hasattr(config_filepath_or_buffer, "read"):
-        response = houston.put("/history/databases/{0}".format(code), params=params,
-                               data=to_bytes(config_filepath_or_buffer))
-
-    elif config_filepath_or_buffer:
-        with open(config_filepath_or_buffer, "rb") as f:
-            response = houston.put("/history/databases/{0}".format(code), params=params, data=f)
-
-    else:
-        response = houston.put("/history/databases/{0}".format(code), params=params)
+    response = houston.put("/history/databases/{0}".format(code), params=params)
 
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_create_db(*args, **kwargs):
-    return json_to_cli(create_db, *args, **kwargs)
+def _cli_create_ibkr_db(*args, **kwargs):
+    return json_to_cli(create_ibkr_db, *args, **kwargs)
 
 def get_db_config(code):
     """
@@ -185,6 +217,9 @@ def _cli_get_db_config(*args, **kwargs):
 def drop_db(code, confirm_by_typing_db_code_again=None):
     """
     Delete a history database.
+
+    Deleting a history database deletes its configuration and data and is
+    irreversible.
 
     Parameters
     ----------
@@ -226,41 +261,41 @@ def list_databases():
 def _cli_list_databases(*args, **kwargs):
     return json_to_cli(list_databases, *args, **kwargs)
 
-def collect_history(codes, priority=False, conids=None, universes=None,
-                    start_date=None, end_date=None, availability_only=False,
-                    delist_missing=False):
+def collect_history(codes, sids=None, universes=None, start_date=None, end_date=None,
+                    priority=False):
     """
-    Collect historical market data from IB and save it to a history database. The request is
-    queued and the data is collected asynchronously.
+    Collect historical market data from a vendor and save it to a history database.
+
+    The vendor and collection parameters are determined by the stored database
+    configuration as defined at the time the database was created. For certain
+    vendors, collection parameters can be overridden at the time of data collection.
 
     Parameters
     ----------
     codes : list of str, required
         the database code(s) to collect data for
 
-    priority : bool
-        use the priority queue (default is to use the standard queue)
-
-    conids : list of int, optional
-        collect history for these conids, overriding config (typically
-        used to collect a subset of securities)
+    sids : list of str, optional
+        collect history for these sids, overriding config (typically
+        used to collect a subset of securities). Only supported for IBKR
+        databases.
 
     universes : list of str, optional
         collect history for these universes, overriding config (typically
-        used to collect a subset of securities)
+        used to collect a subset of securities). Only supported for IBKR
+        databases.
 
     start_date : str (YYYY-MM-DD), optional
-        collect history back to this start date, overriding config
+        collect history back to this start date, overriding config. Only
+        supported for IBKR databases.
 
     end_date : str (YYYY-MM-DD), optional
-        collect history up to this end date, overriding config
+        collect history up to this end date, overriding config. Only supported
+        for IBKR databases.
 
-    availability_only : bool
-        determine and store how far back data is available but
-        don't yet collect the data
-
-    delist_missing : bool
-        auto-delist securities that are no longer available from IB
+    priority : bool
+        use the priority queue (default is to use the standard queue). Only
+        applicable to IBKR databases.
 
     Returns
     -------
@@ -273,18 +308,14 @@ def collect_history(codes, priority=False, conids=None, universes=None,
         params["codes"] = codes
     if priority:
         params["priority"] = priority
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if universes:
         params["universes"] = universes
     if start_date:
         params["start_date"] = start_date
     if end_date:
         params["end_date"] = end_date
-    if availability_only:
-        params["availability_only"] = availability_only
-    if delist_missing:
-        params["delist_missing"] = delist_missing
     response = houston.post("/history/queue", params=params)
 
     houston.raise_for_status_with_json(response)
@@ -300,7 +331,7 @@ def get_history_queue():
     Returns
     -------
     dict
-        standard and priority queues
+        queue by vendor
 
     """
     response = houston.get("/history/queue")
@@ -310,7 +341,7 @@ def get_history_queue():
 def _cli_get_history_queue(*args, **kwargs):
     return json_to_cli(get_history_queue, *args, **kwargs)
 
-def cancel_collections(codes, queues=None):
+def cancel_collections(codes):
     """
     Cancel running or pending historical data collections.
 
@@ -319,20 +350,15 @@ def cancel_collections(codes, queues=None):
     codes : list of str, required
         the database code(s) to cancel collections for
 
-    queues : list of str, optional
-        only cancel collections in these queues. Possible choices: standard, priority
-
     Returns
     -------
     dict
-        standard and priority queues
+        queue by vendor
 
     """
     params = {}
     if codes:
         params["codes"] = codes
-    if queues:
-        params["queues"] = queues
     response = houston.delete("/history/queue", params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
@@ -370,98 +396,10 @@ def wait_for_collections(codes, timeout=None):
 def _cli_wait_for_collections(*args, **kwargs):
     return json_to_cli(wait_for_collections, *args, **kwargs)
 
-def download_history_availability_file(code, filepath_or_buffer=None, output="csv"):
-    """
-    Query historical market data availability from a history database and download to file.
-
-    This function is normally called after running:
-
-        quantrocket history collect mydb --availability
-
-    Parameters
-    ----------
-    code : str, required
-        the code of the database to query
-
-    filepath_or_buffer : str or file-like object
-        filepath to write the data to, or file-like object (defaults to stdout)
-
-    output : str
-        output format (json, csv, default is csv)
-
-    Returns
-    -------
-    None
-
-    See Also
-    --------
-    get_history_availability : load historical availability into Series
-    """
-    output = output or "csv"
-
-    if output not in ("csv", "json", "txt"):
-        raise ValueError("Invalid ouput: {0}".format(output))
-
-    response = houston.get("/history/availability/{0}.{1}".format(code, output))
-
-    houston.raise_for_status_with_json(response)
-    filepath_or_buffer = filepath_or_buffer or sys.stdout
-
-    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
-
-def _cli_download_history_availability_file(*args, **kwargs):
-    return json_to_cli(download_history_availability_file, *args, **kwargs)
-
-def get_history_availability(code):
-    """
-    Query historical data availability from a history database, returning a
-    Series of start dates (with conids as the index) representing how far back
-    data can be collected from IB.
-
-    This function is normally called after running a command such as:
-
-        quantrocket history collect [DB] --availability
-
-    Parameters
-    ----------
-    code : str, required
-        the code of the database to query
-
-    Returns
-    -------
-    Series
-        Series of start dates by conid
-
-    Examples
-    --------
-    Load start dates and display cumulative number of tickers available by
-    start year:
-
-    >>> start_dates = get_history_availability("mydb")
-    >>> cum_ticker_counts = start_dates.groupby(start_dates.dt.year).count().cumsum()
-    >>> print(cum_ticker_counts)
-    StartDate
-    1984    420
-    1985    493
-    1986    539
-    1987    648
-    ...
-    """
-    # Import pandas lazily since it can take a moment to import
-    try:
-        import pandas as pd
-    except ImportError:
-        raise ImportError("pandas must be installed to use this function")
-
-    f = six.StringIO()
-    download_history_availability_file(code, f)
-    start_dates = pd.read_csv(f, index_col="ConId", parse_dates=["StartDate"])
-    return start_dates.StartDate
-
 def download_history_file(code, filepath_or_buffer=None, output="csv",
                           start_date=None, end_date=None,
-                          universes=None, conids=None,
-                          exclude_universes=None, exclude_conids=None,
+                          universes=None, sids=None,
+                          exclude_universes=None, exclude_sids=None,
                           times=None, cont_fut=None, fields=None, tz_naive=False):
     """
     Query historical market data from a history database and download to file.
@@ -486,14 +424,14 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
     universes : list of str, optional
         limit to these universes (default is to return all securities in database)
 
-    conids : list of int, optional
-        limit to these conids
+    sids : list of str, optional
+        limit to these sids
 
     exclude_universes : list of str, optional
         exclude these universes
 
-    exclude_conids : list of int, optional
-        exclude these conids
+    exclude_sids : list of str, optional
+        exclude these sids
 
     times: list of str (HH:MM:SS), optional
         limit to these times
@@ -533,12 +471,12 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
         params["end_date"] = end_date
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if exclude_universes:
         params["exclude_universes"] = exclude_universes
-    if exclude_conids:
-        params["exclude_conids"] = exclude_conids
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
     if times:
         params["times"] = times
     if cont_fut:
@@ -570,92 +508,3 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
 
 def _cli_download_history_file(*args, **kwargs):
     return json_to_cli(download_history_file, *args, **kwargs)
-
-@deprecated_replaced_by("from quantrocket import get_prices")
-def get_historical_prices(codes, start_date=None, end_date=None,
-                          universes=None, conids=None,
-                          exclude_universes=None, exclude_conids=None,
-                          times=None, cont_fut=None, fields=None,
-                          timezone=None, infer_timezone=None,
-                          master_fields=None):
-    """
-    [DEPRECATED] This function is deprecated and will be removed in a future release.
-    Please use `from quantrocket import get_prices` instead. `get_prices` is more flexible
-    as it supports querying of both history databases and real-time aggregate databases.
-    """
-    from quantrocket import get_prices
-
-    return get_prices(codes,
-                      start_date=start_date, end_date=end_date,
-                      universes=universes, conids=conids,
-                      exclude_universes=exclude_universes,
-                      exclude_conids=exclude_conids,
-                      times=times, cont_fut=cont_fut,
-                      fields=fields, timezone=timezone,
-                      infer_timezone=infer_timezone,
-                      master_fields=master_fields)
-
-def load_history_from_file(code, infilepath_or_buffer):
-    """
-    Load market data from a CSV file into a history database.
-
-    Parameters
-    ----------
-    code : str, required
-        the database code to load into
-
-    infilepath_or_buffer : str or file-like object
-        CSV file containing market data (specify '-' to read file from stdin)
-
-    Returns
-    -------
-    dict
-        status message
-
-    """
-    url = "/history/{0}.csv".format(code)
-
-    # Loading large amounts of data can take awhile
-    timeout = 60*60
-
-    if infilepath_or_buffer == "-":
-        response = houston.patch(url, data=to_bytes(sys.stdin), timeout=timeout)
-
-    elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
-        if infilepath_or_buffer.seekable():
-            infilepath_or_buffer.seek(0)
-        response = houston.patch(url, data=to_bytes(infilepath_or_buffer), timeout=timeout)
-
-    else:
-        with open(infilepath_or_buffer, "rb") as f:
-            response = houston.patch(url, data=f, timeout=timeout)
-
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_load_history_from_file(*args, **kwargs):
-    return json_to_cli(load_history_from_file, *args, **kwargs)
-
-@deprecated_replaced_by(collect_history)
-def fetch_history(*args, **kwargs):
-    """
-    Collect historical market data from IB and save it to a history database.
-
-    [DEPRECATED] `fetch_history` is deprecated and will be removed
-    in a future release, please use `collect_history` instead.
-    """
-    return collect_history(*args, **kwargs)
-
-@deprecated_replaced_by("collect", old_name="fetch")
-def _cli_fetch_history(*args, **kwargs):
-    return json_to_cli(collect_history, *args, **kwargs)
-
-@deprecated_replaced_by(cancel_collections)
-def cancel_history_requests(*args, **kwargs):
-    """
-    Cancel running or pending historical data collections.
-
-    [DEPRECATED] `cancel_history_requests` is deprecated and will be removed
-    in a future release, please use `cancel_collections` instead.
-    """
-    return cancel_collections(*args, **kwargs)

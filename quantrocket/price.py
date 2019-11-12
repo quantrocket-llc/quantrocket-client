@@ -31,11 +31,11 @@ from quantrocket.realtime import (
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", tempfile.gettempdir())
 
 def get_prices(codes, start_date=None, end_date=None,
-               universes=None, conids=None,
-               exclude_universes=None, exclude_conids=None,
+               universes=None, sids=None,
+               exclude_universes=None, exclude_sids=None,
                times=None, fields=None,
                timezone=None, infer_timezone=None,
-               cont_fut=None, master_fields=None):
+               cont_fut=None):
     """
     Query one or more history databases and/or real-time aggregate databases
     and load prices into a DataFrame.
@@ -62,14 +62,14 @@ def get_prices(codes, start_date=None, end_date=None,
     universes : list of str, optional
         limit to these universes (default is to return all securities in database)
 
-    conids : list of int, optional
-        limit to these conids
+    sids : list of str, optional
+        limit to these sids
 
     exclude_universes : list of str, optional
         exclude these universes
 
-    exclude_conids : list of int, optional
-        exclude these conids
+    exclude_sids : list of str, optional
+        exclude these sids
 
     times: list of str (HH:MM:SS), optional
         limit to these times, specified in the timezone of the relevant exchange. See
@@ -93,13 +93,6 @@ def get_prices(codes, start_date=None, end_date=None,
         stitch futures into continuous contracts using this method (default is not
         to stitch together). Only applicable to history databases. Possible choices:
         concat
-
-    master_fields : list of str, optional
-        [DEPRECATED] append these fields from the securities master database (pass ['?'] or any
-        invalid fieldname to see available fields). This parameter is deprecated and
-        will be removed in a future release. For better performance, use
-        `quantrocket.master.get_securities_reindexed_like` to get securities master
-        data shaped like prices.
 
     Returns
     -------
@@ -125,7 +118,7 @@ def get_prices(codes, start_date=None, end_date=None,
 
     >>> prices = get_prices('stk-sample-5min', fields=["Close", "Volume"])
     >>> prices.head()
-                                ConId   	265598	38708077
+                                Sid     	FIBBG1	FIBBG2
     Field	Date	        Time
     Close	2017-07-26      09:30:00	153.62	2715.0
                                 09:35:00	153.46	2730.0
@@ -137,7 +130,7 @@ def get_prices(codes, start_date=None, end_date=None,
 
     >>> closes = prices.loc["Close"]
     >>> closes.head()
-                ConId	        265598  38708077
+                Sid	        FIBBG1	FIBBG2
     Date        Time
     2017-07-26	09:30:00	153.62	2715.0
                 09:35:00	153.46	2730.0
@@ -149,7 +142,7 @@ def get_prices(codes, start_date=None, end_date=None,
 
     >>> session_closes = closes.xs("15:45:00", level="Time")
     >>> session_closes.head()
-        ConId	265598	38708077
+        Sid	FIBBG1	FIBBG2
     Date
     2017-07-26	153.29	2700.00
     2017-07-27 	150.10	2660.00
@@ -204,7 +197,6 @@ def get_prices(codes, start_date=None, end_date=None,
 
     db_bar_sizes = set()
     db_bar_sizes_parsed = set()
-    db_domains = set()
     history_db_fields = {}
     realtime_db_fields = {}
 
@@ -223,8 +215,6 @@ def get_prices(codes, start_date=None, end_date=None,
         elif bar_size == "1 month":
             bar_size = "30 day"
         db_bar_sizes_parsed.add(pd.Timedelta(bar_size))
-        db_domain = db_config.get("domain", "main")
-        db_domains.add(db_domain)
         history_db_fields[db] = db_config.get("fields", [])
 
     for db in realtime_agg_dbs:
@@ -232,24 +222,12 @@ def get_prices(codes, start_date=None, end_date=None,
         bar_size = db_config.get("bar_size")
         db_bar_sizes.add(bar_size)
         db_bar_sizes_parsed.add(pd.Timedelta(bar_size))
-        # NOTE: aggregate dbs don't include a domain key; if available, this
-        # would probably have to be obtained from the associated tick db.
-        # This isn't an issue unless/until real-time data comes from multiple
-        # vendors. As it now stands, real-time data is always from "main".
-        db_domain = db_config.get("domain", "main")
-        db_domains.add(db_domain)
         realtime_db_fields[db] = db_config.get("fields", [])
 
     if len(db_bar_sizes_parsed) > 1:
         raise ParameterError(
             "all databases must contain same bar size but {0} have different "
             "bar sizes: {1}".format(", ".join(dbs), ", ".join(db_bar_sizes))
-        )
-
-    if len(db_domains) > 1:
-        raise ParameterError(
-            "all databases must use the same securities master domain but {0} "
-            "use different domains: {1}".format(", ".join(dbs), ", ".join(db_domains))
         )
 
     all_prices = []
@@ -265,9 +243,9 @@ def get_prices(codes, start_date=None, end_date=None,
                 start_date=start_date,
                 end_date=end_date,
                 universes=universes,
-                conids=conids,
+                sids=sids,
                 exclude_universes=exclude_universes,
-                exclude_conids=exclude_conids,
+                exclude_sids=exclude_sids,
                 times=times,
                 cont_fut=cont_fut,
                 fields=list(fields_for_db),
@@ -300,9 +278,9 @@ def get_prices(codes, start_date=None, end_date=None,
                 start_date=start_date,
                 end_date=end_date,
                 universes=universes,
-                conids=conids,
+                sids=sids,
                 exclude_universes=exclude_universes,
-                exclude_conids=exclude_conids,
+                exclude_sids=exclude_sids,
                 fields=list(fields_for_db))
 
             tmp_filepath = "{dir}{sep}realtime.{db}.{pid}.{time}.csv".format(
@@ -332,100 +310,49 @@ def get_prices(codes, start_date=None, end_date=None,
     prices = pd.concat(all_prices, sort=False)
 
     try:
-        prices = prices.pivot(index="ConId", columns="Date").T
+        prices = prices.pivot(index="Sid", columns="Date").T
     except ValueError as e:
         if "duplicate" not in repr(e):
             raise
         # There are duplicates, likely due to querying multiple databases,
         # both of which return one or more identical dates for identical
-        # conids. To resolve, we group by conid and date and take the first
+        # sids. To resolve, we group by sid and date and take the first
         # available value for each field. This means that the orders of
         # [codes] matters. The use of groupby.first() instead of simply
         # drop_duplicates allows us to retain one field from one db and
         # another field from another db.
-        grouped = prices.groupby(["ConId","Date"])
+        grouped = prices.groupby(["Sid","Date"])
         prices = pd.concat(
             dict([(col, grouped[col].first()) for col in prices.columns
-                  if col not in ("ConId","Date")]), axis=1)
-        prices = prices.reset_index().pivot(index="ConId", columns="Date").T
+                  if col not in ("Sid","Date")]), axis=1)
+        prices = prices.reset_index().pivot(index="Sid", columns="Date").T
 
     prices.index.set_names(["Field", "Date"], inplace=True)
 
-    master_fields = master_fields or []
-    if master_fields:
-        import warnings
-        # DeprecationWarning is ignored by default but we want the user
-        # to see it
-        warnings.simplefilter("always", DeprecationWarning)
-        warnings.warn(
-            "`master_fields` parameter is deprecated and will be removed in a "
-            "future release. For better performance, please use "
-            "`quantrocket.master.get_securities_reindexed_like` "
-            "to get securities master data shaped like prices.", DeprecationWarning)
-
-        if isinstance(master_fields, tuple):
-            master_fields = list(master_fields)
-        elif not isinstance(master_fields, list):
-            master_fields = [master_fields]
-
-    # master fields that are required internally but shouldn't be returned to
-    # the user (potentially Timezone)
-    internal_master_fields = []
-
     is_intraday = list(db_bar_sizes_parsed)[0] < pd.Timedelta("1 day")
 
+    # For intraday dbs, infer timezone from securities master
     if is_intraday and not timezone and infer_timezone is not False:
+
         infer_timezone = True
-        if not master_fields or "Timezone" not in master_fields:
-            internal_master_fields.append("Timezone")
-
-    # Next, get the master file
-    if master_fields or internal_master_fields:
-        conids = list(prices.columns)
-
-        domain = list(db_domains)[0] if db_domains else None
+        sids = list(prices.columns)
 
         f = six.StringIO()
         download_master_file(
             f,
-            conids=conids,
-            fields=master_fields + internal_master_fields,
-            domain=domain
-        )
-        securities = pd.read_csv(f, index_col="ConId")
+            sids=sids,
+            fields="Timezone")
+        securities = pd.read_csv(f, index_col="Sid")
 
-        if "Delisted" in securities.columns:
-            securities.loc[:, "Delisted"] = securities.Delisted.astype(bool)
+        timezones = securities.Timezone.unique()
 
-        if "Etf" in securities.columns:
-            securities.loc[:, "Etf"] = securities.Etf.astype(bool)
+        if len(timezones) > 1:
+            raise ParameterError(
+                "cannot infer timezone because multiple timezones are present "
+                "in data, please specify timezone explicitly (timezones: {0})".format(
+                    ", ".join(timezones)))
 
-        # Infer timezone if needed
-        if not timezone and infer_timezone:
-            timezones = securities.Timezone.unique()
-
-            if len(timezones) > 1:
-                raise ParameterError(
-                    "cannot infer timezone because multiple timezones are present "
-                    "in data, please specify timezone explicitly (timezones: {0})".format(
-                        ", ".join(timezones)))
-
-            timezone = timezones[0]
-
-        # Drop any internal-only fields
-        if internal_master_fields:
-            securities = securities.drop(internal_master_fields, axis=1)
-
-        if not securities.empty:
-            # Append securities, indexed to the min date, to allow easy ffill on demand
-            securities = pd.DataFrame(securities.T, columns=prices.columns)
-            securities.index.name = "Field"
-            idx = pd.MultiIndex.from_product(
-                (securities.index, [prices.index.get_level_values("Date").min()]),
-                names=["Field", "Date"])
-
-            securities = securities.reindex(index=idx, level="Field")
-            prices = pd.concat((prices, securities))
+        timezone = timezones[0]
 
     if is_intraday:
         dates = pd.to_datetime(prices.index.get_level_values("Date"), utc=True)
@@ -476,11 +403,7 @@ def get_prices(codes, start_date=None, end_date=None,
     unique_times = prices.index.get_level_values("Time").unique()
     interpolated_index = None
     for field in unique_fields:
-        if master_fields and field in master_fields:
-            min_date = prices.loc[field].index.min()
-            field_idx = pd.MultiIndex.from_tuples([(field,min_date[0], min_date[1])])
-        else:
-            field_idx = pd.MultiIndex.from_product([[field], unique_dates, unique_times]).sort_values()
+        field_idx = pd.MultiIndex.from_product([[field], unique_dates, unique_times]).sort_values()
         if interpolated_index is None:
             interpolated_index = field_idx
         else:
@@ -496,4 +419,3 @@ def get_prices(codes, start_date=None, end_date=None,
         prices = prices.loc[prices.index.get_level_values("Time").isin(times)]
 
     return prices
-
