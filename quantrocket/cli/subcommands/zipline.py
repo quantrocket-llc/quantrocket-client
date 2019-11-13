@@ -28,8 +28,8 @@ Re-ingesting a previously ingested database will create a new version of the
 ingested data, while preserving the earlier version. See
 `quantrocket zipline clean` to remove earlier versions.
 
-Ingestion parameters (start_date, end_date, universes, conids, exclude_universes,
-exclude_conids) can only be specified the first time a bundle is ingested, and
+Ingestion parameters (start_date, end_date, universes, sids, exclude_universes,
+exclude_sids) can only be specified the first time a bundle is ingested, and
 will be reused for subsequent ingestions. You must remove the bundle and start
 over to change the parameters.
 
@@ -91,22 +91,20 @@ Re-ingest the bundle usa-stk-2017:
         metavar="UNIVERSE",
         help="limit to these universes")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
         help="exclude these universes")
     filters.add_argument(
-        "--exclude-conids",
-        type=int,
+        "--exclude-sids",
         nargs="*",
-        metavar="CONID",
-        help="exclude these conids")
+        metavar="SID",
+        help="exclude these sids")
     parser.set_defaults(func="quantrocket.zipline._cli_ingest_bundle")
 
     examples = """

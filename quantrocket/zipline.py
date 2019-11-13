@@ -147,8 +147,8 @@ def _cli_create_tearsheet(*args, **kwargs):
 
 def ingest_bundle(history_db=None, calendar=None, bundle=None,
                   start_date=None, end_date=None,
-                  universes=None, conids=None,
-                  exclude_universes=None, exclude_conids=None):
+                  universes=None, sids=None,
+                  exclude_universes=None, exclude_sids=None):
     """
     Ingest a history database into Zipline for later backtesting.
 
@@ -158,8 +158,8 @@ def ingest_bundle(history_db=None, calendar=None, bundle=None,
     ingested data, while preserving the earlier version. See
     `quantrocket.zipline.clean_bundles` to remove earlier versions.
 
-    Ingestion parameters (start_date, end_date, universes, conids, exclude_universes,
-    exclude_conids) can only be specified the first time a bundle is ingested, and
+    Ingestion parameters (start_date, end_date, universes, sids, exclude_universes,
+    exclude_sids) can only be specified the first time a bundle is ingested, and
     will be reused for subsequent ingestions. You must remove the bundle and start
     over to change the parameters.
 
@@ -184,14 +184,14 @@ def ingest_bundle(history_db=None, calendar=None, bundle=None,
     universes : list of str, optional
         limit to these universes
 
-    conids : list of int, optional
-        limit to these conids
+    sids : list of str, optional
+        limit to these sids
 
     exclude_universes : list of str, optional
         exclude these universes
 
-    exclude_conids : list of int, optional
-        exclude these conids
+    exclude_sids : list of str, optional
+        exclude these sids
 
     Returns
     -------
@@ -238,12 +238,12 @@ def ingest_bundle(history_db=None, calendar=None, bundle=None,
         params["end_date"] = end_date
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if exclude_universes:
         params["exclude_universes"] = exclude_universes
-    if exclude_conids:
-        params["exclude_conids"] = exclude_conids
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
 
     response = houston.post("/zipline/bundles", params=params, timeout=60*60*48)
 
