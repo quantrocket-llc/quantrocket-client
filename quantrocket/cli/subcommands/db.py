@@ -43,12 +43,6 @@ and list each shard individually:
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "service_and_codes",
-        metavar="SERVICE_OR_CODE",
-        nargs="*",
-        help="DEPRECATED, this option will be removed in a future release, please use "
-        "`--services` and `--codes` instead")
-    parser.add_argument(
         "-s", "--services",
         nargs="*",
         metavar="SERVICE",
@@ -133,12 +127,6 @@ Push a database called quantrocket.history.nyse.sqlite:
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "service_and_codes",
-        metavar="SERVICE_OR_CODE",
-        nargs="*",
-        help="DEPRECATED, this option will be removed in a future release, please use "
-        "`--services` and `--codes` instead")
-    parser.add_argument(
         "-s", "--services",
         nargs="*",
         metavar="SERVICE",
@@ -166,12 +154,6 @@ Pull a database stored on S3 as quantrocket.history.nyse.sqlite.gz:
         help="pull database(s) from Amazon S3",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "service_and_codes",
-        metavar="SERVICE_OR_CODE",
-        nargs="*",
-        help="DEPRECATED, this option will be removed in a future release, please use "
-        "`--services` and `--codes` instead")
     parser.add_argument(
         "-s", "--services",
         nargs="*",
@@ -207,12 +189,6 @@ Optimize all blotter databases:
         help="optimize databases to improve performance",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "service_and_codes",
-        metavar="SERVICE_OR_CODE",
-        nargs="*",
-        help="DEPRECATED, this option will be removed in a future release, please use "
-        "`--services` and `--codes` instead")
     parser.add_argument(
         "-s", "--services",
         nargs="*",

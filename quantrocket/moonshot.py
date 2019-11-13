@@ -21,7 +21,6 @@ from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 from quantrocket.utils.parse import _read_moonshot_or_pnl_csv
-from quantrocket.utils.warn import deprecated_replaced_by
 
 def backtest(strategies, start_date=None, end_date=None, segment=None, allocations=None,
              nlv=None, params=None, details=None, output="csv", csv=None, filepath_or_buffer=None,
@@ -72,10 +71,6 @@ def backtest(strategies, start_date=None, end_date=None, segment=None, allocatio
     output : str, required
         the output format (choices are csv or pdf)
 
-    csv : bool
-       DEPRECATED: this argument will be removed in a future version. This argument
-       may be omitted as CSV is the default.
-
     filepath_or_buffer : str, optional
         the location to write the results file (omit to write to stdout)
 
@@ -114,12 +109,6 @@ def backtest(strategies, start_date=None, end_date=None, segment=None, allocatio
 
     if output not in ("csv", "pdf"):
         raise ValueError("invalid output: {0} (choices are csv or pdf".format(output))
-
-    if csv is not None:
-        import warnings
-        warnings.warn(
-            "the `csv` argument is deprecated and will removed in a future version; "
-            "this argument may be omitted as csv is the default", DeprecationWarning)
 
     _params = {}
 
@@ -187,11 +176,6 @@ def read_moonshot_csv(filepath_or_buffer):
     """
     return _read_moonshot_or_pnl_csv(filepath_or_buffer)
 
-@deprecated_replaced_by("from moonchart.utils import intraday_to_daily")
-def intraday_to_daily(results):
-    from moonchart.utils import intraday_to_daily as _intraday_to_daily
-    return _intraday_to_daily(results)
-
 def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
                     param1=None, vals1=None, param2=None, vals2=None,
                     allocations=None, nlv=None, params=None, output="csv",
@@ -249,10 +233,6 @@ def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
     output : str, required
         the output format (choices are csv or pdf)
 
-    csv : bool
-        DEPRECATED: this argument will be removed in a future version. This argument
-        may be omitted as CSV is the default.
-
     filepath_or_buffer : str, optional
         the location to write the results file (omit to write to stdout)
 
@@ -298,12 +278,6 @@ def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
 
     if output not in ("csv", "pdf"):
         raise ValueError("invalid output: {0} (choices are csv or pdf".format(output))
-
-    if csv is not None:
-        import warnings
-        warnings.warn(
-            "the `csv` argument is deprecated and will removed in a future version; "
-            "this argument may be omitted as csv is the default", DeprecationWarning)
 
     _params = {}
     if strategies:

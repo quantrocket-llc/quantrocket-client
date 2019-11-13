@@ -16,8 +16,7 @@ import getpass
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 
-def list_databases(services=None, codes=None, detail=False, expand=False,
-                   service=None):
+def list_databases(services=None, codes=None, detail=False, expand=False):
     """
     List databases.
 
@@ -36,11 +35,6 @@ def list_databases(services=None, codes=None, detail=False, expand=False,
     expand : bool
         expand sharded databases to include individual shards
         (default is to list sharded databases as a single database)
-
-    service : str
-        DEPRECATED, this option will be removed in a future release, please use
-        `services` instead (previously only a single service could be specified but
-        now multiple services can be specified)
 
     Returns
     -------
@@ -66,35 +60,12 @@ def list_databases(services=None, codes=None, detail=False, expand=False,
         params["detail"] = detail
     if expand:
         params["expand"] = expand
-    if service:
-        import warnings
-        # DeprecationWarning is ignored by default but we want the user
-        # to see it
-        warnings.simplefilter("always", DeprecationWarning)
-        warnings.warn(
-            "the `service` option is deprecated and will be removed in a "
-            "future release, please use `services` instead (previously only "
-            "a single service could be specified but now multiple services can "
-            "be specified)", DeprecationWarning)
-        params["services"] = service
 
     response = houston.get("/db/databases", params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
 
 def _cli_list_databases(*args, **kwargs):
-    service_and_codes = kwargs.pop("service_and_codes", None)
-    if service_and_codes:
-        import warnings
-        # DeprecationWarning is ignored by default but we want the user
-        # to see it
-        warnings.simplefilter("always", DeprecationWarning)
-        warnings.warn(
-            "passing positional arguments is deprecated and will be removed in a "
-            "future release, please use `--services` and `--codes` instead",
-            DeprecationWarning)
-        kwargs["services"] = service_and_codes[0]
-        kwargs["codes"] = service_and_codes[1:]
     return json_to_cli(list_databases, *args, **kwargs)
 
 def get_s3_config():
@@ -190,18 +161,6 @@ def s3_push_databases(services=None, codes=None):
     return response.json()
 
 def _cli_s3_push_databases(*args, **kwargs):
-    service_and_codes = kwargs.pop("service_and_codes", None)
-    if service_and_codes:
-        import warnings
-        # DeprecationWarning is ignored by default but we want the user
-        # to see it
-        warnings.simplefilter("always", DeprecationWarning)
-        warnings.warn(
-            "passing positional arguments is deprecated and will be removed in a "
-            "future release, please use `--services` and `--codes` instead",
-            DeprecationWarning)
-        kwargs["services"] = service_and_codes[0]
-        kwargs["codes"] = service_and_codes[1:]
     return json_to_cli(s3_push_databases, *args, **kwargs)
 
 def s3_pull_databases(services=None, codes=None, force=False):
@@ -239,18 +198,6 @@ def s3_pull_databases(services=None, codes=None, force=False):
     return response.json()
 
 def _cli_s3_pull_databases(*args, **kwargs):
-    service_and_codes = kwargs.pop("service_and_codes", None)
-    if service_and_codes:
-        import warnings
-        # DeprecationWarning is ignored by default but we want the user
-        # to see it
-        warnings.simplefilter("always", DeprecationWarning)
-        warnings.warn(
-            "passing positional arguments is deprecated and will be removed in a "
-            "future release, please use `--services` and `--codes` instead",
-            DeprecationWarning)
-        kwargs["services"] = service_and_codes[0]
-        kwargs["codes"] = service_and_codes[1:]
     return json_to_cli(s3_pull_databases, *args, **kwargs)
 
 def optimize_databases(services=None, codes=None):
@@ -283,16 +230,4 @@ def optimize_databases(services=None, codes=None):
     return response.json()
 
 def _cli_optimize_databases(*args, **kwargs):
-    service_and_codes = kwargs.pop("service_and_codes", None)
-    if service_and_codes:
-        import warnings
-        # DeprecationWarning is ignored by default but we want the user
-        # to see it
-        warnings.simplefilter("always", DeprecationWarning)
-        warnings.warn(
-            "passing positional arguments is deprecated and will be removed in a "
-            "future release, please use `--services` and `--codes` instead",
-            DeprecationWarning)
-        kwargs["services"] = service_and_codes[0]
-        kwargs["codes"] = service_and_codes[1:]
     return json_to_cli(optimize_databases, *args, **kwargs)

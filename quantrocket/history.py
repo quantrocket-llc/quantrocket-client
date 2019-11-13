@@ -21,7 +21,6 @@ from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.exceptions import NoHistoricalData
-from quantrocket.utils.warn import deprecated_replaced_by
 
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", "/tmp")
 

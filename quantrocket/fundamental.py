@@ -21,7 +21,6 @@ from quantrocket.master import download_master_file
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.exceptions import ParameterError, MissingData, NoFundamentalData
-from quantrocket.utils.warn import deprecated_replaced_by
 
 def collect_reuters_financials(universes=None, sids=None, force=True):
     """
