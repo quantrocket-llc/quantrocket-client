@@ -22,10 +22,11 @@ from quantrocket.exceptions import NoRealtimeData, ParameterError
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 
-def create_tick_db(code, universes=None, conids=None, vendor=None,
-                   fields=None, primary_exchange=False):
+def create_ibkr_tick_db(code, universes=None, sids=None, fields=None,
+                        primary_exchange=False):
     """
-    Create a new database for collecting real-time tick data.
+    Create a new database for collecting real-time tick data from Interactive
+    Brokers.
 
     The market data requirements you specify when you create a new database are
     applied each time you collect data for that database.
@@ -38,11 +39,8 @@ def create_tick_db(code, universes=None, conids=None, vendor=None,
     universes : list of str
         include these universes
 
-    conids : list of int
-        include these conids
-
-    vendor : str, optional
-        the vendor to collect data from (default 'ib'. Possible choices: ib)
+    sids : list of str
+        include these sids
 
     fields : list of str
         collect these fields (pass '?' or any invalid fieldname to see
@@ -70,22 +68,22 @@ def create_tick_db(code, universes=None, conids=None, vendor=None,
     params = {}
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
-    if vendor:
-        params["vendor"] = vendor
+    if sids:
+        params["sids"] = sids
     if fields:
         params["fields"] = fields
     if primary_exchange:
         params["primary_exchange"] = primary_exchange
+
+    params["vendor"] = "ibkr"
 
     response = houston.put("/realtime/databases/{0}".format(code), params=params)
 
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_create_tick_db(*args, **kwargs):
-    return json_to_cli(create_tick_db, *args, **kwargs)
+def _cli_create_ibkr_tick_db(*args, **kwargs):
+    return json_to_cli(create_ibkr_tick_db, *args, **kwargs)
 
 def create_agg_db(code, tick_db_code, bar_size, fields=None):
     """
@@ -244,7 +242,7 @@ def list_databases():
 def _cli_list_databases(*args, **kwargs):
     return json_to_cli(list_databases, *args, **kwargs)
 
-def collect_market_data(codes, conids=None, universes=None, fields=None, until=None,
+def collect_market_data(codes, sids=None, universes=None, fields=None, until=None,
                         snapshot=False, wait=False):
     """
     Collect real-time market data and save it to a tick database.
@@ -260,8 +258,8 @@ def collect_market_data(codes, conids=None, universes=None, fields=None, until=N
     codes : list of str, required
         the tick database code(s) to collect data for
 
-    conids : list of int, optional
-        collect market data for these conids, overriding db config (typically
+    sids : list of str, optional
+        collect market data for these sids, overriding db config (typically
         used to collect a subset of securities)
 
     universes : list of str, optional
@@ -299,7 +297,9 @@ def collect_market_data(codes, conids=None, universes=None, fields=None, until=N
     Collect market data for a subset of securities in a tick database called 'usa-stk-trades'
     and automatically cancel the data collection in 30 minutes:
 
-    >>> collect_market_data("usa-stk-trades", conids=[12345,23456,34567], until="30m")
+    >>> collect_market_data("usa-stk-trades",
+                            sids=["FIBBG12345", "FIBBG23456", "FIBBG34567"],
+                            until="30m")
 
     Collect a market data snapshot and wait until it completes:
 
@@ -308,8 +308,8 @@ def collect_market_data(codes, conids=None, universes=None, fields=None, until=N
     params = {}
     if codes:
         params["codes"] = codes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if universes:
         params["universes"] = universes
     if fields:
@@ -356,7 +356,7 @@ def get_active_collections(detail=False):
 def _cli_get_active_collections(*args, **kwargs):
     return json_to_cli(get_active_collections, *args, **kwargs)
 
-def cancel_market_data(codes=None, conids=None, universes=None, cancel_all=False):
+def cancel_market_data(codes=None, sids=None, universes=None, cancel_all=False):
     """
     Cancel market data collection.
 
@@ -365,8 +365,8 @@ def cancel_market_data(codes=None, conids=None, universes=None, cancel_all=False
     codes : list of str, optional
         the tick database code(s) to cancel collection for
 
-    conids : list of int, optional
-        cancel market data for these conids, overriding db config
+    sids : list of str, optional
+        cancel market data for these sids, overriding db config
 
     universes : list of str, optional
         cancel market data for these universes, overriding db config
@@ -392,8 +392,8 @@ def cancel_market_data(codes=None, conids=None, universes=None, cancel_all=False
     params = {}
     if codes:
         params["codes"] = codes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if universes:
         params["universes"] = universes
     if cancel_all:
@@ -408,8 +408,8 @@ def _cli_cancel_market_data(*args, **kwargs):
 
 def download_market_data_file(code, filepath_or_buffer=None, output="csv",
                               start_date=None, end_date=None,
-                              universes=None, conids=None,
-                              exclude_universes=None, exclude_conids=None,
+                              universes=None, sids=None,
+                              exclude_universes=None, exclude_sids=None,
                               fields=None):
     """
     Query market data from a tick database or aggregate database and download to file.
@@ -440,14 +440,14 @@ def download_market_data_file(code, filepath_or_buffer=None, output="csv",
     universes : list of str, optional
         limit to these universes (default is to return all securities in database)
 
-    conids : list of int, optional
-        limit to these conids
+    sids : list of str, optional
+        limit to these sids
 
     exclude_universes : list of str, optional
         exclude these universes
 
-    exclude_conids : list of int, optional
-        exclude these conids
+    exclude_sids : list of str, optional
+        exclude these sids
 
     fields : list of str, optional
         only return these fields (pass '?' or any invalid fieldname to see
@@ -477,12 +477,12 @@ def download_market_data_file(code, filepath_or_buffer=None, output="csv",
         params["end_date"] = end_date
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if exclude_universes:
         params["exclude_universes"] = exclude_universes
-    if exclude_conids:
-        params["exclude_conids"] = exclude_conids
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
     if fields:
         params["fields"] = fields
 
@@ -509,16 +509,16 @@ def download_market_data_file(code, filepath_or_buffer=None, output="csv",
 def _cli_download_market_data_file(*args, **kwargs):
     return json_to_cli(download_market_data_file, *args, **kwargs)
 
-def _cli_stream_market_data(conids, exclude_conids, fields):
+def _cli_stream_market_data(sids, exclude_sids, fields):
 
     url = houston.base_url + "/realtime/stream"
 
     params = {}
 
-    if conids:
-        params["conids"] = conids
-    if exclude_conids:
-        params["exclude_conids"] = exclude_conids
+    if sids:
+        params["sids"] = sids
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
     if fields:
         params["fields"] = fields
 

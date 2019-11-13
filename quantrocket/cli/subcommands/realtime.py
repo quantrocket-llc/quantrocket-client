@@ -20,7 +20,7 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Create a new database for collecting real-time tick data.
+Create a new database for collecting real-time tick data from Interactive Brokers.
 
 The market data requirements you specify when you create a new database are
 applied each time you collect data for that database.
@@ -29,15 +29,15 @@ Examples:
 
 Create a database for collecting real-time trades and volume for US stocks:
 
-    quantrocket realtime create-tick-db usa-stk-trades -u usa-stk --fields LastPrice Volume
+    quantrocket realtime create-ibkr-tick-db usa-stk-trades -u usa-stk --fields LastPrice Volume
 
 Create a database for collecting trades and quotes for a universe of futures:
 
-    quantrocket realtime create-tick-db globex-fut-taq -u globex-fut --fields LastPrice Volume BidPrice AskPrice BidSize AskSize
+    quantrocket realtime create-ibkr-tick-db globex-fut-taq -u globex-fut --fields LastPrice Volume BidPrice AskPrice BidSize AskSize
     """
     parser = _subparsers.add_parser(
-        "create-tick-db",
-        help="create a new database for collecting real-time tick data",
+        "create-ibkr-tick-db",
+        help="create a new database for collecting real-time tick data from Interactive Brokers",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -50,16 +50,10 @@ Create a database for collecting trades and quotes for a universe of futures:
         nargs="*",
         help="include these universes")
     parser.add_argument(
-        "-i", "--conids",
-        metavar="CONID",
+        "-i", "--sids",
+        metavar="SID",
         nargs="*",
-        help="include these conids")
-    parser.add_argument(
-        "-v", "--vendor",
-        metavar="VENDOR",
-        choices=["ib"],
-        help="the vendor to collect data from (default 'ib'. Possible choices: "
-        "%(choices)s)")
+        help="include these sids")
     parser.add_argument(
         "-f", "--fields",
         metavar="FIELD",
@@ -70,7 +64,7 @@ Create a database for collecting trades and quotes for a universe of futures:
         "-p", "--primary-exchange",
         action="store_true",
         help="limit to data from the primary exchange")
-    parser.set_defaults(func="quantrocket.realtime._cli_create_tick_db")
+    parser.set_defaults(func="quantrocket.realtime._cli_create_ibkr_tick_db")
 
     examples = """
 Create an aggregate database from a tick database.
@@ -215,7 +209,7 @@ Collect market data for all securities in a tick database called 'japan-banks-tr
 Collect market data for a subset of securities in a tick database called 'usa-stk-trades'
 and automatically cancel the data collection in 30 minutes:
 
-    quantrocket realtime collect usa-stk-trades --conids 12345 23456 34567 --until 30m
+    quantrocket realtime collect usa-stk-trades --sids FIBBG12345 FIBBG23456 FIBBG34567 --until 30m
 
 Collect a market data snapshot and wait until it completes:
 
@@ -232,10 +226,10 @@ Collect a market data snapshot and wait until it completes:
         nargs="+",
         help="the tick database code(s) to collect data for")
     parser.add_argument(
-        "-i", "--conids",
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="collect market data for these conids, overriding db config "
+        metavar="SID",
+        help="collect market data for these sids, overriding db config "
         "(typically used to collect a subset of securities)")
     parser.add_argument(
         "-u", "--universes",
@@ -309,10 +303,10 @@ Cancel all market data collection:
         nargs="*",
         help="the tick database code(s) to cancel collection for")
     parser.add_argument(
-        "-i", "--conids",
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="cancel market data for these conids, overriding db config")
+        metavar="SID",
+        help="cancel market data for these sids, overriding db config")
     parser.add_argument(
         "-u", "--universes",
         nargs="*",
@@ -364,22 +358,20 @@ Download a CSV of futures market data since 08:00 AM Chicago time:
         metavar="UNIVERSE",
         help="limit to these universes")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
         help="exclude these universes")
     filters.add_argument(
-        "--exclude-conids",
-        type=int,
+        "--exclude-sids",
         nargs="*",
-        metavar="CONID",
-        help="exclude these conids")
+        metavar="SID",
+        help="exclude these sids")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
@@ -413,9 +405,9 @@ Stream all incoming market data:
 
     quantrocket realtime stream
 
-Stream a subset of fields and conids:
+Stream a subset of fields and sids:
 
-    quantrocket realtime stream --conids 265598 --fields BidPrice AskPrice
+    quantrocket realtime stream --sids FIBBG265598 --fields BidPrice AskPrice
     """
     parser = _subparsers.add_parser(
         "stream",
@@ -423,15 +415,15 @@ Stream a subset of fields and conids:
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "-i", "--conids",
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     parser.add_argument(
-        "--exclude-conids",
+        "--exclude-sids",
         nargs="*",
-        metavar="CONID",
-        help="exclude these conids")
+        metavar="SID",
+        help="exclude these sids")
     parser.add_argument(
         "-f", "--fields",
         nargs="*",
