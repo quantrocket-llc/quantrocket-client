@@ -20,7 +20,132 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Collect Reuters financial statements from IB and save to database.
+Collect AtomicFin US Fundamentals and save to database.
+
+Examples:
+
+    quantrocket fundamental collect-atomicfin-fundamentals
+    """
+    parser = _subparsers.add_parser(
+        "collect-atomicfin-fundamentals",
+        help="collect AtomicFin US Fundamentals and save to database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_atomicfin_fundamentals")
+
+    examples = """
+List available indicators from the AtomicFin US Fundamentals database.
+
+Examples:
+
+List all AtomicFin codes:
+
+    quantrocket fundamental atomicfin-codes
+
+List all codes from the income statement:
+
+    quantrocket fundamental atomicfin-codes -t 'Income Statement'
+
+    """
+    parser = _subparsers.add_parser(
+        "atomicfin-codes",
+        help="list available indicators from the AtomicFin US Fundamentals "
+        "database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-c", "--codes",
+        nargs="*",
+        metavar="CODE",
+        help="limit to these indicator codes")
+    parser.add_argument(
+        "-t", "--indicator-types",
+        nargs="*",
+        metavar="INDICATOR_TYPE",
+        choices=["Income Statement", "Cash Flow Statement", "Balance Sheet",
+                 "Metrics", "Entity"],
+        help="limit to these indicator types. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.fundamental._cli_list_atomicfin_codes")
+
+    examples = """
+Query AtomicFin US Fundamentals from the local database and download to file.
+
+Examples:
+
+Query as-reported trailing twelve month (ART) fundamentals for all indicators for
+a particular sid:
+
+    quantrocket fundamental atomicfin-fundamentals -i FIBBG12345 --dimensions ART -o aapl_fundamentals.csv
+
+Query as-reported quarterly (ARQ) fundamentals for select indicators for a universe:
+
+    quantrocket fundamental atomicfin-fundamentals -u usa-stk --dimensions ARQ -f REVENUE EPS -o atomicfin_fundamentals.csv
+    """
+    parser = _subparsers.add_parser(
+        "atomicfin-fundamentals",
+        help="query AtomicFin US Fundamentals from the local database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to fundamentals on or after this fiscal period end date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to fundamentals on or before this fiscal period end date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    filters.add_argument(
+        "-m", "--dimensions",
+        nargs="*",
+        choices=["ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"],
+        help="limit to these dimensions. Possible choices: %(choices)s. "
+        "AR=As Reported, MR=Most Recent Reported, Q=Quarterly, Y=Annual, "
+        "T=Trailing Twelve Month.")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields, or see `quantrocket fundamental atomicfin-codes`))")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_atomicfin_fundamentals")
+
+    examples = """
+Collect Reuters financial statements from Interactive Brokers and save to
+database.
 
 This data provides cash flow, balance sheet, and income metrics.
 
@@ -28,28 +153,27 @@ Examples:
 
 Collect Reuters financial statements for a universe of Japanese banks:
 
-    quantrocket fundamental collect-financials --universes 'japan-bank'
+    quantrocket fundamental collect-reuters-financials --universes 'japan-bank'
 
 Collect Reuters financial statements for a particular security:
 
-    quantrocket fundamental collect-financials --conids 123456
+    quantrocket fundamental collect-reuters-financials --sids FIBBG123456
     """
     parser = _subparsers.add_parser(
-        "collect-financials",
-        help="collect Reuters financial statements from IB and save to database",
+        "collect-reuters-financials",
+        help="collect Reuters financial statements from Interactive Brokers and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes (must provide universes, conids, or both)")
+        help="limit to these universes (must provide universes, sids, or both)")
     parser.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids (must provide universes, conids, or both)")
+        metavar="SID",
+        help="limit to these sids (must provide universes, sids, or both)")
     parser.add_argument(
         "-f", "--force",
         action="store_true",
@@ -59,7 +183,7 @@ Collect Reuters financial statements for a particular security:
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_reuters_financials")
 
     examples = """
-Collect Reuters estimates and actuals from IB and save to database.
+Collect Reuters estimates and actuals from Interactive Brokers and save to database.
 
 This data provides analyst estimates and actuals for a variety of indicators.
 
@@ -67,28 +191,27 @@ Examples:
 
 Collect Reuters estimates and actuals for a universe of Japanese banks:
 
-    quantrocket fundamental collect-estimates --universes 'japan-bank'
+    quantrocket fundamental collect-reuters-estimates --universes 'japan-bank'
 
 Collect Reuters estimates and actuals for a particular security:
 
-    quantrocket fundamental collect-estimates --conids 123456
+    quantrocket fundamental collect-reuters-estimates --sids FIBBG123456
     """
     parser = _subparsers.add_parser(
-        "collect-estimates",
-        help="collect Reuters estimates and actuals from IB and save to database",
+        "collect-reuters-estimates",
+        help="collect Reuters estimates and actuals from Interactive Brokers and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes (must provide universes, conids, or both)")
+        help="limit to these universes (must provide universes, sids, or both)")
     parser.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids (must provide universes, conids, or both)")
+        metavar="SID",
+        help="limit to these sids (must provide universes, sids, or both)")
     parser.add_argument(
         "-f", "--force",
         action="store_true",
@@ -96,45 +219,6 @@ Collect Reuters estimates and actuals for a particular security:
         "recently (default is to skip securities that were updated in the last "
         "12 hours)")
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_reuters_estimates")
-
-    examples = """
-Collect Wall Street Horizon upcoming earnings announcement dates from IB
-and save to database.
-
-Examples:
-
-Collect upcoming earnings dates for a universe of US stocks:
-
-    quantrocket fundamental collect-wsh --universes 'usa-stk'
-
-Collect upcoming earnings dates for a particular security:
-
-    quantrocket fundamental collect-wsh --conids 123456
-    """
-    parser = _subparsers.add_parser(
-        "collect-wsh",
-        help=("collect Wall Street Horizon upcoming earnings announcement dates from "
-        "IB and save to database"),
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes (must provide universes, conids, or both)")
-    parser.add_argument(
-        "-i", "--conids",
-        type=int,
-        nargs="*",
-        metavar="CONID",
-        help="limit to these conids (must provide universes, conids, or both)")
-    parser.add_argument(
-        "-f", "--force",
-        action="store_true",
-        help="collect earnings dates for all securities even if they were collected "
-        "recently (default is to skip securities that were updated in the last "
-        "12 hours)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_wsh_earnings_dates")
 
     examples = """
 List available Chart of Account (COA) codes from the Reuters financials database
@@ -147,18 +231,18 @@ Examples:
 
 List all codes:
 
-    quantrocket fundamental codes
+    quantrocket fundamental reuters-codes
 
 List COA codes for balance sheets only:
 
-    quantrocket fundamental codes --report-types financials --statement-types BAL
+    quantrocket fundamental reuters-codes --report-types financials --statement-types BAL
 
 List the description of a specific COA code:
 
-    quantrocket fundamental codes --codes TIAT
+    quantrocket fundamental reuters-codes --codes TIAT
     """
     parser = _subparsers.add_parser(
-        "codes",
+        "reuters-codes",
         help="list available Chart of Account (COA) codes from the Reuters financials "
         "database and/or indicator codes from the Reuters estimates/actuals "
         "database",
@@ -188,7 +272,7 @@ List the description of a specific COA code:
 Query financial statements from the Reuters financials database and
 download to file.
 
-You can query one or more COA codes. Run `quantrocket fundamental codes` to see
+You can query one or more COA codes. Run `quantrocket fundamental reuters-codes` to see
 available codes.
 
 Annual or interim reports are available. Annual is the default and provides
@@ -198,20 +282,20 @@ Examples:
 
 Query total revenue (COA code RTLR) for a universe of Australian stocks:
 
-    quantrocket fundamental financials RTLR -u asx-stk -s 2014-01-01 -e 2017-01-01 -o rtlr.csv
+    quantrocket fundamental reuters-financials RTLR -u asx-stk -s 2014-01-01 -e 2017-01-01 -o rtlr.csv
 
 Query net income (COA code NINC) from interim reports for two securities
-(identified by conid) and exclude restatements:
+(identified by sid) and exclude restatements:
 
-    quantrocket fundamental financials NINC -i 123456 234567 --interim --exclude-restatements -o ninc.csv
+    quantrocket fundamental reuters-financials NINC -i FIBBG123456 FIBBG234567 --interim --exclude-restatements -o ninc.csv
 
 Query common and preferred shares outstanding (COA codes QTCO and QTPO) and return a
 minimal set of fields (several required fields will always be returned)
 
-    quantrocket fundamental financials QTCO QTPO -u nyse-stk --fields Amount -o nyse_float.csv
+    quantrocket fundamental reuters-financials QTCO QTPO -u nyse-stk --fields Amount -o nyse_float.csv
     """
     parser = _subparsers.add_parser(
-        "financials",
+        "reuters-financials",
         help="query financial statements from the Reuters financials database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -235,22 +319,20 @@ minimal set of fields (several required fields will always be returned)
         metavar="UNIVERSE",
         help="limit to these universes")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
         help="exclude these universes")
     filters.add_argument(
-        "--exclude-conids",
-        type=int,
+        "--exclude-sids",
         nargs="*",
-        metavar="CONID",
-        help="exclude these conids")
+        metavar="SID",
+        help="exclude these sids")
     filters.add_argument(
         "-q", "--interim",
         action="store_true",
@@ -273,12 +355,6 @@ minimal set of fields (several required fields will always be returned)
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
-    output_format_group.add_argument(
-        "-p", "--pretty",
-        action="store_const",
-        const="txt",
-        dest="output",
-        help="format output in human-readable format (default is CSV)")
     outputs.add_argument(
         "-f", "--fields",
         metavar="FIELD",
@@ -291,17 +367,17 @@ minimal set of fields (several required fields will always be returned)
 Query estimates and actuals from the Reuters estimates database and
 download to file.
 
-You can query one or more indicator codes. Run `quantrocket fundamental codes` to see
+You can query one or more indicator codes. Run `quantrocket fundamental reuters-codes` to see
 available codes.
 
 Examples:
 
 Query EPS estimates and actuals for a universe of Australian stocks:
 
-    quantrocket fundamental estimates EPS -u asx-stk -s 2014-01-01 -e 2017-01-01 -o eps_estimates.csv
+    quantrocket fundamental reuters-estimates EPS -u asx-stk -s 2014-01-01 -e 2017-01-01 -o eps_estimates.csv
     """
     parser = _subparsers.add_parser(
-        "estimates",
+        "reuters-estimates",
         help="query estimates and actuals from the Reuters estimates database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -325,22 +401,20 @@ Query EPS estimates and actuals for a universe of Australian stocks:
         metavar="UNIVERSE",
         help="limit to these universes")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
         help="exclude these universes")
     filters.add_argument(
-        "--exclude-conids",
-        type=int,
+        "--exclude-sids",
         nargs="*",
-        metavar="CONID",
-        help="exclude these conids")
+        metavar="SID",
+        help="exclude these sids")
     filters.add_argument(
         "-t", "--period-types",
         nargs="*",
@@ -361,12 +435,6 @@ Query EPS estimates and actuals for a universe of Australian stocks:
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
-    output_format_group.add_argument(
-        "-p", "--pretty",
-        action="store_const",
-        const="txt",
-        dest="output",
-        help="format output in human-readable format (default is CSV)")
     outputs.add_argument(
         "-f", "--fields",
         metavar="FIELD",
@@ -374,6 +442,44 @@ Query EPS estimates and actuals for a universe of Australian stocks:
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields)")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_estimates")
+
+    examples = """
+Collect Wall Street Horizon upcoming earnings announcement dates from Interactive
+Brokers and save to database.
+
+Examples:
+
+Collect upcoming earnings dates for a universe of US stocks:
+
+    quantrocket fundamental collect-wsh --universes 'usa-stk'
+
+Collect upcoming earnings dates for a particular security:
+
+    quantrocket fundamental collect-wsh --sids FIBBG123456
+    """
+    parser = _subparsers.add_parser(
+        "collect-wsh",
+        help=("collect Wall Street Horizon upcoming earnings announcement dates from "
+        "Interactive Brokers and save to database"),
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes (must provide universes, sids, or both)")
+    parser.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids (must provide universes, sids, or both)")
+    parser.add_argument(
+        "-f", "--force",
+        action="store_true",
+        help="collect earnings dates for all securities even if they were collected "
+        "recently (default is to skip securities that were updated in the last "
+        "12 hours)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_wsh_earnings_dates")
 
     examples = """
 Query earnings announcement dates from the Wall Street Horizon
@@ -405,22 +511,20 @@ Query earnings dates for a universe of US stocks:
         metavar="UNIVERSE",
         help="limit to these universes")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
         help="exclude these universes")
     filters.add_argument(
-        "--exclude-conids",
-        type=int,
+        "--exclude-sids",
         nargs="*",
-        metavar="CONID",
-        help="exclude these conids")
+        metavar="SID",
+        help="exclude these sids")
     filters.add_argument(
         "-t", "--statuses",
         nargs="*",
@@ -449,146 +553,7 @@ Query earnings dates for a universe of US stocks:
     parser.set_defaults(func="quantrocket.fundamental._cli_download_wsh_earnings_dates")
 
     examples = """
-Collect Sharadar US Fundamentals and save to database.
-
-Examples:
-
-    quantrocket fundamental collect-sharadar
-    """
-    parser = _subparsers.add_parser(
-        "collect-sharadar",
-        help="collect Sharadar US Fundamentals and save to database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_fundamentals")
-
-    examples = """
-List available indicators from the Sharadar US Fundamentals database.
-
-Examples:
-
-List all Sharadar codes:
-
-    quantrocket fundamental sharadar-codes
-
-List all codes from the income statement:
-
-    quantrocket fundamental sharadar-codes -t 'Income Statement'
-
-    """
-    parser = _subparsers.add_parser(
-        "sharadar-codes",
-        help="list available indicators from the Sharadar US Fundamentals "
-        "database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-c", "--codes",
-        nargs="*",
-        metavar="CODE",
-        help="limit to these indicator codes")
-    parser.add_argument(
-        "-t", "--indicator-types",
-        nargs="*",
-        metavar="INDICATOR_TYPE",
-        choices=["Income Statement", "Cash Flow Statement", "Balance Sheet",
-                 "Metrics", "Entity"],
-        help="limit to these indicator types. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.fundamental._cli_list_sharadar_codes")
-
-    examples = """
-Query Sharadar US Fundamentals from the local database and download to file.
-
-The query results can be returned with IB conids or Sharadar conids, depending
-on the `--domain` option, which can be "main" (= IB) or "sharadar".
-The `--domain` option also determines whether the `--universes` and `--conids`
-options, if provided, are interpreted as referring to IB conids or Sharadar conids.
-
-Examples:
-
-Query as-reported trailing twelve month (ART) fundamentals for all indicators for
-a particular IB conid:
-
-    quantrocket fundamental sharadar -i 265598 --domain main --dimensions ART -o aapl_fundamentals.csv
-
-Query as-reported quarterly (ARQ) fundamentals for select indicators for a universe
-defined in the sharadar domain:
-
-    quantrocket fundamental sharadar -u sharadar-usa-stk --domain sharadar --dimensions ARQ -f REVENUE EPS -o sharadar_fundamentals.csv
-    """
-    parser = _subparsers.add_parser(
-        "sharadar",
-        help="query Sharadar US Fundamentals from the local database and download to file",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    filters = parser.add_argument_group("filtering options")
-    filters.add_argument(
-        "-s", "--start-date",
-        metavar="YYYY-MM-DD",
-        help="limit to fundamentals on or after this fiscal period end date")
-    filters.add_argument(
-        "-e", "--end-date",
-        metavar="YYYY-MM-DD",
-        help="limit to fundamentals on or before this fiscal period end date")
-    filters.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes")
-    filters.add_argument(
-        "-i", "--conids",
-        type=int,
-        nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
-    filters.add_argument(
-        "--exclude-universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="exclude these universes")
-    filters.add_argument(
-        "--exclude-conids",
-        type=int,
-        nargs="*",
-        metavar="CONID",
-        help="exclude these conids")
-    filters.add_argument(
-        "-m", "--dimensions",
-        nargs="*",
-        choices=["ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"],
-        help="limit to these dimensions. Possible choices: %(choices)s. "
-        "AR=As Reported, MR=Most Recent Reported, Q=Quarterly, Y=Annual, "
-        "T=Trailing Twelve Month.")
-    outputs = parser.add_argument_group("output options")
-    outputs.add_argument(
-        "-o", "--outfile",
-        metavar="OUTFILE",
-        dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
-    output_format_group = outputs.add_mutually_exclusive_group()
-    output_format_group.add_argument(
-        "-j", "--json",
-        action="store_const",
-        const="json",
-        dest="output",
-        help="format output as JSON (default is CSV)")
-    outputs.add_argument(
-        "-f", "--fields",
-        metavar="FIELD",
-        nargs="*",
-        help="only return these fields (pass '?' or any invalid fieldname to see "
-        "available fields, or see `quantrocket fundamental sharadar-codes`))")
-    outputs.add_argument(
-        "-d", "--domain",
-        choices=["main","sharadar"],
-        required=True,
-        help="the domain of the conids in which to return the results, as well as "
-        "the domain which the provided universes or conids, if any, refer to. "
-        "Domain 'main' corresponds to IB conids. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.fundamental._cli_download_sharadar_fundamentals")
-
-    examples = """
-Collect IB shortable shares data and save to database.
+Collect shortable shares data and save to database.
 
 Data is organized by country and updated every 15 minutes. Historical
 data is available from April 15, 2018.
@@ -605,7 +570,7 @@ Collect shortable shares data for all stocks:
     """
     parser = _subparsers.add_parser(
         "collect-shortshares",
-        help="collect IB shortable shares data and save to database",
+        help="collect shortable shares data and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -617,7 +582,7 @@ Collect shortable shares data for all stocks:
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_shortable_shares")
 
     examples = """
-Collect IB borrow fees data and save to database.
+Collect borrow fees data and save to database.
 
 Data is organized by country and updated every 15 minutes. Historical
 data is available from April 15, 2018.
@@ -634,7 +599,7 @@ Collect borrow fees for all stocks:
     """
     parser = _subparsers.add_parser(
         "collect-shortfees",
-        help="collect IB borrow fees data and save to database",
+        help="collect borrow fees data and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -676,22 +641,20 @@ Query shortable shares for a universe of Australian stocks:
         metavar="UNIVERSE",
         help="limit to these universes")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
         help="exclude these universes")
     filters.add_argument(
-        "--exclude-conids",
-        type=int,
+        "--exclude-sids",
         nargs="*",
-        metavar="CONID",
-        help="exclude these conids")
+        metavar="SID",
+        help="exclude these sids")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
@@ -738,22 +701,20 @@ Query borrow fees for a universe of Australian stocks:
         metavar="UNIVERSE",
         help="limit to these universes")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
         help="exclude these universes")
     filters.add_argument(
-        "--exclude-conids",
-        type=int,
+        "--exclude-sids",
         nargs="*",
-        metavar="CONID",
-        help="exclude these conids")
+        metavar="SID",
+        help="exclude these sids")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
@@ -768,51 +729,3 @@ Query borrow fees for a universe of Australian stocks:
         dest="output",
         help="format output as JSON (default is CSV)")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_borrow_fees")
-
-    examples = """
-Collect Reuters financial statements from IB and save to database
-
-[DEPRECATED] `fetch-financials` is deprecated and will be removed in a future release,
-please use `collect-financials` instead.
-    """
-    parser = _subparsers.add_parser(
-        "fetch-financials",
-        help="[DEPRECATED] collect Reuters financial statements from IB and save to database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes (must provide universes, conids, or both)")
-    parser.add_argument(
-        "-i", "--conids",
-        type=int,
-        nargs="*",
-        metavar="CONID",
-        help="limit to these conids (must provide universes, conids, or both)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_financials")
-
-    examples = """
-Collect Reuters estimates and actuals from IB and save to database.
-
-[DEPRECATED] `fetch-estimates` is deprecated and will be removed in a future release,
-please use `collect-estimates` instead.
-    """
-    parser = _subparsers.add_parser(
-        "fetch-estimates",
-        help="[DEPRECATED] collect Reuters estimates and actuals from IB and save to database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes (must provide universes, conids, or both)")
-    parser.add_argument(
-        "-i", "--conids",
-        type=int,
-        nargs="*",
-        metavar="CONID",
-        help="limit to these conids (must provide universes, conids, or both)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_fetch_reuters_estimates")

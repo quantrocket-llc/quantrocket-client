@@ -23,19 +23,20 @@ from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.exceptions import ParameterError, MissingData, NoFundamentalData
 from quantrocket.utils.warn import deprecated_replaced_by
 
-def collect_reuters_financials(universes=None, conids=None, force=True):
+def collect_reuters_financials(universes=None, sids=None, force=True):
     """
-    Collect Reuters financial statements from IB and save to database.
+    Collect Reuters financial statements from Interactive Brokers and save
+    to database.
 
     This data provides cash flow, balance sheet, and income metrics.
 
     Parameters
     ----------
     universes : list of str, optional
-        limit to these universes (must provide universes, conids, or both)
+        limit to these universes (must provide universes, sids, or both)
 
-    conids : list of int, optional
-        limit to these conids (must provide universes, conids, or both)
+    sids : list of str, optional
+        limit to these sids (must provide universes, sids, or both)
 
     force : bool
         collect financials for all securities even if they were collected recently
@@ -50,8 +51,8 @@ def collect_reuters_financials(universes=None, conids=None, force=True):
     params = {}
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if force:
         params["force"] = force
     response = houston.post("/fundamental/reuters/financials", params=params)
@@ -62,19 +63,19 @@ def collect_reuters_financials(universes=None, conids=None, force=True):
 def _cli_collect_reuters_financials(*args, **kwargs):
     return json_to_cli(collect_reuters_financials, *args, **kwargs)
 
-def collect_reuters_estimates(universes=None, conids=None, force=False):
+def collect_reuters_estimates(universes=None, sids=None, force=False):
     """
-    Collect Reuters estimates and actuals from IB and save to database.
+    Collect Reuters estimates and actuals from Interactive Brokers and save to database.
 
     This data provides analyst estimates and actuals for a variety of indicators.
 
     Parameters
     ----------
     universes : list of str, optional
-        limit to these universes (must provide universes, conids, or both)
+        limit to these universes (must provide universes, sids, or both)
 
-    conids : list of int, optional
-        limit to these conids (must provide universes, conids, or both)
+    sids : list of str, optional
+        limit to these sids (must provide universes, sids, or both)
 
     force : bool
         collect estimates for all securities even if they were collected recently
@@ -89,8 +90,8 @@ def collect_reuters_estimates(universes=None, conids=None, force=False):
     params = {}
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if force:
         params["force"] = force
     response = houston.post("/fundamental/reuters/estimates", params=params)
@@ -101,18 +102,18 @@ def collect_reuters_estimates(universes=None, conids=None, force=False):
 def _cli_collect_reuters_estimates(*args, **kwargs):
     return json_to_cli(collect_reuters_estimates, *args, **kwargs)
 
-def collect_wsh_earnings_dates(universes=None, conids=None, force=False):
+def collect_wsh_earnings_dates(universes=None, sids=None, force=False):
     """
-    Collect Wall Street Horizon upcoming earnings announcement dates from IB
-    and save to database.
+    Collect Wall Street Horizon upcoming earnings announcement dates from
+    Interactive Brokers and save to database.
 
     Parameters
     ----------
     universes : list of str, optional
-        limit to these universes (must provide universes, conids, or both)
+        limit to these universes (must provide universes, sids, or both)
 
-    conids : list of int, optional
-        limit to these conids (must provide universes, conids, or both)
+    sids : list of str, optional
+        limit to these sids (must provide universes, sids, or both)
 
     force : bool
         collect earnings dates for all securities even if they were collected
@@ -128,8 +129,8 @@ def collect_wsh_earnings_dates(universes=None, conids=None, force=False):
     params = {}
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if force:
         params["force"] = force
     response = houston.post("/fundamental/wsh/calendar", params=params)
@@ -182,8 +183,8 @@ def _cli_list_reuters_codes(*args, **kwargs):
 
 def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
                                 start_date=None, end_date=None,
-                                universes=None, conids=None,
-                                exclude_universes=None, exclude_conids=None,
+                                universes=None, sids=None,
+                                exclude_universes=None, exclude_sids=None,
                                 interim=False, exclude_restatements=False, fields=None):
     """
     Query financial statements from the Reuters financials database and
@@ -204,7 +205,7 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
         filepath to write the data to, or file-like object (defaults to stdout)
 
     output : str
-        output format (json, csv, txt, default is csv)
+        output format (json or csv, default is csv)
 
     start_date : str (YYYY-MM-DD), optional
         limit to statements on or after this fiscal period end date
@@ -215,14 +216,14 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
     universes : list of str, optional
         limit to these universes
 
-    conids : list of int, optional
-        limit to these conids
+    sids : list of str, optional
+        limit to these sids
 
     exclude_universes : list of str, optional
         exclude these universes
 
-    exclude_conids : list of int, optional
-        exclude these conids
+    exclude_sids : list of str, optional
+        exclude these sids
 
     interim : bool, optional
         return interim reports (default is to return annual reports,
@@ -251,9 +252,9 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
     >>> financials = pd.read_csv(f, parse_dates=["StatementDate", "SourceDate", "FiscalPeriodEndDate"])
 
     Query net income (COA code NINC) from interim reports for two securities
-    (identified by conid) and exclude restatements:
+    (identified by sid) and exclude restatements:
 
-    >>> download_reuters_financials(["NINC"], f, conids=[123456, 234567],
+    >>> download_reuters_financials(["NINC"], f, sids=["FIBBG123456", "FIBBG234567"],
                                     interim=True, exclude_restatements=True)
 
     Query common and preferred shares outstanding (COA codes QTCO and QTPO) and return a
@@ -271,12 +272,12 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
         params["end_date"] = end_date
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if exclude_universes:
         params["exclude_universes"] = exclude_universes
-    if exclude_conids:
-        params["exclude_conids"] = exclude_conids
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
     if interim:
         params["interim"] = interim
     if exclude_restatements:
@@ -286,7 +287,7 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
 
     output = output or "csv"
 
-    if output not in ("csv", "json", "txt"):
+    if output not in ("csv", "json"):
         raise ValueError("Invalid ouput: {0}".format(output))
 
     response = houston.get("/fundamental/reuters/financials.{0}".format(output), params=params,
@@ -312,7 +313,7 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
     """
     Return a multiindex (CoaCode, Field, Date) DataFrame of point-in-time
     Reuters financial statements for one or more Chart of Account (COA)
-    codes, reindexed to match the index (dates) and columns (conids) of
+    codes, reindexed to match the index (dates) and columns (sids) of
     `reindex_like`. Financial values are forward-filled in order to provide
     the latest reading at any given date. Financials are indexed to the
     SourceDate field, i.e. the date on which the financial statement was
@@ -321,7 +322,7 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
     Parameters
     ----------
     reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and conids
+        a DataFrame (usually of prices) with dates for the index and sids
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
 
@@ -391,7 +392,7 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
     if not hasattr(reindex_like.index, "date"):
         raise ParameterError("reindex_like must have a DatetimeIndex")
 
-    conids = list(reindex_like.columns)
+    sids = list(reindex_like.columns)
     start_date = reindex_like.index.min().date()
     # Since financial reports are sparse, start well before the reindex_like
     # min date
@@ -407,7 +408,7 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
 
     f = six.StringIO()
     download_reuters_financials(
-        coa_codes, f, conids=conids, start_date=start_date, end_date=end_date,
+        coa_codes, f, sids=sids, start_date=start_date, end_date=end_date,
         fields=fields, interim=interim, exclude_restatements=exclude_restatements)
     financials = pd.read_csv(
         f, parse_dates=["SourceDate","FiscalPeriodEndDate"])
@@ -417,7 +418,7 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
 
     # Drop any fields we don't need
     needed_fields = set(fields)
-    needed_fields.update(set(("ConId", "Date", "CoaCode")))
+    needed_fields.update(set(("Sid", "Date", "CoaCode")))
     if max_lag:
         needed_fields.add("FiscalPeriodEndDate")
     unneeded_fields = set(financials.columns) - needed_fields
@@ -449,8 +450,8 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
         # There might be duplicate SourceDates if a company announced
         # reports for several fiscal periods at once. In this case we keep
         # only the last value (i.e. latest fiscal period)
-        financials_for_code = financials_for_code.drop_duplicates(subset=["ConId", "Date"], keep="last")
-        financials_for_code = financials_for_code.pivot(index="ConId",columns="Date").T
+        financials_for_code = financials_for_code.drop_duplicates(subset=["Sid", "Date"], keep="last")
+        financials_for_code = financials_for_code.pivot(index="Sid",columns="Date").T
         multiidx = pd.MultiIndex.from_product(
             (financials_for_code.index.get_level_values(0).unique(), union_date_idx),
             names=["Field", "Date"])
@@ -499,8 +500,8 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
 
 def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
                                start_date=None, end_date=None,
-                               universes=None, conids=None,
-                               exclude_universes=None, exclude_conids=None,
+                               universes=None, sids=None,
+                               exclude_universes=None, exclude_sids=None,
                                period_types=None, fields=None):
     """
     Query estimates and actuals from the Reuters estimates database and
@@ -518,7 +519,7 @@ def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
         filepath to write the data to, or file-like object (defaults to stdout)
 
     output : str
-        output format (json, csv, txt, default is csv)
+        output format (json or csv, default is csv)
 
     start_date : str (YYYY-MM-DD), optional
         limit to estimates and actuals on or after this fiscal period end date
@@ -529,14 +530,14 @@ def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
     universes : list of str, optional
         limit to these universes
 
-    conids : list of int, optional
-        limit to these conids
+    sids : list of str, optional
+        limit to these sids
 
     exclude_universes : list of str, optional
         exclude these universes
 
-    exclude_conids : list of int, optional
-        exclude these conids
+    exclude_sids : list of str, optional
+        exclude these sids
 
     period_types : list of str, optional
         limit to these fiscal period types. Possible choices: A, Q, S, where
@@ -570,12 +571,12 @@ def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
         params["end_date"] = end_date
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if exclude_universes:
         params["exclude_universes"] = exclude_universes
-    if exclude_conids:
-        params["exclude_conids"] = exclude_conids
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
     if period_types:
         params["period_types"] = period_types
     if fields:
@@ -583,7 +584,7 @@ def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
 
     output = output or "csv"
 
-    if output not in ("csv", "json", "txt"):
+    if output not in ("csv", "json"):
         raise ValueError("Invalid ouput: {0}".format(output))
 
     response = houston.get("/fundamental/reuters/estimates.{0}".format(output), params=params,
@@ -610,7 +611,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     """
     Return a multiindex (Indicator, Field, Date) DataFrame of point-in-time
     Reuters estimates and actuals for one or more indicator codes, reindexed
-    to match the index (dates) and columns (conids) of `reindex_like`.
+    to match the index (dates) and columns (sids) of `reindex_like`.
     Estimates and actuals are forward-filled in order to provide the latest
     reading at any given date, indexed to the AnnounceDate field.
     By default AnnounceDate is shifted forward 1 day to avoid lookahead bias.
@@ -618,7 +619,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     Parameters
     ----------
     reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and conids
+        a DataFrame (usually of prices) with dates for the index and sids
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
 
@@ -700,7 +701,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     if not hasattr(reindex_like.index, "date"):
         raise ParameterError("reindex_like must have a DatetimeIndex")
 
-    conids = list(reindex_like.columns)
+    sids = list(reindex_like.columns)
     start_date = reindex_like.index.min().date()
     # Since financial reports are sparse, start well before the reindex_like
     # min date
@@ -722,7 +723,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     if "AnnounceDate" not in query_fields:
         query_fields.append("AnnounceDate")
     download_reuters_estimates(
-        codes, f, conids=conids, start_date=start_date, end_date=end_date,
+        codes, f, sids=sids, start_date=start_date, end_date=end_date,
         fields=query_fields, period_types=period_types)
     parse_dates = ["AnnounceDate"]
     if "FiscalPeriodEndDate" in fields or max_lag:
@@ -738,15 +739,15 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     # Convert UTC AnnounceDate to security timezone, and cast to date for
     # index
     f = six.StringIO()
-    download_master_file(f, conids=list(estimates.ConId.unique()),
+    download_master_file(f, sids=list(estimates.Sid.unique()),
                          fields=["Timezone"])
-    timezones = pd.read_csv(f, index_col="ConId")
-    estimates = estimates.join(timezones, on="ConId")
+    timezones = pd.read_csv(f, index_col="Sid")
+    estimates = estimates.join(timezones, on="Sid")
     if estimates.Timezone.isnull().any():
-        conids_missing_timezones = list(estimates.ConId[estimates.Timezone.isnull()].unique())
-        raise MissingData("timezones are missing for some conids so cannot convert UTC "
-                          "estimates to timezone of security (conids missing timezone: {0})".format(
-                              ",".join([str(conid) for conid in conids_missing_timezones])
+        sids_missing_timezones = list(estimates.Sid[estimates.Timezone.isnull()].unique())
+        raise MissingData("timezones are missing for some sids so cannot convert UTC "
+                          "estimates to timezone of security (sids missing timezone: {0})".format(
+                              ",".join(sids_missing_timezones)
                           ))
 
     # If only 1 timezone in data, use a faster method
@@ -762,7 +763,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
 
     # Drop any fields we don't need
     needed_fields = set(fields)
-    needed_fields.update(set(("ConId", "Date", "Indicator")))
+    needed_fields.update(set(("Sid", "Date", "Indicator")))
     if max_lag:
         needed_fields.add("FiscalPeriodEndDate")
 
@@ -794,8 +795,8 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
         # There might be duplicate AnnounceDates if a company announced
         # reports for several fiscal periods at once. In this case we keep
         # only the last value (i.e. latest fiscal period)
-        estimates_for_code = estimates_for_code.drop_duplicates(subset=["ConId","Date"], keep="last")
-        estimates_for_code = estimates_for_code.pivot(index="ConId",columns="Date").T
+        estimates_for_code = estimates_for_code.drop_duplicates(subset=["Sid","Date"], keep="last")
+        estimates_for_code = estimates_for_code.pivot(index="Sid",columns="Date").T
         multiidx = pd.MultiIndex.from_product(
             (estimates_for_code.index.get_level_values(0).unique(), union_date_idx),
             names=["Field", "Date"])
@@ -848,8 +849,8 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
 
 def download_wsh_earnings_dates(filepath_or_buffer=None, output="csv",
                                 start_date=None, end_date=None,
-                                universes=None, conids=None,
-                                exclude_universes=None, exclude_conids=None,
+                                universes=None, sids=None,
+                                exclude_universes=None, exclude_sids=None,
                                 statuses=None, fields=None):
     """
     Query earnings announcement dates from the Wall Street Horizon
@@ -861,7 +862,7 @@ def download_wsh_earnings_dates(filepath_or_buffer=None, output="csv",
         filepath to write the data to, or file-like object (defaults to stdout)
 
     output : str
-        output format (json, csv, txt, default is csv)
+        output format (json or csv, default is csv)
 
     start_date : str (YYYY-MM-DD), optional
         limit to announcements on or after this date
@@ -872,14 +873,14 @@ def download_wsh_earnings_dates(filepath_or_buffer=None, output="csv",
     universes : list of str, optional
         limit to these universes
 
-    conids : list of int, optional
-        limit to these conids
+    sids : list of str, optional
+        limit to these sids
 
     exclude_universes : list of str, optional
         exclude these universes
 
-    exclude_conids : list of int, optional
-        exclude these conids
+    exclude_sids : list of str, optional
+        exclude these sids
 
     statuses : list of str, optional
         limit to these confirmation statuses. Possible choices: Confirmed, Unconfirmed
@@ -908,12 +909,12 @@ def download_wsh_earnings_dates(filepath_or_buffer=None, output="csv",
         params["end_date"] = end_date
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if exclude_universes:
         params["exclude_universes"] = exclude_universes
-    if exclude_conids:
-        params["exclude_conids"] = exclude_conids
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
     if statuses:
         params["statuses"] = statuses
     if fields:
@@ -946,13 +947,13 @@ def get_wsh_earnings_dates_reindexed_like(reindex_like, fields=["Time"],
                                           statuses=["Confirmed"]):
     """
     Return a multiindex (Field, Date) DataFrame of earnings announcement dates,
-    reindexed to match the index (dates) and columns (conids) of `reindex_like`.
+    reindexed to match the index (dates) and columns (sids) of `reindex_like`.
 
 
     Parameters
     ----------
     reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and conids
+        a DataFrame (usually of prices) with dates for the index and sids
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
 
@@ -1022,7 +1023,7 @@ def get_wsh_earnings_dates_reindexed_like(reindex_like, fields=["Time"],
     if not hasattr(reindex_like.index, "date"):
         raise ParameterError("reindex_like must have a DatetimeIndex")
 
-    conids = list(reindex_like.columns)
+    sids = list(reindex_like.columns)
     start_date = reindex_like.index.min().date()
     start_date = start_date.isoformat()
     end_date = reindex_like.index.max().date().isoformat()
@@ -1038,7 +1039,7 @@ def get_wsh_earnings_dates_reindexed_like(reindex_like, fields=["Time"],
     if "LastUpdated" not in fields:
         query_fields.append("LastUpdated")
     download_wsh_earnings_dates(
-        f, conids=conids, start_date=start_date, end_date=end_date,
+        f, sids=sids, start_date=start_date, end_date=end_date,
         fields=query_fields, statuses=statuses)
     announcements = pd.read_csv(f, parse_dates=["Date", "LastUpdated"])
 
@@ -1049,17 +1050,17 @@ def get_wsh_earnings_dates_reindexed_like(reindex_like, fields=["Time"],
     # There might be duplicate Dates for confirmed vs unconfirmed announcements (or other changes to
     # confirmed or unconfirmed announcements). In this case we keep only the most recently updated
     # record
-    announcements = announcements.sort_values(["LastUpdated"]).drop_duplicates(subset=["ConId","Date"], keep="last")
+    announcements = announcements.sort_values(["LastUpdated"]).drop_duplicates(subset=["Sid","Date"], keep="last")
 
     # Drop any fields we don't need
     needed_fields = set(fields)
-    needed_fields.update(set(("ConId", "Date")))
+    needed_fields.update(set(("Sid", "Date")))
 
     unneeded_fields = set(announcements.columns) - needed_fields
     if unneeded_fields:
         announcements = announcements.drop(unneeded_fields, axis=1)
 
-    announcements = announcements.pivot(index="ConId",columns="Date").T
+    announcements = announcements.pivot(index="Sid",columns="Date").T
 
     multiidx = pd.MultiIndex.from_product(
         (announcements.index.get_level_values(0).unique(), reindex_like.index),
@@ -1068,25 +1069,25 @@ def get_wsh_earnings_dates_reindexed_like(reindex_like, fields=["Time"],
 
     return announcements
 
-def collect_sharadar_fundamentals():
+def collect_atomicfin_fundamentals():
     """
-    Collect Sharadar US Fundamentals and save to database.
+    Collect AtomicFin US Fundamentals and save to database.
 
     Returns
     -------
     dict
         status message
     """
-    response = houston.post("/fundamental/sharadar/sf1")
+    response = houston.post("/fundamental/atomicfin/financials")
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_collect_sharadar_fundamentals(*args, **kwargs):
-    return json_to_cli(collect_sharadar_fundamentals, *args, **kwargs)
+def _cli_collect_atomicfin_fundamentals(*args, **kwargs):
+    return json_to_cli(collect_atomicfin_fundamentals, *args, **kwargs)
 
-def list_sharadar_codes(codes=None, indicator_types=None):
+def list_atomicfin_codes(codes=None, indicator_types=None):
     """
-    List available indicators from the Sharadar US Fundamentals database.
+    List available indicators from the AtomicFin US Fundamentals database.
 
     Parameters
     ----------
@@ -1107,38 +1108,26 @@ def list_sharadar_codes(codes=None, indicator_types=None):
         params["codes"] = codes
     if indicator_types:
         params["indicator_types"] = indicator_types
-    response = houston.get("/fundamental/sharadar/codes", params=params)
+    response = houston.get("/fundamental/atomicfin/codes", params=params)
 
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_list_sharadar_codes(*args, **kwargs):
-    return json_to_cli(list_sharadar_codes, *args, **kwargs)
+def _cli_list_atomicfin_codes(*args, **kwargs):
+    return json_to_cli(list_atomicfin_codes, *args, **kwargs)
 
-def download_sharadar_fundamentals(domain, filepath_or_buffer=None,
+def download_atomicfin_fundamentals(filepath_or_buffer=None,
                                    start_date=None, end_date=None,
-                                   universes=None, conids=None,
-                                   exclude_universes=None, exclude_conids=None,
+                                   universes=None, sids=None,
+                                   exclude_universes=None, exclude_sids=None,
                                    dimensions=None, fields=None,
                                    output=None):
     """
-    Query Sharadar US Fundamentals from the local database and download
+    Query AtomicFin US Fundamentals from the local database and download
     to file.
-
-    The query results can be returned with IB conids or Sharadar conids, depending
-    on the `domain` param, which can be "main" (= IB) or "sharadar".
-    The `domain` param also determines whether the `universes` and `conids`
-    params, if provided, are interpreted as referring to IB conids or Sharadar
-    conids.
 
     Parameters
     ----------
-    domain : str, required
-        the domain of the conids in which to return the results, as well as
-        the domain which the provided universes or conids, if any, refer to.
-        Domain 'main' corresponds to IB conids. Possible choices:
-        main, sharadar
-
     filepath_or_buffer : str or file-like object
         filepath to write the data to, or file-like object (defaults to stdout)
 
@@ -1154,14 +1143,14 @@ def download_sharadar_fundamentals(domain, filepath_or_buffer=None,
     universes : list of str, optional
         limit to these universes
 
-    conids : list of int, optional
-        limit to these conids
+    sids : list of str, optional
+        limit to these sids
 
     exclude_universes : list of str, optional
         exclude these universes
 
-    exclude_conids : list of int, optional
-        exclude these conids
+    exclude_sids : list of str, optional
+        exclude these sids
 
     dimensions : list of str, optional
         limit to these dimensions. Possible choices: ARQ, ARY, ART, MRQ,
@@ -1170,7 +1159,7 @@ def download_sharadar_fundamentals(domain, filepath_or_buffer=None,
 
     fields : list of str, optional
         only return these fields (pass ['?'] or any invalid fieldname to see
-        available fields, or see `list_sharadar_codes`)
+        available fields, or see `list_atomicfin_codes`)
 
     Returns
     -------
@@ -1179,37 +1168,32 @@ def download_sharadar_fundamentals(domain, filepath_or_buffer=None,
     Examples
     --------
     Query as-reported trailing twelve month (ART) fundamentals for all indicators
-    for a particular IB conid, then load the CSV into Pandas:
+    for a particular sid, then load the CSV into Pandas:
 
-    >>> download_sharadar_fundamentals(domain="main", filepath_or_buffer="aapl_fundamentals.csv",
-                                       conids=265598, dimensions="ART")
+    >>> download_atomicfin_fundamentals(filepath_or_buffer="aapl_fundamentals.csv",
+                                       sids="FIBBG265598", dimensions="ART")
     >>> fundamentals = pd.read_csv("aapl_fundamentals.csv", parse_dates=["REPORTPERIOD", "DATEKEY", "CALENDARDATE"])
 
     Query as-reported quarterly (ARQ) fundamentals for select indicators for a
-    universe defined in the sharadar domain:
+    universe:
 
-    >>> download_sharadar_fundamentals(domain="sharadar", filepath_or_buffer="sharadar_fundamentals.csv",
-                                       universes="sharadar-usa-stk",
+    >>> download_atomicfin_fundamentals(filepath_or_buffer="atomicfin_fundamentals.csv",
+                                       universes="usa-stk",
                                        dimensions="ARQ", fields=["REVENUE", "EPS"])
     """
-    if not domain:
-        raise ValueError("please specify domain")
-
-    params = {
-        "domain": domain
-    }
+    params = {}
     if start_date:
         params["start_date"] = start_date
     if end_date:
         params["end_date"] = end_date
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if exclude_universes:
         params["exclude_universes"] = exclude_universes
-    if exclude_conids:
-        params["exclude_conids"] = exclude_conids
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
     if dimensions:
         params["dimensions"] = dimensions
     if fields:
@@ -1217,17 +1201,17 @@ def download_sharadar_fundamentals(domain, filepath_or_buffer=None,
 
     output = output or "csv"
 
-    if output not in ("csv", "json", "txt"):
+    if output not in ("csv", "json"):
         raise ValueError("Invalid ouput: {0}".format(output))
 
-    response = houston.get("/fundamental/sharadar/sf1.{0}".format(output), params=params,
+    response = houston.get("/fundamental/atomicfin/financials.{0}".format(output), params=params,
                            timeout=60*15)
 
     try:
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "no sharadar fundamentals match the query parameters" in repr(e).lower():
+        if "no AtomicFin fundamentals match the query parameters" in repr(e).lower():
             raise NoFundamentalData(e)
         raise
 
@@ -1235,30 +1219,25 @@ def download_sharadar_fundamentals(domain, filepath_or_buffer=None,
 
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
-def _cli_download_sharadar_fundamentals(*args, **kwargs):
-    return json_to_cli(download_sharadar_fundamentals, *args, **kwargs)
+def _cli_download_atomicfin_fundamentals(*args, **kwargs):
+    return json_to_cli(download_atomicfin_fundamentals, *args, **kwargs)
 
-def get_sharadar_fundamentals_reindexed_like(reindex_like, domain, fields=None,
-                                             dimension="ART"):
+def get_atomicfin_fundamentals_reindexed_like(reindex_like, fields=None,
+                                              dimension="ART"):
     """
     Return a multiindex (Field, Date) DataFrame of point-in-time
-    Sharadar US Fundamentals, reindexed to match the index (dates)
-    and columns (conids) of `reindex_like`. Financial indicators are
+    AtomicFin US Fundamentals, reindexed to match the index (dates)
+    and columns (sids) of `reindex_like`. Financial indicators are
     forward-filled in order to provide the latest reading at any given
-    date. Indicators are indexed to the Sharadar DATEKEY field, i.e. the
+    date. Indicators are indexed to the AtomicFin DATEKEY field, i.e. the
     filing date. DATEKEY is shifted forward 1 day to avoid lookahead bias.
 
     Parameters
     ----------
     reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and conids
+        a DataFrame (usually of prices) with dates for the index and sids
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
-
-    domain : str, required
-        the domain of the conids in `reindex_like`. Pass 'main' if
-        `reindex_like` contains IB conids, pass "sharadar" if it contains
-        Sharadar conids. Possible choices: main, sharadar
 
     fields : list of str
         a list of fields to include in the resulting DataFrame. Defaults to
@@ -1280,25 +1259,24 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, domain, fields=None,
     Examples
     --------
     Query several trailing twelve month indicators using a DataFrame of
-    historical prices from IB:
+    historical prices:
 
     >>> closes = prices.loc["Close"]
-    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes, fields=["EPS", "REVENUE"])
+    >>> fundamentals = get_atomicfin_fundamentals_reindexed_like(closes, fields=["EPS", "REVENUE"])
     >>> eps = fundamentals.loc["EPS"]
     >>> revenue = fundamentals.loc["REVENUE"]
 
-    Query quarterly book value per share using a DataFrame of historical prices
-    from IB:
+    Query quarterly book value per share using a DataFrame of historical prices:
 
     >>> closes = prices.loc["Close"]
-    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes, domain="main",
-                                                                fields=["BVPS"], dimension="ARQ")
+    >>> fundamentals = get_atomicfin_fundamentals_reindexed_like(closes, fields=["BVPS"],
+                                                                 dimension="ARQ")
     >>> bvps = fundamentals.loc["BVPS"]
 
-    Query outstanding shares using a DataFrame of historical prices from Sharadar:
+    Query outstanding shares using a DataFrame of historical prices:
 
     >>> closes = prices.loc["Close"]
-    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes, domain="sharadar",
+    >>> fundamentals = get_atomicfin_fundamentals_reindexed_like(closes,
                                                                 fields=["SHARESWA"])
     >>> shares_out = fundamentals.loc["SHARESWA"]
     """
@@ -1321,7 +1299,7 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, domain, fields=None,
     if not hasattr(reindex_like.index, "date"):
         raise ParameterError("reindex_like must have a DatetimeIndex")
 
-    conids = list(reindex_like.columns)
+    sids = list(reindex_like.columns)
     start_date = reindex_like.index.min().date()
     # Since financial reports are sparse, start well before the reindex_like
     # min date
@@ -1333,8 +1311,8 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, domain, fields=None,
         fields = [fields]
 
     f = six.StringIO()
-    download_sharadar_fundamentals(
-        domain=domain, filepath_or_buffer=f, conids=conids, start_date=start_date, end_date=end_date,
+    download_atomicfin_fundamentals(
+        filepath_or_buffer=f, sids=sids, start_date=start_date, end_date=end_date,
         fields=fields, dimensions=dimension)
     financials = pd.read_csv(
         f, parse_dates=["DATEKEY","REPORTPERIOD"])
@@ -1345,7 +1323,7 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, domain, fields=None,
     # Drop any fields we don't need
     if fields:
         needed_fields = set(fields)
-        needed_fields.update(set(("ConId", "Date")))
+        needed_fields.update(set(("Sid", "Date")))
         unneeded_fields = set(financials.columns) - needed_fields
         if unneeded_fields:
             financials = financials.drop(unneeded_fields, axis=1)
@@ -1368,8 +1346,8 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, domain, fields=None,
     # There might be duplicate DATEKEYs if a company announced
     # reports for several fiscal periods at once. In this case we keep
     # only the last value (i.e. latest fiscal period)
-    financials = financials.drop_duplicates(subset=["ConId", "Date"], keep="last")
-    financials = financials.pivot(index="ConId",columns="Date").T
+    financials = financials.drop_duplicates(subset=["Sid", "Date"], keep="last")
+    financials = financials.pivot(index="Sid",columns="Date").T
     multiidx = pd.MultiIndex.from_product(
         (financials.index.get_level_values(0).unique(), union_date_idx),
         names=["Field", "Date"])
@@ -1397,7 +1375,7 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, domain, fields=None,
 
 def collect_shortable_shares(countries=None):
     """
-    Collect IB shortable shares data and save to database.
+    Collect shortable shares data and save to database.
 
     Data is organized by country and updated every 15 minutes. Historical
     data is available from April 2018.
@@ -1427,7 +1405,7 @@ def _cli_collect_shortable_shares(*args, **kwargs):
 
 def collect_borrow_fees(countries=None):
     """
-    Collect IB borrow fees data and save to database.
+    Collect borrow fees data and save to database.
 
     Data is organized by country and updated every 15 minutes. Historical
     data is available from April 2018.
@@ -1457,8 +1435,8 @@ def _cli_collect_borrow_fees(*args, **kwargs):
 
 def download_shortable_shares(filepath_or_buffer=None, output="csv",
                               start_date=None, end_date=None,
-                              universes=None, conids=None,
-                              exclude_universes=None, exclude_conids=None):
+                              universes=None, sids=None,
+                              exclude_universes=None, exclude_sids=None):
     """
     Query shortable shares from the stockloan database and download to file.
 
@@ -1481,14 +1459,14 @@ def download_shortable_shares(filepath_or_buffer=None, output="csv",
     universes : list of str, optional
         limit to these universes
 
-    conids : list of int, optional
-        limit to these conids
+    sids : list of str, optional
+        limit to these sids
 
     exclude_universes : list of str, optional
         exclude these universes
 
-    exclude_conids : list of int, optional
-        exclude these conids
+    exclude_sids : list of str, optional
+        exclude these sids
 
     Returns
     -------
@@ -1509,12 +1487,12 @@ def download_shortable_shares(filepath_or_buffer=None, output="csv",
         params["end_date"] = end_date
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if exclude_universes:
         params["exclude_universes"] = exclude_universes
-    if exclude_conids:
-        params["exclude_conids"] = exclude_conids
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
 
     output = output or "csv"
 
@@ -1541,8 +1519,8 @@ def _cli_download_shortable_shares(*args, **kwargs):
 
 def download_borrow_fees(filepath_or_buffer=None, output="csv",
                          start_date=None, end_date=None,
-                         universes=None, conids=None,
-                         exclude_universes=None, exclude_conids=None):
+                         universes=None, sids=None,
+                         exclude_universes=None, exclude_sids=None):
     """
     Query borrow fees from the stockloan database and download to file.
 
@@ -1565,14 +1543,14 @@ def download_borrow_fees(filepath_or_buffer=None, output="csv",
     universes : list of str, optional
         limit to these universes
 
-    conids : list of int, optional
-        limit to these conids
+    sids : list of str, optional
+        limit to these sids
 
     exclude_universes : list of str, optional
         exclude these universes
 
-    exclude_conids : list of int, optional
-        exclude these conids
+    exclude_sids : list of str, optional
+        exclude these sids
 
     Returns
     -------
@@ -1593,12 +1571,12 @@ def download_borrow_fees(filepath_or_buffer=None, output="csv",
         params["end_date"] = end_date
     if universes:
         params["universes"] = universes
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if exclude_universes:
         params["exclude_universes"] = exclude_universes
-    if exclude_conids:
-        params["exclude_conids"] = exclude_conids
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
 
     output = output or "csv"
 
@@ -1648,7 +1626,7 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
     if not hasattr(reindex_like.index, "date"):
         raise ParameterError("reindex_like must have a DatetimeIndex")
 
-    conids = list(reindex_like.columns)
+    sids = list(reindex_like.columns)
     start_date = reindex_like.index.min().date()
     # Stockloan data is sparse but batched in monthly files, so start >1-month
     # before the reindex_like min date
@@ -1658,7 +1636,7 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
 
     f = six.StringIO()
     stockloan_func(
-        f, conids=conids, start_date=start_date, end_date=end_date)
+        f, sids=sids, start_date=start_date, end_date=end_date)
     stockloan_data = pd.read_csv(f)
     stockloan_data.loc[:, "Date"] = pd.to_datetime(stockloan_data.Date, utc=True)
 
@@ -1682,9 +1660,9 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
         else:
             # try to infer from component securities
             f = six.StringIO()
-            download_master_file(f, conids=list(stockloan_data.ConId.unique()),
+            download_master_file(f, sids=list(stockloan_data.Sid.unique()),
                                  fields=["Timezone"])
-            security_timezones = pd.read_csv(f, index_col="ConId")
+            security_timezones = pd.read_csv(f, index_col="Sid")
             security_timezones = list(security_timezones.Timezone.unique())
             if len(security_timezones) > 1:
                 raise ParameterError(
@@ -1710,7 +1688,7 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
 
     index_at_time = index_at_time.tz_convert("UTC")
 
-    stockloan_data = stockloan_data.pivot(index="ConId",columns="Date").T
+    stockloan_data = stockloan_data.pivot(index="Sid",columns="Date").T
     stockloan_data = stockloan_data.loc[stockloan_field]
 
     # Create a unioned index of requested times and stockloan data timestamps
@@ -1737,12 +1715,12 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
 def get_shortable_shares_reindexed_like(reindex_like, time=None):
     """
     Return a DataFrame of shortable shares, reindexed to match the index
-    (dates) and columns (conids) of `reindex_like`.
+    (dates) and columns (sids) of `reindex_like`.
 
     Parameters
     ----------
     reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and conids
+        a DataFrame (usually of prices) with dates for the index and sids
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
 
@@ -1799,12 +1777,12 @@ def get_shortable_shares_reindexed_like(reindex_like, time=None):
 def get_borrow_fees_reindexed_like(reindex_like, time=None):
     """
     Return a DataFrame of borrow fees, reindexed to match the index
-    (dates) and columns (conids) of `reindex_like`.
+    (dates) and columns (sids) of `reindex_like`.
 
     Parameters
     ----------
     reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and conids
+        a DataFrame (usually of prices) with dates for the index and sids
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
 
@@ -1847,31 +1825,3 @@ def get_borrow_fees_reindexed_like(reindex_like, time=None):
     return _get_stockloan_data_reindexed_like(
         download_borrow_fees, "FeeRate",
         reindex_like=reindex_like, time=time)
-
-@deprecated_replaced_by(collect_reuters_financials)
-def fetch_reuters_financials(*args, **kwargs):
-    """
-    Collect Reuters financial statements from IB and save to database.
-
-    [DEPRECATED] `fetch_reuters_financials` is deprecated and will be removed
-    in a future release, please use `collect_reuters_financials` instead.
-    """
-    return collect_reuters_financials(*args, **kwargs)
-
-@deprecated_replaced_by("collect-financials", old_name="fetch-financials")
-def _cli_fetch_reuters_financials(*args, **kwargs):
-    return json_to_cli(collect_reuters_financials, *args, **kwargs)
-
-@deprecated_replaced_by(collect_reuters_estimates)
-def fetch_reuters_estimates(*args, **kwargs):
-    """
-    Collect Reuters estimates and actuals from IB and save to database.
-
-    [DEPRECATED] `fetch_reuters_estimates` is deprecated and will be removed
-    in a future release, please use `collect_reuters_estimates` instead.
-    """
-    return collect_reuters_estimates(*args, **kwargs)
-
-@deprecated_replaced_by("collect-estimates", old_name="fetch-estimates")
-def _cli_fetch_reuters_estimates(*args, **kwargs):
-    return json_to_cli(collect_reuters_estimates, *args, **kwargs)
