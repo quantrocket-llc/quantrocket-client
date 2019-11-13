@@ -23,7 +23,7 @@ def download_account_balances(filepath_or_buffer=None, output="csv",
                               latest=False, accounts=None, below=None,
                               fields=None, force_refresh=False):
     """
-    Query IB account balances.
+    Query Interactive Brokers account balances.
 
     Parameters
     ----------
@@ -31,7 +31,7 @@ def download_account_balances(filepath_or_buffer=None, output="csv",
         filepath to write the data to, or file-like object (defaults to stdout)
 
     output : str
-        output format (json, csv, txt, default is csv)
+        output format (json or csv, default is csv)
 
     start_date : str (YYYY-MM-DD), optional
         limit to account balance snapshots taken on or after this date
@@ -54,7 +54,7 @@ def download_account_balances(filepath_or_buffer=None, output="csv",
         available fields)
 
     force_refresh : bool
-        refresh account balances from IB (default is to query the
+        refresh account balances from Interactive Brokers (default is to query the
         database, which is refreshed every minute)
 
     Returns
@@ -87,7 +87,7 @@ def download_account_balances(filepath_or_buffer=None, output="csv",
 
     output = output or "csv"
 
-    if output not in ("csv", "json", "txt"):
+    if output not in ("csv", "json"):
         raise ValueError("Invalid ouput: {0}".format(output))
 
     response = houston.get("/account/balances.{0}".format(output), params=params)
@@ -110,10 +110,10 @@ def _cli_download_account_balances(*args, **kwargs):
 
 def download_account_portfolio(filepath_or_buffer=None, output="csv",
                                accounts=None, sec_types=None,
-                               exchanges=None, conids=None, symbols=None,
+                               exchanges=None, sids=None, symbols=None,
                                include_zero=False, fields=None):
     """
-    Download current IB portfolio.
+    Download current Interactive Brokers portfolio.
 
     Parameters
     ----------
@@ -132,8 +132,8 @@ def download_account_portfolio(filepath_or_buffer=None, output="csv",
     exchanges : list of str, optional
         limit to these exchanges
 
-    conids : list of int, optional
-        limit to these conids
+    sids : list of str, optional
+        limit to these sids
 
     symbols : list of str, optional
         limit to these symbols
@@ -164,8 +164,8 @@ def download_account_portfolio(filepath_or_buffer=None, output="csv",
         params["sec_types"] = sec_types
     if exchanges:
         params["exchanges"] = exchanges
-    if conids:
-        params["conids"] = conids
+    if sids:
+        params["sids"] = sids
     if symbols:
         params["symbols"] = symbols
     if include_zero:
@@ -209,7 +209,7 @@ def download_exchange_rates(filepath_or_buffer=None, output="csv",
         filepath to write the data to, or file-like object (defaults to stdout)
 
     output : str
-        output format (json, csv, txt, default is csv)
+        output format (json, csv, default is csv)
 
     start_date : str (YYYY-MM-DD), optional
         limit to exchange rates on or after this date
@@ -252,7 +252,7 @@ def download_exchange_rates(filepath_or_buffer=None, output="csv",
 
     output = output or "csv"
 
-    if output not in ("csv", "json", "txt"):
+    if output not in ("csv", "json"):
         raise ValueError("Invalid ouput: {0}".format(output))
 
     response = houston.get("/account/rates.{0}".format(output), params=params)

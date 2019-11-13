@@ -21,7 +21,7 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Query IB account balances.
+Query Interactive Brokers account balances.
 
 Examples:
 
@@ -44,7 +44,7 @@ Query historical account balances over a date range:
     """
     parser = _subparsers.add_parser(
         "balance",
-        help="query IB account balances",
+        help="query Interactive Brokers account balances",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
@@ -87,12 +87,6 @@ Query historical account balances over a date range:
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
-    output_format_group.add_argument(
-        "-p", "--pretty",
-        action="store_const",
-        const="txt",
-        dest="output",
-        help="format output in human-readable format (default is CSV)")
     outputs.add_argument(
         "-f", "--fields",
         metavar="FIELD",
@@ -102,12 +96,12 @@ Query historical account balances over a date range:
     parser.add_argument(
         "--force-refresh",
         action="store_true",
-        help="refresh account balances from IB (default is to query the "
+        help="refresh account balances from Interactive Brokers (default is to query the "
         "database, which is refreshed every minute)")
     parser.set_defaults(func="quantrocket.account._cli_download_account_balances")
 
     examples = """
-Download current IB portfolio.
+Download current Interactive Brokers portfolio.
 
 Examples:
 
@@ -121,7 +115,7 @@ Download current portfolio for a particular account and save to file:
     """
     parser = _subparsers.add_parser(
         "portfolio",
-        help="download current IB portfolio",
+        help="download current Interactive Brokers portfolio",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
@@ -141,10 +135,10 @@ Download current portfolio for a particular account and save to file:
         metavar="EXCHANGE",
         help="limit to these exchanges")
     filters.add_argument(
-        "-i", "--conids",
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "-s", "--symbols",
         nargs="*",
@@ -229,10 +223,4 @@ Query the latest exchange rates.
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
-    output_format_group.add_argument(
-        "-p", "--pretty",
-        action="store_const",
-        const="txt",
-        dest="output",
-        help="format output in human-readable format (default is CSV)")
     parser.set_defaults(func="quantrocket.account._cli_download_exchange_rates")
