@@ -224,27 +224,3 @@ Optimize all blotter databases:
         metavar="DATABASE_CODE",
         help="limit to these codes")
     parser.set_defaults(func="quantrocket.db._cli_optimize_databases")
-
-    examples = """
-[DEPRECATED] Download a database from the db service and write to a local file.
-
-Examples:
-
-Download a database called quantrocket.history.nyse.sqlite:
-
-    quantrocket db get quantrocket.history.nyse.sqlite /path/to/localdir/quantrocket.history.nyse.sqlite
-    """
-    parser = _subparsers.add_parser(
-        "get",
-        help="[DEPRECATED] download a database from the db service and write to a local file",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "database",
-        metavar="DATABASE",
-        help="the filename of the database (as returned by the list command)")
-    parser.add_argument(
-        "outfile",
-        metavar="OUTFILE",
-        help="filename to write the database to")
-    parser.set_defaults(func="quantrocket.db._cli_download_database")

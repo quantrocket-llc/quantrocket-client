@@ -97,42 +97,6 @@ def _cli_list_databases(*args, **kwargs):
         kwargs["codes"] = service_and_codes[1:]
     return json_to_cli(list_databases, *args, **kwargs)
 
-def download_database(database, outfile):
-    """
-    [DEPRECATED] Download a database from the db service and write to a local file.
-
-    This function is deprecated. Please use `docker cp` to download databases.
-
-    Parameters
-    ----------
-    database : str, required
-        the filename of the database (as returned by the list_databases)
-
-    outfile: str, required
-        filename to write the database to
-
-    Returns
-    -------
-    None
-    """
-    import warnings
-    # DeprecationWarning is ignored by default but we want the user
-    # to see it
-    warnings.simplefilter("always", DeprecationWarning)
-    warnings.warn(
-        "this function is deprecated and will be removed in a "
-        "future release, please use `docker cp` to download databases",
-        DeprecationWarning)
-    response = houston.get("/db/databases/{0}".format(database), stream=True)
-    houston.raise_for_status_with_json(response)
-    with open(outfile, "wb") as f:
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
-
-def _cli_download_database(*args, **kwargs):
-    return json_to_cli(download_database, *args, **kwargs)
-
 def get_s3_config():
     """
     Return the current S3 configuration, if any.
