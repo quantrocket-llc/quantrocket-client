@@ -178,7 +178,7 @@ def read_moonshot_csv(filepath_or_buffer):
     -------
     DataFrame
         a multi-index (Field, Date[, Time]) DataFrame of backtest
-        results, with conids or strategy codes as columns
+        results, with sids or strategy codes as columns
 
     Examples
     --------
