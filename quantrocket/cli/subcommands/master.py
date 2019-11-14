@@ -290,6 +290,12 @@ terminal display:
         action="store_true",
         default=False,
         help="exclude backmonth and expired futures contracts")
+    filters.add_argument(
+        "-v", "--vendors",
+        nargs="*",
+        metavar="VENDOR",
+        choices=["atomicfin", "edi", "ibkr"],
+        help="limit to these vendors. Possible choices: %(choices)s")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",

@@ -349,7 +349,7 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
                          currencies=None, universes=None, symbols=None, sids=None,
                          exclude_universes=None, exclude_sids=None,
                          exclude_delisted=False, exclude_expired=False,
-                         frontmonth=False, fields=None):
+                         frontmonth=False, vendors=None, fields=None):
     """
     Query security details from the securities master database and download to file.
 
@@ -394,6 +394,9 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
 
     frontmonth : bool
         exclude backmonth and expired futures contracts (default False)
+
+    vendors : list of str, optional
+        limit to these vendors. Possible choices: atomicfin, edi, ibkr
 
     fields : list of str, optional
         Return specific fields. By default a core set of fields is
@@ -451,6 +454,8 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         params["exclude_expired"] = exclude_expired
     if frontmonth:
         params["frontmonth"] = frontmonth
+    if vendors:
+        params["vendors"] = vendors
     if fields:
         params["fields"] = fields
 
