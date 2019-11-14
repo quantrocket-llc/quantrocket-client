@@ -38,7 +38,7 @@ Place orders from a JSON file.
 
 Place an order by specifying the order parameters on the command line:
 
-    quantrocket blotter order --params ConId:123456 Action:BUY Exchange:SMART TotalQuantity:100 OrderType:MKT Tif:Day Account:DU12345 OrderRef:my-strategy
+    quantrocket blotter order --params Sid:FIBBG123456 Action:BUY Exchange:SMART TotalQuantity:100 OrderType:MKT Tif:Day Account:DU12345 OrderRef:my-strategy
     """
     parser = _subparsers.add_parser(
         "order",
@@ -62,7 +62,7 @@ Place an order by specifying the order parameters on the command line:
     parser.set_defaults(func="quantrocket.blotter._cli_place_orders")
 
     examples = """
-Cancel one or more orders by order ID, conid, or order ref.
+Cancel one or more orders by order ID, sid, or order ref.
 
 Examples:
 
@@ -70,9 +70,9 @@ Cancel orders by order ID:
 
     quantrocket blotter cancel -d 6002:45 6001:46
 
-Cancel orders by conid:
+Cancel orders by sid:
 
-    quantrocket blotter cancel -i 123456
+    quantrocket blotter cancel -i FIBBG123456
 
 Cancel orders by order ref:
 
@@ -84,7 +84,7 @@ Cancel all open orders:
     """
     parser = _subparsers.add_parser(
         "cancel",
-        help="cancel one or more orders by order ID, conid, or order ref",
+        help="cancel one or more orders by order ID, sid, or order ref",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -93,11 +93,10 @@ Cancel all open orders:
         nargs="*",
         help="cancel these order IDs")
     parser.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="cancel orders for these conids")
+        metavar="SID",
+        help="cancel orders for these sids")
     parser.add_argument(
         "-r", "--order-refs",
         nargs="*",
@@ -133,9 +132,9 @@ Download order status with extra fields and display as YAML:
 
     quantrocket blotter status --open --fields Exchange LmtPrice --json | json2yaml
 
-Download order status of open orders by conid:
+Download order status of open orders by sid:
 
-    quantrocket blotter status -i 123456 --open
+    quantrocket blotter status -i FIBBG123456 --open
 
 Download order status of open orders by order ref:
 
@@ -153,11 +152,10 @@ Download order status of open orders by order ref:
         nargs="*",
         help="limit to these order IDs")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to orders for these conids")
+        metavar="SID",
+        help="limit to orders for these sids")
     filters.add_argument(
         "-r", "--order-refs",
         nargs="*",
@@ -206,13 +204,13 @@ Query current positions.
 
 There are two ways to view positions: blotter view (default) and broker view.
 
-The default "blotter view" returns positions by account, conid, and order ref. Positions
+The default "blotter view" returns positions by account, sid, and order ref. Positions
 are tracked based on execution records saved to the blotter database.
 
-"Broker view" (using the `--broker` option) returns positions by account and conid (but
-not order ref) as reported directly by IB. Broker view is more authoritative but less
-informative than blotter view. Broker view is typically used to verify the accuracy
-of blotter view.
+"Broker view" (using the `--broker` option) returns positions by account and sid (but
+not order ref) as reported directly by the broker. Broker view is more authoritative
+but less informative than blotter view. Broker view is typically used to verify the
+accuracy of blotter view.
 
 Examples:
 
@@ -239,11 +237,10 @@ Query positions using broker view:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "-r", "--order-refs",
         nargs="*",
@@ -265,8 +262,8 @@ Query positions using broker view:
         action="store_const",
         dest="view",
         const="broker",
-        help="return 'broker' view of positions (by account and conid) instead "
-        "of default 'blotter' view (by account, conid, and order ref)")
+        help="return 'broker' view of positions (by account and sid) instead "
+        "of default 'blotter' view (by account, sid, and order ref)")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
@@ -303,11 +300,10 @@ Generate orders and also place them:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "-r", "--order-refs",
         nargs="*",
@@ -355,11 +351,10 @@ Get a CSV of all executions:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "-r", "--order-refs",
         nargs="*",
@@ -390,7 +385,7 @@ Get a CSV of all executions:
 Query trading performance and return a PDF tearsheet or CSV of results.
 
 Trading performance is broken down by account and order ref and optionally by
-conid.
+sid.
 
 Examples:
 
@@ -398,7 +393,7 @@ Get a Moonchart PDF of all trading performance PNL:
 
     quantrocket blotter pnl -o pnl.pdf --pdf
 
-Get a PDF for a single account and order ref, broken down by conid:
+Get a PDF for a single account and order ref, broken down by sid:
 
     quantrocket blotter pnl --accounts U12345 --order-refs mystrategy1 --details --pdf -o pnl_details.pdf
 
@@ -413,11 +408,10 @@ Get a CSV of performance results for a particular date range:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
-        "-i", "--conids",
-        type=int,
+        "-i", "--sids",
         nargs="*",
-        metavar="CONID",
-        help="limit to these conids")
+        metavar="SID",
+        help="limit to these sids")
     filters.add_argument(
         "-r", "--order-refs",
         nargs="*",
