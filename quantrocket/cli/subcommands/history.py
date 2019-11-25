@@ -431,11 +431,6 @@ Download a CSV of all historical market data since 2015 from a database called
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields)")
     outputs.add_argument(
-        "--tz-naive",
-        action="store_true",
-        help="return timestamps without UTC offsets: 2018-02-01T10:00:00 (default is to "
-        "include UTC offsets: 2018-02-01T10:00:00-4000)")
-    outputs.add_argument(
         "-c", "--cont-fut",
         choices=["concat"],
         metavar="HOW",

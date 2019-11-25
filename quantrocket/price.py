@@ -249,7 +249,6 @@ def get_prices(codes, start_date=None, end_date=None,
                 times=times,
                 cont_fut=cont_fut,
                 fields=list(fields_for_db),
-                tz_naive=False
             )
 
             tmp_filepath = "{dir}{sep}history.{db}.{pid}.{time}.csv".format(
