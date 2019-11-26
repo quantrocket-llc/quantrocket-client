@@ -70,7 +70,7 @@ market sector and a detailed security type, as well as exchange-level,
 country-level, and share class-level FIGI identifiers.
 
 The collected data fields show up in the master file under the
-prefix FIGI_.
+prefix figi_.
 
 This command does not directly query the OpenFIGI API but rather
 downloads a dump of all FIGIs which QuantRocket has previously
@@ -215,7 +215,7 @@ the exchanges:
 Download NYSE and NASDAQ securities to file, using IBKR exchange codes
 to specify the exchanges, and include all IBKR fields:
 
-    quantrocket master get --exchanges NYSE NASDAQ -f 'IBKR*' -o securities.csv
+    quantrocket master get --exchanges NYSE NASDAQ -f 'ibkr*' -o securities.csv
 
 Download a CSV of all ARCA ETFs and use it to create a universe called
 "arca-etf":
@@ -317,8 +317,8 @@ terminal display:
         'returned, but additional vendor-specific fields are also available. '
         'To return non-core fields, you can reference them by name, or pass "*" '
         'to return all available fields. To return all fields for a specific '
-        'vendor, pass the vendor prefix followed by *, for example "IBKR*" '
-        'for all IBKR fields. Pass "?*" (or any invalid vendor prefix plus *) '
+        'vendor, pass the vendor prefix followed by *, for example "edi*" '
+        'for all EDI fields. Pass "?*" (or any invalid vendor prefix plus *) '
         'to see available vendor prefixes. Pass "?" or any invalid fieldname '
         'to see all available fields.')
     parser.set_defaults(func="quantrocket.master._cli_download_master_file")
@@ -372,7 +372,7 @@ Asynchronously generate a diff for all securities in a universe called
 Asynchronously generate a diff for all securities in a universe called
 "italy-stk", looking only for sector or industry changes:
 
-    quantrocket master diff-ibkr -u "italy-stk" --fields IBKR_Sector IBKR_Industry
+    quantrocket master diff-ibkr -u "italy-stk" --fields ibkr_Sector ibkr_Industry
 
 Synchronously get a diff for specific securities by sid:
 
@@ -413,7 +413,7 @@ or that are now associated with the PINK exchange:
         "-f", "--fields",
         nargs="*",
         metavar="FIELD",
-        help="only diff these fields (field name should start with IBKR_)")
+        help="only diff these fields (field name should start with ibkr_)")
     parser.add_argument(
         "--delist-missing",
         action="store_true",

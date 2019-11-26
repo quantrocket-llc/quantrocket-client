@@ -114,7 +114,7 @@ def collect_figi_listings():
     country-level, and share class-level FIGI identifiers.
 
     The collected data fields show up in the master file under the
-    prefix FIGI_.
+    prefix figi_.
 
     This function does not directly query the OpenFIGI API but rather
     downloads a dump of all FIGIs which QuantRocket has previously
@@ -291,7 +291,7 @@ def diff_ibkr_securities(universes=None, sids=None, infilepath_or_buffer=None,
         limit to the sids in this file (specify '-' to read file from stdin)
 
     fields : list of str, optional
-        only diff these fields (field name should start with IBKR_)
+        only diff these fields (field name should start with ibkr_)
 
     delist_missing : bool
         auto-delist securities that are no longer available from IB
@@ -403,8 +403,8 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         returned, but additional vendor-specific fields are also available.
         To return non-core fields, you can reference them by name, or pass "*"
         to return all available fields. To return all fields for a specific
-        vendor, pass the vendor prefix followed by *, for example "IBKR*"
-        for all IBKR fields. Pass "?*" (or any invalid vendor prefix plus *)
+        vendor, pass the vendor prefix followed by *, for example "edi*"
+        for all EDI fields. Pass "?*" (or any invalid vendor prefix plus *)
         to see available vendor prefixes. Pass "?" or any invalid fieldname
         to see all available fields.
 
@@ -422,7 +422,7 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
     Download NYSE and NASDAQ securities to file, using IBKR exchange codes
     to specify the exchanges, and include all IBKR fields:
 
-    >>> download_master_file("securities.csv", exchanges=["NYSE","NASDAQ"], fields="IBKR*")
+    >>> download_master_file("securities.csv", exchanges=["NYSE","NASDAQ"], fields="ibkr*")
 
     Download securities for a particular universe to in-memory file, including
     all possible fields, and load the CSV into pandas.
@@ -495,7 +495,7 @@ def get_securities_reindexed_like(reindex_like, fields=None):
         are also available. To return non-core fields, you can reference them
         by name, or pass "*" to return all available fields. To return all
         fields for a specific vendor, pass the vendor prefix followed by *,
-        for example "IBKR*" for all IBKR fields. Pass "?*" (or any invalid
+        for example "edi*" for all EDI fields. Pass "?*" (or any invalid
         vendor prefix plus *) to see available vendor prefixes. Pass "?" or
         any invalid fieldname to see all available fields.
 
@@ -530,7 +530,7 @@ def get_securities_reindexed_like(reindex_like, fields=None):
 
     for col in securities.columns:
         this_col = securities[col]
-        if col in ("Delisted", "Etf", "IBKR_Etf", "IBKR_Delisted"):
+        if col in ("Delisted", "Etf", "ibkr_Etf", "ibkr_Delisted"):
             this_col = this_col.astype(bool)
         all_master_fields[col] = reindex_like.apply(lambda x: this_col, axis=1)
 
@@ -594,7 +594,7 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
 
     f = six.StringIO()
     download_master_file(f, sids=list(reindex_like.columns),
-                         fields=["RolloverDate","IBKR_UnderConId","SecType"])
+                         fields=["RolloverDate","ibkr_UnderConId","SecType"])
     rollover_dates = pd.read_csv(f, parse_dates=["RolloverDate"])
     rollover_dates = rollover_dates[rollover_dates.SecType=="FUT"].drop("SecType", axis=1)
 
@@ -609,7 +609,7 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
                     reindex_like_dt_index.max()])
 
     # Stack sids by underlying (1 column per underlying)
-    rollover_dates = rollover_dates.set_index(["RolloverDate","IBKR_UnderConId"]).Sid.unstack()
+    rollover_dates = rollover_dates.set_index(["RolloverDate","ibkr_UnderConId"]).Sid.unstack()
 
     contract_nums = None
 
@@ -627,7 +627,7 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
 
         # Stack to Series of Date, nth sid
         _rollover_dates = _rollover_dates.stack()
-        _rollover_dates.index = _rollover_dates.index.droplevel("IBKR_UnderConId")
+        _rollover_dates.index = _rollover_dates.index.droplevel("ibkr_UnderConId")
         _rollover_dates.index.name = "Date"
 
         # Pivot Series to DataFrame
