@@ -50,17 +50,26 @@ def list_ibkr_exchanges(regions=None, sec_types=None):
 def _cli_list_ibkr_exchanges(*args, **kwargs):
     return json_to_cli(list_ibkr_exchanges, *args, **kwargs)
 
-def collect_atomicfin_listings():
+def collect_atomicfin_listings(countries="US"):
     """
     Collect securities listings from AtomicFin and store in securities master
     database.
+
+    Parameters
+    ----------
+    countries : list of str, required
+        countries to collect listings for. Possible choices: US, FREE
 
     Returns
     -------
     dict
         status message
     """
-    response = houston.post("/master/securities/atomicfin")
+    params = {}
+    if countries:
+        params["countries"] = countries
+
+    response = houston.post("/master/securities/atomicfin", params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
 
@@ -74,9 +83,8 @@ def collect_edi_listings(exchanges=None):
 
     Parameters
     ----------
-    exchanges : list or str
-        limit to these exchanges (identified by MICs). By default
-        collects listings for all permitted exchanges.
+    exchanges : list or str, required
+        collect listings for these exchanges (identified by MICs)
 
     Returns
     -------
@@ -530,7 +538,11 @@ def get_securities_reindexed_like(reindex_like, fields=None):
 
     for col in securities.columns:
         this_col = securities[col]
-        if col in ("Delisted", "Etf", "ibkr_Etf", "ibkr_Delisted"):
+        if col in (
+            "Delisted", "Etf",
+            "ibkr_Etf", "ibkr_Delisted",
+            "atomicfin_Delisted"
+            ):
             this_col = this_col.astype(bool)
         all_master_fields[col] = reindex_like.apply(lambda x: this_col, axis=1)
 

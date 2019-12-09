@@ -25,13 +25,20 @@ database.
 
 Examples:
 
-    quantrocket master collect-atomicfin
+    quantrocket master collect-atomicfin --countries US
     """
     parser = _subparsers.add_parser(
         "collect-atomicfin",
         help="collect securities listings from AtomicFin and store in securities master database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-c", "--countries",
+        nargs="*",
+        metavar="COUNTRY",
+        default=["US"],
+        choices=["US", "FREE"],
+        help="collect listings for these countries. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.master._cli_collect_atomicfin_listings")
 
     examples = """
@@ -57,8 +64,7 @@ Collect all Toronto Stock Exchange stock listings:
         "-e", "--exchanges",
         nargs="*",
         metavar="MIC",
-        help="limit to these exchanges (identified by MICs). By default "
-        "collects listings for all permitted exchanges.")
+        help="collect listings for these exchanges (identified by MICs)")
     parser.set_defaults(func="quantrocket.master._cli_collect_edi_listings")
 
     examples = """
