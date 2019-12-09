@@ -24,9 +24,9 @@ Create a new database for collecting historical data from AtomicFin.
 
 Examples:
 
-Create a database for AtomicFin data and call it "atomicfin-1d":
+Create a database for AtomicFin US data and call it "usa-atomicfin-1d":
 
-    quantrocket history create-atomicfin-db atomicfin-1d
+    quantrocket history create-atomicfin-db usa-atomicfin-1d --country US
 """
     parser = _subparsers.add_parser(
         "create-atomicfin-db",
@@ -37,6 +37,11 @@ Create a database for AtomicFin data and call it "atomicfin-1d":
         "code",
         metavar="CODE",
         help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
+    parser.add_argument(
+        "-c", "--country",
+        metavar="COUNTRY",
+        choices=["US","FREE"],
+        help="country to collect listings for. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.history._cli_create_atomicfin_db")
 
     examples = """

@@ -24,7 +24,7 @@ from quantrocket.exceptions import NoHistoricalData
 
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", "/tmp")
 
-def create_atomicfin_db(code):
+def create_atomicfin_db(code, country="US"):
     """
     Create a new database for collecting historical data from AtomicFin.
 
@@ -33,6 +33,9 @@ def create_atomicfin_db(code):
     code : str, required
         the code to assign to the database (lowercase alphanumerics and hyphens only)
 
+    country : str, required
+        country to collect listings for. Possible choices: US, FREE
+
     Returns
     -------
     dict
@@ -40,6 +43,9 @@ def create_atomicfin_db(code):
 
     """
     params = {"vendor": "atomicfin"}
+    if country:
+        params["country"] = country
+
     response = houston.put("/history/databases/{0}".format(code), params=params)
 
     houston.raise_for_status_with_json(response)
