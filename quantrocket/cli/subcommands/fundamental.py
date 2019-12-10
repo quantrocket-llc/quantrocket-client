@@ -20,7 +20,7 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Collect AtomicFin US Fundamentals and save to database.
+Collect fundamental data from AtomicFin and save to database.
 
 Examples:
 
@@ -28,120 +28,110 @@ Examples:
     """
     parser = _subparsers.add_parser(
         "collect-atomicfin-fundamentals",
-        help="collect AtomicFin US Fundamentals and save to database",
+        help="collect fundamental data from AtomicFin and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-c", "--country",
+        metavar="COUNTRY",
+        choices=["US","FREE"],
+        default="US",
+        help="country to collect fundamentals for. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_atomicfin_fundamentals")
 
     examples = """
-List available indicators from the AtomicFin US Fundamentals database.
+Collect insider holdings data from AtomicFin and save to database.
 
 Examples:
 
-List all AtomicFin codes:
-
-    quantrocket fundamental atomicfin-codes
-
-List all codes from the income statement:
-
-    quantrocket fundamental atomicfin-codes -t 'Income Statement'
-
+    quantrocket fundamental collect-atomicfin-insiders
     """
     parser = _subparsers.add_parser(
-        "atomicfin-codes",
-        help="list available indicators from the AtomicFin US Fundamentals "
-        "database",
+        "collect-atomicfin-insiders",
+        help="collect insider holdings data from AtomicFin and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "-c", "--codes",
-        nargs="*",
-        metavar="CODE",
-        help="limit to these indicator codes")
-    parser.add_argument(
-        "-t", "--indicator-types",
-        nargs="*",
-        metavar="INDICATOR_TYPE",
-        choices=["Income Statement", "Cash Flow Statement", "Balance Sheet",
-                 "Metrics", "Entity"],
-        help="limit to these indicator types. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.fundamental._cli_list_atomicfin_codes")
+        "-c", "--country",
+        metavar="COUNTRY",
+        choices=["US","FREE"],
+        default="US",
+        help="country to collect insider holdings data for. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_atomicfin_insiders")
 
     examples = """
-Query AtomicFin US Fundamentals from the local database and download to file.
+Collect institutional investor data from AtomicFin and save to database.
 
 Examples:
 
-Query as-reported trailing twelve month (ART) fundamentals for all indicators for
-a particular sid:
+Collect institutional investor data aggregated by security:
 
-    quantrocket fundamental atomicfin-fundamentals -i FIBBG12345 --dimensions ART -o aapl_fundamentals.csv
+    quantrocket fundamental collect-atomicfin-institutions
 
-Query as-reported quarterly (ARQ) fundamentals for select indicators for a universe:
+Collect detailed institutional investor data (not aggregated by security):
 
-    quantrocket fundamental atomicfin-fundamentals -u usa-stk --dimensions ARQ -f REVENUE EPS -o atomicfin_fundamentals.csv
+    quantrocket fundamental collect-atomicfin-institutions -d
     """
     parser = _subparsers.add_parser(
-        "atomicfin-fundamentals",
-        help="query AtomicFin US Fundamentals from the local database and download to file",
+        "collect-atomicfin-institutions",
+        help="collect institutional investor data from AtomicFin and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    filters = parser.add_argument_group("filtering options")
-    filters.add_argument(
-        "-s", "--start-date",
-        metavar="YYYY-MM-DD",
-        help="limit to fundamentals on or after this fiscal period end date")
-    filters.add_argument(
-        "-e", "--end-date",
-        metavar="YYYY-MM-DD",
-        help="limit to fundamentals on or before this fiscal period end date")
-    filters.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes")
-    filters.add_argument(
-        "-i", "--sids",
-        nargs="*",
-        metavar="SID",
-        help="limit to these sids")
-    filters.add_argument(
-        "--exclude-universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="exclude these universes")
-    filters.add_argument(
-        "--exclude-sids",
-        nargs="*",
-        metavar="SID",
-        help="exclude these sids")
-    filters.add_argument(
-        "-m", "--dimensions",
-        nargs="*",
-        choices=["ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"],
-        help="limit to these dimensions. Possible choices: %(choices)s. "
-        "AR=As Reported, MR=Most Recent Reported, Q=Quarterly, Y=Annual, "
-        "T=Trailing Twelve Month.")
-    outputs = parser.add_argument_group("output options")
-    outputs.add_argument(
-        "-o", "--outfile",
-        metavar="OUTFILE",
-        dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
-    output_format_group = outputs.add_mutually_exclusive_group()
-    output_format_group.add_argument(
-        "-j", "--json",
-        action="store_const",
-        const="json",
-        dest="output",
-        help="format output as JSON (default is CSV)")
-    outputs.add_argument(
-        "-f", "--fields",
-        metavar="FIELD",
-        nargs="*",
-        help="only return these fields (pass '?' or any invalid fieldname to see "
-        "available fields, or see `quantrocket fundamental atomicfin-codes`))")
-    parser.set_defaults(func="quantrocket.fundamental._cli_download_atomicfin_fundamentals")
+    parser.add_argument(
+        "-c", "--country",
+        metavar="COUNTRY",
+        choices=["US","FREE"],
+        default="US",
+        help="country to collect institutional investor data for. Possible choices: %(choices)s")
+    parser.add_argument(
+        "-d", "--detail",
+        action="store_true",
+        help="collect detailed investor data (separate record per "
+        "investor per security per quarter). If omitted, "
+        "collect data aggregated by security (separate record per "
+        "security per quarter)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_atomicfin_institutions")
+
+    examples = """
+Collect SEC Form 8-K events from AtomicFin and save to database.
+
+Examples:
+
+    quantrocket fundamental collect-atomicfin-sec8
+    """
+    parser = _subparsers.add_parser(
+        "collect-atomicfin-sec8",
+        help="collect SEC Form 8-K events from AtomicFin and save to database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-c", "--country",
+        metavar="COUNTRY",
+        choices=["US","FREE"],
+        default="US",
+        help="country to collect events data for. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_atomicfin_sec8")
+
+    examples = """
+Collect historical S&P 500 index constituents from AtomicFin and save to
+database.
+
+Examples:
+
+    quantrocket fundamental collect-atomicfin-sp500
+    """
+    parser = _subparsers.add_parser(
+        "collect-atomicfin-sp500",
+        help="collect historical S&P 500 index constituents from AtomicFin and save to database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-c", "--country",
+        metavar="COUNTRY",
+        choices=["US","FREE"],
+        default="US",
+        help="country to collect S&P 500 constituents data for. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_atomicfin_sp500")
 
     examples = """
 Collect Reuters financial statements from Interactive Brokers and save to
@@ -219,6 +209,452 @@ Collect Reuters estimates and actuals for a particular security:
         "recently (default is to skip securities that were updated in the last "
         "12 hours)")
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_reuters_estimates")
+
+    examples = """
+Collect Wall Street Horizon upcoming earnings announcement dates from Interactive
+Brokers and save to database.
+
+Examples:
+
+Collect upcoming earnings dates for a universe of US stocks:
+
+    quantrocket fundamental collect-wsh --universes 'usa-stk'
+
+Collect upcoming earnings dates for a particular security:
+
+    quantrocket fundamental collect-wsh --sids FIBBG123456
+    """
+    parser = _subparsers.add_parser(
+        "collect-wsh",
+        help=("collect Wall Street Horizon upcoming earnings announcement dates from "
+        "Interactive Brokers and save to database"),
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes (must provide universes, sids, or both)")
+    parser.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids (must provide universes, sids, or both)")
+    parser.add_argument(
+        "-f", "--force",
+        action="store_true",
+        help="collect earnings dates for all securities even if they were collected "
+        "recently (default is to skip securities that were updated in the last "
+        "12 hours)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_wsh_earnings_dates")
+
+    examples = """
+Collect shortable shares data and save to database.
+
+Data is organized by country and updated every 15 minutes. Historical
+data is available from April 15, 2018.
+
+Examples:
+
+Collect shortable shares data for US stocks:
+
+    quantrocket fundamental collect-shortshares --countries usa
+
+Collect shortable shares data for all stocks:
+
+    quantrocket fundamental collect-shortshares
+    """
+    parser = _subparsers.add_parser(
+        "collect-shortshares",
+        help="collect shortable shares data and save to database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-c", "--countries",
+        nargs="*",
+        metavar="COUNTRY",
+        help="limit to these countries (pass '?' or any invalid country to see "
+        "available countries)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_shortable_shares")
+
+    examples = """
+Collect borrow fees data and save to database.
+
+Data is organized by country and updated every 15 minutes. Historical
+data is available from April 15, 2018.
+
+Examples:
+
+Collect borrow fees for US stocks:
+
+    quantrocket fundamental collect-shortfees --countries usa
+
+Collect borrow fees for all stocks:
+
+    quantrocket fundamental collect-shortfees
+    """
+    parser = _subparsers.add_parser(
+        "collect-shortfees",
+        help="collect borrow fees data and save to database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-c", "--countries",
+        nargs="*",
+        metavar="COUNTRY",
+        help="limit to these countries (pass '?' or any invalid country to see "
+        "available countries)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_borrow_fees")
+
+    examples = """
+Query AtomicFin Fundamentals from the local database and download to file.
+
+Examples:
+
+Query as-reported trailing twelve month (ART) fundamentals for all indicators for
+a particular sid:
+
+    quantrocket fundamental atomicfin-fundamentals -i FIBBG12345 --dimensions ART -o aapl_fundamentals.csv
+
+Query as-reported quarterly (ARQ) fundamentals for select indicators for a universe:
+
+    quantrocket fundamental atomicfin-fundamentals -u usa-stk --dimensions ARQ -f REVENUE EPS -o atomicfin_fundamentals.csv
+    """
+    parser = _subparsers.add_parser(
+        "atomicfin-fundamentals",
+        help="query AtomicFin Fundamentals from the local database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to fundamentals on or after this fiscal period end date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to fundamentals on or before this fiscal period end date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    filters.add_argument(
+        "-m", "--dimensions",
+        nargs="*",
+        choices=["ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"],
+        help="limit to these dimensions. Possible choices: %(choices)s. "
+        "AR=As Reported, MR=Most Recent Reported, Q=Quarterly, Y=Annual, "
+        "T=Trailing Twelve Month.")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields))")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_atomicfin_fundamentals")
+
+    examples = """
+Query AtomicFin insider holdings data from the local database and download
+to file.
+
+Examples:
+
+Query insider holdings data for a particular sid:
+
+    quantrocket fundamental atomicfin-insiders -i FIBBG000B9XRY4 -o aapl_insiders.csv
+    """
+    parser = _subparsers.add_parser(
+        "atomicfin-insiders",
+        help="query AtomicFin insider holdings data from the local database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to data on or after this filing date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to data on or before this filing date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_atomicfin_insiders")
+
+    examples = """
+Query AtomicFin institutional investor data from the local database and
+download to file.
+
+Examples:
+
+Query institutional investor data aggregated by security:
+
+    quantrocket fundamental atomicfin-institutions -u usa-stk -s 2019-01-01 -o institutions.csv
+    """
+    parser = _subparsers.add_parser(
+        "atomicfin-institutions",
+        help="query AtomicFin institutional investor data from the local database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to data on or after this quarter end date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to data on or before this quarter end date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
+    outputs.add_argument(
+        "-d", "--detail",
+        action="store_true",
+        help="query detailed investor data (separate record per "
+        "investor per security per quarter). If omitted, "
+        "query data aggregated by security (separate record per "
+        "security per quarter)"
+    )
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_atomicfin_institutions")
+
+    examples = """
+Query AtomicFin SEC Form 8-K events data from the local database and download
+to file.
+
+Examples:
+
+Query event code 13 (Bankruptcy) for a universe of securities:
+
+    quantrocket fundamental atomicfin-sec8 -u usa-stk --event-codes 13 -o bankruptcies.csv
+    """
+    parser = _subparsers.add_parser(
+        "atomicfin-sec8",
+        help="query AtomicFin SEC Form 8-K events data from the local database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to data on or after this filing date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to data on or before this filing date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    filters.add_argument(
+        "-c", "--event-codes",
+        nargs="*",
+        type=int,
+        metavar="INT",
+        help="limit to these event codes")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_atomicfin_sec8")
+
+    examples = """
+Query AtomicFin S&P 500 index changes (additions and removals) from the
+local database and download to file.
+
+Examples:
+
+Query S&P 500 index changes since 2010:
+
+    quantrocket fundamental atomicfin-sp500 -s 2010-01-01 -o sp500_changes.csv
+    """
+    parser = _subparsers.add_parser(
+        "atomicfin-sp500",
+        help="query AtomicFin S&P 500 index changes (additions and removals) from the local database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to index changes on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to index changes on or before this date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_atomicfin_sp500")
 
     examples = """
 List available Chart of Account (COA) codes from the Reuters financials database
@@ -444,44 +880,6 @@ Query EPS estimates and actuals for a universe of Australian stocks:
     parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_estimates")
 
     examples = """
-Collect Wall Street Horizon upcoming earnings announcement dates from Interactive
-Brokers and save to database.
-
-Examples:
-
-Collect upcoming earnings dates for a universe of US stocks:
-
-    quantrocket fundamental collect-wsh --universes 'usa-stk'
-
-Collect upcoming earnings dates for a particular security:
-
-    quantrocket fundamental collect-wsh --sids FIBBG123456
-    """
-    parser = _subparsers.add_parser(
-        "collect-wsh",
-        help=("collect Wall Street Horizon upcoming earnings announcement dates from "
-        "Interactive Brokers and save to database"),
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes (must provide universes, sids, or both)")
-    parser.add_argument(
-        "-i", "--sids",
-        nargs="*",
-        metavar="SID",
-        help="limit to these sids (must provide universes, sids, or both)")
-    parser.add_argument(
-        "-f", "--force",
-        action="store_true",
-        help="collect earnings dates for all securities even if they were collected "
-        "recently (default is to skip securities that were updated in the last "
-        "12 hours)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_wsh_earnings_dates")
-
-    examples = """
 Query earnings announcement dates from the Wall Street Horizon
 announcements database and download to file.
 
@@ -551,64 +949,6 @@ Query earnings dates for a universe of US stocks:
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields)")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_wsh_earnings_dates")
-
-    examples = """
-Collect shortable shares data and save to database.
-
-Data is organized by country and updated every 15 minutes. Historical
-data is available from April 15, 2018.
-
-Examples:
-
-Collect shortable shares data for US stocks:
-
-    quantrocket fundamental collect-shortshares --countries usa
-
-Collect shortable shares data for all stocks:
-
-    quantrocket fundamental collect-shortshares
-    """
-    parser = _subparsers.add_parser(
-        "collect-shortshares",
-        help="collect shortable shares data and save to database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-c", "--countries",
-        nargs="*",
-        metavar="COUNTRY",
-        help="limit to these countries (pass '?' or any invalid country to see "
-        "available countries)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_shortable_shares")
-
-    examples = """
-Collect borrow fees data and save to database.
-
-Data is organized by country and updated every 15 minutes. Historical
-data is available from April 15, 2018.
-
-Examples:
-
-Collect borrow fees for US stocks:
-
-    quantrocket fundamental collect-shortfees --countries usa
-
-Collect borrow fees for all stocks:
-
-    quantrocket fundamental collect-shortfees
-    """
-    parser = _subparsers.add_parser(
-        "collect-shortfees",
-        help="collect borrow fees data and save to database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-c", "--countries",
-        nargs="*",
-        metavar="COUNTRY",
-        help="limit to these countries (pass '?' or any invalid country to see "
-        "available countries)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_borrow_fees")
 
     examples = """
 Query shortable shares from the stockloan database and download to file.

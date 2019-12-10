@@ -41,6 +41,7 @@ Create a database for AtomicFin US data and call it "usa-atomicfin-1d":
         "-c", "--country",
         metavar="COUNTRY",
         choices=["US","FREE"],
+        default="US",
         help="country to collect listings for. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.history._cli_create_atomicfin_db")
 
