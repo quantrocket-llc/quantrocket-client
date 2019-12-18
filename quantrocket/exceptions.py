@@ -20,9 +20,6 @@ class ImproperlyConfigured(Exception):
 class CannotConnectToHouston(Exception):
     pass
 
-class UnavailableInsideJupyter(EnvironmentError):
-    pass
-
 class ParameterError(ValueError):
     pass
 

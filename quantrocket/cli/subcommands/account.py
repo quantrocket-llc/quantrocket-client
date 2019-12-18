@@ -21,7 +21,52 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Query Interactive Brokers account balances.
+Set Alpaca API key, or view the current API key.
+
+Examples:
+
+View current live and paper API keys:
+
+    quantrocket account alpaca-key
+
+Set Alpaca live API key (will prompt for secret key):
+
+    quantrocket account alpaca-key --api-key AK123 --live
+
+Set Alpaca live API key (will prompt for secret key):
+
+    quantrocket account alpaca-key --api-key PK123 --paper
+    """
+    parser = _subparsers.add_parser(
+        "alpaca-key",
+        help="set Alpaca API key, or view the current API key",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-a", "--api-key",
+        metavar="API_KEY",
+        help="Alpaca API key ID")
+    parser.add_argument(
+        "-s", "--secret-key",
+        metavar="SECRET_KEY",
+        help="Alpaca secret key (if omitted, will be prompted for secret key)")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--paper",
+        action="store_const",
+        dest="trading_mode",
+        const="paper",
+        help="set trading mode to paper trading")
+    group.add_argument(
+        "--live",
+        action="store_const",
+        dest="trading_mode",
+        const="live",
+        help="set trading mode to live trading")
+    parser.set_defaults(func="quantrocket.account._cli_get_or_set_alpaca_key")
+
+    examples = """
+Query account balances.
 
 Examples:
 
@@ -44,7 +89,7 @@ Query historical account balances over a date range:
     """
     parser = _subparsers.add_parser(
         "balance",
-        help="query Interactive Brokers account balances",
+        help="query account balances",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
@@ -91,17 +136,18 @@ Query historical account balances over a date range:
         "-f", "--fields",
         metavar="FIELD",
         nargs="*",
-        help="only return these fields (pass '?' or any invalid fieldname to see "
-        "available fields)")
+        help="only return these fields. By default a core set of fields is returned. "
+        "Pass a list of fields, or '*' to return all fields. Pass '?' or any "
+        "invalid fieldname to see available fields.")
     parser.add_argument(
         "--force-refresh",
         action="store_true",
-        help="refresh account balances from Interactive Brokers (default is to query the "
+        help="refresh account balances to ensure the latest data (default is to query the "
         "database, which is refreshed every minute)")
     parser.set_defaults(func="quantrocket.account._cli_download_account_balances")
 
     examples = """
-Download current Interactive Brokers portfolio.
+Download current portfolio.
 
 Examples:
 
@@ -115,10 +161,16 @@ Download current portfolio for a particular account and save to file:
     """
     parser = _subparsers.add_parser(
         "portfolio",
-        help="download current Interactive Brokers portfolio",
+        help="download current portfolio",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-b", "--brokers",
+        nargs="*",
+        metavar="BROKER",
+        choices=["alpaca","ibkr"],
+        help="limit to these brokers. Possible choices: %(choices)s")
     filters.add_argument(
         "-a", "--accounts",
         nargs="*",
@@ -148,7 +200,8 @@ Download current portfolio for a particular account and save to file:
         "-z", "--zero",
         action="store_true",
         dest="include_zero",
-        help="include zero position rows (default is to exclude them)")
+        help="include zero position rows (default is to exclude them). Only "
+        "supported for Interactive Brokers.")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
@@ -165,8 +218,9 @@ Download current portfolio for a particular account and save to file:
         "-f", "--fields",
         metavar="FIELD",
         nargs="*",
-        help="only return these fields (pass '?' or any invalid fieldname to see "
-        "available fields)")
+        help="only return these fields. By default a core set of fields is returned. "
+        "Pass a list of fields, or '*' to return all fields. Pass '?' or any "
+        "invalid fieldname to see available fields.")
     parser.set_defaults(func="quantrocket.account._cli_download_account_portfolio")
 
     examples = """

@@ -13,10 +13,8 @@
 # limitations under the License.
 
 import os
-import webbrowser
 import getpass
 from quantrocket.houston import houston
-from quantrocket.exceptions import UnavailableInsideJupyter
 from quantrocket.cli.utils.output import json_to_cli
 
 def get_credentials(gateway):
