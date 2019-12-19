@@ -50,6 +50,23 @@ def list_ibkr_exchanges(regions=None, sec_types=None):
 def _cli_list_ibkr_exchanges(*args, **kwargs):
     return json_to_cli(list_ibkr_exchanges, *args, **kwargs)
 
+def collect_alpaca_listings():
+    """
+    Collect securities listings from Alpaca and store in securities master
+    database.
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    response = houston.post("/master/securities/alpaca")
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_alpaca_listings(*args, **kwargs):
+    return json_to_cli(collect_alpaca_listings, *args, **kwargs)
+
 def collect_atomicfin_listings(countries="US"):
     """
     Collect securities listings from AtomicFin and store in securities master
@@ -370,7 +387,7 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         output format (csv or json, default is csv)
 
     exchanges : list of str, optional
-        limit to these exchanges. You can specify exchange using the MIC or the
+        limit to these exchanges. You can specify exchanges using the MIC or the
         vendor's exchange code.
 
     sec_types : list of str, optional
@@ -404,7 +421,7 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         exclude backmonth and expired futures contracts (default False)
 
     vendors : list of str, optional
-        limit to these vendors. Possible choices: atomicfin, edi, ibkr
+        limit to these vendors. Possible choices: alpaca, atomicfin, edi, ibkr
 
     fields : list of str, optional
         Return specific fields. By default a core set of fields is

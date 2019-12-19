@@ -20,6 +20,21 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
+Collect securities listings from Alpaca and store in securities master
+database.
+
+Examples:
+
+    quantrocket master collect-alpaca
+    """
+    parser = _subparsers.add_parser(
+        "collect-alpaca",
+        help="collect securities listings from Alpaca and store in securities master database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.set_defaults(func="quantrocket.master._cli_collect_alpaca_listings")
+
+    examples = """
 Collect securities listings from AtomicFin and store in securities master
 database.
 
@@ -243,7 +258,7 @@ terminal display:
         "-e", "--exchanges",
         nargs="*",
         metavar="EXCHANGE",
-        help="limit to these exchanges. You can specify exchange using the MIC or the "
+        help="limit to these exchanges. You can specify exchanges using the MIC or the "
         "vendor's exchange code.")
     filters.add_argument(
         "-t", "--sec-types",
@@ -300,7 +315,7 @@ terminal display:
         "-v", "--vendors",
         nargs="*",
         metavar="VENDOR",
-        choices=["atomicfin", "edi", "ibkr"],
+        choices=["alpaca", "atomicfin", "edi", "ibkr"],
         help="limit to these vendors. Possible choices: %(choices)s")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
@@ -336,14 +351,14 @@ Examples:
 
 List all exchanges:
 
-    quantrocket master exchanges-ibkr
+    quantrocket master list-ibkr-exchanges
 
 List stock exchanges in North America:
 
-    quantrocket master exchanges-ibkr --regions north_america --sec-types STK
+    quantrocket master list-ibkr-exchanges --regions north_america --sec-types STK
     """
     parser = _subparsers.add_parser(
-        "exchanges-ibkr",
+        "list-ibkr-exchanges",
         help="list exchanges by security type and country as found on the IBKR website",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
