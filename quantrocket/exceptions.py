@@ -26,29 +26,21 @@ class ParameterError(ValueError):
 class MissingData(ValueError):
     pass
 
-class NoHistoricalData(requests.HTTPError):
+class NoData(requests.HTTPError):
 
     def __init__(self, e):
         if isinstance(e, requests.HTTPError):
             self.__dict__ = e.__dict__
-            super(NoHistoricalData, self).__init__(e.args)
+            super(NoData, self).__init__(e.args)
         else:
-            super(NoHistoricalData, self).__init__(e)
+            super(NoData, self).__init__(e)
 
-class NoRealtimeData(requests.HTTPError):
 
-    def __init__(self, e):
-        if isinstance(e, requests.HTTPError):
-            self.__dict__ = e.__dict__
-            super(NoRealtimeData, self).__init__(e.args)
-        else:
-            super(NoRealtimeData, self).__init__(e)
+class NoHistoricalData(NoData):
+    pass
 
-class NoFundamentalData(requests.HTTPError):
+class NoRealtimeData(NoData):
+    pass
 
-    def __init__(self, e):
-        if isinstance(e, requests.HTTPError):
-            self.__dict__ = e.__dict__
-            super(NoFundamentalData, self).__init__(e.args)
-        else:
-            super(NoFundamentalData, self).__init__(e)
+class NoFundamentalData(NoData):
+    pass

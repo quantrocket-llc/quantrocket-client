@@ -19,11 +19,10 @@ from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
-def run_algorithm(algofile, data_frequency=None, capital_base=None,
-                  bundle=None, bundle_timestamp=None, start=None, end=None,
-                  filepath_or_buffer=None, calendar=None):
+def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
+             start=None, end=None, filepath_or_buffer=None):
     """
-    Run a Zipline backtest and write the test results to a CSV file.
+    Backtest a Zipline strategy and write the test results to a CSV file.
 
     The CSV result file contains several DataFrames stacked into one: the Zipline performance
     results, plus the extracted returns, transactions, positions, and benchmark returns from those
@@ -31,8 +30,8 @@ def run_algorithm(algofile, data_frequency=None, capital_base=None,
 
     Parameters
     ----------
-    algofile : str, required
-        the file that contains the algorithm to run
+    strategy : str, required
+        the file that contains the strategy to run
 
     data_frequency : str, optional
         the data frequency of the simulation. Possible choices: daily, minute (default is daily)
@@ -43,9 +42,6 @@ def run_algorithm(algofile, data_frequency=None, capital_base=None,
     bundle : str, required
         the data bundle to use for the simulation
 
-    bundle_timestamp : str, optional
-        the date to lookup data on or before (default is <current-time>)
-
     start : str (YYYY-MM-DD), required
         the start date of the simulation
 
@@ -55,10 +51,6 @@ def run_algorithm(algofile, data_frequency=None, capital_base=None,
     filepath_or_buffer : str, optional
         the location to write the output file (omit to write to stdout)
 
-    calendar : str, optional
-        the calendar you want to use e.g. LSE (default is to use the calendar
-        associated with the data bundle).
-
     Returns
     -------
     None
@@ -67,10 +59,9 @@ def run_algorithm(algofile, data_frequency=None, capital_base=None,
     --------
     Run a backtest and save to CSV.
 
-    >>> from quantrocket.zipline import run_algorithm
-    >>> run_algorithm("momentum_pipeline.py", bundle="my-bundle",
-                      start="2015-02-04", end="2015-12-31",
-                      filepath_or_buffer="momentum_pipeline_results.csv")
+    >>> backtest("momentum_pipeline.py", bundle="my-bundle",
+                 start="2015-02-04", end="2015-12-31",
+                 filepath_or_buffer="momentum_pipeline_results.csv")
 
     Get a pyfolio tear sheet from the results:
 
@@ -85,24 +76,20 @@ def run_algorithm(algofile, data_frequency=None, capital_base=None,
     if not bundle:
         raise ValueError("must specify a bundle")
     params["bundle"] = bundle
-    if bundle_timestamp:
-        params["bundle_timestamp"] = bundle_timestamp
     if start:
         params["start"] = start
     if end:
         params["end"] = end
-    if calendar:
-        params["calendar"] = calendar
 
-    response = houston.post("/zipline/backtests/{0}".format(algofile), params=params, timeout=60*60*3)
+    response = houston.post("/zipline/backtests/{0}".format(strategy), params=params, timeout=60*60*3)
 
     houston.raise_for_status_with_json(response)
 
     filepath_or_buffer = filepath_or_buffer or sys.stdout
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
-def _cli_run_algorithm(*args, **kwargs):
-    return json_to_cli(run_algorithm, *args, **kwargs)
+def _cli_backtest(*args, **kwargs):
+    return json_to_cli(backtest, *args, **kwargs)
 
 def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None):
     """
@@ -202,7 +189,6 @@ def ingest_bundle(history_db=None, calendar=None, bundle=None,
     --------
     Ingest a history database called "arca-etf-eod" into Zipline:
 
-    >>> from quantrocket.zipline import ingest_bundle
     >>> ingest_bundle(history_db="arca-etf-eod", calendar="NYSE")
 
     Re-ingest "arca-etf-eod" (calendar and other ingestion parameters aren't
@@ -304,7 +290,6 @@ def clean_bundles(bundles, before=None, after=None, keep_last=None, clean_all=Fa
     --------
     Remove all but the last ingestion for a bundle called 'aus-1min':
 
-    >>> from quantrocket.zipline import clean_bundles
     >>> clean_bundles("aus-1min", keep_last=1)
 
     Remove all ingestions for bundles called 'aus-1min' and 'usa-1min':
@@ -329,6 +314,111 @@ def clean_bundles(bundles, before=None, after=None, keep_last=None, clean_all=Fa
 
 def _cli_clean_bundles(*args, **kwargs):
     return json_to_cli(clean_bundles, *args, **kwargs)
+
+def trade(strategy, bundle, account=None):
+    """
+    Trade a Zipline strategy.
+
+    Parameters
+    ----------
+    strategy : str, required
+        the file that contains the strategy to run
+
+    bundle : str, required
+        the data bundle to use
+
+    account : str, optional
+        the account to run the strategy in. Only required
+        if the strategy is allocated to more than one
+        account in quantrocket.zipline.allocations.yml.
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Trade a strategy:
+
+    >>> trade("momentum_pipeline.py", bundle="my-bundle")
+    """
+    params = {}
+    if not bundle:
+        raise ValueError("must specify a bundle")
+    params["bundle"] = bundle
+    if account:
+        params["account"] = account
+
+    response = houston.post("/zipline/trade/{0}".format(strategy), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_trade(*args, **kwargs):
+    return json_to_cli(trade, *args, **kwargs)
+
+def list_active_strategies():
+    """
+    List actively trading Zipline strategies.
+
+    Returns
+    -------
+    dict
+        dict of account: strategies
+    """
+    response = houston.get("/zipline/trade")
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_list_active_strategies(*args, **kwargs):
+    return json_to_cli(list_active_strategies, *args, **kwargs)
+
+def cancel_strategies(strategies=None, accounts=None, cancel_all=False):
+    """
+    Cancel actively trading strategies.
+
+    Parameters
+    ----------
+    strategies : list of str, optional
+        limit to these strategies
+
+    accounts : list of str, optional
+        limit to these accounts
+
+    cancel_all : bool
+        cancel all actively trading strategies
+
+    Returns
+    -------
+    dict
+        dict of actively trading strategies after canceling
+
+    Examples
+    --------
+    Cancel a single strategy:
+
+    >>> cancel_strategies(strategies="momentum_pipeline.py")
+
+    Cancel all strategies:
+
+    >>> cancel_strategies(cancel_all=True)
+    """
+    params = {}
+    if strategies:
+        params["strategies"] = strategies
+    if accounts:
+        params["accounts"] = accounts
+    if cancel_all:
+        params["cancel_all"] = cancel_all
+
+    response = houston.delete("/zipline/trade", params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_cancel_strategies(*args, **kwargs):
+    return json_to_cli(cancel_strategies, *args, **kwargs)
 
 class ZiplineBacktestResult(object):
     """

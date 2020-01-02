@@ -15,7 +15,7 @@
 import argparse
 
 def add_subparser(subparsers):
-    _parser = subparsers.add_parser("zipline", description="QuantRocket CLI for Zipline", help="Backtest and trade with Zipline")
+    _parser = subparsers.add_parser("zipline", description="QuantRocket CLI for Zipline", help="Backtest and trade Zipline strategies")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
 
@@ -169,7 +169,7 @@ Remove all ingestions for bundles called 'aus-1min' and 'usa-1min':
     parser.set_defaults(func="quantrocket.zipline._cli_clean_bundles")
 
     examples = """
-Run a Zipline backtest and write the test results to a CSV file.
+Backtest a Zipline strategy and write the test results to a CSV file.
 
 The CSV result file contains several DataFrames stacked into one: the Zipline performance
 results, plus the extracted returns, transactions, positions, and benchmark returns from those
@@ -177,24 +177,19 @@ results.
 
 Examples:
 
-Run a backtest from an algo file called etf_arb.py and save a CSV file of results:
+Run a backtest from a strategy file called etf_arb.py and save a CSV file of results:
 
-    quantrocket zipline run --bundle 'arca-etf-eod' -f 'etf_arb.py' -s 2010-04-01 -e 2016-02-01 -o results.csv
-
-Run a backtest using the us_futures calendar:
-
-    quantrocket zipline run --bundle 'cl-rb-1day' -f 'futures_pairs_trading.py' --calendar us_futures -s 2015-04-01 -e 2016-02-01 -o results.csv
+    quantrocket zipline backtest etf_arb.py --bundle arca-etf-eod -s 2010-04-01 -e 2016-02-01 -o results.csv
     """
     parser = _subparsers.add_parser(
-        "run",
-        help="run a Zipline backtest and write the test results to a CSV file",
+        "backtest",
+        help="backtest a Zipline strategy and write the test results to a CSV file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "-f", "--algofile",
-        required=True,
+        "strategy",
         metavar="FILENAME",
-        help="the file that contains the algorithm to run")
+        help="the file that contains the strategy to run")
     parser.add_argument(
         "--data-frequency",
         choices=["daily", "minute"],
@@ -210,10 +205,6 @@ Run a backtest using the us_futures calendar:
         required=True,
         help="the data bundle to use for the simulation")
     parser.add_argument(
-        "--bundle-timestamp",
-        metavar="TIMESTAMP",
-        help="the date to lookup data on or before (default is <current-time>)")
-    parser.add_argument(
         "-s", "--start",
         required=True,
         metavar="DATE",
@@ -228,12 +219,7 @@ Run a backtest using the us_futures calendar:
         metavar="FILENAME",
         dest="filepath_or_buffer",
         help="the location to write the output file (omit to write to stdout)")
-    parser.add_argument(
-        "--calendar",
-        metavar="CALENDAR",
-        help="the calendar you want to use e.g. LSE (default is to use the calendar "
-        "associated with the data bundle)")
-    parser.set_defaults(func="quantrocket.zipline._cli_run_algorithm")
+    parser.set_defaults(func="quantrocket.zipline._cli_backtest")
 
     examples = """
 Create a pyfolio PDF tear sheet from a Zipline backtest result.
@@ -247,7 +233,7 @@ Create a pyfolio tear sheet from a Zipline CSV results file:
 Run a Zipline backtest and create a pyfolio tear sheet without saving
 the CSV file:
 
-    quantrocket zipline run -f 'buy_aapl.py' -s 2010-04-01 -e 2016-02-01 | quantrocket zipline tearsheet -o buy_aapl.pdf
+    quantrocket zipline backtest buy_aapl.py -s 2010-04-01 -e 2016-02-01 | quantrocket zipline tearsheet -o buy_aapl.pdf
     """
     parser = _subparsers.add_parser(
         "tearsheet",
@@ -267,3 +253,84 @@ the CSV file:
         dest="outfilepath_or_buffer",
         help="the location to write the pyfolio tear sheet")
     parser.set_defaults(func="quantrocket.zipline._cli_create_tearsheet")
+
+    examples = """
+Trade a Zipline strategy.
+
+Examples:
+
+Trade a strategy:
+
+    quantrocket zipline trade momentum_pipeline.py --bundle my-bundle
+    """
+    parser = _subparsers.add_parser(
+        "trade",
+        help="trade a Zipline strategy",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "strategy",
+        metavar="FILENAME",
+        help="the file that contains the strategy to run")
+    parser.add_argument(
+        "-b", "--bundle",
+        metavar="BUNDLE-NAME",
+        required=True,
+        help="the data bundle to use")
+    parser.add_argument(
+        "-a", "--account",
+        help="the account to run the strategy in. Only required "
+        "if the strategy is allocated to more than one "
+        "account in quantrocket.zipline.allocations.yml")
+    parser.set_defaults(func="quantrocket.zipline._cli_trade")
+
+    examples = """
+List actively trading Zipline strategies.
+
+Examples:
+
+List strategies:
+
+    quantrocket zipline active
+    """
+    parser = _subparsers.add_parser(
+        "active",
+        help="list actively trading Zipline strategies",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.set_defaults(func="quantrocket.zipline._cli_list_active_strategies")
+
+    examples = """
+Cancel actively trading strategies.
+
+Examples:
+
+Cancel a single strategy:
+
+    quantrocket zipline cancel --strategies momentum_pipeline.py
+
+Cancel all strategies:
+
+    quantrocket zipline cancel --all
+    """
+    parser = _subparsers.add_parser(
+        "cancel",
+        help="cancel actively trading strategies",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-s", "--strategies",
+        nargs="*",
+        metavar="FILENAME",
+        help="limit to these strategies")
+    parser.add_argument(
+        "-a", "--accounts",
+        metavar="ACCOUNT",
+        nargs="*",
+        help="limit to these accounts")
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        dest="cancel_all",
+        help="cancel all actively trading strategies")
+    parser.set_defaults(func="quantrocket.zipline._cli_cancel_strategies")

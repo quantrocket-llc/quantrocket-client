@@ -208,9 +208,7 @@ The default "blotter view" returns positions by account, sid, and order ref. Pos
 are tracked based on execution records saved to the blotter database.
 
 "Broker view" (using the `--broker` option) returns positions by account and sid (but
-not order ref) as reported directly by the broker. Broker view is more authoritative
-but less informative than blotter view. Broker view is typically used to verify the
-accuracy of blotter view.
+not order ref) as reported directly by the broker.
 
 Examples:
 
