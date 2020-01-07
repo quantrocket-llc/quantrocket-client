@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+from quantrocket.cli.utils.parse import dict_str
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("zipline", description="QuantRocket CLI for Zipline", help="Backtest and trade Zipline strategies")
@@ -20,71 +21,61 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Ingest a history database into Zipline for later backtesting.
+Create a Zipline bundle from a history database or real-time aggregate
+database.
 
-You can ingest 1-minute or 1-day history databases.
+You can ingest 1-minute or 1-day databases.
 
-Re-ingesting a previously ingested database will create a new version of the
-ingested data, while preserving the earlier version. See
-`quantrocket zipline clean` to remove earlier versions.
-
-Ingestion parameters (start_date, end_date, universes, sids, exclude_universes,
-exclude_sids) can only be specified the first time a bundle is ingested, and
-will be reused for subsequent ingestions. You must remove the bundle and start
-over to change the parameters.
+This function defines the bundle parameters but does not ingest the actual
+data. To ingest the data, see `quantrocket zipline ingest`.
 
 Examples:
 
-Ingest a history database called "arca-etf-eod" into Zipline:
+Create a bundle from a history database called "es-fut-1min" and name
+it like the history database:
 
-    quantrocket zipline ingest --history-db arca-etf-eod --calendar NYSE
+    quantrocket zipline create-db-bundle es-fut-1min --from-db es-fut-1min --calendar us_futures
 
-Re-ingest "arca-etf-eod" (calendar and other ingestion parameters aren't
-needed as they will be re-used from the first ingestion):
+Create a bundle named "usa-stk-1min-2017" for ingesting a single year of US
+1-minute stock data from a history database called "usa-stk-1min":
 
-    quantrocket zipline ingest --history-db arca-etf-eod
-
-Ingest a history database called "lse-stk" into Zipline and associate it with
-the LSE calendar:
-
-    quantrocket zipline ingest --history-db lse-stk --calendar LSE
-
-Ingest a single year of US 1-minute stock data and name the bundle usa-stk-2017:
-
-    quantrocket zipline ingest --history-db usa-stk-1min -s 2017-01-01 -e 2017-12-31 --bundle usa-stk-2017 --calendar NYSE
-
-Re-ingest the bundle usa-stk-2017:
-
-    quantrocket zipline ingest --bundle usa-stk-2017
+    quantrocket zipline create-db-bundle usa-stk-1min-2017 --from-db usa-stk-1min -s 2017-01-01 -e 2017-12-31 --calendar XNYS
     """
     parser = _subparsers.add_parser(
-        "ingest",
-        help="ingest a history database into Zipline",
+        "create-db-bundle",
+        help="create a Zipline bundle from a history database or real-time aggregate database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "-d", "--history-db",
+        "code",
         metavar="CODE",
-        help="the code of a history db to ingest")
+        help="the code to assign to the bundle (lowercase alphanumerics and hyphens only)")
+    parser.add_argument(
+        "-d", "--from-db",
+        metavar="CODE",
+        help="the code of a history database or real-time aggregate database to ingest")
     parser.add_argument(
         "-c", "--calendar",
         metavar="NAME",
-        help="the name of the calendar to use with this history db bundle "
+        help="the name of the calendar to use with this bundle "
         "(provide '?' or any invalid calendar name to see available choices)")
     parser.add_argument(
-        "-b", "--bundle",
-        metavar="NAME",
-        help="the name to assign to the bundle (defaults to the history "
-        "database code)")
-    filters = parser.add_argument_group("filtering options for history db ingestion")
+        "-f", "--fields",
+        nargs="*",
+        type=dict_str,
+        metavar="ZIPLINE_FIELD:DB_FIELD",
+        help="mapping of Zipline fields (open, high, low, close, volume) to "
+        "db fields. Pass as 'zipline_field:db_field'. Defaults to mapping Zipline "
+        "'open' to db 'Open', etc.")
+    filters = parser.add_argument_group("filtering options for db ingestion")
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to history on or after this date")
+        help="limit to historical data on or after this date")
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to history on or before this date")
+        help="limit to historical data on or before this date")
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
@@ -105,68 +96,67 @@ Re-ingest the bundle usa-stk-2017:
         nargs="*",
         metavar="SID",
         help="exclude these sids")
-    parser.set_defaults(func="quantrocket.zipline._cli_ingest_bundle")
+    parser.set_defaults(func="quantrocket.zipline._cli_create_db_bundle")
 
     examples = """
-List all of the available data bundles.
+Ingest data into a previously defined bundle.
 
 Examples:
 
-    quantrocket zipline bundles
+Ingest data into a bundle called es-fut-1min:
+
+    quantrocket zipline ingest es-fut-1min
     """
     parser = _subparsers.add_parser(
-        "bundles",
-        help="list all of the available data bundles",
+        "ingest",
+        help="ingest data into a previously defined bundle",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the bundle code")
+    parser.set_defaults(func="quantrocket.zipline._cli_ingest_bundle")
+
+    examples = """
+List available data bundles and whether data has been ingested into them.
+
+Examples:
+
+    quantrocket zipline list-bundles
+    """
+    parser = _subparsers.add_parser(
+        "list-bundles",
+        help="list available data bundles and whether data has been ingested into them",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.set_defaults(func="quantrocket.zipline._cli_list_bundles")
 
     examples = """
-Remove previously ingested data for one or more bundles.
+Delete a bundle.
 
 Examples:
 
-Remove all but the last ingestion for a bundle called 'aus-1min':
+Delete a bundle called 'es-fut-1min':
 
-    quantrocket zipline clean -b aus-1min --keep-last 1
-
-Remove all ingestions for bundles called 'aus-1min' and 'usa-1min':
-
-    quantrocket zipline clean -b aus-1min usa-1min --all
+    quantrocket zipline drop-bundle es-fut-1min --confirm-by-typing-bundle-code-again es-fut-1min
     """
     parser = _subparsers.add_parser(
-        "clean",
-        help="remove previously ingested data for one or more bundles",
+        "drop-bundle",
+        help="delete a bundle",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "-b", "--bundles",
-        nargs="+",
-        metavar="NAME",
-        help="the data bundle(s) to clean")
+        "code",
+        metavar="CODE",
+        help="the bundle code")
     parser.add_argument(
-        "-e", "--before",
-        metavar="YYYY-MM-DD[ HH:MM:SS]",
-        help="clear all data before this timestamp. Mutually exclusive with keep_last "
-        "and clean_all")
-    parser.add_argument(
-        "-a", "--after",
-        metavar="YYYY-MM-DD[ HH:MM:SS]",
-        help="clear all data after this timestamp. Mutually exclusive with keep_last "
-        "and clean_all.")
-    parser.add_argument(
-        "-k", "--keep-last",
-        metavar="N",
-        type=int,
-        help="clear all but the last N ingestions. Mutually exclusive with before, "
-        "after, and clean_all")
-    parser.add_argument(
-        "--all",
-        action="store_true",
-        dest="clean_all",
-        help="clear all ingestions for bundle(s), and delete bundle configuration. "
-        "Default False. Mutually exclusive with before, after, and keep_last.")
-    parser.set_defaults(func="quantrocket.zipline._cli_clean_bundles")
+        "--confirm-by-typing-bundle-code-again",
+        metavar="CODE",
+        required=True,
+        help="enter the bundle code again to confirm you want to drop the bundle, its config, "
+        "and all its data")
+    parser.set_defaults(func="quantrocket.zipline._cli_drop_bundle")
 
     examples = """
 Backtest a Zipline strategy and write the test results to a CSV file.

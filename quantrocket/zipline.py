@@ -18,6 +18,186 @@ from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
+
+def create_db_bundle(code, from_db, calendar,
+                     start_date=None, end_date=None,
+                     universes=None, sids=None,
+                     exclude_universes=None, exclude_sids=None,
+                     fields=None):
+    """
+    Create a Zipline bundle from a history database or real-time aggregate
+    database.
+
+    You can ingest 1-minute or 1-day databases.
+
+    This function defines the bundle parameters but does not ingest the actual
+    data. To ingest the data, see `ingest_bundle`.
+
+    Parameters
+    ----------
+    code : str, required
+        the code to assign to the bundle (lowercase alphanumerics and hyphens only)
+
+    from_db : str, required
+        the code of a history database or real-time aggregate database to ingest
+
+    calendar : str, required
+        the name of the calendar to use with this bundle (provide '?' or
+        any invalid calendar name to see available choices)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to historical data on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to historical data on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    fields : dict, optional
+        mapping of Zipline fields (open, high, low, close, volume) to
+        db fields. Defaults to mapping Zipline 'open' to db 'Open', etc.
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Create a bundle from a history database called "es-fut-1min" and name
+    it like the history database:
+
+    >>> create_db_bundle("es-fut-1min", from_db="es-fut-1min", calendar="us_futures")
+
+    Create a bundle named "usa-stk-1min-2017" for ingesting a single year of
+    US 1-minute stock data from a history database called "usa-stk-1min":
+
+    >>> create_db_bundle("usa-stk-1min-2017", from_db="usa-stk-1min",
+    >>>                  calendar="XNYS",
+    >>>                  start_date="2017-01-01", end_date="2017-12-31")
+    """
+    params = {}
+    params["from_db"] = from_db
+    params["calendar"] = calendar
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+    if fields:
+        params["fields"] = dict_to_dict_strs(fields)
+
+    response = houston.put("/zipline/bundles/{}".format(code), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_create_db_bundle(*args, **kwargs):
+    fields = kwargs.get("fields", None)
+    if fields:
+        kwargs["fields"] = dict_strs_to_dict(*fields)
+    return json_to_cli(create_db_bundle, *args, **kwargs)
+
+def ingest_bundle(code):
+    """
+    Ingest data into a previously defined bundle.
+
+    Parameters
+    ----------
+    code : str, required
+        the bundle code
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Ingest data into a bundle called es-fut-1min:
+
+    >>> ingest_bundle("es-fut-1min")
+    """
+    response = houston.post("/zipline/bundles/{}".format(code))
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_ingest_bundle(*args, **kwargs):
+    return json_to_cli(ingest_bundle, *args, **kwargs)
+
+def list_bundles():
+    """
+    List available data bundles and whether data has been
+    ingested into them.
+
+    Returns
+    -------
+    dict
+        data bundles and whether they have data (True indicates
+        data, False indicates config only)
+    """
+    response = houston.get("/zipline/bundles")
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_list_bundles(*args, **kwargs):
+    return json_to_cli(list_bundles, *args, **kwargs)
+
+def drop_bundle(code, confirm_by_typing_bundle_code_again=None):
+    """
+    Delete a bundle.
+
+    Parameters
+    ----------
+    code : str, required
+        the bundle code
+
+    confirm_by_typing_bundle_code_again : str, required
+       enter the bundle code again to confirm you want to drop the bundle, its config,
+       and all its data
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Delete a bundle called 'es-fut-1min':
+
+    >>> drop_bundle("es-fut-1min")
+    """
+    params = {}
+    if confirm_by_typing_bundle_code_again:
+        params["confirm_by_typing_bundle_code_again"] = confirm_by_typing_bundle_code_again
+
+    response = houston.delete("/zipline/bundles/{}".format(code), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_drop_bundle(*args, **kwargs):
+    return json_to_cli(drop_bundle, *args, **kwargs)
 
 def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
              start=None, end=None, filepath_or_buffer=None):
@@ -131,189 +311,6 @@ def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None):
 
 def _cli_create_tearsheet(*args, **kwargs):
     return json_to_cli(create_tearsheet, *args, **kwargs)
-
-def ingest_bundle(history_db=None, calendar=None, bundle=None,
-                  start_date=None, end_date=None,
-                  universes=None, sids=None,
-                  exclude_universes=None, exclude_sids=None):
-    """
-    Ingest a history database into Zipline for later backtesting.
-
-    You can ingest 1-minute or 1-day history databases.
-
-    Re-ingesting a previously ingested database will create a new version of the
-    ingested data, while preserving the earlier version. See
-    `quantrocket.zipline.clean_bundles` to remove earlier versions.
-
-    Ingestion parameters (start_date, end_date, universes, sids, exclude_universes,
-    exclude_sids) can only be specified the first time a bundle is ingested, and
-    will be reused for subsequent ingestions. You must remove the bundle and start
-    over to change the parameters.
-
-    Parameters
-    ----------
-    history_db : str, optional
-        the code of a history db to ingest
-
-    calendar : str, optional
-        the name of the calendar to use with this history db bundle (provide '?' or
-        any invalid calendar name to see available choices)
-
-    bundle : str, optional
-        the name to assign to the bundle (defaults to the history database code)
-
-    start_date : str (YYYY-MM-DD), optional
-        limit to history on or after this date
-
-    end_date : str (YYYY-MM-DD), optional
-        limit to history on or before this date
-
-    universes : list of str, optional
-        limit to these universes
-
-    sids : list of str, optional
-        limit to these sids
-
-    exclude_universes : list of str, optional
-        exclude these universes
-
-    exclude_sids : list of str, optional
-        exclude these sids
-
-    Returns
-    -------
-    dict
-        status message
-
-    Examples
-    --------
-    Ingest a history database called "arca-etf-eod" into Zipline:
-
-    >>> ingest_bundle(history_db="arca-etf-eod", calendar="NYSE")
-
-    Re-ingest "arca-etf-eod" (calendar and other ingestion parameters aren't
-    needed as they will be re-used from the first ingestion):
-
-    >>> ingest_bundle(history_db="arca-etf-eod")
-
-    Ingest a history database called "lse-stk" into Zipline and associate it with
-    the LSE calendar:
-
-    >>> ingest_bundle(history_db="lse-stk", calendar="LSE")
-
-    Ingest a single year of US 1-minute stock data and name the bundle usa-stk-2017:
-
-    >>> ingest_bundle(history_db="usa-stk-1min", calendar="NYSE",
-    >>>               start_date="2017-01-01", end_date="2017-12-31",
-    >>>               bundle="usa-stk-2017")
-
-    Re-ingest the bundle usa-stk-2017:
-
-    >>> ingest_bundle(bundle="usa-stk-2017")
-    """
-    params = {}
-    if history_db:
-        params["history_db"] = history_db
-    if calendar:
-        params["calendar"] = calendar
-    if bundle:
-        params["bundle"] = bundle
-    if start_date:
-        params["start_date"] = start_date
-    if end_date:
-        params["end_date"] = end_date
-    if universes:
-        params["universes"] = universes
-    if sids:
-        params["sids"] = sids
-    if exclude_universes:
-        params["exclude_universes"] = exclude_universes
-    if exclude_sids:
-        params["exclude_sids"] = exclude_sids
-
-    response = houston.post("/zipline/bundles", params=params, timeout=60*60*48)
-
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_ingest_bundle(*args, **kwargs):
-    return json_to_cli(ingest_bundle, *args, **kwargs)
-
-def list_bundles():
-    """
-    List all of the available data bundles.
-
-    Returns
-    -------
-    dict
-        data bundles and timestamps
-    """
-    response = houston.get("/zipline/bundles")
-
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_list_bundles(*args, **kwargs):
-    return json_to_cli(list_bundles, *args, **kwargs)
-
-def clean_bundles(bundles, before=None, after=None, keep_last=None, clean_all=False):
-    """
-    Remove previously ingested data for one or more bundles.
-
-    Parameters
-    ----------
-    bundles : list of str, required
-        the data bundles to clean
-
-    before : str (YYYY-MM-DD[ HH:MM:SS]), optional
-        clear all data before this timestamp. Mutually exclusive with keep_last
-        and clean_all.
-
-    after : str (YYYY-MM-DD[ HH:MM:SS]), optional
-        clear all data after this timestamp. Mutually exclusive with keep_last
-        and clean_all.
-
-    keep_last : int, optional
-        clear all but the last N ingestions. Mutually exclusive with before,
-        after, and clean_all.
-
-    clean_all : bool
-        clear all ingestions for bundle(s), and delete bundle configuration.
-        Default False. Mutually exclusive with before, after, and keep_last.
-
-    Returns
-    -------
-    dict
-        bundles removed
-
-    Examples
-    --------
-    Remove all but the last ingestion for a bundle called 'aus-1min':
-
-    >>> clean_bundles("aus-1min", keep_last=1)
-
-    Remove all ingestions for bundles called 'aus-1min' and 'usa-1min':
-
-    >>> clean_bundles(["aus-1min", "usa-1min"], clean_all=True)
-    """
-    params = {}
-    params["bundles"] = bundles
-    if before:
-        params["before"] = before
-    if after:
-        params["after"] = after
-    if keep_last:
-        params["keep_last"] = keep_last
-    if clean_all:
-        params["clean_all"] = clean_all
-
-    response = houston.delete("/zipline/bundles", params=params)
-
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_clean_bundles(*args, **kwargs):
-    return json_to_cli(clean_bundles, *args, **kwargs)
 
 def trade(strategy, bundle, account=None):
     """
