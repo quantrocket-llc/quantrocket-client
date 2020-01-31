@@ -307,6 +307,24 @@ Collect borrow fees for all stocks:
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_ibkr_borrow_fees")
 
     examples = """
+Collect Alpaca easy-to-borrow data and save to database.
+
+Data is updated daily. Historical data is available from March 2019.
+
+Examples:
+
+Collect easy-to-borrow data:
+
+    quantrocket fundamental collect-alpaca-etb
+    """
+    parser = _subparsers.add_parser(
+        "collect-alpaca-etb",
+        help="collect Alpaca easy-to-borrow data and save to database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_alpaca_etb")
+
+    examples = """
 Query AtomicFin Fundamentals from the local database and download to file.
 
 Examples:
@@ -1069,3 +1087,61 @@ Query borrow fees for a universe of Australian stocks:
         dest="output",
         help="format output as JSON (default is CSV)")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_ibkr_borrow_fees")
+
+    examples = """
+Query Alpaca easy-to-borrow data from the local database and download to file.
+
+Examples:
+
+Query easy-to-borrow data for a universe of US stocks:
+
+    quantrocket fundamental alpaca-etb -u usa-stk -o usa_etb.csv
+    """
+    parser = _subparsers.add_parser(
+        "alpaca-etb",
+        help="query Alpaca easy-to-borrow data from the local database and download to file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to data on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to data on or before this date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_alpaca_etb")

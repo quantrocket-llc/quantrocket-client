@@ -2205,6 +2205,26 @@ def collect_ibkr_borrow_fees(countries=None):
 def _cli_collect_ibkr_borrow_fees(*args, **kwargs):
     return json_to_cli(collect_ibkr_borrow_fees, *args, **kwargs)
 
+def collect_alpaca_etb():
+    """
+    Collect Alpaca easy-to-borrow data and save to database.
+
+    Data is updated daily. Historical data is available from March 2019.
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    response = houston.post("/fundamental/alpaca/stockloan/etb")
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_alpaca_etb(*args, **kwargs):
+    return json_to_cli(collect_alpaca_etb, *args, **kwargs)
+
 def download_ibkr_shortable_shares(filepath_or_buffer=None, output="csv",
                                    start_date=None, end_date=None,
                                    universes=None, sids=None,
@@ -2278,7 +2298,7 @@ def download_ibkr_shortable_shares(filepath_or_buffer=None, output="csv",
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "no shortable shares match the query parameters" in repr(e).lower():
+        if "no shortable shares data match the query parameters" in repr(e).lower():
             raise NoFundamentalData(e)
         raise
 
@@ -2362,7 +2382,7 @@ def download_ibkr_borrow_fees(filepath_or_buffer=None, output="csv",
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "no borrow fees match the query parameters" in repr(e).lower():
+        if "no borrow fees data match the query parameters" in repr(e).lower():
             raise NoFundamentalData(e)
         raise
 
@@ -2373,11 +2393,112 @@ def download_ibkr_borrow_fees(filepath_or_buffer=None, output="csv",
 def _cli_download_ibkr_borrow_fees(*args, **kwargs):
     return json_to_cli(download_ibkr_borrow_fees, *args, **kwargs)
 
-def _get_ibkr_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_like,
-                                       time=None):
+def download_alpaca_etb(filepath_or_buffer=None, output="csv",
+                        start_date=None, end_date=None,
+                        universes=None, sids=None,
+                        exclude_universes=None, exclude_sids=None):
+    """
+    Query Alpaca easy-to-borrow data from the local database and download to file.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to data on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to data on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query easy-to-borrow data for a universe of US stocks.
+
+    >>> f = io.StringIO()
+    >>> download_alpaca_etb("usa_etb.csv", universes=["usa-stk"])
+    >>> etb = pd.read_csv("usa_etb.csv", parse_dates=["Date"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/alpaca/stockloan/etb.{0}".format(output), params=params,
+                           timeout=60*5)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no easy-to-borrow data match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_alpaca_etb(*args, **kwargs):
+    return json_to_cli(download_alpaca_etb, *args, **kwargs)
+
+def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_like,
+                                       time=None, is_intraday=True):
     """
     Common base function for get_ibkr_shortable_shares_reindexed_like and
-    get_ibkr_borrow_fees_reindexed_like.
+    get_ibkr_borrow_fees_reindexed_like and get_alpaca_etb_reindexed_like.
+
+    Parameters
+    ----------
+
+    stockloan_func : func
+        the download function for the stockloan data
+
+    stockloan_field : str
+        the field in the stockloan data to be returned
+
+    reindex_like : DataFrame
+        the input DataFrame to conform the stockloan data to
+
+    time : str
+        the time of day for which to return stockloan data. Only
+        applicable to intraday stockloan data
+
+    is_intraday : bool
+        whether the stockloan data is intraday or daily
     """
     try:
         import pandas as pd
@@ -2410,55 +2531,62 @@ def _get_ibkr_stockloan_data_reindexed_like(stockloan_func, stockloan_field, rei
     stockloan_func(
         f, sids=sids, start_date=start_date, end_date=end_date)
     stockloan_data = pd.read_csv(f)
-    stockloan_data.loc[:, "Date"] = pd.to_datetime(stockloan_data.Date, utc=True)
+    stockloan_data.loc[:, "Date"] = pd.to_datetime(stockloan_data.Date, utc=is_intraday)
 
-    # Determine timezone, from:
-    # - time param if provided
-    # - else reindex_like.index.tz if set
-    # - else component securities if all have same timezone
-    timezone = None
+    if is_intraday:
+        # Determine timezone, from:
+        # - time param if provided
+        # - else reindex_like.index.tz if set
+        # - else component securities if all have same timezone
+        timezone = None
 
-    if time and " " in time:
-        time, timezone = time.split(" ", 1)
+        if time and " " in time:
+            time, timezone = time.split(" ", 1)
 
-        if reindex_like.index.tz and reindex_like.index.tz.zone != timezone:
-            raise ParameterError((
-                "cannot use timezone {0} because reindex_like timezone is {1}, "
-                "these must match".format(timezone, reindex_like.index.tz.zone)))
+            if reindex_like.index.tz and reindex_like.index.tz.zone != timezone:
+                raise ParameterError((
+                    "cannot use timezone {0} because reindex_like timezone is {1}, "
+                    "these must match".format(timezone, reindex_like.index.tz.zone)))
 
-    if not timezone:
-        if reindex_like.index.tz:
-            timezone = reindex_like.index.tz.zone
+        if not timezone:
+            if reindex_like.index.tz:
+                timezone = reindex_like.index.tz.zone
+            else:
+                # try to infer from component securities
+                f = six.StringIO()
+                download_master_file(f, sids=list(stockloan_data.Sid.unique()),
+                                     fields=["Timezone"])
+                security_timezones = pd.read_csv(f, index_col="Sid")
+                security_timezones = list(security_timezones.Timezone.unique())
+                if len(security_timezones) > 1:
+                    raise ParameterError(
+                        "no timezone specified and cannot infer because multiple timezones are "
+                        "present in data, please specify timezone (timezones in data: {0})".format(
+                        ", ".join(security_timezones)))
+                timezone = security_timezones[0]
+
+        # Create an index of `reindex_like` dates at `time`
+        if time:
+            try:
+                time = pd.Timestamp(time).time()
+            except ValueError as e:
+                raise ParameterError("could not parse time '{0}': {1}".format(
+                    time, str(e)))
+            index_at_time = pd.Index(reindex_like.index.to_series().apply(
+                lambda x: pd.datetime.combine(x, time)))
         else:
-            # try to infer from component securities
-            f = six.StringIO()
-            download_master_file(f, sids=list(stockloan_data.Sid.unique()),
-                                 fields=["Timezone"])
-            security_timezones = pd.read_csv(f, index_col="Sid")
-            security_timezones = list(security_timezones.Timezone.unique())
-            if len(security_timezones) > 1:
-                raise ParameterError(
-                    "no timezone specified and cannot infer because multiple timezones are "
-                    "present in data, please specify timezone (timezones in data: {0})".format(
-                    ", ".join(security_timezones)))
-            timezone = security_timezones[0]
+            index_at_time = reindex_like.index
 
-    # Create an index of `reindex_like` dates at `time`
-    if time:
-        try:
-            time = pd.Timestamp(time).time()
-        except ValueError as e:
-            raise ParameterError("could not parse time '{0}': {1}".format(
-                time, str(e)))
-        index_at_time = pd.Index(reindex_like.index.to_series().apply(
-            lambda x: pd.datetime.combine(x, time)))
+        if not index_at_time.tz:
+            index_at_time = index_at_time.tz_localize(timezone)
+
+        index_at_time = index_at_time.tz_convert("UTC")
+
+    # For daily stockloan data, just use the input DataFrame index
     else:
         index_at_time = reindex_like.index
-
-    if not index_at_time.tz:
-        index_at_time = index_at_time.tz_localize(timezone)
-
-    index_at_time = index_at_time.tz_convert("UTC")
+        if index_at_time.tz:
+            index_at_time = index_at_time.tz_localize(None)
 
     stockloan_data = stockloan_data.pivot(index="Sid",columns="Date").T
     stockloan_data = stockloan_data.loc[stockloan_field]
@@ -2532,9 +2660,9 @@ def get_ibkr_shortable_shares_reindexed_like(reindex_like, time=None):
     >>> closes = prices.loc["Close"]
     >>> shortables = get_ibkr_shortable_shares_reindexed_like(closes, time="09:20:00 America/New_York")
     """
-    shortable_shares = _get_ibkr_stockloan_data_reindexed_like(
+    shortable_shares = _get_stockloan_data_reindexed_like(
         download_ibkr_shortable_shares, "Quantity",
-        reindex_like=reindex_like, time=time)
+        reindex_like=reindex_like, time=time, is_intraday=True)
 
     # fillna(0) where date > 2018-04-15, the data start date (NaNs after that
     # date indicate no shortable shares, NaNs before that date indicate don't
@@ -2594,6 +2722,37 @@ def get_ibkr_borrow_fees_reindexed_like(reindex_like, time=None):
     >>> closes = prices.loc["Close"]
     >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes, time="16:30:00 America/New_York")
     """
-    return _get_ibkr_stockloan_data_reindexed_like(
+    return _get_stockloan_data_reindexed_like(
         download_ibkr_borrow_fees, "FeeRate",
-        reindex_like=reindex_like, time=time)
+        reindex_like=reindex_like, time=time, is_intraday=True)
+
+def get_alpaca_etb_reindexed_like(reindex_like):
+    """
+    Return a DataFrame of Alpaca easy-to-borrow status, reindexed to match the index
+    (dates) and columns (sids) of `reindex_like`.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and sids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    Returns
+    -------
+    DataFrame
+        a Boolean DataFrame indicating easy-to-borrow status, shaped like
+        the input DataFrame
+
+    Examples
+    --------
+    Get easy-to-borrow status for a DataFrame of stocks:
+
+    >>> closes = prices.loc["Close"]
+    >>> are_etb = get_alpaca_etb_reindexed_like(closes)
+    """
+    etb = _get_stockloan_data_reindexed_like(
+        download_alpaca_etb, "EasyToBorrow",
+        reindex_like=reindex_like, is_intraday=False)
+
+    return etb.fillna(0).astype(bool)
