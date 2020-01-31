@@ -249,7 +249,7 @@ Collect upcoming earnings dates for a particular security:
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_wsh_earnings_dates")
 
     examples = """
-Collect shortable shares data and save to database.
+Collect IBKR shortable shares data and save to database.
 
 Data is organized by country and updated every 15 minutes. Historical
 data is available from April 15, 2018.
@@ -258,15 +258,15 @@ Examples:
 
 Collect shortable shares data for US stocks:
 
-    quantrocket fundamental collect-shortshares --countries usa
+    quantrocket fundamental collect-ibkr-shortshares --countries usa
 
 Collect shortable shares data for all stocks:
 
-    quantrocket fundamental collect-shortshares
+    quantrocket fundamental collect-ibkr-shortshares
     """
     parser = _subparsers.add_parser(
-        "collect-shortshares",
-        help="collect shortable shares data and save to database",
+        "collect-ibkr-shortshares",
+        help="collect IBKR shortable shares data and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -275,10 +275,10 @@ Collect shortable shares data for all stocks:
         metavar="COUNTRY",
         help="limit to these countries (pass '?' or any invalid country to see "
         "available countries)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_shortable_shares")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_ibkr_shortable_shares")
 
     examples = """
-Collect borrow fees data and save to database.
+Collect IBKR borrow fees data and save to database.
 
 Data is organized by country and updated every 15 minutes. Historical
 data is available from April 15, 2018.
@@ -287,15 +287,15 @@ Examples:
 
 Collect borrow fees for US stocks:
 
-    quantrocket fundamental collect-shortfees --countries usa
+    quantrocket fundamental collect-ibkr-shortfees --countries usa
 
 Collect borrow fees for all stocks:
 
-    quantrocket fundamental collect-shortfees
+    quantrocket fundamental collect-ibkr-shortfees
     """
     parser = _subparsers.add_parser(
-        "collect-shortfees",
-        help="collect borrow fees data and save to database",
+        "collect-ibkr-shortfees",
+        help="collect IBKR borrow fees data and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -304,7 +304,7 @@ Collect borrow fees for all stocks:
         metavar="COUNTRY",
         help="limit to these countries (pass '?' or any invalid country to see "
         "available countries)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_borrow_fees")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_ibkr_borrow_fees")
 
     examples = """
 Query AtomicFin Fundamentals from the local database and download to file.
@@ -951,7 +951,7 @@ Query earnings dates for a universe of US stocks:
     parser.set_defaults(func="quantrocket.fundamental._cli_download_wsh_earnings_dates")
 
     examples = """
-Query shortable shares from the stockloan database and download to file.
+Query IBKR shortable shares from the local database and download to file.
 
 Data timestamps are UTC.
 
@@ -959,11 +959,11 @@ Examples:
 
 Query shortable shares for a universe of Australian stocks:
 
-    quantrocket fundamental shortshares -u asx-stk -o asx_shortables.csv
+    quantrocket fundamental ibkr-shortshares -u asx-stk -o asx_shortables.csv
     """
     parser = _subparsers.add_parser(
-        "shortshares",
-        help="query shortable shares from the stockloan database and download to file",
+        "ibkr-shortshares",
+        help="query IBKR shortable shares from the local database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
@@ -1008,10 +1008,10 @@ Query shortable shares for a universe of Australian stocks:
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_download_shortable_shares")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_ibkr_shortable_shares")
 
     examples = """
-Query borrow fees from the stockloan database and download to file.
+Query IBKR borrow fees from the local database and download to file.
 
 Data timestamps are UTC.
 
@@ -1019,11 +1019,11 @@ Examples:
 
 Query borrow fees for a universe of Australian stocks:
 
-    quantrocket fundamental shortfees -u asx-stk -o asx_borrow_fees.csv
+    quantrocket fundamental ibkr-shortfees -u asx-stk -o asx_borrow_fees.csv
     """
     parser = _subparsers.add_parser(
-        "shortfees",
-        help="query borrow fees from the stockloan database and download to file",
+        "ibkr-shortfees",
+        help="query IBKR borrow fees from the local database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
@@ -1068,4 +1068,4 @@ Query borrow fees for a universe of Australian stocks:
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_download_borrow_fees")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_ibkr_borrow_fees")

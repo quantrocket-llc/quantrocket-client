@@ -2145,9 +2145,9 @@ def get_atomicfin_sp500_reindexed_like(reindex_like):
 
     return are_in_sp500
 
-def collect_shortable_shares(countries=None):
+def collect_ibkr_shortable_shares(countries=None):
     """
-    Collect shortable shares data and save to database.
+    Collect IBKR shortable shares data and save to database.
 
     Data is organized by country and updated every 15 minutes. Historical
     data is available from April 2018.
@@ -2167,17 +2167,17 @@ def collect_shortable_shares(countries=None):
     params = {}
     if countries:
         params["countries"] = countries
-    response = houston.post("/fundamental/stockloan/shares", params=params)
+    response = houston.post("/fundamental/ibkr/stockloan/shares", params=params)
 
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_collect_shortable_shares(*args, **kwargs):
-    return json_to_cli(collect_shortable_shares, *args, **kwargs)
+def _cli_collect_ibkr_shortable_shares(*args, **kwargs):
+    return json_to_cli(collect_ibkr_shortable_shares, *args, **kwargs)
 
-def collect_borrow_fees(countries=None):
+def collect_ibkr_borrow_fees(countries=None):
     """
-    Collect borrow fees data and save to database.
+    Collect IBKR borrow fees data and save to database.
 
     Data is organized by country and updated every 15 minutes. Historical
     data is available from April 2018.
@@ -2197,20 +2197,20 @@ def collect_borrow_fees(countries=None):
     params = {}
     if countries:
         params["countries"] = countries
-    response = houston.post("/fundamental/stockloan/fees", params=params)
+    response = houston.post("/fundamental/ibkr/stockloan/fees", params=params)
 
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_collect_borrow_fees(*args, **kwargs):
-    return json_to_cli(collect_borrow_fees, *args, **kwargs)
+def _cli_collect_ibkr_borrow_fees(*args, **kwargs):
+    return json_to_cli(collect_ibkr_borrow_fees, *args, **kwargs)
 
-def download_shortable_shares(filepath_or_buffer=None, output="csv",
-                              start_date=None, end_date=None,
-                              universes=None, sids=None,
-                              exclude_universes=None, exclude_sids=None):
+def download_ibkr_shortable_shares(filepath_or_buffer=None, output="csv",
+                                   start_date=None, end_date=None,
+                                   universes=None, sids=None,
+                                   exclude_universes=None, exclude_sids=None):
     """
-    Query shortable shares from the stockloan database and download to file.
+    Query IBKR shortable shares from the local database and download to file.
 
     Data timestamps are UTC.
 
@@ -2249,7 +2249,7 @@ def download_shortable_shares(filepath_or_buffer=None, output="csv",
     Query shortable shares for a universe of Australian stocks.
 
     >>> f = io.StringIO()
-    >>> download_shortable_shares("asx_shortables.csv", universes=["asx-stk"])
+    >>> download_ibkr_shortable_shares("asx_shortables.csv", universes=["asx-stk"])
     >>> shortables = pd.read_csv("asx_shortables.csv", parse_dates=["Date"])
     """
     params = {}
@@ -2271,7 +2271,7 @@ def download_shortable_shares(filepath_or_buffer=None, output="csv",
     if output not in ("csv", "json"):
         raise ValueError("Invalid ouput: {0}".format(output))
 
-    response = houston.get("/fundamental/stockloan/shares.{0}".format(output), params=params,
+    response = houston.get("/fundamental/ibkr/stockloan/shares.{0}".format(output), params=params,
                            timeout=60*5)
 
     try:
@@ -2286,15 +2286,15 @@ def download_shortable_shares(filepath_or_buffer=None, output="csv",
 
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
-def _cli_download_shortable_shares(*args, **kwargs):
-    return json_to_cli(download_shortable_shares, *args, **kwargs)
+def _cli_download_ibkr_shortable_shares(*args, **kwargs):
+    return json_to_cli(download_ibkr_shortable_shares, *args, **kwargs)
 
-def download_borrow_fees(filepath_or_buffer=None, output="csv",
+def download_ibkr_borrow_fees(filepath_or_buffer=None, output="csv",
                          start_date=None, end_date=None,
                          universes=None, sids=None,
                          exclude_universes=None, exclude_sids=None):
     """
-    Query borrow fees from the stockloan database and download to file.
+    Query IBKR borrow fees from the local database and download to file.
 
     Data timestamps are UTC.
 
@@ -2333,7 +2333,7 @@ def download_borrow_fees(filepath_or_buffer=None, output="csv",
     Query borrow fees for a universe of Australian stocks.
 
     >>> f = io.StringIO()
-    >>> download_borrow_fees("asx_borrow_fees.csv", universes=["asx-stk"])
+    >>> download_ibkr_borrow_fees("asx_borrow_fees.csv", universes=["asx-stk"])
     >>> borrow_fees = pd.read_csv("asx_borrow_fees.csv", parse_dates=["Date"])
     """
     params = {}
@@ -2355,7 +2355,7 @@ def download_borrow_fees(filepath_or_buffer=None, output="csv",
     if output not in ("csv", "json"):
         raise ValueError("Invalid ouput: {0}".format(output))
 
-    response = houston.get("/fundamental/stockloan/fees.{0}".format(output), params=params,
+    response = houston.get("/fundamental/ibkr/stockloan/fees.{0}".format(output), params=params,
                            timeout=60*5)
 
     try:
@@ -2370,14 +2370,14 @@ def download_borrow_fees(filepath_or_buffer=None, output="csv",
 
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
-def _cli_download_borrow_fees(*args, **kwargs):
-    return json_to_cli(download_borrow_fees, *args, **kwargs)
+def _cli_download_ibkr_borrow_fees(*args, **kwargs):
+    return json_to_cli(download_ibkr_borrow_fees, *args, **kwargs)
 
-def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_like,
+def _get_ibkr_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_like,
                                        time=None):
     """
-    Common base function for get_shortable_shares_reindexed_like and
-    get_borrow_fees_reindexed_like.
+    Common base function for get_ibkr_shortable_shares_reindexed_like and
+    get_ibkr_borrow_fees_reindexed_like.
     """
     try:
         import pandas as pd
@@ -2484,9 +2484,9 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
 
     return stockloan_data
 
-def get_shortable_shares_reindexed_like(reindex_like, time=None):
+def get_ibkr_shortable_shares_reindexed_like(reindex_like, time=None):
     """
-    Return a DataFrame of shortable shares, reindexed to match the index
+    Return a DataFrame of IBKR shortable shares, reindexed to match the index
     (dates) and columns (sids) of `reindex_like`.
 
     Parameters
@@ -2518,22 +2518,22 @@ def get_shortable_shares_reindexed_like(reindex_like, time=None):
     Get shortable shares as of midnight for a DataFrame of US stocks:
 
     >>> closes = prices.loc["Close"]
-    >>> shortables = get_shortable_shares_reindexed_like(closes)
+    >>> shortables = get_ibkr_shortable_shares_reindexed_like(closes)
 
     Get shortable shares as of 9:20 AM for a DataFrame of US stocks (timezone
     inferred from component stocks):
 
     >>> closes = prices.loc["Close"]
-    >>> shortables = get_shortable_shares_reindexed_like(closes, time="09:20:00")
+    >>> shortables = get_ibkr_shortable_shares_reindexed_like(closes, time="09:20:00")
 
     Get shortable shares as of 9:20 AM New York time for a multi-timezone DataFrame
     of stocks:
 
     >>> closes = prices.loc["Close"]
-    >>> shortables = get_shortable_shares_reindexed_like(closes, time="09:20:00 America/New_York")
+    >>> shortables = get_ibkr_shortable_shares_reindexed_like(closes, time="09:20:00 America/New_York")
     """
-    shortable_shares = _get_stockloan_data_reindexed_like(
-        download_shortable_shares, "Quantity",
+    shortable_shares = _get_ibkr_stockloan_data_reindexed_like(
+        download_ibkr_shortable_shares, "Quantity",
         reindex_like=reindex_like, time=time)
 
     # fillna(0) where date > 2018-04-15, the data start date (NaNs after that
@@ -2546,9 +2546,9 @@ def get_shortable_shares_reindexed_like(reindex_like, time=None):
 
     return shortable_shares
 
-def get_borrow_fees_reindexed_like(reindex_like, time=None):
+def get_ibkr_borrow_fees_reindexed_like(reindex_like, time=None):
     """
-    Return a DataFrame of borrow fees, reindexed to match the index
+    Return a DataFrame of IBKR borrow fees, reindexed to match the index
     (dates) and columns (sids) of `reindex_like`.
 
     Parameters
@@ -2580,20 +2580,20 @@ def get_borrow_fees_reindexed_like(reindex_like, time=None):
     Get borrow fees as of midnight for a DataFrame of US stocks:
 
     >>> closes = prices.loc["Close"]
-    >>> borrow_fees = get_borrow_fees_reindexed_like(closes)
+    >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes)
 
     Get borrow fees as of 4:30 PM for a DataFrame of US stocks (timezone inferred
     from component stocks):
 
     >>> closes = prices.loc["Close"]
-    >>> borrow_fees = get_borrow_fees_reindexed_like(closes, time="16:30:00")
+    >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes, time="16:30:00")
 
     Get borrow fees as of 4:30 PM New York time for a multi-timezone DataFrame
     of stocks:
 
     >>> closes = prices.loc["Close"]
-    >>> borrow_fees = get_borrow_fees_reindexed_like(closes, time="16:30:00 America/New_York")
+    >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes, time="16:30:00 America/New_York")
     """
-    return _get_stockloan_data_reindexed_like(
-        download_borrow_fees, "FeeRate",
+    return _get_ibkr_stockloan_data_reindexed_like(
+        download_ibkr_borrow_fees, "FeeRate",
         reindex_like=reindex_like, time=time)
