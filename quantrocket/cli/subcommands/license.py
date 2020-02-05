@@ -57,3 +57,79 @@ Examples:
         metavar="LICENSEKEY",
         help="the license key for your account")
     parser.set_defaults(func="quantrocket.license._cli_set_license")
+
+    examples = """
+Set Alpaca API key, or view the current API key.
+
+Your credentials are encrypted at rest and never leave
+your deployment.
+
+Examples:
+
+View current live and paper API keys:
+
+    quantrocket license alpaca-key
+
+Set Alpaca live API key (will prompt for secret key):
+
+    quantrocket license alpaca-key --api-key AK123 --live
+
+Set Alpaca paper API key (will prompt for secret key):
+
+    quantrocket license alpaca-key --api-key PK123 --paper
+    """
+    parser = _subparsers.add_parser(
+        "alpaca-key",
+        help="set Alpaca API key, or view the current API key",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-a", "--api-key",
+        metavar="API_KEY",
+        help="Alpaca API key ID")
+    parser.add_argument(
+        "-s", "--secret-key",
+        metavar="SECRET_KEY",
+        help="Alpaca secret key (if omitted, will be prompted for secret key)")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--paper",
+        action="store_const",
+        dest="trading_mode",
+        const="paper",
+        help="set trading mode to paper trading")
+    group.add_argument(
+        "--live",
+        action="store_const",
+        dest="trading_mode",
+        const="live",
+        help="set trading mode to live trading")
+    parser.set_defaults(func="quantrocket.license._cli_get_or_set_alpaca_key")
+
+    examples = """
+Set Polygon API key, or view the current API key.
+
+Your credentials are encrypted at rest and never leave
+your deployment.
+
+Examples:
+
+View current API key:
+
+    quantrocket license polygon-key
+
+Set Polygon API key:
+
+    quantrocket license polygon-key K123
+    """
+    parser = _subparsers.add_parser(
+        "polygon-key",
+        help="set Polygon API key, or view the current API key",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "api_key",
+        nargs="?",
+        metavar="API_KEY",
+        help="Polygon API key")
+    parser.set_defaults(func="quantrocket.license._cli_get_or_set_polygon_key")

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import sys
-import getpass
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
@@ -274,57 +273,3 @@ def download_exchange_rates(filepath_or_buffer=None, output="csv",
 
 def _cli_download_exchange_rates(*args, **kwargs):
     return json_to_cli(download_exchange_rates, *args, **kwargs)
-
-def get_alpaca_key():
-    """
-    Returns the current API key(s) for Alpaca.
-
-    Returns
-    -------
-    dict
-        credentials
-    """
-    response = houston.get("/account/credentials/alpaca")
-    houston.raise_for_status_with_json(response)
-    # It's possible to get a 204 empty response
-    if not response.content:
-        return {}
-    return response.json()
-
-def set_alpaca_key(api_key, trading_mode, secret_key=None):
-    """
-    Set Alpaca API key.
-
-    Parameters
-    ----------
-    api_key : str, required
-        Alpaca API key ID
-
-    trading_mode : str, required
-        the trading mode of this API key ('paper' or 'live')
-
-    secret_key : str, optional
-        Alpaca secret key (if omitted, will be prompted for secret key)
-
-    Returns
-    -------
-    dict
-        status message
-    """
-    if not secret_key:
-        secret_key = getpass.getpass(prompt="Enter Alpaca secret key: ")
-
-    data = {}
-    data["api_key"] = api_key
-    data["secret_key"] = secret_key
-    data["trading_mode"] = trading_mode
-
-    response = houston.put("/account/credentials/alpaca", data=data)
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_get_or_set_alpaca_key(*args, **kwargs):
-    if any(kwargs.values()):
-        return json_to_cli(set_alpaca_key, *args, **kwargs)
-    else:
-        return json_to_cli(get_alpaca_key)
