@@ -600,6 +600,7 @@ def get_securities_reindexed_like(reindex_like, fields=None):
     names.insert(0, "Field")
 
     securities = pd.concat(all_master_fields, names=names)
+    securities = securities.reindex(columns=reindex_like.columns)
     return securities
 
 def get_contract_nums_reindexed_like(reindex_like, limit=5):
