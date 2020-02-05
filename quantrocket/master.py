@@ -239,6 +239,38 @@ def collect_ibkr_listings(exchanges=None, sec_types=None, currencies=None,
 def _cli_collect_ibkr_listings(*args, **kwargs):
     return json_to_cli(collect_ibkr_listings, *args, **kwargs)
 
+def collect_polygon_listings(exchanges=None):
+    """
+    Collect securities listings from Polygon and store in securities master
+    database.
+
+    Parameters
+    ----------
+    exchanges : list or str, required
+        collect listings for these exchanges
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Collect listings for all US listed stocks:
+
+    >>> collect_polygon_listings(["XNYS", "XNAS", "ARCX", "XASE", "BATS"])
+    """
+    params = {}
+    if exchanges:
+        params["exchanges"] = exchanges
+
+    response = houston.post("/master/securities/polygon", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_polygon_listings(*args, **kwargs):
+    return json_to_cli(collect_polygon_listings, *args, **kwargs)
+
 def collect_ibkr_option_chains(universes=None, sids=None, infilepath_or_buffer=None):
     """
     Collect IBKR option chains for underlying securities.
@@ -391,7 +423,7 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         vendor's exchange code.
 
     sec_types : list of str, optional
-        limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND, OPT, FOP, BAG
+        limit to these security types. Possible choices: STK, ETF, FUT, CASH, CRYPTO, IND, OPT, FOP, BAG
 
     currencies : list of str, optional
         limit to these currencies
@@ -421,7 +453,8 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         exclude backmonth and expired futures contracts (default False)
 
     vendors : list of str, optional
-        limit to these vendors. Possible choices: alpaca, atomicfin, edi, ibkr
+        limit to these vendors. Possible choices: alpaca, atomicfin, edi, ibkr,
+        polygon
 
     fields : list of str, optional
         Return specific fields. By default a core set of fields is

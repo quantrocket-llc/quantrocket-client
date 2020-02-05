@@ -176,6 +176,28 @@ Re-collect contract details for an existing universe called "japan-fin":
     parser.set_defaults(func="quantrocket.master._cli_collect_ibkr_listings")
 
     examples = """
+Collect securities listings from Polygon and store in securities master
+database.
+
+Examples:
+
+Collect listings for all listed US stocks:
+
+    quantrocket master collect-polygon -e XNYS XNAS XASE ARCX BATS
+    """
+    parser = _subparsers.add_parser(
+        "collect-polygon",
+        help="collect securities listings from Polygon and store in securities master database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-e", "--exchanges",
+        nargs="*",
+        metavar="MIC",
+        help="collect listings for these exchanges")
+    parser.set_defaults(func="quantrocket.master._cli_collect_polygon_listings")
+
+    examples = """
 Collect IBKR option chains for underlying securities.
 
 Note: option chains often consist of hundreds, sometimes thousands of options
@@ -264,7 +286,7 @@ terminal display:
         "-t", "--sec-types",
         nargs="*",
         metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG"],
+        choices=["STK", "ETF", "FUT", "CASH", "CRYPTO", "IND", "OPT", "FOP", "BAG"],
         help="limit to these security types. Possible choices: %(choices)s")
     filters.add_argument(
         "-c", "--currencies",
@@ -315,7 +337,7 @@ terminal display:
         "-v", "--vendors",
         nargs="*",
         metavar="VENDOR",
-        choices=["alpaca", "atomicfin", "edi", "ibkr"],
+        choices=["alpaca", "atomicfin", "edi", "ibkr", "polygon"],
         help="limit to these vendors. Possible choices: %(choices)s")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
