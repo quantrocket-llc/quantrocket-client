@@ -247,7 +247,8 @@ def collect_polygon_listings(exchanges=None):
     Parameters
     ----------
     exchanges : list or str, required
-        collect listings for these exchanges
+        collect listings for these exchanges. Possible choices: FX, CRYPTO,
+        XNYS, XNAS, ARCX, XASE, BATS, PINX, PSGM, OTCB, OTCQ
 
     Returns
     -------
@@ -259,6 +260,10 @@ def collect_polygon_listings(exchanges=None):
     Collect listings for all US listed stocks:
 
     >>> collect_polygon_listings(["XNYS", "XNAS", "ARCX", "XASE", "BATS"])
+
+    Collect currencies and crytocurrencies:
+
+    >>> collect_polygon_listings(["FX", "CRYPTO"])
     """
     params = {}
     if exchanges:

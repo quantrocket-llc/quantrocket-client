@@ -184,6 +184,10 @@ Examples:
 Collect listings for all listed US stocks:
 
     quantrocket master collect-polygon -e XNYS XNAS XASE ARCX BATS
+
+Collect currencies and crytocurrencies:
+
+    quantrocket master collect-polygon -e FX CRYPTO
     """
     parser = _subparsers.add_parser(
         "collect-polygon",
@@ -192,9 +196,24 @@ Collect listings for all listed US stocks:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-e", "--exchanges",
-        nargs="*",
+        nargs="+",
         metavar="MIC",
-        help="collect listings for these exchanges")
+        choices=[
+            # Currencies
+            "FX",
+            "CRYPTO",
+            # Listed stocks
+            "XNYS",
+            "XNAS",
+            "ARCX",
+            "XASE",
+            "BATS",
+            # Unlisted stocks
+            "PINX",
+            "PSGM",
+            "OTCB",
+            "OTCQ",],
+        help="collect listings for these exchanges. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.master._cli_collect_polygon_listings")
 
     examples = """
