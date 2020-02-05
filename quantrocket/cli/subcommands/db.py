@@ -70,6 +70,8 @@ from S3.
 
 See http://qrok.it/h/dbs3 to learn more.
 
+Credentials are encrypted at rest and never leave your deployment.
+
 Examples:
 
 Configure S3 (will prompt for secret access key):

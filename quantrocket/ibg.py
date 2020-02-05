@@ -50,6 +50,8 @@ def set_credentials(gateway, username=None, password=None, trading_mode=None):
     (must have previously entered live credentials). Setting new credentials will
     restart IB Gateway and takes a moment to complete.
 
+    Credentials are encrypted at rest and never leave your deployment.
+
     Parameters
     ----------
     gateway : str, required

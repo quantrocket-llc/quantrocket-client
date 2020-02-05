@@ -27,6 +27,8 @@ Can be used to set new credentials or switch between paper and live trading
 (must have previously entered live credentials). Setting new credentials will
 restart IB Gateway and takes a moment to complete.
 
+Credentials are encrypted at rest and never leave your deployment.
+
 Examples:
 
 View current credentials for IB Gateway service named ibg1 (shows username and

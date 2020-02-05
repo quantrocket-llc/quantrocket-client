@@ -93,6 +93,8 @@ def set_s3_config(access_key_id=None, secret_access_key=None, bucket=None):
 
     See http://qrok.it/h/dbs3 to learn more.
 
+    Credentials are encrypted at rest and never leave your deployment.
+
     Parameters
     ----------
     access_key_id : str, optional
