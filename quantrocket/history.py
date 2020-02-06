@@ -112,7 +112,7 @@ def create_ibkr_db(code, universes=None, sids=None, start_date=None, end_date=No
     end_date : str (YYYY-MM-DD), optional
         collect history up to this end date (default is to collect up to the present)
 
-    bar_size : str, required for vendor ib
+    bar_size : str, required
         the bar size to collect. Possible choices:
         "1 secs", "5 secs",	"10 secs", "15 secs", "30 secs",
         "1 min", "2 mins", "3 mins", "5 mins", "10 mins", "15 mins", "20 mins", "30 mins",
@@ -153,8 +153,8 @@ def create_ibkr_db(code, universes=None, sids=None, start_date=None, end_date=No
         Required for intraday databases. Possible choices are `year` (separate
         database for each year), `month` (separate database for each year+month),
         `day` (separate database for each day), `time` (separate database for each
-        bar time), `conid` (separate database for each security), `conid,time`
-        (duplicate copies of database, one sharded by conid and the other by time),
+        bar time), `sid` (separate database for each security), `sid,time`
+        (duplicate copies of database, one sharded by sid and the other by time),
         or `off` (no sharding). See http://qrok.it/h/shard for more help.
 
     Returns
@@ -196,6 +196,94 @@ def create_ibkr_db(code, universes=None, sids=None, start_date=None, end_date=No
 
 def _cli_create_ibkr_db(*args, **kwargs):
     return json_to_cli(create_ibkr_db, *args, **kwargs)
+
+def create_polygon_db(code, universes=None, sids=None, start_date=None, end_date=None,
+                      bar_size=None, outside_rth=False, times=None, between_times=None,
+                      shard=None):
+    """
+    Create a new database for collecting historical data from Polygon.
+
+    The historical data requirements you specify when you create a new database (bar
+    size, universes, etc.) are applied each time you collect data for that database.
+
+    Parameters
+    ----------
+    code : str, required
+        the code to assign to the database (lowercase alphanumerics and hyphens only)
+
+    universes : list of str
+        include these universes
+
+    sids : list of str
+        include these sids
+
+    start_date : str (YYYY-MM-DD), optional
+        collect history back to this start date (default is to collect as far back as data
+        is available)
+
+    end_date : str (YYYY-MM-DD), optional
+        collect history up to this end date (default is to collect up to the present)
+
+    bar_size : str, required
+        the bar size to collect. Should be a number followed by "minute", "hour", or "day",
+        for example "1 minute"
+
+    outside_rth : bool
+        include data from outside regular trading hours (default is to limit to regular
+        trading hours)
+
+    times : list of str (HH:MM:SS), optional
+        limit to these times (refers to the bar's start time; mutually exclusive
+        with `between_times`)
+
+    between_times : list of str (HH:MM:SS), optional
+        limit to times between these two times (refers to the bar's start time;
+        mutually exclusive with `times`)
+
+    shard : str, optional
+        whether and how to shard the database, i.e. break it into smaller pieces.
+        Required for intraday databases. Possible choices are `year` (separate
+        database for each year), `month` (separate database for each year+month),
+        `day` (separate database for each day), `time` (separate database for each
+        bar time), `sid` (separate database for each security), `sid,time`
+        (duplicate copies of database, one sharded by sid and the other by time),
+        or `off` (no sharding). See http://qrok.it/h/shard for more help.
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if bar_size:
+        params["bar_size"] = bar_size
+    if outside_rth:
+        params["outside_rth"] = outside_rth
+    if times:
+        params["times"] = times
+    if between_times:
+        params["between_times"] = between_times
+    if shard:
+        params["shard"] = shard
+
+    params["vendor"] = "polygon"
+
+    response = houston.put("/history/databases/{0}".format(code), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_create_polygon_db(*args, **kwargs):
+    return json_to_cli(create_polygon_db, *args, **kwargs)
 
 def get_db_config(code):
     """
