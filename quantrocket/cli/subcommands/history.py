@@ -231,8 +231,17 @@ Create a 1-minute database for a universe of US stocks and shard by day:
     parser.add_argument(
         "-z", "--bar-size",
         metavar="BAR_SIZE",
-        help="the bar size to collect. Should be a number followed by 'minute', 'hour', "
-        "or 'day', for example '1 minute'")
+        choices=[
+            "1 minute",
+            "2 minute",
+            "3 minute",
+            "5 minute",
+            "10 minute",
+            "15 minute",
+            "30 minute",
+            "1 day"
+            ],
+        help="the bar size to collect. Possible choices: %(choices)s")
     parser.add_argument(
         "-o", "--outside-rth",
         action="store_true",

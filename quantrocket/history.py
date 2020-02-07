@@ -225,8 +225,8 @@ def create_polygon_db(code, universes=None, sids=None, start_date=None, end_date
         collect history up to this end date (default is to collect up to the present)
 
     bar_size : str, required
-        the bar size to collect. Should be a number followed by "minute", "hour", or "day",
-        for example "1 minute"
+        the bar size to collect. Possible choices: 1 minute, 2 minute, 3 minute, 5 minute,
+        10 minute, 15 minute, 30 minute, 1 day
 
     outside_rth : bool
         include data from outside regular trading hours (default is to limit to regular
