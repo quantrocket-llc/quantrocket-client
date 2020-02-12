@@ -58,12 +58,13 @@ def create_ibkr_tick_db(code, universes=None, sids=None, fields=None,
     --------
     Create a database for collecting real-time trades and volume for US stocks:
 
-    >>> create_tick_db("usa-stk-trades", universes="usa-stk", fields=["LastPrice", "Volume"])
+    >>> create_ibkr_tick_db("usa-stk-trades", universes="usa-stk",
+                            fields=["LastPrice", "Volume"])
 
     Create a database for collecting trades and quotes for a universe of futures:
 
-    >>> create_tick_db("globex-fut-taq", universes="globex-fut",
-                       fields=["LastPrice", "Volume", "BidPrice", "AskPrice", "BidSize", "AskSize"])
+    >>> create_ibkr_tick_db("globex-fut-taq", universes="globex-fut",
+                            fields=["LastPrice", "Volume", "BidPrice", "AskPrice", "BidSize", "AskSize"])
     """
     params = {}
     if universes:
@@ -84,6 +85,58 @@ def create_ibkr_tick_db(code, universes=None, sids=None, fields=None,
 
 def _cli_create_ibkr_tick_db(*args, **kwargs):
     return json_to_cli(create_ibkr_tick_db, *args, **kwargs)
+
+def create_polygon_tick_db(code, universes=None, sids=None, fields=None):
+    """
+    Create a new database for collecting real-time tick data from Polygon.
+
+    The market data requirements you specify when you create a new database are
+    applied each time you collect data for that database.
+
+    Parameters
+    ----------
+    code : str, required
+        the code to assign to the database (lowercase alphanumerics and hyphens only)
+
+    universes : list of str
+        include these universes
+
+    sids : list of str
+        include these sids
+
+    fields : list of str
+        collect these fields (pass '?' or any invalid fieldname to see
+        available fields, default fields are 'LastPrice' and 'LastSize')
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Create a database for collecting real-time trade prices and sizes for US stocks:
+
+    >>> create_polygon_tick_db("usa-stk-trades", universes="usa-stk", fields=["LastPrice", "LastSize"])
+
+    """
+    params = {}
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if fields:
+        params["fields"] = fields
+
+    params["vendor"] = "polygon"
+
+    response = houston.put("/realtime/databases/{0}".format(code), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_create_polygon_tick_db(*args, **kwargs):
+    return json_to_cli(create_polygon_tick_db, *args, **kwargs)
 
 def create_agg_db(code, tick_db_code, bar_size, fields=None):
     """
@@ -248,7 +301,8 @@ def collect_market_data(codes, sids=None, universes=None, fields=None, until=Non
     Collect real-time market data and save it to a tick database.
 
     A single snapshot of market data or a continuous stream of market data can
-    be collected, depending on the `snapshot` parameter.
+    be collected, depending on the `snapshot` parameter. (Snapshots are not
+    supported for all vendors.)
 
     Streaming real-time data is collected until cancelled, or can be scheduled
     for cancellation using the `until` parameter.

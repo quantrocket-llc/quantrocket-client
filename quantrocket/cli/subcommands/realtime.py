@@ -67,6 +67,45 @@ Create a database for collecting trades and quotes for a universe of futures:
     parser.set_defaults(func="quantrocket.realtime._cli_create_ibkr_tick_db")
 
     examples = """
+Create a new database for collecting real-time tick data from Polygon.
+
+The market data requirements you specify when you create a new database are
+applied each time you collect data for that database.
+
+Examples:
+
+Create a database for collecting real-time trade prices and sizes for US stocks:
+
+    quantrocket realtime create-polygon-tick-db usa-stk-trades -u usa-stk --fields LastPrice LastSize
+    """
+    parser = _subparsers.add_parser(
+        "create-polygon-tick-db",
+        help="create a new database for collecting real-time tick data from Polygon",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
+    parser.add_argument(
+        "-u", "--universes",
+        metavar="UNIVERSE",
+        nargs="*",
+        help="include these universes")
+    parser.add_argument(
+        "-i", "--sids",
+        metavar="SID",
+        nargs="*",
+        help="include these sids")
+    parser.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="collect these fields (pass '?' or any invalid fieldname to see "
+        "available fields, default fields are 'LastPrice' and 'LastSize')")
+    parser.set_defaults(func="quantrocket.realtime._cli_create_polygon_tick_db")
+
+    examples = """
 Create an aggregate database from a tick database.
 
 Aggregate databases provide rolled-up views of the underlying tick data,
@@ -195,7 +234,8 @@ Examples:
 Collect real-time market data and save it to a tick database.
 
 A single snapshot of market data or a continuous stream of market data can
-be collected, depending on the `--snapshot` parameter.
+be collected, depending on the `--snapshot` parameter. (Snapshots are not
+supported for all vendors.)
 
 Streaming real-time data is collected until cancelled, or can be scheduled
 for cancellation using the `--until` parameter.
