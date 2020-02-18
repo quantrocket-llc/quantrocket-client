@@ -217,6 +217,21 @@ Collect currencies and crytocurrencies:
     parser.set_defaults(func="quantrocket.master._cli_collect_polygon_listings")
 
     examples = """
+Collect US stock listings from QuantRocket and store in securities master
+database.
+
+Examples:
+
+    quantrocket master collect-usstock
+    """
+    parser = _subparsers.add_parser(
+        "collect-usstock",
+        help="collect US stock listings from QuantRocket and store in securities master database",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.set_defaults(func="quantrocket.master._cli_collect_usstock_listings")
+
+    examples = """
 Collect IBKR option chains for underlying securities.
 
 Note: option chains often consist of hundreds, sometimes thousands of options

@@ -276,6 +276,23 @@ def collect_polygon_listings(exchanges=None):
 def _cli_collect_polygon_listings(*args, **kwargs):
     return json_to_cli(collect_polygon_listings, *args, **kwargs)
 
+def collect_usstock_listings():
+    """
+    Collect US stock listings from QuantRocket and store in securities
+    master database.
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    response = houston.post("/master/securities/usstock")
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_usstock_listings(*args, **kwargs):
+    return json_to_cli(collect_usstock_listings, *args, **kwargs)
+
 def collect_ibkr_option_chains(universes=None, sids=None, infilepath_or_buffer=None):
     """
     Collect IBKR option chains for underlying securities.
