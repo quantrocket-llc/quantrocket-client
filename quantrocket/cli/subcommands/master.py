@@ -371,7 +371,7 @@ terminal display:
         "-v", "--vendors",
         nargs="*",
         metavar="VENDOR",
-        choices=["alpaca", "atomicfin", "edi", "ibkr", "polygon"],
+        choices=["alpaca", "atomicfin", "edi", "ibkr", "polygon", "usstock"],
         help="limit to these vendors. Possible choices: %(choices)s")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(

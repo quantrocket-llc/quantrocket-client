@@ -476,7 +476,7 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
 
     vendors : list of str, optional
         limit to these vendors. Possible choices: alpaca, atomicfin, edi, ibkr,
-        polygon
+        polygon, usstock
 
     fields : list of str, optional
         Return specific fields. By default a core set of fields is

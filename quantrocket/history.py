@@ -197,7 +197,7 @@ def create_ibkr_db(code, universes=None, sids=None, start_date=None, end_date=No
 def _cli_create_ibkr_db(*args, **kwargs):
     return json_to_cli(create_ibkr_db, *args, **kwargs)
 
-def create_usstock_db(code, bar_size=None):
+def create_usstock_db(code, bar_size=None, universe=None):
     """
     Create a new database for collecting historical US stock data from QuantRocket.
 
@@ -207,19 +207,29 @@ def create_usstock_db(code, bar_size=None):
         the code to assign to the database (lowercase alphanumerics and hyphens only)
 
     bar_size : str, optional
-        the bar size to collect. Possible choices: 1d
+        the bar size to collect. Possible choices: 1 day
+
+    universe : str, optional
+        the universe to collect. Possible choices: US, FREE
 
     Returns
     -------
     dict
         status message
 
+    Examples
+    --------
+    Create a database for end-of-day US stock prices:
+
+    create_usstock_db('us-stk-1d', bar_size='1 day')
     """
     params = {
         "vendor": "usstock",
     }
     if bar_size:
         params["bar_size"] = bar_size
+    if universe:
+        params["universe"] = universe
 
     response = houston.put("/history/databases/{0}".format(code), params=params)
 
