@@ -274,6 +274,33 @@ Create a 1-minute database for a universe of US stocks and shard by day:
     parser.set_defaults(func="quantrocket.history._cli_create_polygon_db")
 
     examples = """
+Create a new database for collecting historical US stock data from QuantRocket.
+
+Examples:
+
+Create a database for end-of-day US stock prices:
+
+    quantrocket history create-usstock-db us-stk-1d --bar-size 1d
+"""
+    parser = _subparsers.add_parser(
+        "create-usstock-db",
+        help="create a new database for collecting historical US stock data from QuantRocket",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
+    parser.add_argument(
+        "-z", "--bar-size",
+        metavar="BAR_SIZE",
+        choices=[
+            "1d"
+            ],
+        help="the bar size to collect. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.history._cli_create_usstock_db")
+
+    examples = """
 List history databases.
 
 Examples:

@@ -285,6 +285,38 @@ def create_polygon_db(code, universes=None, sids=None, start_date=None, end_date
 def _cli_create_polygon_db(*args, **kwargs):
     return json_to_cli(create_polygon_db, *args, **kwargs)
 
+def create_usstock_db(code, bar_size=None):
+    """
+    Create a new database for collecting historical US stock data from QuantRocket.
+
+    Parameters
+    ----------
+    code : str, required
+        the code to assign to the database (lowercase alphanumerics and hyphens only)
+
+    bar_size : str, optional
+        the bar size to collect. Possible choices: 1d
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {
+        "vendor": "usstock",
+    }
+    if bar_size:
+        params["bar_size"] = bar_size
+
+    response = houston.put("/history/databases/{0}".format(code), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_create_usstock_db(*args, **kwargs):
+    return json_to_cli(create_usstock_db, *args, **kwargs)
+
 def get_db_config(code):
     """
     Return the configuration for a history database.
