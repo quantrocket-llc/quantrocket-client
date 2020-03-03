@@ -187,6 +187,34 @@ Delete a bundle called 'es-fut-1min':
     parser.set_defaults(func="quantrocket.zipline._cli_drop_bundle")
 
     examples = """
+Set or show the default bundle to use for backtesting and trading.
+
+Setting a default bundle is a convenience and is optional. It can be
+overridden by manually specifying a bundle when backtesting or
+trading.
+
+Examples:
+
+Set a bundle named usstock-1min as the default:
+
+    quantrocket zipline default-bundle usstock-1min
+
+Show current default bundle:
+
+    quantrocket zipline default-bundle
+    """
+    parser = _subparsers.add_parser(
+        "default-bundle",
+        help="set or show the default bundle to use for backtesting and trading",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "bundle",
+        nargs="?",
+        help="the bundle code")
+    parser.set_defaults(func="quantrocket.zipline._cli_get_or_set_default_bundle")
+
+    examples = """
 Backtest a Zipline strategy and write the test results to a CSV file.
 
 The CSV result file contains several DataFrames stacked into one: the Zipline performance
@@ -219,9 +247,9 @@ Run a backtest from a strategy file called etf_arb.py and save a CSV file of res
         help="the starting capital for the simulation (default is 10000000.0)")
     parser.add_argument(
         "-b", "--bundle",
-        metavar="BUNDLE-NAME",
-        required=True,
-        help="the data bundle to use for the simulation")
+        metavar="CODE",
+        help="the data bundle to use for the simulation. If omitted, the default "
+        "bundle (if set) is used.")
     parser.add_argument(
         "-s", "--start",
         required=True,
@@ -292,9 +320,9 @@ Trade a strategy:
         help="the file that contains the strategy to run")
     parser.add_argument(
         "-b", "--bundle",
-        metavar="BUNDLE-NAME",
-        required=True,
-        help="the data bundle to use")
+        metavar="CODE",
+        help="the data bundle to use. If omitted, the default bundle "
+        "(if set) is used.")
     parser.add_argument(
         "-a", "--account",
         help="the account to run the strategy in. Only required "

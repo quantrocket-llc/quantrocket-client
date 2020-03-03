@@ -239,6 +239,53 @@ def drop_bundle(code, confirm_by_typing_bundle_code_again=None):
 def _cli_drop_bundle(*args, **kwargs):
     return json_to_cli(drop_bundle, *args, **kwargs)
 
+def get_default_bundle():
+    """
+    Return the current default bundle, if any.
+
+    Returns
+    -------
+    dict
+        default bundle
+    """
+    response = houston.get("/zipline/config")
+    houston.raise_for_status_with_json(response)
+    # It's possible to get a 204 empty response
+    if not response.content:
+        return {}
+    return response.json()
+
+def set_default_bundle(bundle):
+    """
+    Set the default bundle to use for backtesting and trading.
+
+    Setting a default bundle is a convenience and is optional. It
+    can be overridden by manually specifying a bundle when backtesting
+    or trading.
+
+    Parameters
+    ----------
+    bundle : str, required
+        the bundle code
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    data = {
+        "default_bundle": bundle
+    }
+    response = houston.put("/zipline/config", data=data)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_get_or_set_default_bundle(bundle=None, *args, **kwargs):
+    if bundle:
+        return json_to_cli(set_default_bundle, bundle, *args, **kwargs)
+    else:
+        return json_to_cli(get_default_bundle, *args, **kwargs)
+
 def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
              start=None, end=None, filepath_or_buffer=None):
     """
@@ -259,8 +306,9 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
     capital_base : float, optional
         the starting capital for the simulation (default is 10000000.0)
 
-    bundle : str, required
-        the data bundle to use for the simulation
+    bundle : str, option
+        the data bundle to use for the simulation. If omitted, the default bundle (if set)
+        is used.
 
     start : str (YYYY-MM-DD), required
         the start date of the simulation
@@ -293,9 +341,8 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
         params["data_frequency"] = data_frequency
     if capital_base:
         params["capital_base"] = capital_base
-    if not bundle:
-        raise ValueError("must specify a bundle")
-    params["bundle"] = bundle
+    if bundle:
+        params["bundle"] = bundle
     if start:
         params["start"] = start
     if end:
@@ -352,7 +399,7 @@ def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None):
 def _cli_create_tearsheet(*args, **kwargs):
     return json_to_cli(create_tearsheet, *args, **kwargs)
 
-def trade(strategy, bundle, account=None):
+def trade(strategy, bundle=None, account=None):
     """
     Trade a Zipline strategy.
 
@@ -361,8 +408,9 @@ def trade(strategy, bundle, account=None):
     strategy : str, required
         the file that contains the strategy to run
 
-    bundle : str, required
-        the data bundle to use
+    bundle : str, optional
+        the data bundle to use. If omitted, the default bundle (if set)
+        is used.
 
     account : str, optional
         the account to run the strategy in. Only required
@@ -380,9 +428,8 @@ def trade(strategy, bundle, account=None):
     >>> trade("momentum_pipeline.py", bundle="my-bundle")
     """
     params = {}
-    if not bundle:
-        raise ValueError("must specify a bundle")
-    params["bundle"] = bundle
+    if bundle:
+        params["bundle"] = bundle
     if account:
         params["account"] = account
 
