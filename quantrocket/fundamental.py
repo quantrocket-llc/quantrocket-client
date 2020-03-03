@@ -1642,6 +1642,13 @@ def download_atomicfin_sp500(filepath_or_buffer=None,
 
     >>> download_atomicfin_sp500(filepath_or_buffer="sp500_changes.csv", start_date="2010-01-01")
     >>> sp500_changes = pd.read_csv("sp500_changes.csv", parse_dates=["DATE"])
+
+    Get the current members of the S&P 500:
+
+    >>> download_atomicfin_sp500(filepath_or_buffer="sp500_changes.csv")
+    >>> sp500_changes = pd.read_csv("sp500_changes.csv", parse_dates=["DATE"])
+    >>> latest_changes = sp500_changes.drop_duplicates(subset="Sid", keep="last")
+    >>> current_members = latest_changes[latest_changes.ACTION == "added"]
     """
     params = {}
     if start_date:
