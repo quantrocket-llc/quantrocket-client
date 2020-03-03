@@ -20,6 +20,45 @@ from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 
+def create_usstock_bundle(code, universe=None):
+    """
+    Create a Zipline bundle for US stocks.
+
+    This function defines the bundle parameters but does not ingest the actual
+    data. To ingest the data, see `ingest_bundle`.
+
+    Parameters
+    ----------
+    code : str, required
+        the code to assign to the bundle (lowercase alphanumerics and hyphens only)
+
+    universe : str, optional
+        the universe to ingest. Possible choices: US, FREE
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Create a bundle named "usstock-1min":
+
+    >>> create_usstock_bundle("usstock-1min")
+    """
+    params = {}
+    params["ingest_type"] = "usstock"
+    if universe:
+        params["universe"] = universe
+
+    response = houston.put("/zipline/bundles/{}".format(code), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_create_usstock_bundle(*args, **kwargs):
+    return json_to_cli(create_usstock_bundle, *args, **kwargs)
+
 def create_db_bundle(code, from_db, calendar,
                      start_date=None, end_date=None,
                      universes=None, sids=None,
@@ -88,6 +127,7 @@ def create_db_bundle(code, from_db, calendar,
     >>>                  start_date="2017-01-01", end_date="2017-12-31")
     """
     params = {}
+    params["ingest_type"] = "from_db"
     params["from_db"] = from_db
     params["calendar"] = calendar
     if start_date:
@@ -191,7 +231,7 @@ def drop_bundle(code, confirm_by_typing_bundle_code_again=None):
     if confirm_by_typing_bundle_code_again:
         params["confirm_by_typing_bundle_code_again"] = confirm_by_typing_bundle_code_again
 
-    response = houston.delete("/zipline/bundles/{}".format(code), params=params)
+    response = houston.delete("/zipline/bundles/{}".format(code), params=params, timeout=6*60*60)
 
     houston.raise_for_status_with_json(response)
     return response.json()

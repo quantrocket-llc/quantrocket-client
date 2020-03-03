@@ -21,12 +21,40 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
+Create a Zipline bundle for US stocks.
+
+This command defines the bundle parameters but does not ingest the actual
+data. To ingest the data, see `quantrocket zipline ingest`.
+
+
+Examples:
+
+Create a bundle named "usstock-1min":
+
+    quantrocket zipline create-usstock-bundle usstock-1min
+    """
+    parser = _subparsers.add_parser(
+        "create-usstock-bundle",
+        help="create a Zipline bundle for US stocks",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the code to assign to the bundle (lowercase alphanumerics and hyphens only)")
+    parser.add_argument(
+        "-u", "--universe",
+        choices=["US", "FREE"],
+        help="the universe to ingest. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.zipline._cli_create_usstock_bundle")
+
+    examples = """
 Create a Zipline bundle from a history database or real-time aggregate
 database.
 
 You can ingest 1-minute or 1-day databases.
 
-This function defines the bundle parameters but does not ingest the actual
+This command defines the bundle parameters but does not ingest the actual
 data. To ingest the data, see `quantrocket zipline ingest`.
 
 Examples:
