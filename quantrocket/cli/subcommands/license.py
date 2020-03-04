@@ -133,3 +133,31 @@ Set Polygon API key:
         metavar="API_KEY",
         help="Polygon API key")
     parser.set_defaults(func="quantrocket.license._cli_get_or_set_polygon_key")
+
+    examples = """
+Set Quandl API key, or view the current API key.
+
+Your credentials are encrypted at rest and never leave
+your deployment.
+
+Examples:
+
+View current API key:
+
+    quantrocket license quandl-key
+
+Set Polygon API key:
+
+    quantrocket license quandl-key K123
+    """
+    parser = _subparsers.add_parser(
+        "quandl-key",
+        help="set Quandl API key, or view the current API key",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "api_key",
+        nargs="?",
+        metavar="API_KEY",
+        help="Quandl API key")
+    parser.set_defaults(func="quantrocket.license._cli_get_or_set_quandl_key")

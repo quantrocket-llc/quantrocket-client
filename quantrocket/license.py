@@ -165,3 +165,49 @@ def _cli_get_or_set_polygon_key(*args, **kwargs):
         return json_to_cli(set_polygon_key, *args, **kwargs)
     else:
         return json_to_cli(get_polygon_key)
+
+def get_quandl_key():
+    """
+    Returns the current API key for Quandl.
+
+    Returns
+    -------
+    dict
+        credentials
+    """
+    response = houston.get("/license-service/credentials/quandl")
+    houston.raise_for_status_with_json(response)
+    # It's possible to get a 204 empty response
+    if not response.content:
+        return {}
+    return response.json()
+
+def set_quandl_key(api_key):
+    """
+    Set Quandl API key.
+
+    Your credentials are encrypted at rest and never leave
+    your deployment.
+
+    Parameters
+    ----------
+    api_key : str, required
+        Quandl API key
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    data = {}
+    data["api_key"] = api_key
+
+    response = houston.put("/license-service/credentials/quandl", data=data)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_get_or_set_quandl_key(*args, **kwargs):
+    if any(kwargs.values()):
+        return json_to_cli(set_quandl_key, *args, **kwargs)
+    else:
+        return json_to_cli(get_quandl_key)
