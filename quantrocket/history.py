@@ -24,36 +24,6 @@ from quantrocket.exceptions import NoHistoricalData
 
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", "/tmp")
 
-def create_atomicfin_db(code, country="US"):
-    """
-    Create a new database for collecting historical data from AtomicFin.
-
-    Parameters
-    ----------
-    code : str, required
-        the code to assign to the database (lowercase alphanumerics and hyphens only)
-
-    country : str, required
-        country to collect listings for. Possible choices: US, FREE
-
-    Returns
-    -------
-    dict
-        status message
-
-    """
-    params = {"vendor": "atomicfin"}
-    if country:
-        params["country"] = country
-
-    response = houston.put("/history/databases/{0}".format(code), params=params)
-
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_create_atomicfin_db(*args, **kwargs):
-    return json_to_cli(create_atomicfin_db, *args, **kwargs)
-
 def create_edi_db(code, exchanges):
     """
     Create a new database for collecting historical data from EDI.
@@ -196,6 +166,36 @@ def create_ibkr_db(code, universes=None, sids=None, start_date=None, end_date=No
 
 def _cli_create_ibkr_db(*args, **kwargs):
     return json_to_cli(create_ibkr_db, *args, **kwargs)
+
+def create_sharadar_db(code, country="US"):
+    """
+    Create a new database for collecting historical data from Sharadar.
+
+    Parameters
+    ----------
+    code : str, required
+        the code to assign to the database (lowercase alphanumerics and hyphens only)
+
+    country : str, required
+        country to collect listings for. Possible choices: US, FREE
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {"vendor": "sharadar"}
+    if country:
+        params["country"] = country
+
+    response = houston.put("/history/databases/{0}".format(code), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_create_sharadar_db(*args, **kwargs):
+    return json_to_cli(create_sharadar_db, *args, **kwargs)
 
 def create_usstock_db(code, bar_size=None, universe=None):
     """

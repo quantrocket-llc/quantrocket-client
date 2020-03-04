@@ -20,15 +20,15 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Collect fundamental data from AtomicFin and save to database.
+Collect fundamental data from Sharadar and save to database.
 
 Examples:
 
-    quantrocket fundamental collect-atomicfin-fundamentals
+    quantrocket fundamental collect-sharadar-fundamentals
     """
     parser = _subparsers.add_parser(
-        "collect-atomicfin-fundamentals",
-        help="collect fundamental data from AtomicFin and save to database",
+        "collect-sharadar-fundamentals",
+        help="collect fundamental data from Sharadar and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -37,18 +37,18 @@ Examples:
         choices=["US","FREE"],
         default="US",
         help="country to collect fundamentals for. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_atomicfin_fundamentals")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_fundamentals")
 
     examples = """
-Collect insider holdings data from AtomicFin and save to database.
+Collect insider holdings data from Sharadar and save to database.
 
 Examples:
 
-    quantrocket fundamental collect-atomicfin-insiders
+    quantrocket fundamental collect-sharadar-insiders
     """
     parser = _subparsers.add_parser(
-        "collect-atomicfin-insiders",
-        help="collect insider holdings data from AtomicFin and save to database",
+        "collect-sharadar-insiders",
+        help="collect insider holdings data from Sharadar and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -57,24 +57,24 @@ Examples:
         choices=["US","FREE"],
         default="US",
         help="country to collect insider holdings data for. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_atomicfin_insiders")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_insiders")
 
     examples = """
-Collect institutional investor data from AtomicFin and save to database.
+Collect institutional investor data from Sharadar and save to database.
 
 Examples:
 
 Collect institutional investor data aggregated by security:
 
-    quantrocket fundamental collect-atomicfin-institutions
+    quantrocket fundamental collect-sharadar-institutions
 
 Collect detailed institutional investor data (not aggregated by security):
 
-    quantrocket fundamental collect-atomicfin-institutions -d
+    quantrocket fundamental collect-sharadar-institutions -d
     """
     parser = _subparsers.add_parser(
-        "collect-atomicfin-institutions",
-        help="collect institutional investor data from AtomicFin and save to database",
+        "collect-sharadar-institutions",
+        help="collect institutional investor data from Sharadar and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -90,18 +90,18 @@ Collect detailed institutional investor data (not aggregated by security):
         "investor per security per quarter). If omitted, "
         "collect data aggregated by security (separate record per "
         "security per quarter)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_atomicfin_institutions")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_institutions")
 
     examples = """
-Collect SEC Form 8-K events from AtomicFin and save to database.
+Collect SEC Form 8-K events from Sharadar and save to database.
 
 Examples:
 
-    quantrocket fundamental collect-atomicfin-sec8
+    quantrocket fundamental collect-sharadar-sec8
     """
     parser = _subparsers.add_parser(
-        "collect-atomicfin-sec8",
-        help="collect SEC Form 8-K events from AtomicFin and save to database",
+        "collect-sharadar-sec8",
+        help="collect SEC Form 8-K events from Sharadar and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -110,19 +110,19 @@ Examples:
         choices=["US","FREE"],
         default="US",
         help="country to collect events data for. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_atomicfin_sec8")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_sec8")
 
     examples = """
-Collect historical S&P 500 index constituents from AtomicFin and save to
+Collect historical S&P 500 index constituents from Sharadar and save to
 database.
 
 Examples:
 
-    quantrocket fundamental collect-atomicfin-sp500
+    quantrocket fundamental collect-sharadar-sp500
     """
     parser = _subparsers.add_parser(
-        "collect-atomicfin-sp500",
-        help="collect historical S&P 500 index constituents from AtomicFin and save to database",
+        "collect-sharadar-sp500",
+        help="collect historical S&P 500 index constituents from Sharadar and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -131,7 +131,7 @@ Examples:
         choices=["US","FREE"],
         default="US",
         help="country to collect S&P 500 constituents data for. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_atomicfin_sp500")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_sp500")
 
     examples = """
 Collect Reuters financial statements from Interactive Brokers and save to
@@ -325,22 +325,22 @@ Collect easy-to-borrow data:
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_alpaca_etb")
 
     examples = """
-Query AtomicFin Fundamentals from the local database and download to file.
+Query Sharadar Fundamentals from the local database and download to file.
 
 Examples:
 
 Query as-reported trailing twelve month (ART) fundamentals for all indicators for
 a particular sid:
 
-    quantrocket fundamental atomicfin-fundamentals -i FIBBG12345 --dimensions ART -o aapl_fundamentals.csv
+    quantrocket fundamental sharadar-fundamentals -i FIBBG12345 --dimensions ART -o aapl_fundamentals.csv
 
 Query as-reported quarterly (ARQ) fundamentals for select indicators for a universe:
 
-    quantrocket fundamental atomicfin-fundamentals -u usa-stk --dimensions ARQ -f REVENUE EPS -o atomicfin_fundamentals.csv
+    quantrocket fundamental sharadar-fundamentals -u usa-stk --dimensions ARQ -f REVENUE EPS -o sharadar_fundamentals.csv
     """
     parser = _subparsers.add_parser(
-        "atomicfin-fundamentals",
-        help="query AtomicFin Fundamentals from the local database and download to file",
+        "sharadar-fundamentals",
+        help="query Sharadar Fundamentals from the local database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
@@ -398,21 +398,21 @@ Query as-reported quarterly (ARQ) fundamentals for select indicators for a unive
         nargs="*",
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields))")
-    parser.set_defaults(func="quantrocket.fundamental._cli_download_atomicfin_fundamentals")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_sharadar_fundamentals")
 
     examples = """
-Query AtomicFin insider holdings data from the local database and download
+Query Sharadar insider holdings data from the local database and download
 to file.
 
 Examples:
 
 Query insider holdings data for a particular sid:
 
-    quantrocket fundamental atomicfin-insiders -i FIBBG000B9XRY4 -o aapl_insiders.csv
+    quantrocket fundamental sharadar-insiders -i FIBBG000B9XRY4 -o aapl_insiders.csv
     """
     parser = _subparsers.add_parser(
-        "atomicfin-insiders",
-        help="query AtomicFin insider holdings data from the local database and download to file",
+        "sharadar-insiders",
+        help="query Sharadar insider holdings data from the local database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
@@ -463,21 +463,21 @@ Query insider holdings data for a particular sid:
         nargs="*",
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_download_atomicfin_insiders")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_sharadar_insiders")
 
     examples = """
-Query AtomicFin institutional investor data from the local database and
+Query Sharadar institutional investor data from the local database and
 download to file.
 
 Examples:
 
 Query institutional investor data aggregated by security:
 
-    quantrocket fundamental atomicfin-institutions -u usa-stk -s 2019-01-01 -o institutions.csv
+    quantrocket fundamental sharadar-institutions -u usa-stk -s 2019-01-01 -o institutions.csv
     """
     parser = _subparsers.add_parser(
-        "atomicfin-institutions",
-        help="query AtomicFin institutional investor data from the local database and download to file",
+        "sharadar-institutions",
+        help="query Sharadar institutional investor data from the local database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
@@ -536,21 +536,21 @@ Query institutional investor data aggregated by security:
         "query data aggregated by security (separate record per "
         "security per quarter)"
     )
-    parser.set_defaults(func="quantrocket.fundamental._cli_download_atomicfin_institutions")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_sharadar_institutions")
 
     examples = """
-Query AtomicFin SEC Form 8-K events data from the local database and download
+Query Sharadar SEC Form 8-K events data from the local database and download
 to file.
 
 Examples:
 
 Query event code 13 (Bankruptcy) for a universe of securities:
 
-    quantrocket fundamental atomicfin-sec8 -u usa-stk --event-codes 13 -o bankruptcies.csv
+    quantrocket fundamental sharadar-sec8 -u usa-stk --event-codes 13 -o bankruptcies.csv
     """
     parser = _subparsers.add_parser(
-        "atomicfin-sec8",
-        help="query AtomicFin SEC Form 8-K events data from the local database and download to file",
+        "sharadar-sec8",
+        help="query Sharadar SEC Form 8-K events data from the local database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
@@ -607,21 +607,21 @@ Query event code 13 (Bankruptcy) for a universe of securities:
         nargs="*",
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_download_atomicfin_sec8")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_sharadar_sec8")
 
     examples = """
-Query AtomicFin S&P 500 index changes (additions and removals) from the
+Query Sharadar S&P 500 index changes (additions and removals) from the
 local database and download to file.
 
 Examples:
 
 Query S&P 500 index changes since 2010:
 
-    quantrocket fundamental atomicfin-sp500 -s 2010-01-01 -o sp500_changes.csv
+    quantrocket fundamental sharadar-sp500 -s 2010-01-01 -o sp500_changes.csv
     """
     parser = _subparsers.add_parser(
-        "atomicfin-sp500",
-        help="query AtomicFin S&P 500 index changes (additions and removals) from the local database and download to file",
+        "sharadar-sp500",
+        help="query Sharadar S&P 500 index changes (additions and removals) from the local database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
@@ -672,7 +672,7 @@ Query S&P 500 index changes since 2010:
         nargs="*",
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_download_atomicfin_sp500")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_sharadar_sp500")
 
     examples = """
 List available Chart of Account (COA) codes from the Reuters financials database

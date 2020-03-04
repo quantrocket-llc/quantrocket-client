@@ -35,28 +35,6 @@ Examples:
     parser.set_defaults(func="quantrocket.master._cli_collect_alpaca_listings")
 
     examples = """
-Collect securities listings from AtomicFin and store in securities master
-database.
-
-Examples:
-
-    quantrocket master collect-atomicfin --countries US
-    """
-    parser = _subparsers.add_parser(
-        "collect-atomicfin",
-        help="collect securities listings from AtomicFin and store in securities master database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-c", "--countries",
-        nargs="*",
-        metavar="COUNTRY",
-        default=["US"],
-        choices=["US", "FREE"],
-        help="collect listings for these countries. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.master._cli_collect_atomicfin_listings")
-
-    examples = """
 Collect securities listings from EDI and store in securities master
 database.
 
@@ -176,45 +154,26 @@ Re-collect contract details for an existing universe called "japan-fin":
     parser.set_defaults(func="quantrocket.master._cli_collect_ibkr_listings")
 
     examples = """
-Collect securities listings from Polygon and store in securities master
+Collect securities listings from Sharadar and store in securities master
 database.
 
 Examples:
 
-Collect listings for all listed US stocks:
-
-    quantrocket master collect-polygon -e XNYS XNAS XASE ARCX BATS
-
-Collect currencies and crytocurrencies:
-
-    quantrocket master collect-polygon -e FX CRYPTO
+    quantrocket master collect-sharadar --countries US
     """
     parser = _subparsers.add_parser(
-        "collect-polygon",
-        help="collect securities listings from Polygon and store in securities master database",
+        "collect-sharadar",
+        help="collect securities listings from Sharadar and store in securities master database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        "-e", "--exchanges",
-        nargs="+",
-        metavar="MIC",
-        choices=[
-            # Currencies
-            "FX",
-            "CRYPTO",
-            # Listed stocks
-            "XNYS",
-            "XNAS",
-            "ARCX",
-            "XASE",
-            "BATS",
-            # Unlisted stocks
-            "PINX",
-            "PSGM",
-            "OTCB",
-            "OTCQ",],
-        help="collect listings for these exchanges. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.master._cli_collect_polygon_listings")
+        "-c", "--countries",
+        nargs="*",
+        metavar="COUNTRY",
+        default=["US"],
+        choices=["US", "FREE"],
+        help="collect listings for these countries. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.master._cli_collect_sharadar_listings")
 
     examples = """
 Collect US stock listings from QuantRocket and store in securities master
@@ -371,7 +330,7 @@ terminal display:
         "-v", "--vendors",
         nargs="*",
         metavar="VENDOR",
-        choices=["alpaca", "atomicfin", "edi", "ibkr", "polygon", "usstock"],
+        choices=["alpaca", "edi", "ibkr", "sharadar", "usstock"],
         help="limit to these vendors. Possible choices: %(choices)s")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(

@@ -67,32 +67,6 @@ def collect_alpaca_listings():
 def _cli_collect_alpaca_listings(*args, **kwargs):
     return json_to_cli(collect_alpaca_listings, *args, **kwargs)
 
-def collect_atomicfin_listings(countries="US"):
-    """
-    Collect securities listings from AtomicFin and store in securities master
-    database.
-
-    Parameters
-    ----------
-    countries : list of str, required
-        countries to collect listings for. Possible choices: US, FREE
-
-    Returns
-    -------
-    dict
-        status message
-    """
-    params = {}
-    if countries:
-        params["countries"] = countries
-
-    response = houston.post("/master/securities/atomicfin", params=params)
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_atomicfin_listings(*args, **kwargs):
-    return json_to_cli(collect_atomicfin_listings, *args, **kwargs)
-
 def collect_edi_listings(exchanges=None):
     """
     Collect securities listings from EDI and store in securities master
@@ -239,42 +213,31 @@ def collect_ibkr_listings(exchanges=None, sec_types=None, currencies=None,
 def _cli_collect_ibkr_listings(*args, **kwargs):
     return json_to_cli(collect_ibkr_listings, *args, **kwargs)
 
-def collect_polygon_listings(exchanges=None):
+def collect_sharadar_listings(countries="US"):
     """
-    Collect securities listings from Polygon and store in securities master
+    Collect securities listings from Sharadar and store in securities master
     database.
 
     Parameters
     ----------
-    exchanges : list or str, required
-        collect listings for these exchanges. Possible choices: FX, CRYPTO,
-        XNYS, XNAS, ARCX, XASE, BATS, PINX, PSGM, OTCB, OTCQ
+    countries : list of str, required
+        countries to collect listings for. Possible choices: US, FREE
 
     Returns
     -------
     dict
         status message
-
-    Examples
-    --------
-    Collect listings for all US listed stocks:
-
-    >>> collect_polygon_listings(["XNYS", "XNAS", "ARCX", "XASE", "BATS"])
-
-    Collect currencies and crytocurrencies:
-
-    >>> collect_polygon_listings(["FX", "CRYPTO"])
     """
     params = {}
-    if exchanges:
-        params["exchanges"] = exchanges
+    if countries:
+        params["countries"] = countries
 
-    response = houston.post("/master/securities/polygon", params=params)
+    response = houston.post("/master/securities/sharadar", params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_collect_polygon_listings(*args, **kwargs):
-    return json_to_cli(collect_polygon_listings, *args, **kwargs)
+def _cli_collect_sharadar_listings(*args, **kwargs):
+    return json_to_cli(collect_sharadar_listings, *args, **kwargs)
 
 def collect_usstock_listings():
     """
@@ -475,8 +438,8 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         exclude backmonth and expired futures contracts (default False)
 
     vendors : list of str, optional
-        limit to these vendors. Possible choices: alpaca, atomicfin, edi, ibkr,
-        polygon, usstock
+        limit to these vendors. Possible choices: alpaca, edi, ibkr,
+        sharadar, usstock
 
     fields : list of str, optional
         Return specific fields. By default a core set of fields is
@@ -610,11 +573,7 @@ def get_securities_reindexed_like(reindex_like, fields=None):
 
     for col in securities.columns:
         this_col = securities[col]
-        if col in (
-            "Delisted", "Etf",
-            "ibkr_Etf", "ibkr_Delisted",
-            "atomicfin_Delisted"
-            ):
+        if col.endswith("Delisted") or col.endswith("Etf"):
             this_col = this_col.astype(bool)
         all_master_fields[col] = reindex_like.apply(lambda x: this_col, axis=1)
 

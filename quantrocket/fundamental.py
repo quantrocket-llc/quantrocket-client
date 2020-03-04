@@ -22,6 +22,618 @@ from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.exceptions import ParameterError, MissingData, NoFundamentalData
 
+def collect_alpaca_etb():
+    """
+    Collect Alpaca easy-to-borrow data and save to database.
+
+    Data is updated daily. Historical data is available from March 2019.
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    response = houston.post("/fundamental/alpaca/stockloan/etb")
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_alpaca_etb(*args, **kwargs):
+    return json_to_cli(collect_alpaca_etb, *args, **kwargs)
+
+def download_alpaca_etb(filepath_or_buffer=None, output="csv",
+                        start_date=None, end_date=None,
+                        universes=None, sids=None,
+                        exclude_universes=None, exclude_sids=None):
+    """
+    Query Alpaca easy-to-borrow data from the local database and download to file.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to data on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to data on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query easy-to-borrow data for a universe of US stocks.
+
+    >>> f = io.StringIO()
+    >>> download_alpaca_etb("usa_etb.csv", universes=["usa-stk"])
+    >>> etb = pd.read_csv("usa_etb.csv", parse_dates=["Date"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/alpaca/stockloan/etb.{0}".format(output), params=params,
+                           timeout=60*5)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no easy-to-borrow data match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_alpaca_etb(*args, **kwargs):
+    return json_to_cli(download_alpaca_etb, *args, **kwargs)
+
+def get_alpaca_etb_reindexed_like(reindex_like):
+    """
+    Return a DataFrame of Alpaca easy-to-borrow status, reindexed to match the index
+    (dates) and columns (sids) of `reindex_like`.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and sids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    Returns
+    -------
+    DataFrame
+        a Boolean DataFrame indicating easy-to-borrow status, shaped like
+        the input DataFrame
+
+    Examples
+    --------
+    Get easy-to-borrow status for a DataFrame of stocks:
+
+    >>> closes = prices.loc["Close"]
+    >>> are_etb = get_alpaca_etb_reindexed_like(closes)
+    """
+    etb = _get_stockloan_data_reindexed_like(
+        download_alpaca_etb, "EasyToBorrow",
+        reindex_like=reindex_like, is_intraday=False)
+
+    return etb.fillna(0).astype(bool)
+
+def collect_ibkr_shortable_shares(countries=None):
+    """
+    Collect IBKR shortable shares data and save to database.
+
+    Data is organized by country and updated every 15 minutes. Historical
+    data is available from April 2018.
+
+    Parameters
+    ----------
+    countries : list of str, optional
+        limit to these countries (pass '?' or any invalid country to see
+        available countries)
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    if countries:
+        params["countries"] = countries
+    response = houston.post("/fundamental/ibkr/stockloan/shares", params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_ibkr_shortable_shares(*args, **kwargs):
+    return json_to_cli(collect_ibkr_shortable_shares, *args, **kwargs)
+
+def collect_ibkr_borrow_fees(countries=None):
+    """
+    Collect IBKR borrow fees data and save to database.
+
+    Data is organized by country and updated every 15 minutes. Historical
+    data is available from April 2018.
+
+    Parameters
+    ----------
+    countries : list of str, optional
+        limit to these countries (pass '?' or any invalid country to see
+        available countries)
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    if countries:
+        params["countries"] = countries
+    response = houston.post("/fundamental/ibkr/stockloan/fees", params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_ibkr_borrow_fees(*args, **kwargs):
+    return json_to_cli(collect_ibkr_borrow_fees, *args, **kwargs)
+
+def download_ibkr_shortable_shares(filepath_or_buffer=None, output="csv",
+                                   start_date=None, end_date=None,
+                                   universes=None, sids=None,
+                                   exclude_universes=None, exclude_sids=None):
+    """
+    Query IBKR shortable shares from the local database and download to file.
+
+    Data timestamps are UTC.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to data on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to data on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query shortable shares for a universe of Australian stocks.
+
+    >>> f = io.StringIO()
+    >>> download_ibkr_shortable_shares("asx_shortables.csv", universes=["asx-stk"])
+    >>> shortables = pd.read_csv("asx_shortables.csv", parse_dates=["Date"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/ibkr/stockloan/shares.{0}".format(output), params=params,
+                           timeout=60*5)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no shortable shares data match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_ibkr_shortable_shares(*args, **kwargs):
+    return json_to_cli(download_ibkr_shortable_shares, *args, **kwargs)
+
+def download_ibkr_borrow_fees(filepath_or_buffer=None, output="csv",
+                         start_date=None, end_date=None,
+                         universes=None, sids=None,
+                         exclude_universes=None, exclude_sids=None):
+    """
+    Query IBKR borrow fees from the local database and download to file.
+
+    Data timestamps are UTC.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to data on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to data on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query borrow fees for a universe of Australian stocks.
+
+    >>> f = io.StringIO()
+    >>> download_ibkr_borrow_fees("asx_borrow_fees.csv", universes=["asx-stk"])
+    >>> borrow_fees = pd.read_csv("asx_borrow_fees.csv", parse_dates=["Date"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/ibkr/stockloan/fees.{0}".format(output), params=params,
+                           timeout=60*5)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no borrow fees data match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_ibkr_borrow_fees(*args, **kwargs):
+    return json_to_cli(download_ibkr_borrow_fees, *args, **kwargs)
+
+def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_like,
+                                       time=None, is_intraday=True):
+    """
+    Common base function for get_ibkr_shortable_shares_reindexed_like and
+    get_ibkr_borrow_fees_reindexed_like and get_alpaca_etb_reindexed_like.
+
+    Parameters
+    ----------
+
+    stockloan_func : func
+        the download function for the stockloan data
+
+    stockloan_field : str
+        the field in the stockloan data to be returned
+
+    reindex_like : DataFrame
+        the input DataFrame to conform the stockloan data to
+
+    time : str
+        the time of day for which to return stockloan data. Only
+        applicable to intraday stockloan data
+
+    is_intraday : bool
+        whether the stockloan data is intraday or daily
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join([str(name) for name in index_levels])))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    sids = list(reindex_like.columns)
+    start_date = reindex_like.index.min().date()
+    # Stockloan data is sparse but batched in monthly files, so start >1-month
+    # before the reindex_like min date
+    start_date -= pd.Timedelta(days=45)
+    start_date = start_date.isoformat()
+    end_date = reindex_like.index.max().date().isoformat()
+
+    f = six.StringIO()
+    stockloan_func(
+        f, sids=sids, start_date=start_date, end_date=end_date)
+    stockloan_data = pd.read_csv(f)
+    stockloan_data.loc[:, "Date"] = pd.to_datetime(stockloan_data.Date, utc=is_intraday)
+
+    if is_intraday:
+        # Determine timezone, from:
+        # - time param if provided
+        # - else reindex_like.index.tz if set
+        # - else component securities if all have same timezone
+        timezone = None
+
+        if time and " " in time:
+            time, timezone = time.split(" ", 1)
+
+            if reindex_like.index.tz and reindex_like.index.tz.zone != timezone:
+                raise ParameterError((
+                    "cannot use timezone {0} because reindex_like timezone is {1}, "
+                    "these must match".format(timezone, reindex_like.index.tz.zone)))
+
+        if not timezone:
+            if reindex_like.index.tz:
+                timezone = reindex_like.index.tz.zone
+            else:
+                # try to infer from component securities
+                f = six.StringIO()
+                download_master_file(f, sids=list(stockloan_data.Sid.unique()),
+                                     fields=["Timezone"])
+                security_timezones = pd.read_csv(f, index_col="Sid")
+                security_timezones = list(security_timezones.Timezone.unique())
+                if len(security_timezones) > 1:
+                    raise ParameterError(
+                        "no timezone specified and cannot infer because multiple timezones are "
+                        "present in data, please specify timezone (timezones in data: {0})".format(
+                        ", ".join(security_timezones)))
+                timezone = security_timezones[0]
+
+        # Create an index of `reindex_like` dates at `time`
+        if time:
+            try:
+                time = pd.Timestamp(time).time()
+            except ValueError as e:
+                raise ParameterError("could not parse time '{0}': {1}".format(
+                    time, str(e)))
+            index_at_time = pd.Index(reindex_like.index.to_series().apply(
+                lambda x: pd.datetime.combine(x, time)))
+        else:
+            index_at_time = reindex_like.index
+
+        if not index_at_time.tz:
+            index_at_time = index_at_time.tz_localize(timezone)
+
+        index_at_time = index_at_time.tz_convert("UTC")
+
+    # For daily stockloan data, just use the input DataFrame index
+    else:
+        index_at_time = reindex_like.index
+        if index_at_time.tz:
+            index_at_time = index_at_time.tz_localize(None)
+
+    stockloan_data = stockloan_data.pivot(index="Sid",columns="Date").T
+    stockloan_data = stockloan_data.loc[stockloan_field]
+
+    # Create a unioned index of requested times and stockloan data timestamps
+    unioned_idx = index_at_time.union(stockloan_data.index)
+    # performance boost: don't need to reindex and ffill earlier than the
+    # stockloan data start date
+    unioned_idx = unioned_idx[unioned_idx >= stockloan_data.index.min()]
+    stockloan_data = stockloan_data.reindex(index=unioned_idx, columns=reindex_like.columns)
+
+    stockloan_data = stockloan_data.fillna(method="ffill")
+
+    # Keep only the requested times, now that we've ffilled
+    stockloan_data = stockloan_data.reindex(index=index_at_time)
+
+    # Replace index_at_time with the original reindex_like index (this needs
+    # to be done because index_at_time is tz-aware and reindex_like may not
+    # be, and because index_at_time uses the requested `time` if provided.
+    # Since index_at_time was derived from reindex_like.index and has the
+    # same shape, it is safe to replace it.)
+    stockloan_data.index = reindex_like.index
+
+    return stockloan_data
+
+def get_ibkr_shortable_shares_reindexed_like(reindex_like, time=None):
+    """
+    Return a DataFrame of IBKR shortable shares, reindexed to match the index
+    (dates) and columns (sids) of `reindex_like`.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and sids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    time : str (HH:MM:SS[ TZ]), optional
+        return shortable shares as of this time of day. If omitted, shortable
+        shares will be returned as of the times of day in `reindex_like`'s
+        DatetimeIndex. (Note that for a DatetimeIndex containing dates only,
+        the time is 00:00:00, meaning shortable shares will be returned as of
+        midnight at the start of the day.) A time and timezone can be passed
+        as a space-separated string (e.g. "09:30:00 America/New_York"). If
+        timezone is omitted, the timezone of `reindex_like`'s DatetimeIndex
+        will be used; if `reindex_like`'s timezone is not set, the timezone
+        will be inferred from the component securities, if all securities
+        share the same timezone.
+
+    Returns
+    -------
+    DataFrame
+        a DataFrame of shortable shares, shaped like the input DataFrame
+
+    Examples
+    --------
+    Get shortable shares as of midnight for a DataFrame of US stocks:
+
+    >>> closes = prices.loc["Close"]
+    >>> shortables = get_ibkr_shortable_shares_reindexed_like(closes)
+
+    Get shortable shares as of 9:20 AM for a DataFrame of US stocks (timezone
+    inferred from component stocks):
+
+    >>> closes = prices.loc["Close"]
+    >>> shortables = get_ibkr_shortable_shares_reindexed_like(closes, time="09:20:00")
+
+    Get shortable shares as of 9:20 AM New York time for a multi-timezone DataFrame
+    of stocks:
+
+    >>> closes = prices.loc["Close"]
+    >>> shortables = get_ibkr_shortable_shares_reindexed_like(closes, time="09:20:00 America/New_York")
+    """
+    shortable_shares = _get_stockloan_data_reindexed_like(
+        download_ibkr_shortable_shares, "Quantity",
+        reindex_like=reindex_like, time=time, is_intraday=True)
+
+    # fillna(0) where date > 2018-04-15, the data start date (NaNs after that
+    # date indicate no shortable shares, NaNs before that date indicate don't
+    # know)
+    data_start_date = os.environ.get("STOCKLOAN_DATA_START_DATE", "2018-04-15")
+    after_start_date_selector = shortable_shares.index > data_start_date
+    shortable_shares.loc[after_start_date_selector, :] = shortable_shares.loc[
+        after_start_date_selector].fillna(0)
+
+    return shortable_shares
+
+def get_ibkr_borrow_fees_reindexed_like(reindex_like, time=None):
+    """
+    Return a DataFrame of IBKR borrow fees, reindexed to match the index
+    (dates) and columns (sids) of `reindex_like`.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and sids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    time : str (HH:MM:SS[ TZ]), optional
+        return borrow fees as of this time of day. If omitted, borrow
+        fees will be returned as of the times of day in `reindex_like`'s
+        DatetimeIndex. (Note that for a DatetimeIndex containing dates only,
+        the time is 00:00:00, meaning borrow fees will be returned as of
+        midnight at the start of the day.) A time and timezone can be passed
+        as a space-separated string (e.g. "09:30:00 America/New_York"). If
+        timezone is omitted, the timezone of `reindex_like`'s DatetimeIndex
+        will be used; if `reindex_like`'s timezone is not set, the timezone
+        will be inferred from the component securities, if all securities
+        share the same timezone.
+
+    Returns
+    -------
+    DataFrame
+        a DataFrame of borrow fees, shaped like the input DataFrame
+
+    Examples
+    --------
+    Get borrow fees as of midnight for a DataFrame of US stocks:
+
+    >>> closes = prices.loc["Close"]
+    >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes)
+
+    Get borrow fees as of 4:30 PM for a DataFrame of US stocks (timezone inferred
+    from component stocks):
+
+    >>> closes = prices.loc["Close"]
+    >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes, time="16:30:00")
+
+    Get borrow fees as of 4:30 PM New York time for a multi-timezone DataFrame
+    of stocks:
+
+    >>> closes = prices.loc["Close"]
+    >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes, time="16:30:00 America/New_York")
+    """
+    return _get_stockloan_data_reindexed_like(
+        download_ibkr_borrow_fees, "FeeRate",
+        reindex_like=reindex_like, time=time, is_intraday=True)
+
 def collect_reuters_financials(universes=None, sids=None, force=True):
     """
     Collect Reuters financial statements from Interactive Brokers and save
@@ -100,45 +712,6 @@ def collect_reuters_estimates(universes=None, sids=None, force=False):
 
 def _cli_collect_reuters_estimates(*args, **kwargs):
     return json_to_cli(collect_reuters_estimates, *args, **kwargs)
-
-def collect_wsh_earnings_dates(universes=None, sids=None, force=False):
-    """
-    Collect Wall Street Horizon upcoming earnings announcement dates from
-    Interactive Brokers and save to database.
-
-    Parameters
-    ----------
-    universes : list of str, optional
-        limit to these universes (must provide universes, sids, or both)
-
-    sids : list of str, optional
-        limit to these sids (must provide universes, sids, or both)
-
-    force : bool
-        collect earnings dates for all securities even if they were collected
-        recently (default is to skip securities that were updated in the last
-        12 hours)
-
-    Returns
-    -------
-    dict
-        status message
-
-    """
-    params = {}
-    if universes:
-        params["universes"] = universes
-    if sids:
-        params["sids"] = sids
-    if force:
-        params["force"] = force
-    response = houston.post("/fundamental/wsh/calendar", params=params)
-
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_wsh_earnings_dates(*args, **kwargs):
-    return json_to_cli(collect_wsh_earnings_dates, *args, **kwargs)
 
 def list_reuters_codes(codes=None, report_types=None, statement_types=None):
     """
@@ -846,6 +1419,1129 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
 
     return estimates
 
+def collect_sharadar_fundamentals(country="US"):
+    """
+    Collect fundamental data from Sharadar and save to database.
+
+    Parameters
+    ----------
+    country : str, required
+        country to collect fundamentals for. Possible choices: US, FREE
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    params = {}
+    if country:
+        params["country"] = country
+    response = houston.post("/fundamental/sharadar/fundamentals", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_sharadar_fundamentals(*args, **kwargs):
+    return json_to_cli(collect_sharadar_fundamentals, *args, **kwargs)
+
+def collect_sharadar_insiders(country="US"):
+    """
+    Collect insider holdings data from Sharadar and save to database.
+
+    Parameters
+    ----------
+    country : str, required
+        country to collect insider holdings data for. Possible choices:
+        US, FREE
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    params = {}
+    if country:
+        params["country"] = country
+    response = houston.post("/fundamental/sharadar/insiders", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_sharadar_insiders(*args, **kwargs):
+    return json_to_cli(collect_sharadar_insiders, *args, **kwargs)
+
+def collect_sharadar_institutions(country="US", detail=False):
+    """
+    Collect institutional investor data from Sharadar and save to database.
+
+    Parameters
+    ----------
+    country : str, required
+        country to collect institutional investor data for. Possible
+        choices: US, FREE
+
+    detail : bool
+        if true, collect detailed investor data (separate record per
+        investor per security per quarter). If false (the default),
+        collect data aggregated by security (separate record per
+        security per quarter).
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    params = {}
+    if country:
+        params["country"] = country
+    if detail:
+        params["detail"] = detail
+    response = houston.post("/fundamental/sharadar/institutions", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_sharadar_institutions(*args, **kwargs):
+    return json_to_cli(collect_sharadar_institutions, *args, **kwargs)
+
+def collect_sharadar_sec8(country="US"):
+    """
+    Collect SEC Form 8-K events from Sharadar and save to database.
+
+    Parameters
+    ----------
+    country : str, required
+        country to collect events data for. Possible choices: US, FREE
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    params = {}
+    if country:
+        params["country"] = country
+    response = houston.post("/fundamental/sharadar/sec8", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_sharadar_sec8(*args, **kwargs):
+    return json_to_cli(collect_sharadar_sec8, *args, **kwargs)
+
+def collect_sharadar_sp500(country="US"):
+    """
+    Collect historical S&P 500 index constituents from Sharadar and save to
+    database.
+
+    Parameters
+    ----------
+    country : str, required
+        country to collect S&P 500 constituents data for. Possible
+        choices: US, FREE
+
+    Returns
+    -------
+    dict
+        status message
+    """
+    params = {}
+    if country:
+        params["country"] = country
+    response = houston.post("/fundamental/sharadar/sp500", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_sharadar_sp500(*args, **kwargs):
+    return json_to_cli(collect_sharadar_sp500, *args, **kwargs)
+
+def download_sharadar_fundamentals(filepath_or_buffer=None,
+                                   start_date=None, end_date=None,
+                                   universes=None, sids=None,
+                                   exclude_universes=None, exclude_sids=None,
+                                   dimensions=None, fields=None,
+                                   output=None):
+    """
+    Query Sharadar fundamentals from the local database and download
+    to file.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to fundamentals on or after this fiscal period end date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to fundamentals on or before this fiscal period end date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    dimensions : list of str, optional
+        limit to these dimensions. Possible choices: ARQ, ARY, ART, MRQ,
+        MRY, MRT. AR=As Reported, MR=Most Recent Reported, Q=Quarterly,
+        Y=Annual, T=Trailing Twelve Month.
+
+    fields : list of str, optional
+        only return these fields (pass '?' or any invalid fieldname to see
+        available fields)
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query as-reported trailing twelve month (ART) fundamentals for all indicators
+    for a particular sid, then load the CSV into Pandas:
+
+    >>> download_sharadar_fundamentals(filepath_or_buffer="aapl_fundamentals.csv",
+                                       sids="FIBBG265598", dimensions="ART")
+    >>> fundamentals = pd.read_csv("aapl_fundamentals.csv", parse_dates=["REPORTPERIOD", "DATEKEY", "CALENDARDATE"])
+
+    Query as-reported quarterly (ARQ) fundamentals for select indicators for a
+    universe:
+
+    >>> download_sharadar_fundamentals(filepath_or_buffer="sharadar_fundamentals.csv",
+                                       universes="usa-stk",
+                                       dimensions="ARQ", fields=["REVENUE", "EPS"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+    if dimensions:
+        params["dimensions"] = dimensions
+    if fields:
+        params["fields"] = fields
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/sharadar/fundamentals.{0}".format(output), params=params,
+                           timeout=60*15)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_sharadar_fundamentals(*args, **kwargs):
+    return json_to_cli(download_sharadar_fundamentals, *args, **kwargs)
+
+def download_sharadar_insiders(filepath_or_buffer=None,
+                                start_date=None, end_date=None,
+                                universes=None, sids=None,
+                                exclude_universes=None, exclude_sids=None,
+                                fields=None, output=None):
+    """
+    Query Sharadar insider holdings data from the local database and download
+    to file.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to data on or after this filing date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to data on or before this filing date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    fields : list of str, optional
+        only return these fields (pass '?' or any invalid fieldname to see
+        available fields)
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query insider holdings data for a particular sid, then load the CSV into Pandas:
+
+    >>> download_sharadar_insiders(filepath_or_buffer="aapl_insiders.csv",
+                                    sids="FIBBG000B9XRY4")
+    >>> insiders = pd.read_csv("aapl_insiders.csv", parse_dates=["FILINGDATE", "TRANSACTIONDATE"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+    if fields:
+        params["fields"] = fields
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/sharadar/insiders.{0}".format(output), params=params,
+                           timeout=60*15)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_sharadar_insiders(*args, **kwargs):
+    return json_to_cli(download_sharadar_insiders, *args, **kwargs)
+
+def download_sharadar_institutions(filepath_or_buffer=None,
+                                    start_date=None, end_date=None,
+                                    universes=None, sids=None,
+                                    exclude_universes=None, exclude_sids=None,
+                                    detail=False, fields=None,
+                                    output=None):
+    """
+    Query Sharadar institutional investor data from the local database and
+    download to file.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to data on or after this quarter end date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to data on or before this quarter end date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    detail : bool
+        if true, query detailed investor data (separate record per
+        investor per security per quarter). If false (the default),
+        query data aggregated by security (separate record per
+        security per quarter).
+
+    fields : list of str, optional
+        only return these fields (pass '?' or any invalid fieldname to see
+        available fields)
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query institutional investor data aggregated by security and load the
+    CSV into Pandas:
+
+    >>> download_sharadar_institutions(filepath_or_buffer="institutions.csv",
+                                        universes="usa-stk", start_date="2019-01-01")
+    >>> institutions = pd.read_csv("institutions.csv", parse_dates=["CALENDARDATE"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+    if detail:
+        params["detail"] = detail
+    if fields:
+        params["fields"] = fields
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/sharadar/institutions.{0}".format(output), params=params,
+                           timeout=60*15)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_sharadar_institutions(*args, **kwargs):
+    return json_to_cli(download_sharadar_institutions, *args, **kwargs)
+
+def download_sharadar_sec8(filepath_or_buffer=None,
+                            start_date=None, end_date=None,
+                            universes=None, sids=None,
+                            exclude_universes=None, exclude_sids=None,
+                            event_codes=None,
+                            fields=None, output=None):
+    """
+    Query Sharadar SEC Form 8-K events data from the local database and
+    download to file.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to data on or after this filing date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to data on or before this filing date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    event_codes : list of int, optional
+        limit to these event codes
+
+    fields : list of str, optional
+        only return these fields (pass '?' or any invalid fieldname to see
+        available fields)
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query event code 13 (Bankruptcy) for a universe of securities and load
+    into Pandas:
+
+    >>> download_sharadar_sec8(filepath_or_buffer="bankruptcies.csv",
+                                universes="usa-stk", event_codes=13)
+    >>> bankruptcies = pd.read_csv("bankruptcies.csv", parse_dates=["DATE"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+    if event_codes:
+        params["event_codes"] = event_codes
+    if fields:
+        params["fields"] = fields
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/sharadar/sec8.{0}".format(output), params=params,
+                           timeout=60*15)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_sharadar_sec8(*args, **kwargs):
+    return json_to_cli(download_sharadar_sec8, *args, **kwargs)
+
+def download_sharadar_sp500(filepath_or_buffer=None,
+                             start_date=None, end_date=None,
+                             universes=None, sids=None,
+                             exclude_universes=None, exclude_sids=None,
+                             fields=None, output=None):
+    """
+    Query Sharadar S&P 500 index changes (additions and removals) from the
+    local database and download to file.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to index changes on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to index changes on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    fields : list of str, optional
+        only return these fields (pass '?' or any invalid fieldname to see
+        available fields)
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query S&P 500 index changes since 2010 and load into Pandas:
+
+    >>> download_sharadar_sp500(filepath_or_buffer="sp500_changes.csv", start_date="2010-01-01")
+    >>> sp500_changes = pd.read_csv("sp500_changes.csv", parse_dates=["DATE"])
+
+    Get the current members of the S&P 500:
+
+    >>> download_sharadar_sp500(filepath_or_buffer="sp500_changes.csv")
+    >>> sp500_changes = pd.read_csv("sp500_changes.csv", parse_dates=["DATE"])
+    >>> latest_changes = sp500_changes.drop_duplicates(subset="Sid", keep="last")
+    >>> current_members = latest_changes[latest_changes.ACTION == "added"]
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+    if fields:
+        params["fields"] = fields
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/sharadar/sp500.{0}".format(output), params=params,
+                           timeout=60*15)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_sharadar_sp500(*args, **kwargs):
+    return json_to_cli(download_sharadar_sp500, *args, **kwargs)
+
+def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
+                                              dimension="ART"):
+    """
+    Return a multiindex (Field, Date) DataFrame of point-in-time
+    Sharadar fundamentals, reindexed to match the index (dates)
+    and columns (sids) of `reindex_like`. Financial indicators are
+    forward-filled in order to provide the latest reading at any given
+    date. Indicators are indexed to the Sharadar DATEKEY field, i.e. the
+    filing date. DATEKEY is shifted forward 1 day to avoid lookahead bias.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and sids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    fields : list of str
+        a list of fields to include in the resulting DataFrame. Defaults to
+        including all fields. For faster performance, limiting fields to
+        those needed is highly recommended, especially for large universes.
+
+    dimension: bool
+        the dimension of the data. Defaults to As Reported Trailing Twelve
+        Month (ART). Possible choices: ARQ, ARY, ART, MRQ,
+        MRY, MRT. AR=As Reported, MR=Most Recent Reported, Q=Quarterly,
+        Y=Annual, T=Trailing Twelve Month.
+
+    Returns
+    -------
+    DataFrame
+        a multiindex (Field, Date) DataFrame of fundamentals, shaped like
+        the input DataFrame
+
+    Examples
+    --------
+    Query several trailing twelve month indicators using a DataFrame of
+    historical prices:
+
+    >>> closes = prices.loc["Close"]
+    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes, fields=["EPS", "REVENUE"])
+    >>> eps = fundamentals.loc["EPS"]
+    >>> revenue = fundamentals.loc["REVENUE"]
+
+    Query quarterly book value per share using a DataFrame of historical prices:
+
+    >>> closes = prices.loc["Close"]
+    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes, fields=["BVPS"],
+                                                                 dimension="ARQ")
+    >>> bvps = fundamentals.loc["BVPS"]
+
+    Query outstanding shares using a DataFrame of historical prices:
+
+    >>> closes = prices.loc["Close"]
+    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes,
+                                                                fields=["SHARESWA"])
+    >>> shares_out = fundamentals.loc["SHARESWA"]
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join([str(name) for name in index_levels])))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    sids = list(reindex_like.columns)
+    start_date = reindex_like.index.min().date()
+    # Since financial reports are sparse, start well before the reindex_like
+    # min date
+    start_date -= pd.Timedelta(days=365+180)
+    start_date = start_date.isoformat()
+    end_date = reindex_like.index.max().date().isoformat()
+
+    if fields and not isinstance(fields, (list,tuple)):
+        fields = [fields]
+
+    f = six.StringIO()
+    download_sharadar_fundamentals(
+        filepath_or_buffer=f, sids=sids, start_date=start_date, end_date=end_date,
+        fields=fields, dimensions=dimension)
+    financials = pd.read_csv(
+        f, parse_dates=["DATEKEY"])
+
+    # Rename DATEKEY to match price history index name
+    financials = financials.rename(columns={"DATEKEY": "Date"})
+
+    # Drop any fields we don't need
+    if fields:
+        needed_fields = set(fields)
+        needed_fields.update(set(("Sid", "Date")))
+        unneeded_fields = set(financials.columns) - needed_fields
+        if unneeded_fields:
+            financials = financials.drop(unneeded_fields, axis=1)
+
+    # if reindex_like.index is tz-aware, make financials tz-aware so they can
+    # be joined (tz-aware or tz-naive are both fine, as DATEKEY represents
+    # dates which are assumed to be in the local timezone of the reported
+    # company)
+    if reindex_like.index.tz:
+        financials.loc[:, "Date"] = financials.Date.dt.tz_localize(reindex_like.index.tz.zone)
+        deduped_datekeys = financials.Date.drop_duplicates()
+    else:
+        # joining to tz-naive requires using values, whereas joining to
+        # tz-aware requires not using it. Why?
+        deduped_datekeys = financials.Date.drop_duplicates().values
+
+    # Create a unioned index of input DataFrame and statement DATEKEYs
+    union_date_idx = reindex_like.index.union(deduped_datekeys).sort_values()
+
+    # There might be duplicate DATEKEYs if a company announced
+    # reports for several fiscal periods at once. In this case we keep
+    # only the last value (i.e. latest fiscal period)
+    financials = financials.drop_duplicates(subset=["Sid", "Date"], keep="last")
+    financials = financials.pivot(index="Sid",columns="Date").T
+    multiidx = pd.MultiIndex.from_product(
+        (financials.index.get_level_values(0).unique(), union_date_idx),
+        names=["Field", "Date"])
+    financials = financials.reindex(index=multiidx, columns=reindex_like.columns)
+
+    # financial values are sparse so ffill (one field at a time)
+    all_fields = {}
+    for fieldname in financials.index.get_level_values("Field").unique():
+        field = financials.loc[fieldname].fillna(method="ffill")
+
+        # Shift to avoid lookahead bias
+        field = field.shift()
+
+        all_fields[fieldname] = field
+
+    financials = pd.concat(all_fields, names=["Field", "Date"])
+
+    # In cases the statements included dates not in the input
+    # DataFrame, drop those now that we've ffilled
+    extra_dates = union_date_idx.difference(reindex_like.index)
+    if not extra_dates.empty:
+        financials.drop(extra_dates, axis=0, level="Date", inplace=True)
+
+    return financials
+
+def get_sharadar_institutions_reindexed_like(reindex_like, fields=None, shift=45):
+    """
+    Return a multiindex (Field, Date) DataFrame of Sharadar institutional
+    investor data, reindexed to match the index (dates) and columns (sids) of
+    `reindex_like`. Values are forward-filled in order to provide the latest
+    reading at any given date. Data are indexed to the quarter end date.
+    Because the reporting deadline is 45 days after the end of the quarter
+    the values are shifted forward 45 calendar days by default (see the
+    `shift` parameter to control this).
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and sids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    fields : list of str
+        a list of fields to include in the resulting DataFrame. Defaults to
+        including all fields. For faster performance, limiting fields to
+        those needed is highly recommended, especially for large universes.
+
+    shift: int, optional
+        shift the data forward this many period to account for the 45-day
+        lag between the quarter end date and the reporting deadline. Defaults
+        to 45.
+
+    Returns
+    -------
+    DataFrame
+        a multiindex (Field, Date) DataFrame of institutional investor data,
+        shaped like the input DataFrame
+
+    Examples
+    --------
+    Calculate institutional ownership as a percentage of total market cap:
+
+    >>> closes = prices.loc["Close"]
+    >>> insti = get_sharadar_institutions_reindexed_like(closes, fields="SHRVALUE")
+    >>> insti_share_values = insti.loc["SHRVALUE"]
+    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes, dimension="ARQ", fields="MARKETCAP")
+    >>> market_caps = fundamentals.loc["MARKETCAP"]
+    >>> insti_pct = insti_share_values/market_caps
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join([str(name) for name in index_levels])))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    sids = list(reindex_like.columns)
+    start_date = reindex_like.index.min().date()
+    # Since financial reports are sparse, start well before the reindex_like
+    # min date
+    start_date -= pd.Timedelta(days=365+180)
+    start_date = start_date.isoformat()
+    end_date = reindex_like.index.max().date().isoformat()
+
+    if fields and not isinstance(fields, (list,tuple)):
+        fields = [fields]
+
+    f = six.StringIO()
+    download_sharadar_institutions(
+        filepath_or_buffer=f, sids=sids, start_date=start_date, end_date=end_date,
+        fields=fields)
+    institutions = pd.read_csv(
+        f, parse_dates=["CALENDARDATE"])
+
+    # Rename CALENDARDATE to match price history index name
+    institutions = institutions.rename(columns={"CALENDARDATE": "Date"})
+
+    # Drop any fields we don't need
+    if fields:
+        needed_fields = set(fields)
+        needed_fields.update(set(("Sid", "Date")))
+        unneeded_fields = set(institutions.columns) - needed_fields
+        if unneeded_fields:
+            institutions = institutions.drop(unneeded_fields, axis=1)
+
+    # if reindex_like.index is tz-aware, make institutions tz-aware so they can
+    # be joined
+    if reindex_like.index.tz:
+        institutions.loc[:, "Date"] = institutions.Date.dt.tz_localize(reindex_like.index.tz.zone)
+        deduped_datekeys = institutions.Date.drop_duplicates()
+    else:
+        # joining to tz-naive requires using values, whereas joining to
+        # tz-aware requires not using it. Why?
+        deduped_datekeys = institutions.Date.drop_duplicates().values
+
+    # Create a unioned index of input DataFrame and statement DATEKEYs
+    union_date_idx = reindex_like.index.union(deduped_datekeys).sort_values()
+
+    # Interpolate calendar days into unioned index
+    union_date_idx = pd.date_range(start=union_date_idx.min(), end=union_date_idx.max(),
+                                   freq="D", tz=union_date_idx.tz)
+
+    institutions = institutions.pivot(index="Sid",columns="Date").T
+    multiidx = pd.MultiIndex.from_product(
+        (institutions.index.get_level_values(0).unique(), union_date_idx),
+        names=["Field", "Date"])
+    institutions = institutions.reindex(index=multiidx, columns=reindex_like.columns)
+
+    # values are sparse so ffill (one field at a time)
+    all_fields = {}
+    for fieldname in institutions.index.get_level_values("Field").unique():
+        field = institutions.loc[fieldname].fillna(method="ffill")
+
+        # Shift to avoid lookahead bias
+        if shift:
+            field = field.shift(shift)
+
+        all_fields[fieldname] = field
+
+    institutions = pd.concat(all_fields, names=["Field", "Date"])
+
+    # In cases the institutions included dates not in the input
+    # DataFrame, drop those now that we've ffilled
+    extra_dates = union_date_idx.difference(reindex_like.index)
+    if not extra_dates.empty:
+        institutions.drop(extra_dates, axis=0, level="Date", inplace=True)
+
+    return institutions
+
+def get_sharadar_sec8_reindexed_like(reindex_like, event_codes=None):
+    """
+    Return a Boolean DataFrame indicating whether securities filed SEC Form
+    8-K for specified event codes on given dates. The resulting DataFrame
+    will be reindexed to match the index (dates) and columns (sids) of
+    `reindex_like`.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and sids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    event_codes : list of int, optional
+        limit to these event codes
+
+    Returns
+    -------
+    DataFrame
+        a Boolean DataFrame shaped like the input DataFrame
+
+    Examples
+    --------
+    Query bankruptcies (event code 13) and use it to mask a prices
+    DataFrame:
+
+    >>> closes = prices.loc["Close"]
+    >>> filed_for_bankruptcy = get_sharadar_sec8_reindexed_like(closes, event_codes=13)
+    >>> closes.where(filed_for_bankruptcy)
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join([str(name) for name in index_levels])))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    sids = list(reindex_like.columns)
+    start_date = reindex_like.index.min().date().isoformat()
+    end_date = reindex_like.index.max().date().isoformat()
+
+    f = six.StringIO()
+    try:
+        download_sharadar_sec8(
+            filepath_or_buffer=f, sids=sids,
+            start_date=start_date, end_date=end_date,
+            event_codes=event_codes,
+            fields=["Sid","DATE","EVENTCODE"]
+        )
+    except NoFundamentalData:
+        # If no data for these securities, there were no events
+        return pd.DataFrame(False, index=reindex_like.index, columns=reindex_like.columns)
+
+    events = pd.read_csv(f, parse_dates=["DATE"])
+
+    # Rename DATE to match price history index name
+    events = events.rename(columns={"DATE": "Date"})
+
+    # if reindex_like.index is tz-aware, make financials tz-aware so they can
+    # be joined
+    if reindex_like.index.tz:
+        events.loc[:, "Date"] = events.Date.dt.tz_localize(reindex_like.index.tz.zone)
+
+    # If multiple events, drop duplicates
+    events = events.drop_duplicates(subset=["Sid","Date"])
+
+    # Pivot and reindex
+    events = events.pivot(index="Sid",columns="Date").T
+    events = events.loc["EVENTCODE"]
+    events = events.reindex(index=reindex_like.index, columns=reindex_like.columns)
+
+    have_events = events.notnull()
+    return have_events
+
+def get_sharadar_sp500_reindexed_like(reindex_like):
+    """
+    Return a Boolean DataFrame indicating whether securities were in the S&P
+    500 on the given dates. The resulting DataFrame will be reindexed to
+    match the index (dates) and columns (sids) of `reindex_like`.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and sids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    Returns
+    -------
+    DataFrame
+        a Boolean DataFrame shaped like the input DataFrame
+
+    Examples
+    --------
+    Query S&P 500 membership and use it to mask a prices DataFrame:
+
+    >>> closes = prices.loc["Close"]
+    >>> are_in_sp500 = get_sharadar_sp500_reindexed_like(closes)
+    >>> closes.where(are_in_sp500)
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join([str(name) for name in index_levels])))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    sids = list(reindex_like.columns)
+    # in case constituents have never left the index, don't include a start
+    # date
+    end_date = reindex_like.index.max().date().isoformat()
+
+    f = six.StringIO()
+    try:
+        download_sharadar_sp500(
+            filepath_or_buffer=f, sids=sids, end_date=end_date,
+            fields=["Sid","DATE","ACTION"])
+    except NoFundamentalData:
+        # If no data for these securities, they're not in the index
+        return pd.DataFrame(False, index=reindex_like.index, columns=reindex_like.columns)
+
+    sp500_changes = pd.read_csv(
+        f, parse_dates=["DATE"])
+
+    # Rename DATE to match price history index name
+    sp500_changes = sp500_changes.rename(columns={"DATE": "Date"})
+
+    # if reindex_like.index is tz-aware, make financials tz-aware so they can
+    # be joined
+    if reindex_like.index.tz:
+        sp500_changes.loc[:, "Date"] = sp500_changes.Date.dt.tz_localize(reindex_like.index.tz.zone)
+        deduped_datekeys = sp500_changes.Date.drop_duplicates()
+    else:
+        # joining to tz-naive requires using values, whereas joining to
+        # tz-aware requires not using it. Why?
+        deduped_datekeys = sp500_changes.Date.drop_duplicates().values
+
+    # Create a unioned index of input DataFrame and statement DATEs
+    union_date_idx = reindex_like.index.union(deduped_datekeys).sort_values()
+
+    # Reindex with unioned index and ffill to create Boolean dataframe
+    sp500_changes = sp500_changes.pivot(index="Sid",columns="Date").T
+    sp500_changes = sp500_changes.loc["ACTION"]
+    sp500_changes = sp500_changes.reindex(index=union_date_idx, columns=reindex_like.columns)
+    are_in_sp500 = sp500_changes.fillna(method="ffill").fillna("removed") == "added"
+
+    # reindex like input DataFrame
+    are_in_sp500 = are_in_sp500.reindex(index=reindex_like.index)
+
+    return are_in_sp500
+
+def collect_wsh_earnings_dates(universes=None, sids=None, force=False):
+    """
+    Collect Wall Street Horizon upcoming earnings announcement dates from
+    Interactive Brokers and save to database.
+
+    Parameters
+    ----------
+    universes : list of str, optional
+        limit to these universes (must provide universes, sids, or both)
+
+    sids : list of str, optional
+        limit to these sids (must provide universes, sids, or both)
+
+    force : bool
+        collect earnings dates for all securities even if they were collected
+        recently (default is to skip securities that were updated in the last
+        12 hours)
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if force:
+        params["force"] = force
+    response = houston.post("/fundamental/wsh/calendar", params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_wsh_earnings_dates(*args, **kwargs):
+    return json_to_cli(collect_wsh_earnings_dates, *args, **kwargs)
+
 def download_wsh_earnings_dates(filepath_or_buffer=None, output="csv",
                                 start_date=None, end_date=None,
                                 universes=None, sids=None,
@@ -1067,1699 +2763,3 @@ def get_wsh_earnings_dates_reindexed_like(reindex_like, fields=["Time"],
     announcements = announcements.reindex(index=multiidx, columns=reindex_like.columns)
 
     return announcements
-
-def collect_atomicfin_fundamentals(country="US"):
-    """
-    Collect fundamental data from AtomicFin and save to database.
-
-    Parameters
-    ----------
-    country : str, required
-        country to collect fundamentals for. Possible choices: US, FREE
-
-    Returns
-    -------
-    dict
-        status message
-    """
-    params = {}
-    if country:
-        params["country"] = country
-    response = houston.post("/fundamental/atomicfin/fundamentals", params=params)
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_atomicfin_fundamentals(*args, **kwargs):
-    return json_to_cli(collect_atomicfin_fundamentals, *args, **kwargs)
-
-def collect_atomicfin_insiders(country="US"):
-    """
-    Collect insider holdings data from AtomicFin and save to database.
-
-    Parameters
-    ----------
-    country : str, required
-        country to collect insider holdings data for. Possible choices:
-        US, FREE
-
-    Returns
-    -------
-    dict
-        status message
-    """
-    params = {}
-    if country:
-        params["country"] = country
-    response = houston.post("/fundamental/atomicfin/insiders", params=params)
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_atomicfin_insiders(*args, **kwargs):
-    return json_to_cli(collect_atomicfin_insiders, *args, **kwargs)
-
-def collect_atomicfin_institutions(country="US", detail=False):
-    """
-    Collect institutional investor data from AtomicFin and save to database.
-
-    Parameters
-    ----------
-    country : str, required
-        country to collect institutional investor data for. Possible
-        choices: US, FREE
-
-    detail : bool
-        if true, collect detailed investor data (separate record per
-        investor per security per quarter). If false (the default),
-        collect data aggregated by security (separate record per
-        security per quarter).
-
-    Returns
-    -------
-    dict
-        status message
-    """
-    params = {}
-    if country:
-        params["country"] = country
-    if detail:
-        params["detail"] = detail
-    response = houston.post("/fundamental/atomicfin/institutions", params=params)
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_atomicfin_institutions(*args, **kwargs):
-    return json_to_cli(collect_atomicfin_institutions, *args, **kwargs)
-
-def collect_atomicfin_sec8(country="US"):
-    """
-    Collect SEC Form 8-K events from AtomicFin and save to database.
-
-    Parameters
-    ----------
-    country : str, required
-        country to collect events data for. Possible choices: US, FREE
-
-    Returns
-    -------
-    dict
-        status message
-    """
-    params = {}
-    if country:
-        params["country"] = country
-    response = houston.post("/fundamental/atomicfin/sec8", params=params)
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_atomicfin_sec8(*args, **kwargs):
-    return json_to_cli(collect_atomicfin_sec8, *args, **kwargs)
-
-def collect_atomicfin_sp500(country="US"):
-    """
-    Collect historical S&P 500 index constituents from AtomicFin and save to
-    database.
-
-    Parameters
-    ----------
-    country : str, required
-        country to collect S&P 500 constituents data for. Possible
-        choices: US, FREE
-
-    Returns
-    -------
-    dict
-        status message
-    """
-    params = {}
-    if country:
-        params["country"] = country
-    response = houston.post("/fundamental/atomicfin/sp500", params=params)
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_atomicfin_sp500(*args, **kwargs):
-    return json_to_cli(collect_atomicfin_sp500, *args, **kwargs)
-
-def download_atomicfin_fundamentals(filepath_or_buffer=None,
-                                   start_date=None, end_date=None,
-                                   universes=None, sids=None,
-                                   exclude_universes=None, exclude_sids=None,
-                                   dimensions=None, fields=None,
-                                   output=None):
-    """
-    Query AtomicFin fundamentals from the local database and download
-    to file.
-
-    Parameters
-    ----------
-    filepath_or_buffer : str or file-like object
-        filepath to write the data to, or file-like object (defaults to stdout)
-
-    output : str
-        output format (json, csv, default is csv)
-
-    start_date : str (YYYY-MM-DD), optional
-        limit to fundamentals on or after this fiscal period end date
-
-    end_date : str (YYYY-MM-DD), optional
-        limit to fundamentals on or before this fiscal period end date
-
-    universes : list of str, optional
-        limit to these universes
-
-    sids : list of str, optional
-        limit to these sids
-
-    exclude_universes : list of str, optional
-        exclude these universes
-
-    exclude_sids : list of str, optional
-        exclude these sids
-
-    dimensions : list of str, optional
-        limit to these dimensions. Possible choices: ARQ, ARY, ART, MRQ,
-        MRY, MRT. AR=As Reported, MR=Most Recent Reported, Q=Quarterly,
-        Y=Annual, T=Trailing Twelve Month.
-
-    fields : list of str, optional
-        only return these fields (pass '?' or any invalid fieldname to see
-        available fields)
-
-    Returns
-    -------
-    None
-
-    Examples
-    --------
-    Query as-reported trailing twelve month (ART) fundamentals for all indicators
-    for a particular sid, then load the CSV into Pandas:
-
-    >>> download_atomicfin_fundamentals(filepath_or_buffer="aapl_fundamentals.csv",
-                                       sids="FIBBG265598", dimensions="ART")
-    >>> fundamentals = pd.read_csv("aapl_fundamentals.csv", parse_dates=["REPORTPERIOD", "DATEKEY", "CALENDARDATE"])
-
-    Query as-reported quarterly (ARQ) fundamentals for select indicators for a
-    universe:
-
-    >>> download_atomicfin_fundamentals(filepath_or_buffer="atomicfin_fundamentals.csv",
-                                       universes="usa-stk",
-                                       dimensions="ARQ", fields=["REVENUE", "EPS"])
-    """
-    params = {}
-    if start_date:
-        params["start_date"] = start_date
-    if end_date:
-        params["end_date"] = end_date
-    if universes:
-        params["universes"] = universes
-    if sids:
-        params["sids"] = sids
-    if exclude_universes:
-        params["exclude_universes"] = exclude_universes
-    if exclude_sids:
-        params["exclude_sids"] = exclude_sids
-    if dimensions:
-        params["dimensions"] = dimensions
-    if fields:
-        params["fields"] = fields
-
-    output = output or "csv"
-
-    if output not in ("csv", "json"):
-        raise ValueError("Invalid ouput: {0}".format(output))
-
-    response = houston.get("/fundamental/atomicfin/fundamentals.{0}".format(output), params=params,
-                           timeout=60*15)
-
-    try:
-        houston.raise_for_status_with_json(response)
-    except requests.HTTPError as e:
-        # Raise a dedicated exception
-        if "match the query parameters" in repr(e).lower():
-            raise NoFundamentalData(e)
-        raise
-
-    filepath_or_buffer = filepath_or_buffer or sys.stdout
-
-    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
-
-def _cli_download_atomicfin_fundamentals(*args, **kwargs):
-    return json_to_cli(download_atomicfin_fundamentals, *args, **kwargs)
-
-def download_atomicfin_insiders(filepath_or_buffer=None,
-                                start_date=None, end_date=None,
-                                universes=None, sids=None,
-                                exclude_universes=None, exclude_sids=None,
-                                fields=None, output=None):
-    """
-    Query AtomicFin insider holdings data from the local database and download
-    to file.
-
-    Parameters
-    ----------
-    filepath_or_buffer : str or file-like object
-        filepath to write the data to, or file-like object (defaults to stdout)
-
-    output : str
-        output format (json, csv, default is csv)
-
-    start_date : str (YYYY-MM-DD), optional
-        limit to data on or after this filing date
-
-    end_date : str (YYYY-MM-DD), optional
-        limit to data on or before this filing date
-
-    universes : list of str, optional
-        limit to these universes
-
-    sids : list of str, optional
-        limit to these sids
-
-    exclude_universes : list of str, optional
-        exclude these universes
-
-    exclude_sids : list of str, optional
-        exclude these sids
-
-    fields : list of str, optional
-        only return these fields (pass '?' or any invalid fieldname to see
-        available fields)
-
-    Returns
-    -------
-    None
-
-    Examples
-    --------
-    Query insider holdings data for a particular sid, then load the CSV into Pandas:
-
-    >>> download_atomicfin_insiders(filepath_or_buffer="aapl_insiders.csv",
-                                    sids="FIBBG000B9XRY4")
-    >>> insiders = pd.read_csv("aapl_insiders.csv", parse_dates=["FILINGDATE", "TRANSACTIONDATE"])
-    """
-    params = {}
-    if start_date:
-        params["start_date"] = start_date
-    if end_date:
-        params["end_date"] = end_date
-    if universes:
-        params["universes"] = universes
-    if sids:
-        params["sids"] = sids
-    if exclude_universes:
-        params["exclude_universes"] = exclude_universes
-    if exclude_sids:
-        params["exclude_sids"] = exclude_sids
-    if fields:
-        params["fields"] = fields
-
-    output = output or "csv"
-
-    if output not in ("csv", "json"):
-        raise ValueError("Invalid ouput: {0}".format(output))
-
-    response = houston.get("/fundamental/atomicfin/insiders.{0}".format(output), params=params,
-                           timeout=60*15)
-
-    try:
-        houston.raise_for_status_with_json(response)
-    except requests.HTTPError as e:
-        # Raise a dedicated exception
-        if "match the query parameters" in repr(e).lower():
-            raise NoFundamentalData(e)
-        raise
-
-    filepath_or_buffer = filepath_or_buffer or sys.stdout
-
-    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
-
-def _cli_download_atomicfin_insiders(*args, **kwargs):
-    return json_to_cli(download_atomicfin_insiders, *args, **kwargs)
-
-def download_atomicfin_institutions(filepath_or_buffer=None,
-                                    start_date=None, end_date=None,
-                                    universes=None, sids=None,
-                                    exclude_universes=None, exclude_sids=None,
-                                    detail=False, fields=None,
-                                    output=None):
-    """
-    Query AtomicFin institutional investor data from the local database and
-    download to file.
-
-    Parameters
-    ----------
-    filepath_or_buffer : str or file-like object
-        filepath to write the data to, or file-like object (defaults to stdout)
-
-    output : str
-        output format (json, csv, default is csv)
-
-    start_date : str (YYYY-MM-DD), optional
-        limit to data on or after this quarter end date
-
-    end_date : str (YYYY-MM-DD), optional
-        limit to data on or before this quarter end date
-
-    universes : list of str, optional
-        limit to these universes
-
-    sids : list of str, optional
-        limit to these sids
-
-    exclude_universes : list of str, optional
-        exclude these universes
-
-    exclude_sids : list of str, optional
-        exclude these sids
-
-    detail : bool
-        if true, query detailed investor data (separate record per
-        investor per security per quarter). If false (the default),
-        query data aggregated by security (separate record per
-        security per quarter).
-
-    fields : list of str, optional
-        only return these fields (pass '?' or any invalid fieldname to see
-        available fields)
-
-    Returns
-    -------
-    None
-
-    Examples
-    --------
-    Query institutional investor data aggregated by security and load the
-    CSV into Pandas:
-
-    >>> download_atomicfin_institutions(filepath_or_buffer="institutions.csv",
-                                        universes="usa-stk", start_date="2019-01-01")
-    >>> institutions = pd.read_csv("institutions.csv", parse_dates=["CALENDARDATE"])
-    """
-    params = {}
-    if start_date:
-        params["start_date"] = start_date
-    if end_date:
-        params["end_date"] = end_date
-    if universes:
-        params["universes"] = universes
-    if sids:
-        params["sids"] = sids
-    if exclude_universes:
-        params["exclude_universes"] = exclude_universes
-    if exclude_sids:
-        params["exclude_sids"] = exclude_sids
-    if detail:
-        params["detail"] = detail
-    if fields:
-        params["fields"] = fields
-
-    output = output or "csv"
-
-    if output not in ("csv", "json"):
-        raise ValueError("Invalid ouput: {0}".format(output))
-
-    response = houston.get("/fundamental/atomicfin/institutions.{0}".format(output), params=params,
-                           timeout=60*15)
-
-    try:
-        houston.raise_for_status_with_json(response)
-    except requests.HTTPError as e:
-        # Raise a dedicated exception
-        if "match the query parameters" in repr(e).lower():
-            raise NoFundamentalData(e)
-        raise
-
-    filepath_or_buffer = filepath_or_buffer or sys.stdout
-
-    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
-
-def _cli_download_atomicfin_institutions(*args, **kwargs):
-    return json_to_cli(download_atomicfin_institutions, *args, **kwargs)
-
-def download_atomicfin_sec8(filepath_or_buffer=None,
-                            start_date=None, end_date=None,
-                            universes=None, sids=None,
-                            exclude_universes=None, exclude_sids=None,
-                            event_codes=None,
-                            fields=None, output=None):
-    """
-    Query AtomicFin SEC Form 8-K events data from the local database and
-    download to file.
-
-    Parameters
-    ----------
-    filepath_or_buffer : str or file-like object
-        filepath to write the data to, or file-like object (defaults to stdout)
-
-    output : str
-        output format (json, csv, default is csv)
-
-    start_date : str (YYYY-MM-DD), optional
-        limit to data on or after this filing date
-
-    end_date : str (YYYY-MM-DD), optional
-        limit to data on or before this filing date
-
-    universes : list of str, optional
-        limit to these universes
-
-    sids : list of str, optional
-        limit to these sids
-
-    exclude_universes : list of str, optional
-        exclude these universes
-
-    exclude_sids : list of str, optional
-        exclude these sids
-
-    event_codes : list of int, optional
-        limit to these event codes
-
-    fields : list of str, optional
-        only return these fields (pass '?' or any invalid fieldname to see
-        available fields)
-
-    Returns
-    -------
-    None
-
-    Examples
-    --------
-    Query event code 13 (Bankruptcy) for a universe of securities and load
-    into Pandas:
-
-    >>> download_atomicfin_sec8(filepath_or_buffer="bankruptcies.csv",
-                                universes="usa-stk", event_codes=13)
-    >>> bankruptcies = pd.read_csv("bankruptcies.csv", parse_dates=["DATE"])
-    """
-    params = {}
-    if start_date:
-        params["start_date"] = start_date
-    if end_date:
-        params["end_date"] = end_date
-    if universes:
-        params["universes"] = universes
-    if sids:
-        params["sids"] = sids
-    if exclude_universes:
-        params["exclude_universes"] = exclude_universes
-    if exclude_sids:
-        params["exclude_sids"] = exclude_sids
-    if event_codes:
-        params["event_codes"] = event_codes
-    if fields:
-        params["fields"] = fields
-
-    output = output or "csv"
-
-    if output not in ("csv", "json"):
-        raise ValueError("Invalid ouput: {0}".format(output))
-
-    response = houston.get("/fundamental/atomicfin/sec8.{0}".format(output), params=params,
-                           timeout=60*15)
-
-    try:
-        houston.raise_for_status_with_json(response)
-    except requests.HTTPError as e:
-        # Raise a dedicated exception
-        if "match the query parameters" in repr(e).lower():
-            raise NoFundamentalData(e)
-        raise
-
-    filepath_or_buffer = filepath_or_buffer or sys.stdout
-
-    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
-
-def _cli_download_atomicfin_sec8(*args, **kwargs):
-    return json_to_cli(download_atomicfin_sec8, *args, **kwargs)
-
-def download_atomicfin_sp500(filepath_or_buffer=None,
-                             start_date=None, end_date=None,
-                             universes=None, sids=None,
-                             exclude_universes=None, exclude_sids=None,
-                             fields=None, output=None):
-    """
-    Query AtomicFin S&P 500 index changes (additions and removals) from the
-    local database and download to file.
-
-    Parameters
-    ----------
-    filepath_or_buffer : str or file-like object
-        filepath to write the data to, or file-like object (defaults to stdout)
-
-    output : str
-        output format (json, csv, default is csv)
-
-    start_date : str (YYYY-MM-DD), optional
-        limit to index changes on or after this date
-
-    end_date : str (YYYY-MM-DD), optional
-        limit to index changes on or before this date
-
-    universes : list of str, optional
-        limit to these universes
-
-    sids : list of str, optional
-        limit to these sids
-
-    exclude_universes : list of str, optional
-        exclude these universes
-
-    exclude_sids : list of str, optional
-        exclude these sids
-
-    fields : list of str, optional
-        only return these fields (pass '?' or any invalid fieldname to see
-        available fields)
-
-    Returns
-    -------
-    None
-
-    Examples
-    --------
-    Query S&P 500 index changes since 2010 and load into Pandas:
-
-    >>> download_atomicfin_sp500(filepath_or_buffer="sp500_changes.csv", start_date="2010-01-01")
-    >>> sp500_changes = pd.read_csv("sp500_changes.csv", parse_dates=["DATE"])
-
-    Get the current members of the S&P 500:
-
-    >>> download_atomicfin_sp500(filepath_or_buffer="sp500_changes.csv")
-    >>> sp500_changes = pd.read_csv("sp500_changes.csv", parse_dates=["DATE"])
-    >>> latest_changes = sp500_changes.drop_duplicates(subset="Sid", keep="last")
-    >>> current_members = latest_changes[latest_changes.ACTION == "added"]
-    """
-    params = {}
-    if start_date:
-        params["start_date"] = start_date
-    if end_date:
-        params["end_date"] = end_date
-    if universes:
-        params["universes"] = universes
-    if sids:
-        params["sids"] = sids
-    if exclude_universes:
-        params["exclude_universes"] = exclude_universes
-    if exclude_sids:
-        params["exclude_sids"] = exclude_sids
-    if fields:
-        params["fields"] = fields
-
-    output = output or "csv"
-
-    if output not in ("csv", "json"):
-        raise ValueError("Invalid ouput: {0}".format(output))
-
-    response = houston.get("/fundamental/atomicfin/sp500.{0}".format(output), params=params,
-                           timeout=60*15)
-
-    try:
-        houston.raise_for_status_with_json(response)
-    except requests.HTTPError as e:
-        # Raise a dedicated exception
-        if "match the query parameters" in repr(e).lower():
-            raise NoFundamentalData(e)
-        raise
-
-    filepath_or_buffer = filepath_or_buffer or sys.stdout
-
-    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
-
-def _cli_download_atomicfin_sp500(*args, **kwargs):
-    return json_to_cli(download_atomicfin_sp500, *args, **kwargs)
-
-def get_atomicfin_fundamentals_reindexed_like(reindex_like, fields=None,
-                                              dimension="ART"):
-    """
-    Return a multiindex (Field, Date) DataFrame of point-in-time
-    AtomicFin fundamentals, reindexed to match the index (dates)
-    and columns (sids) of `reindex_like`. Financial indicators are
-    forward-filled in order to provide the latest reading at any given
-    date. Indicators are indexed to the AtomicFin DATEKEY field, i.e. the
-    filing date. DATEKEY is shifted forward 1 day to avoid lookahead bias.
-
-    Parameters
-    ----------
-    reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and sids
-        for the columns, to which the shape of the resulting DataFrame will
-        be conformed
-
-    fields : list of str
-        a list of fields to include in the resulting DataFrame. Defaults to
-        including all fields. For faster performance, limiting fields to
-        those needed is highly recommended, especially for large universes.
-
-    dimension: bool
-        the dimension of the data. Defaults to As Reported Trailing Twelve
-        Month (ART). Possible choices: ARQ, ARY, ART, MRQ,
-        MRY, MRT. AR=As Reported, MR=Most Recent Reported, Q=Quarterly,
-        Y=Annual, T=Trailing Twelve Month.
-
-    Returns
-    -------
-    DataFrame
-        a multiindex (Field, Date) DataFrame of fundamentals, shaped like
-        the input DataFrame
-
-    Examples
-    --------
-    Query several trailing twelve month indicators using a DataFrame of
-    historical prices:
-
-    >>> closes = prices.loc["Close"]
-    >>> fundamentals = get_atomicfin_fundamentals_reindexed_like(closes, fields=["EPS", "REVENUE"])
-    >>> eps = fundamentals.loc["EPS"]
-    >>> revenue = fundamentals.loc["REVENUE"]
-
-    Query quarterly book value per share using a DataFrame of historical prices:
-
-    >>> closes = prices.loc["Close"]
-    >>> fundamentals = get_atomicfin_fundamentals_reindexed_like(closes, fields=["BVPS"],
-                                                                 dimension="ARQ")
-    >>> bvps = fundamentals.loc["BVPS"]
-
-    Query outstanding shares using a DataFrame of historical prices:
-
-    >>> closes = prices.loc["Close"]
-    >>> fundamentals = get_atomicfin_fundamentals_reindexed_like(closes,
-                                                                fields=["SHARESWA"])
-    >>> shares_out = fundamentals.loc["SHARESWA"]
-    """
-    try:
-        import pandas as pd
-    except ImportError:
-        raise ImportError("pandas must be installed to use this function")
-
-    index_levels = reindex_like.index.names
-    if "Time" in index_levels:
-        raise ParameterError(
-            "reindex_like should not have 'Time' in index, please take a cross-section first, "
-            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
-
-    if index_levels != ["Date"]:
-        raise ParameterError(
-            "reindex_like must have index called 'Date', but has {0}".format(
-                ",".join([str(name) for name in index_levels])))
-
-    if not hasattr(reindex_like.index, "date"):
-        raise ParameterError("reindex_like must have a DatetimeIndex")
-
-    sids = list(reindex_like.columns)
-    start_date = reindex_like.index.min().date()
-    # Since financial reports are sparse, start well before the reindex_like
-    # min date
-    start_date -= pd.Timedelta(days=365+180)
-    start_date = start_date.isoformat()
-    end_date = reindex_like.index.max().date().isoformat()
-
-    if fields and not isinstance(fields, (list,tuple)):
-        fields = [fields]
-
-    f = six.StringIO()
-    download_atomicfin_fundamentals(
-        filepath_or_buffer=f, sids=sids, start_date=start_date, end_date=end_date,
-        fields=fields, dimensions=dimension)
-    financials = pd.read_csv(
-        f, parse_dates=["DATEKEY"])
-
-    # Rename DATEKEY to match price history index name
-    financials = financials.rename(columns={"DATEKEY": "Date"})
-
-    # Drop any fields we don't need
-    if fields:
-        needed_fields = set(fields)
-        needed_fields.update(set(("Sid", "Date")))
-        unneeded_fields = set(financials.columns) - needed_fields
-        if unneeded_fields:
-            financials = financials.drop(unneeded_fields, axis=1)
-
-    # if reindex_like.index is tz-aware, make financials tz-aware so they can
-    # be joined (tz-aware or tz-naive are both fine, as DATEKEY represents
-    # dates which are assumed to be in the local timezone of the reported
-    # company)
-    if reindex_like.index.tz:
-        financials.loc[:, "Date"] = financials.Date.dt.tz_localize(reindex_like.index.tz.zone)
-        deduped_datekeys = financials.Date.drop_duplicates()
-    else:
-        # joining to tz-naive requires using values, whereas joining to
-        # tz-aware requires not using it. Why?
-        deduped_datekeys = financials.Date.drop_duplicates().values
-
-    # Create a unioned index of input DataFrame and statement DATEKEYs
-    union_date_idx = reindex_like.index.union(deduped_datekeys).sort_values()
-
-    # There might be duplicate DATEKEYs if a company announced
-    # reports for several fiscal periods at once. In this case we keep
-    # only the last value (i.e. latest fiscal period)
-    financials = financials.drop_duplicates(subset=["Sid", "Date"], keep="last")
-    financials = financials.pivot(index="Sid",columns="Date").T
-    multiidx = pd.MultiIndex.from_product(
-        (financials.index.get_level_values(0).unique(), union_date_idx),
-        names=["Field", "Date"])
-    financials = financials.reindex(index=multiidx, columns=reindex_like.columns)
-
-    # financial values are sparse so ffill (one field at a time)
-    all_fields = {}
-    for fieldname in financials.index.get_level_values("Field").unique():
-        field = financials.loc[fieldname].fillna(method="ffill")
-
-        # Shift to avoid lookahead bias
-        field = field.shift()
-
-        all_fields[fieldname] = field
-
-    financials = pd.concat(all_fields, names=["Field", "Date"])
-
-    # In cases the statements included dates not in the input
-    # DataFrame, drop those now that we've ffilled
-    extra_dates = union_date_idx.difference(reindex_like.index)
-    if not extra_dates.empty:
-        financials.drop(extra_dates, axis=0, level="Date", inplace=True)
-
-    return financials
-
-def get_atomicfin_institutions_reindexed_like(reindex_like, fields=None, shift=45):
-    """
-    Return a multiindex (Field, Date) DataFrame of AtomicFin institutional
-    investor data, reindexed to match the index (dates) and columns (sids) of
-    `reindex_like`. Values are forward-filled in order to provide the latest
-    reading at any given date. Data are indexed to the quarter end date.
-    Because the reporting deadline is 45 days after the end of the quarter
-    the values are shifted forward 45 calendar days by default (see the
-    `shift` parameter to control this).
-
-    Parameters
-    ----------
-    reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and sids
-        for the columns, to which the shape of the resulting DataFrame will
-        be conformed
-
-    fields : list of str
-        a list of fields to include in the resulting DataFrame. Defaults to
-        including all fields. For faster performance, limiting fields to
-        those needed is highly recommended, especially for large universes.
-
-    shift: int, optional
-        shift the data forward this many period to account for the 45-day
-        lag between the quarter end date and the reporting deadline. Defaults
-        to 45.
-
-    Returns
-    -------
-    DataFrame
-        a multiindex (Field, Date) DataFrame of institutional investor data,
-        shaped like the input DataFrame
-
-    Examples
-    --------
-    Calculate institutional ownership as a percentage of total market cap:
-
-    >>> closes = prices.loc["Close"]
-    >>> insti = get_atomicfin_institutions_reindexed_like(closes, fields="SHRVALUE")
-    >>> insti_share_values = insti.loc["SHRVALUE"]
-    >>> fundamentals = get_atomicfin_fundamentals_reindexed_like(closes, dimension="ARQ", fields="MARKETCAP")
-    >>> market_caps = fundamentals.loc["MARKETCAP"]
-    >>> insti_pct = insti_share_values/market_caps
-    """
-    try:
-        import pandas as pd
-    except ImportError:
-        raise ImportError("pandas must be installed to use this function")
-
-    index_levels = reindex_like.index.names
-    if "Time" in index_levels:
-        raise ParameterError(
-            "reindex_like should not have 'Time' in index, please take a cross-section first, "
-            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
-
-    if index_levels != ["Date"]:
-        raise ParameterError(
-            "reindex_like must have index called 'Date', but has {0}".format(
-                ",".join([str(name) for name in index_levels])))
-
-    if not hasattr(reindex_like.index, "date"):
-        raise ParameterError("reindex_like must have a DatetimeIndex")
-
-    sids = list(reindex_like.columns)
-    start_date = reindex_like.index.min().date()
-    # Since financial reports are sparse, start well before the reindex_like
-    # min date
-    start_date -= pd.Timedelta(days=365+180)
-    start_date = start_date.isoformat()
-    end_date = reindex_like.index.max().date().isoformat()
-
-    if fields and not isinstance(fields, (list,tuple)):
-        fields = [fields]
-
-    f = six.StringIO()
-    download_atomicfin_institutions(
-        filepath_or_buffer=f, sids=sids, start_date=start_date, end_date=end_date,
-        fields=fields)
-    institutions = pd.read_csv(
-        f, parse_dates=["CALENDARDATE"])
-
-    # Rename CALENDARDATE to match price history index name
-    institutions = institutions.rename(columns={"CALENDARDATE": "Date"})
-
-    # Drop any fields we don't need
-    if fields:
-        needed_fields = set(fields)
-        needed_fields.update(set(("Sid", "Date")))
-        unneeded_fields = set(institutions.columns) - needed_fields
-        if unneeded_fields:
-            institutions = institutions.drop(unneeded_fields, axis=1)
-
-    # if reindex_like.index is tz-aware, make institutions tz-aware so they can
-    # be joined
-    if reindex_like.index.tz:
-        institutions.loc[:, "Date"] = institutions.Date.dt.tz_localize(reindex_like.index.tz.zone)
-        deduped_datekeys = institutions.Date.drop_duplicates()
-    else:
-        # joining to tz-naive requires using values, whereas joining to
-        # tz-aware requires not using it. Why?
-        deduped_datekeys = institutions.Date.drop_duplicates().values
-
-    # Create a unioned index of input DataFrame and statement DATEKEYs
-    union_date_idx = reindex_like.index.union(deduped_datekeys).sort_values()
-
-    # Interpolate calendar days into unioned index
-    union_date_idx = pd.date_range(start=union_date_idx.min(), end=union_date_idx.max(),
-                                   freq="D", tz=union_date_idx.tz)
-
-    institutions = institutions.pivot(index="Sid",columns="Date").T
-    multiidx = pd.MultiIndex.from_product(
-        (institutions.index.get_level_values(0).unique(), union_date_idx),
-        names=["Field", "Date"])
-    institutions = institutions.reindex(index=multiidx, columns=reindex_like.columns)
-
-    # values are sparse so ffill (one field at a time)
-    all_fields = {}
-    for fieldname in institutions.index.get_level_values("Field").unique():
-        field = institutions.loc[fieldname].fillna(method="ffill")
-
-        # Shift to avoid lookahead bias
-        if shift:
-            field = field.shift(shift)
-
-        all_fields[fieldname] = field
-
-    institutions = pd.concat(all_fields, names=["Field", "Date"])
-
-    # In cases the institutions included dates not in the input
-    # DataFrame, drop those now that we've ffilled
-    extra_dates = union_date_idx.difference(reindex_like.index)
-    if not extra_dates.empty:
-        institutions.drop(extra_dates, axis=0, level="Date", inplace=True)
-
-    return institutions
-
-def get_atomicfin_sec8_reindexed_like(reindex_like, event_codes=None):
-    """
-    Return a Boolean DataFrame indicating whether securities filed SEC Form
-    8-K for specified event codes on given dates. The resulting DataFrame
-    will be reindexed to match the index (dates) and columns (sids) of
-    `reindex_like`.
-
-    Parameters
-    ----------
-    reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and sids
-        for the columns, to which the shape of the resulting DataFrame will
-        be conformed
-
-    event_codes : list of int, optional
-        limit to these event codes
-
-    Returns
-    -------
-    DataFrame
-        a Boolean DataFrame shaped like the input DataFrame
-
-    Examples
-    --------
-    Query bankruptcies (event code 13) and use it to mask a prices
-    DataFrame:
-
-    >>> closes = prices.loc["Close"]
-    >>> filed_for_bankruptcy = get_atomicfin_sec8_reindexed_like(closes, event_codes=13)
-    >>> closes.where(filed_for_bankruptcy)
-    """
-    try:
-        import pandas as pd
-    except ImportError:
-        raise ImportError("pandas must be installed to use this function")
-
-    index_levels = reindex_like.index.names
-    if "Time" in index_levels:
-        raise ParameterError(
-            "reindex_like should not have 'Time' in index, please take a cross-section first, "
-            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
-
-    if index_levels != ["Date"]:
-        raise ParameterError(
-            "reindex_like must have index called 'Date', but has {0}".format(
-                ",".join([str(name) for name in index_levels])))
-
-    if not hasattr(reindex_like.index, "date"):
-        raise ParameterError("reindex_like must have a DatetimeIndex")
-
-    sids = list(reindex_like.columns)
-    start_date = reindex_like.index.min().date().isoformat()
-    end_date = reindex_like.index.max().date().isoformat()
-
-    f = six.StringIO()
-    try:
-        download_atomicfin_sec8(
-            filepath_or_buffer=f, sids=sids,
-            start_date=start_date, end_date=end_date,
-            event_codes=event_codes,
-            fields=["Sid","DATE","EVENTCODE"]
-        )
-    except NoFundamentalData:
-        # If no data for these securities, there were no events
-        return pd.DataFrame(False, index=reindex_like.index, columns=reindex_like.columns)
-
-    events = pd.read_csv(f, parse_dates=["DATE"])
-
-    # Rename DATE to match price history index name
-    events = events.rename(columns={"DATE": "Date"})
-
-    # if reindex_like.index is tz-aware, make financials tz-aware so they can
-    # be joined
-    if reindex_like.index.tz:
-        events.loc[:, "Date"] = events.Date.dt.tz_localize(reindex_like.index.tz.zone)
-
-    # If multiple events, drop duplicates
-    events = events.drop_duplicates(subset=["Sid","Date"])
-
-    # Pivot and reindex
-    events = events.pivot(index="Sid",columns="Date").T
-    events = events.loc["EVENTCODE"]
-    events = events.reindex(index=reindex_like.index, columns=reindex_like.columns)
-
-    have_events = events.notnull()
-    return have_events
-
-def get_atomicfin_sp500_reindexed_like(reindex_like):
-    """
-    Return a Boolean DataFrame indicating whether securities were in the S&P
-    500 on the given dates. The resulting DataFrame will be reindexed to
-    match the index (dates) and columns (sids) of `reindex_like`.
-
-    Parameters
-    ----------
-    reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and sids
-        for the columns, to which the shape of the resulting DataFrame will
-        be conformed
-
-    Returns
-    -------
-    DataFrame
-        a Boolean DataFrame shaped like the input DataFrame
-
-    Examples
-    --------
-    Query S&P 500 membership and use it to mask a prices DataFrame:
-
-    >>> closes = prices.loc["Close"]
-    >>> are_in_sp500 = get_atomicfin_sp500_reindexed_like(closes)
-    >>> closes.where(are_in_sp500)
-    """
-    try:
-        import pandas as pd
-    except ImportError:
-        raise ImportError("pandas must be installed to use this function")
-
-    index_levels = reindex_like.index.names
-    if "Time" in index_levels:
-        raise ParameterError(
-            "reindex_like should not have 'Time' in index, please take a cross-section first, "
-            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
-
-    if index_levels != ["Date"]:
-        raise ParameterError(
-            "reindex_like must have index called 'Date', but has {0}".format(
-                ",".join([str(name) for name in index_levels])))
-
-    if not hasattr(reindex_like.index, "date"):
-        raise ParameterError("reindex_like must have a DatetimeIndex")
-
-    sids = list(reindex_like.columns)
-    # in case constituents have never left the index, don't include a start
-    # date
-    end_date = reindex_like.index.max().date().isoformat()
-
-    f = six.StringIO()
-    try:
-        download_atomicfin_sp500(
-            filepath_or_buffer=f, sids=sids, end_date=end_date,
-            fields=["Sid","DATE","ACTION"])
-    except NoFundamentalData:
-        # If no data for these securities, they're not in the index
-        return pd.DataFrame(False, index=reindex_like.index, columns=reindex_like.columns)
-
-    sp500_changes = pd.read_csv(
-        f, parse_dates=["DATE"])
-
-    # Rename DATE to match price history index name
-    sp500_changes = sp500_changes.rename(columns={"DATE": "Date"})
-
-    # if reindex_like.index is tz-aware, make financials tz-aware so they can
-    # be joined
-    if reindex_like.index.tz:
-        sp500_changes.loc[:, "Date"] = sp500_changes.Date.dt.tz_localize(reindex_like.index.tz.zone)
-        deduped_datekeys = sp500_changes.Date.drop_duplicates()
-    else:
-        # joining to tz-naive requires using values, whereas joining to
-        # tz-aware requires not using it. Why?
-        deduped_datekeys = sp500_changes.Date.drop_duplicates().values
-
-    # Create a unioned index of input DataFrame and statement DATEs
-    union_date_idx = reindex_like.index.union(deduped_datekeys).sort_values()
-
-    # Reindex with unioned index and ffill to create Boolean dataframe
-    sp500_changes = sp500_changes.pivot(index="Sid",columns="Date").T
-    sp500_changes = sp500_changes.loc["ACTION"]
-    sp500_changes = sp500_changes.reindex(index=union_date_idx, columns=reindex_like.columns)
-    are_in_sp500 = sp500_changes.fillna(method="ffill").fillna("removed") == "added"
-
-    # reindex like input DataFrame
-    are_in_sp500 = are_in_sp500.reindex(index=reindex_like.index)
-
-    return are_in_sp500
-
-def collect_ibkr_shortable_shares(countries=None):
-    """
-    Collect IBKR shortable shares data and save to database.
-
-    Data is organized by country and updated every 15 minutes. Historical
-    data is available from April 2018.
-
-    Parameters
-    ----------
-    countries : list of str, optional
-        limit to these countries (pass '?' or any invalid country to see
-        available countries)
-
-    Returns
-    -------
-    dict
-        status message
-
-    """
-    params = {}
-    if countries:
-        params["countries"] = countries
-    response = houston.post("/fundamental/ibkr/stockloan/shares", params=params)
-
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_ibkr_shortable_shares(*args, **kwargs):
-    return json_to_cli(collect_ibkr_shortable_shares, *args, **kwargs)
-
-def collect_ibkr_borrow_fees(countries=None):
-    """
-    Collect IBKR borrow fees data and save to database.
-
-    Data is organized by country and updated every 15 minutes. Historical
-    data is available from April 2018.
-
-    Parameters
-    ----------
-    countries : list of str, optional
-        limit to these countries (pass '?' or any invalid country to see
-        available countries)
-
-    Returns
-    -------
-    dict
-        status message
-
-    """
-    params = {}
-    if countries:
-        params["countries"] = countries
-    response = houston.post("/fundamental/ibkr/stockloan/fees", params=params)
-
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_ibkr_borrow_fees(*args, **kwargs):
-    return json_to_cli(collect_ibkr_borrow_fees, *args, **kwargs)
-
-def collect_alpaca_etb():
-    """
-    Collect Alpaca easy-to-borrow data and save to database.
-
-    Data is updated daily. Historical data is available from March 2019.
-
-    Returns
-    -------
-    dict
-        status message
-
-    """
-    response = houston.post("/fundamental/alpaca/stockloan/etb")
-
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_alpaca_etb(*args, **kwargs):
-    return json_to_cli(collect_alpaca_etb, *args, **kwargs)
-
-def download_ibkr_shortable_shares(filepath_or_buffer=None, output="csv",
-                                   start_date=None, end_date=None,
-                                   universes=None, sids=None,
-                                   exclude_universes=None, exclude_sids=None):
-    """
-    Query IBKR shortable shares from the local database and download to file.
-
-    Data timestamps are UTC.
-
-    Parameters
-    ----------
-    filepath_or_buffer : str or file-like object
-        filepath to write the data to, or file-like object (defaults to stdout)
-
-    output : str
-        output format (json, csv, default is csv)
-
-    start_date : str (YYYY-MM-DD), optional
-        limit to data on or after this date
-
-    end_date : str (YYYY-MM-DD), optional
-        limit to data on or before this date
-
-    universes : list of str, optional
-        limit to these universes
-
-    sids : list of str, optional
-        limit to these sids
-
-    exclude_universes : list of str, optional
-        exclude these universes
-
-    exclude_sids : list of str, optional
-        exclude these sids
-
-    Returns
-    -------
-    None
-
-    Examples
-    --------
-    Query shortable shares for a universe of Australian stocks.
-
-    >>> f = io.StringIO()
-    >>> download_ibkr_shortable_shares("asx_shortables.csv", universes=["asx-stk"])
-    >>> shortables = pd.read_csv("asx_shortables.csv", parse_dates=["Date"])
-    """
-    params = {}
-    if start_date:
-        params["start_date"] = start_date
-    if end_date:
-        params["end_date"] = end_date
-    if universes:
-        params["universes"] = universes
-    if sids:
-        params["sids"] = sids
-    if exclude_universes:
-        params["exclude_universes"] = exclude_universes
-    if exclude_sids:
-        params["exclude_sids"] = exclude_sids
-
-    output = output or "csv"
-
-    if output not in ("csv", "json"):
-        raise ValueError("Invalid ouput: {0}".format(output))
-
-    response = houston.get("/fundamental/ibkr/stockloan/shares.{0}".format(output), params=params,
-                           timeout=60*5)
-
-    try:
-        houston.raise_for_status_with_json(response)
-    except requests.HTTPError as e:
-        # Raise a dedicated exception
-        if "no shortable shares data match the query parameters" in repr(e).lower():
-            raise NoFundamentalData(e)
-        raise
-
-    filepath_or_buffer = filepath_or_buffer or sys.stdout
-
-    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
-
-def _cli_download_ibkr_shortable_shares(*args, **kwargs):
-    return json_to_cli(download_ibkr_shortable_shares, *args, **kwargs)
-
-def download_ibkr_borrow_fees(filepath_or_buffer=None, output="csv",
-                         start_date=None, end_date=None,
-                         universes=None, sids=None,
-                         exclude_universes=None, exclude_sids=None):
-    """
-    Query IBKR borrow fees from the local database and download to file.
-
-    Data timestamps are UTC.
-
-    Parameters
-    ----------
-    filepath_or_buffer : str or file-like object
-        filepath to write the data to, or file-like object (defaults to stdout)
-
-    output : str
-        output format (json, csv, default is csv)
-
-    start_date : str (YYYY-MM-DD), optional
-        limit to data on or after this date
-
-    end_date : str (YYYY-MM-DD), optional
-        limit to data on or before this date
-
-    universes : list of str, optional
-        limit to these universes
-
-    sids : list of str, optional
-        limit to these sids
-
-    exclude_universes : list of str, optional
-        exclude these universes
-
-    exclude_sids : list of str, optional
-        exclude these sids
-
-    Returns
-    -------
-    None
-
-    Examples
-    --------
-    Query borrow fees for a universe of Australian stocks.
-
-    >>> f = io.StringIO()
-    >>> download_ibkr_borrow_fees("asx_borrow_fees.csv", universes=["asx-stk"])
-    >>> borrow_fees = pd.read_csv("asx_borrow_fees.csv", parse_dates=["Date"])
-    """
-    params = {}
-    if start_date:
-        params["start_date"] = start_date
-    if end_date:
-        params["end_date"] = end_date
-    if universes:
-        params["universes"] = universes
-    if sids:
-        params["sids"] = sids
-    if exclude_universes:
-        params["exclude_universes"] = exclude_universes
-    if exclude_sids:
-        params["exclude_sids"] = exclude_sids
-
-    output = output or "csv"
-
-    if output not in ("csv", "json"):
-        raise ValueError("Invalid ouput: {0}".format(output))
-
-    response = houston.get("/fundamental/ibkr/stockloan/fees.{0}".format(output), params=params,
-                           timeout=60*5)
-
-    try:
-        houston.raise_for_status_with_json(response)
-    except requests.HTTPError as e:
-        # Raise a dedicated exception
-        if "no borrow fees data match the query parameters" in repr(e).lower():
-            raise NoFundamentalData(e)
-        raise
-
-    filepath_or_buffer = filepath_or_buffer or sys.stdout
-
-    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
-
-def _cli_download_ibkr_borrow_fees(*args, **kwargs):
-    return json_to_cli(download_ibkr_borrow_fees, *args, **kwargs)
-
-def download_alpaca_etb(filepath_or_buffer=None, output="csv",
-                        start_date=None, end_date=None,
-                        universes=None, sids=None,
-                        exclude_universes=None, exclude_sids=None):
-    """
-    Query Alpaca easy-to-borrow data from the local database and download to file.
-
-    Parameters
-    ----------
-    filepath_or_buffer : str or file-like object
-        filepath to write the data to, or file-like object (defaults to stdout)
-
-    output : str
-        output format (json, csv, default is csv)
-
-    start_date : str (YYYY-MM-DD), optional
-        limit to data on or after this date
-
-    end_date : str (YYYY-MM-DD), optional
-        limit to data on or before this date
-
-    universes : list of str, optional
-        limit to these universes
-
-    sids : list of str, optional
-        limit to these sids
-
-    exclude_universes : list of str, optional
-        exclude these universes
-
-    exclude_sids : list of str, optional
-        exclude these sids
-
-    Returns
-    -------
-    None
-
-    Examples
-    --------
-    Query easy-to-borrow data for a universe of US stocks.
-
-    >>> f = io.StringIO()
-    >>> download_alpaca_etb("usa_etb.csv", universes=["usa-stk"])
-    >>> etb = pd.read_csv("usa_etb.csv", parse_dates=["Date"])
-    """
-    params = {}
-    if start_date:
-        params["start_date"] = start_date
-    if end_date:
-        params["end_date"] = end_date
-    if universes:
-        params["universes"] = universes
-    if sids:
-        params["sids"] = sids
-    if exclude_universes:
-        params["exclude_universes"] = exclude_universes
-    if exclude_sids:
-        params["exclude_sids"] = exclude_sids
-
-    output = output or "csv"
-
-    if output not in ("csv", "json"):
-        raise ValueError("Invalid ouput: {0}".format(output))
-
-    response = houston.get("/fundamental/alpaca/stockloan/etb.{0}".format(output), params=params,
-                           timeout=60*5)
-
-    try:
-        houston.raise_for_status_with_json(response)
-    except requests.HTTPError as e:
-        # Raise a dedicated exception
-        if "no easy-to-borrow data match the query parameters" in repr(e).lower():
-            raise NoFundamentalData(e)
-        raise
-
-    filepath_or_buffer = filepath_or_buffer or sys.stdout
-
-    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
-
-def _cli_download_alpaca_etb(*args, **kwargs):
-    return json_to_cli(download_alpaca_etb, *args, **kwargs)
-
-def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_like,
-                                       time=None, is_intraday=True):
-    """
-    Common base function for get_ibkr_shortable_shares_reindexed_like and
-    get_ibkr_borrow_fees_reindexed_like and get_alpaca_etb_reindexed_like.
-
-    Parameters
-    ----------
-
-    stockloan_func : func
-        the download function for the stockloan data
-
-    stockloan_field : str
-        the field in the stockloan data to be returned
-
-    reindex_like : DataFrame
-        the input DataFrame to conform the stockloan data to
-
-    time : str
-        the time of day for which to return stockloan data. Only
-        applicable to intraday stockloan data
-
-    is_intraday : bool
-        whether the stockloan data is intraday or daily
-    """
-    try:
-        import pandas as pd
-    except ImportError:
-        raise ImportError("pandas must be installed to use this function")
-
-    index_levels = reindex_like.index.names
-    if "Time" in index_levels:
-        raise ParameterError(
-            "reindex_like should not have 'Time' in index, please take a cross-section first, "
-            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
-
-    if index_levels != ["Date"]:
-        raise ParameterError(
-            "reindex_like must have index called 'Date', but has {0}".format(
-                ",".join([str(name) for name in index_levels])))
-
-    if not hasattr(reindex_like.index, "date"):
-        raise ParameterError("reindex_like must have a DatetimeIndex")
-
-    sids = list(reindex_like.columns)
-    start_date = reindex_like.index.min().date()
-    # Stockloan data is sparse but batched in monthly files, so start >1-month
-    # before the reindex_like min date
-    start_date -= pd.Timedelta(days=45)
-    start_date = start_date.isoformat()
-    end_date = reindex_like.index.max().date().isoformat()
-
-    f = six.StringIO()
-    stockloan_func(
-        f, sids=sids, start_date=start_date, end_date=end_date)
-    stockloan_data = pd.read_csv(f)
-    stockloan_data.loc[:, "Date"] = pd.to_datetime(stockloan_data.Date, utc=is_intraday)
-
-    if is_intraday:
-        # Determine timezone, from:
-        # - time param if provided
-        # - else reindex_like.index.tz if set
-        # - else component securities if all have same timezone
-        timezone = None
-
-        if time and " " in time:
-            time, timezone = time.split(" ", 1)
-
-            if reindex_like.index.tz and reindex_like.index.tz.zone != timezone:
-                raise ParameterError((
-                    "cannot use timezone {0} because reindex_like timezone is {1}, "
-                    "these must match".format(timezone, reindex_like.index.tz.zone)))
-
-        if not timezone:
-            if reindex_like.index.tz:
-                timezone = reindex_like.index.tz.zone
-            else:
-                # try to infer from component securities
-                f = six.StringIO()
-                download_master_file(f, sids=list(stockloan_data.Sid.unique()),
-                                     fields=["Timezone"])
-                security_timezones = pd.read_csv(f, index_col="Sid")
-                security_timezones = list(security_timezones.Timezone.unique())
-                if len(security_timezones) > 1:
-                    raise ParameterError(
-                        "no timezone specified and cannot infer because multiple timezones are "
-                        "present in data, please specify timezone (timezones in data: {0})".format(
-                        ", ".join(security_timezones)))
-                timezone = security_timezones[0]
-
-        # Create an index of `reindex_like` dates at `time`
-        if time:
-            try:
-                time = pd.Timestamp(time).time()
-            except ValueError as e:
-                raise ParameterError("could not parse time '{0}': {1}".format(
-                    time, str(e)))
-            index_at_time = pd.Index(reindex_like.index.to_series().apply(
-                lambda x: pd.datetime.combine(x, time)))
-        else:
-            index_at_time = reindex_like.index
-
-        if not index_at_time.tz:
-            index_at_time = index_at_time.tz_localize(timezone)
-
-        index_at_time = index_at_time.tz_convert("UTC")
-
-    # For daily stockloan data, just use the input DataFrame index
-    else:
-        index_at_time = reindex_like.index
-        if index_at_time.tz:
-            index_at_time = index_at_time.tz_localize(None)
-
-    stockloan_data = stockloan_data.pivot(index="Sid",columns="Date").T
-    stockloan_data = stockloan_data.loc[stockloan_field]
-
-    # Create a unioned index of requested times and stockloan data timestamps
-    unioned_idx = index_at_time.union(stockloan_data.index)
-    # performance boost: don't need to reindex and ffill earlier than the
-    # stockloan data start date
-    unioned_idx = unioned_idx[unioned_idx >= stockloan_data.index.min()]
-    stockloan_data = stockloan_data.reindex(index=unioned_idx, columns=reindex_like.columns)
-
-    stockloan_data = stockloan_data.fillna(method="ffill")
-
-    # Keep only the requested times, now that we've ffilled
-    stockloan_data = stockloan_data.reindex(index=index_at_time)
-
-    # Replace index_at_time with the original reindex_like index (this needs
-    # to be done because index_at_time is tz-aware and reindex_like may not
-    # be, and because index_at_time uses the requested `time` if provided.
-    # Since index_at_time was derived from reindex_like.index and has the
-    # same shape, it is safe to replace it.)
-    stockloan_data.index = reindex_like.index
-
-    return stockloan_data
-
-def get_ibkr_shortable_shares_reindexed_like(reindex_like, time=None):
-    """
-    Return a DataFrame of IBKR shortable shares, reindexed to match the index
-    (dates) and columns (sids) of `reindex_like`.
-
-    Parameters
-    ----------
-    reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and sids
-        for the columns, to which the shape of the resulting DataFrame will
-        be conformed
-
-    time : str (HH:MM:SS[ TZ]), optional
-        return shortable shares as of this time of day. If omitted, shortable
-        shares will be returned as of the times of day in `reindex_like`'s
-        DatetimeIndex. (Note that for a DatetimeIndex containing dates only,
-        the time is 00:00:00, meaning shortable shares will be returned as of
-        midnight at the start of the day.) A time and timezone can be passed
-        as a space-separated string (e.g. "09:30:00 America/New_York"). If
-        timezone is omitted, the timezone of `reindex_like`'s DatetimeIndex
-        will be used; if `reindex_like`'s timezone is not set, the timezone
-        will be inferred from the component securities, if all securities
-        share the same timezone.
-
-    Returns
-    -------
-    DataFrame
-        a DataFrame of shortable shares, shaped like the input DataFrame
-
-    Examples
-    --------
-    Get shortable shares as of midnight for a DataFrame of US stocks:
-
-    >>> closes = prices.loc["Close"]
-    >>> shortables = get_ibkr_shortable_shares_reindexed_like(closes)
-
-    Get shortable shares as of 9:20 AM for a DataFrame of US stocks (timezone
-    inferred from component stocks):
-
-    >>> closes = prices.loc["Close"]
-    >>> shortables = get_ibkr_shortable_shares_reindexed_like(closes, time="09:20:00")
-
-    Get shortable shares as of 9:20 AM New York time for a multi-timezone DataFrame
-    of stocks:
-
-    >>> closes = prices.loc["Close"]
-    >>> shortables = get_ibkr_shortable_shares_reindexed_like(closes, time="09:20:00 America/New_York")
-    """
-    shortable_shares = _get_stockloan_data_reindexed_like(
-        download_ibkr_shortable_shares, "Quantity",
-        reindex_like=reindex_like, time=time, is_intraday=True)
-
-    # fillna(0) where date > 2018-04-15, the data start date (NaNs after that
-    # date indicate no shortable shares, NaNs before that date indicate don't
-    # know)
-    data_start_date = os.environ.get("STOCKLOAN_DATA_START_DATE", "2018-04-15")
-    after_start_date_selector = shortable_shares.index > data_start_date
-    shortable_shares.loc[after_start_date_selector, :] = shortable_shares.loc[
-        after_start_date_selector].fillna(0)
-
-    return shortable_shares
-
-def get_ibkr_borrow_fees_reindexed_like(reindex_like, time=None):
-    """
-    Return a DataFrame of IBKR borrow fees, reindexed to match the index
-    (dates) and columns (sids) of `reindex_like`.
-
-    Parameters
-    ----------
-    reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and sids
-        for the columns, to which the shape of the resulting DataFrame will
-        be conformed
-
-    time : str (HH:MM:SS[ TZ]), optional
-        return borrow fees as of this time of day. If omitted, borrow
-        fees will be returned as of the times of day in `reindex_like`'s
-        DatetimeIndex. (Note that for a DatetimeIndex containing dates only,
-        the time is 00:00:00, meaning borrow fees will be returned as of
-        midnight at the start of the day.) A time and timezone can be passed
-        as a space-separated string (e.g. "09:30:00 America/New_York"). If
-        timezone is omitted, the timezone of `reindex_like`'s DatetimeIndex
-        will be used; if `reindex_like`'s timezone is not set, the timezone
-        will be inferred from the component securities, if all securities
-        share the same timezone.
-
-    Returns
-    -------
-    DataFrame
-        a DataFrame of borrow fees, shaped like the input DataFrame
-
-    Examples
-    --------
-    Get borrow fees as of midnight for a DataFrame of US stocks:
-
-    >>> closes = prices.loc["Close"]
-    >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes)
-
-    Get borrow fees as of 4:30 PM for a DataFrame of US stocks (timezone inferred
-    from component stocks):
-
-    >>> closes = prices.loc["Close"]
-    >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes, time="16:30:00")
-
-    Get borrow fees as of 4:30 PM New York time for a multi-timezone DataFrame
-    of stocks:
-
-    >>> closes = prices.loc["Close"]
-    >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes, time="16:30:00 America/New_York")
-    """
-    return _get_stockloan_data_reindexed_like(
-        download_ibkr_borrow_fees, "FeeRate",
-        reindex_like=reindex_like, time=time, is_intraday=True)
-
-def get_alpaca_etb_reindexed_like(reindex_like):
-    """
-    Return a DataFrame of Alpaca easy-to-borrow status, reindexed to match the index
-    (dates) and columns (sids) of `reindex_like`.
-
-    Parameters
-    ----------
-    reindex_like : DataFrame, required
-        a DataFrame (usually of prices) with dates for the index and sids
-        for the columns, to which the shape of the resulting DataFrame will
-        be conformed
-
-    Returns
-    -------
-    DataFrame
-        a Boolean DataFrame indicating easy-to-borrow status, shaped like
-        the input DataFrame
-
-    Examples
-    --------
-    Get easy-to-borrow status for a DataFrame of stocks:
-
-    >>> closes = prices.loc["Close"]
-    >>> are_etb = get_alpaca_etb_reindexed_like(closes)
-    """
-    etb = _get_stockloan_data_reindexed_like(
-        download_alpaca_etb, "EasyToBorrow",
-        reindex_like=reindex_like, is_intraday=False)
-
-    return etb.fillna(0).astype(bool)

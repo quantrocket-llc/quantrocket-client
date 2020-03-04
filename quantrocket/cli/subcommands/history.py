@@ -20,32 +20,6 @@ def add_subparser(subparsers):
     _subparsers.required = True
 
     examples = """
-Create a new database for collecting historical data from AtomicFin.
-
-Examples:
-
-Create a database for AtomicFin US data and call it "usa-atomicfin-1d":
-
-    quantrocket history create-atomicfin-db usa-atomicfin-1d --country US
-"""
-    parser = _subparsers.add_parser(
-        "create-atomicfin-db",
-        help="create a new database for collecting historical data from AtomicFin",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "code",
-        metavar="CODE",
-        help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
-    parser.add_argument(
-        "-c", "--country",
-        metavar="COUNTRY",
-        choices=["US","FREE"],
-        default="US",
-        help="country to collect listings for. Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.history._cli_create_atomicfin_db")
-
-    examples = """
 Create a new database for collecting historical data from EDI.
 
 Examples:
@@ -183,6 +157,32 @@ stocks in 2016:
         "copies of database, one sharded by sid and the other by time),or `off` (no "
         "sharding). See http://qrok.it/h/shard for more help.")
     parser.set_defaults(func="quantrocket.history._cli_create_ibkr_db")
+
+    examples = """
+Create a new database for collecting historical data from Sharadar.
+
+Examples:
+
+Create a database for Sharadar US data and call it "usa-sharadar-1d":
+
+    quantrocket history create-sharadar-db usa-sharadar-1d --country US
+"""
+    parser = _subparsers.add_parser(
+        "create-sharadar-db",
+        help="create a new database for collecting historical data from Sharadar",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
+    parser.add_argument(
+        "-c", "--country",
+        metavar="COUNTRY",
+        choices=["US","FREE"],
+        default="US",
+        help="country to collect listings for. Possible choices: %(choices)s")
+    parser.set_defaults(func="quantrocket.history._cli_create_sharadar_db")
 
     examples = """
 Create a new database for collecting historical US stock data from QuantRocket.
