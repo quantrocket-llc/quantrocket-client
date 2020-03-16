@@ -112,8 +112,8 @@ def collect_figi_listings():
     market sector and a detailed security type, as well as exchange-level,
     country-level, and share class-level FIGI identifiers.
 
-    The collected data fields show up in the master file under the
-    prefix figi_.
+    The collected data fields show up in the master file with the
+    prefix "figi_*".
 
     This function does not directly query the OpenFIGI API but rather
     downloads a dump of all FIGIs which QuantRocket has previously
@@ -333,7 +333,7 @@ def diff_ibkr_securities(universes=None, sids=None, infilepath_or_buffer=None,
         limit to the sids in this file (specify '-' to read file from stdin)
 
     fields : list of str, optional
-        only diff these fields (field name should start with ibkr_)
+        only diff these fields (field name should start with "ibkr")
 
     delist_missing : bool
         auto-delist securities that are no longer available from IB
@@ -446,8 +446,8 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         returned, but additional vendor-specific fields are also available.
         To return non-core fields, you can reference them by name, or pass "*"
         to return all available fields. To return all fields for a specific
-        vendor, pass the vendor prefix followed by *, for example "edi*"
-        for all EDI fields. Pass "?*" (or any invalid vendor prefix plus *)
+        vendor, pass the vendor prefix followed by "*", for example "edi*"
+        for all EDI fields. Pass "?*" (or any invalid vendor prefix plus "*")
         to see available vendor prefixes. Pass "?" or any invalid fieldname
         to see all available fields.
 
@@ -537,9 +537,9 @@ def get_securities_reindexed_like(reindex_like, fields=None):
         core set of fields is returned, but additional vendor-specific fields
         are also available. To return non-core fields, you can reference them
         by name, or pass "*" to return all available fields. To return all
-        fields for a specific vendor, pass the vendor prefix followed by *,
+        fields for a specific vendor, pass the vendor prefix followed by "*",
         for example "edi*" for all EDI fields. Pass "?*" (or any invalid
-        vendor prefix plus *) to see available vendor prefixes. Pass "?" or
+        vendor prefix plus "*") to see available vendor prefixes. Pass "?" or
         any invalid fieldname to see all available fields.
 
     Returns

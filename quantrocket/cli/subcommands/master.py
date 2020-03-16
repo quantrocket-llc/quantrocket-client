@@ -69,7 +69,7 @@ market sector and a detailed security type, as well as exchange-level,
 country-level, and share class-level FIGI identifiers.
 
 The collected data fields show up in the master file under the
-prefix figi_.
+prefix "figi_*".
 
 This command does not directly query the OpenFIGI API but rather
 downloads a dump of all FIGIs which QuantRocket has previously
@@ -353,8 +353,8 @@ terminal display:
         'returned, but additional vendor-specific fields are also available. '
         'To return non-core fields, you can reference them by name, or pass "*" '
         'to return all available fields. To return all fields for a specific '
-        'vendor, pass the vendor prefix followed by *, for example "edi*" '
-        'for all EDI fields. Pass "?*" (or any invalid vendor prefix plus *) '
+        'vendor, pass the vendor prefix followed by "*", for example "edi*" '
+        'for all EDI fields. Pass "?*" (or any invalid vendor prefix plus "*") '
         'to see available vendor prefixes. Pass "?" or any invalid fieldname '
         'to see all available fields.')
     parser.set_defaults(func="quantrocket.master._cli_download_master_file")
@@ -449,7 +449,7 @@ or that are now associated with the PINK exchange:
         "-f", "--fields",
         nargs="*",
         metavar="FIELD",
-        help="only diff these fields (field name should start with ibkr_)")
+        help="only diff these fields (field name should start with 'ibkr')")
     parser.add_argument(
         "--delist-missing",
         action="store_true",
