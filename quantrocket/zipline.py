@@ -20,7 +20,7 @@ from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 
-def create_usstock_bundle(code, universe=None):
+def create_usstock_bundle(code, sids=None, universes=None, free=False):
     """
     Create a Zipline bundle for US stocks.
 
@@ -32,8 +32,14 @@ def create_usstock_bundle(code, universe=None):
     code : str, required
         the code to assign to the bundle (lowercase alphanumerics and hyphens only)
 
-    universe : str, optional
-        the universe to ingest. Possible choices: US, FREE
+    sids : list of str, optional
+        limit to these sids
+
+    universes : list of str, optional
+        limit to these universes
+
+    free : bool
+        limit to free sample data
 
     Returns
     -------
@@ -42,14 +48,26 @@ def create_usstock_bundle(code, universe=None):
 
     Examples
     --------
-    Create a bundle named "usstock-1min":
+    Create a bundle for all US stocks:
 
     >>> create_usstock_bundle("usstock-1min")
+
+    Create a bundle based on a universe:
+
+    >>> create_usstock_bundle("usstock-tech-1min", universes="us-tech")
+
+    Create a bundle of free sample data:
+
+    >>> create_usstock_bundle("usstock-free-1min", free=True)
     """
     params = {}
     params["ingest_type"] = "usstock"
-    if universe:
-        params["universe"] = universe
+    if sids:
+        params["sids"] = sids
+    if universes:
+        params["universes"] = universes
+    if free:
+        params["free"] = free
 
     response = houston.put("/zipline/bundles/{}".format(code), params=params)
 
@@ -156,7 +174,7 @@ def _cli_create_db_bundle(*args, **kwargs):
         kwargs["fields"] = dict_strs_to_dict(*fields)
     return json_to_cli(create_db_bundle, *args, **kwargs)
 
-def ingest_bundle(code):
+def ingest_bundle(code, sids=None, universes=None):
     """
     Ingest data into a previously defined bundle.
 
@@ -164,6 +182,12 @@ def ingest_bundle(code):
     ----------
     code : str, required
         the bundle code
+
+    sids : list of str, optional
+        limit to these sids, overriding stored config
+
+    universes : list of str, optional
+        limit to these universes, overriding stored config
 
     Returns
     -------
@@ -176,7 +200,13 @@ def ingest_bundle(code):
 
     >>> ingest_bundle("es-fut-1min")
     """
-    response = houston.post("/zipline/bundles/{}".format(code))
+    params = {}
+    if sids:
+        params["sids"] = sids
+    if universes:
+        params["universes"] = universes
+
+    response = houston.post("/zipline/ingestions/{}".format(code), params=params)
 
     houston.raise_for_status_with_json(response)
     return response.json()

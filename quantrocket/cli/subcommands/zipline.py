@@ -26,12 +26,19 @@ Create a Zipline bundle for US stocks.
 This command defines the bundle parameters but does not ingest the actual
 data. To ingest the data, see `quantrocket zipline ingest`.
 
-
 Examples:
 
-Create a bundle named "usstock-1min":
+Create a bundle for all US stocks:
 
     quantrocket zipline create-usstock-bundle usstock-1min
+
+Create a bundle based on a universe:
+
+    quantrocket zipline create-usstock-bundle usstock-tech-1min --universes us-tech
+
+Create a bundle of free sample data:
+
+    quantrocket zipline create-usstock-bundle usstock-free-1min --free
     """
     parser = _subparsers.add_parser(
         "create-usstock-bundle",
@@ -43,9 +50,17 @@ Create a bundle named "usstock-1min":
         metavar="CODE",
         help="the code to assign to the bundle (lowercase alphanumerics and hyphens only)")
     parser.add_argument(
-        "-u", "--universe",
-        choices=["US", "FREE"],
-        help="the universe to ingest. Possible choices: %(choices)s")
+        "-i", "--sids",
+        metavar="SID",
+        help="limit to these sids")
+    parser.add_argument(
+        "-u", "--universes",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    parser.add_argument(
+        "--free",
+        action="store_true",
+        help="limit to free sample data")
     parser.set_defaults(func="quantrocket.zipline._cli_create_usstock_bundle")
 
     examples = """
@@ -144,6 +159,14 @@ Ingest data into a bundle called es-fut-1min:
         "code",
         metavar="CODE",
         help="the bundle code")
+    parser.add_argument(
+        "-i", "--sids",
+        metavar="SID",
+        help="limit to these sids, overriding stored config")
+    parser.add_argument(
+        "-u", "--universes",
+        metavar="UNIVERSE",
+        help="limit to these universes, overriding stored config")
     parser.set_defaults(func="quantrocket.zipline._cli_ingest_bundle")
 
     examples = """
