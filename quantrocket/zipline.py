@@ -14,7 +14,9 @@
 
 import sys
 import six
+import requests
 from quantrocket.houston import houston
+from quantrocket.exceptions import NoHistoricalData
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
@@ -315,6 +317,102 @@ def _cli_get_or_set_default_bundle(bundle=None, *args, **kwargs):
         return json_to_cli(set_default_bundle, bundle, *args, **kwargs)
     else:
         return json_to_cli(get_default_bundle, *args, **kwargs)
+
+def download_minute_file(code, filepath_or_buffer=None,
+                        start_date=None, end_date=None,
+                        universes=None, sids=None,
+                        exclude_universes=None, exclude_sids=None,
+                        times=None, fields=None):
+    """
+    Query minute data from a Zipline bundle and download to a CSV file.
+
+    Parameters
+    ----------
+    code : str, required
+        the bundle code
+
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to history on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to history on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    times: list of str (HH:MM:SS), optional
+        limit to these times
+
+    fields : list of str, optional
+        only return these fields (pass ['?'] or any invalid fieldname to see
+        available fields)
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Load minute prices into pandas:
+
+    >>> download_minute_file("usstock-1min", sids=["FIBBG12345"])
+    >>> prices = pd.read_csv(f, parse_dates=["Date"], index_col=["Field","Date"])
+
+    Isolate fields with .loc:
+
+    >>> closes = prices.loc["Close"]
+
+    See Also
+    --------
+    quantrocket.get_prices : load prices into a DataFrame
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+    if times:
+        params["times"] = times
+    if fields:
+        params["fields"] = fields
+
+    response = houston.get("/zipline/bundles/data/{code}.csv", params=params,
+                           timeout=60*30)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no history matches the query parameters" in repr(e).lower():
+            raise NoHistoricalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_minute_file(*args, **kwargs):
+    return json_to_cli(download_minute_file, *args, **kwargs)
 
 def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
              start=None, end=None, filepath_or_buffer=None):

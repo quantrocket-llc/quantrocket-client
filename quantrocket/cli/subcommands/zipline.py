@@ -238,6 +238,74 @@ Show current default bundle:
     parser.set_defaults(func="quantrocket.zipline._cli_get_or_set_default_bundle")
 
     examples = """
+Query minute data from a Zipline bundle and download to a CSV file.
+
+Examples:
+
+Download a CSV of minute prices since 2015 for a single security from a bundle called
+"usstock-1min":
+
+    quantrocket history get usstock-1min --start-date 2015-01-01 -i FIBBG12345 -o minute_prices.csv
+    """
+    parser = _subparsers.add_parser(
+        "get",
+        help="query minute data from a Zipline bundle and download to a CSV file",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the bundle code")
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to history on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to history on or before this date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    filters.add_argument(
+        "-t", "--times",
+        nargs="*",
+        metavar="HH:MM:SS",
+        help="limit to these times")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
+    parser.set_defaults(func="quantrocket.zipline._cli_download_minute_file")
+
+    examples = """
 Backtest a Zipline strategy and write the test results to a CSV file.
 
 The CSV result file contains several DataFrames stacked into one: the Zipline performance
