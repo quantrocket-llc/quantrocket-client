@@ -296,7 +296,6 @@ Download a CSV of minute prices since 2015 for a single security from a bundle c
         metavar="OUTFILE",
         dest="filepath_or_buffer",
         help="filename to write the data to (default is stdout)")
-    output_format_group = outputs.add_mutually_exclusive_group()
     outputs.add_argument(
         "-f", "--fields",
         metavar="FIELD",

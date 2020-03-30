@@ -27,6 +27,7 @@ from quantrocket.realtime import (
     download_market_data_file,
     get_db_config as get_realtime_db_config,
     list_databases as list_realtime_databases)
+from quantrocket.zipline import list_bundles, download_minute_file
 
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", tempfile.gettempdir())
 
@@ -37,8 +38,8 @@ def get_prices(codes, start_date=None, end_date=None,
                timezone=None, infer_timezone=None,
                cont_fut=None):
     """
-    Query one or more history databases and/or real-time aggregate databases
-    and load prices into a DataFrame.
+    Query one or more history databases, real-time aggregate databases,
+    and/or Zipline bundles and load prices into a DataFrame.
 
     For bar sizes smaller than 1-day, the resulting DataFrame will have a MultiIndex
     with levels (Field, Date, Time). For bar sizes of 1-day or larger, the MultiIndex
@@ -50,7 +51,7 @@ def get_prices(codes, start_date=None, end_date=None,
         the code(s) of one or more databases to query. If multiple databases
         are specified, they must have the same bar size. List databses in order of
         priority (highest priority first). If multiple databases provide the same
-        field for the same conid on the same datetime, the first database's value will
+        field for the same sid on the same datetime, the first database's value will
         be used.
 
     start_date : str (YYYY-MM-DD), optional
@@ -101,16 +102,17 @@ def get_prices(codes, start_date=None, end_date=None,
 
     Notes
     -----
-    The `times` parameter, if provided, is applied differently for history databases vs
-    real-time aggregate databases. For history databases, the parameter is applied when
-    querying the database. For real-time aggregate databases, the parameter is not applied
-    when querying the database; rather, all available times are retrieved and the `times`
-    filter is applied to the resulting DataFrame after casting it to the appropriate timezone
-    (as inferred from the securities master Timezone field or as explicitly specified with
-    the `timezone` parameter). The rationale for this behavior is that history databases store
-    intraday data in the timezone of the relevant exchange whereas real-time aggregate
-    databases store data in UTC. By applying the `times` filter as described, users can specify
-    the times in the timezone of the relevant exchange for both types of databases.
+    The `times` parameter, if provided, is applied differently for history databases and
+    Zipline bundles vs real-time aggregate databases. For history databases and Zipline
+    bundles, the parameter is applied when querying the database. For real-time aggregate
+    databases, the parameter is not applied when querying the database; rather, all available
+    times are retrieved and the `times` filter is applied to the resulting DataFrame after
+    casting it to the appropriate timezone (as inferred from the securities master Timezone
+    field or as explicitly specified with the `timezone` parameter). The rationale for this
+    behavior is that history databases and Zipline bundles store intraday data in the timezone
+    of the relevant exchange whereas real-time aggregate databases store data in UTC. By
+    applying the `times` filter as described, users can specify the times in the timezone of
+    the relevant exchange for both types of databases.
 
     Examples
     --------
@@ -174,15 +176,17 @@ def get_prices(codes, start_date=None, end_date=None,
     if not isinstance(fields, (list, tuple)):
         fields = [fields]
 
-    # separate history dbs from realtime dbs
+    # separate history dbs from Zipline bundles from realtime dbs
     history_dbs = set(list_history_databases())
     realtime_dbs = list_realtime_databases()
     realtime_agg_dbs = set(itertools.chain(*realtime_dbs.values()))
+    zipline_bundles = set(list_bundles())
 
     history_dbs.intersection_update(set(dbs))
     realtime_agg_dbs.intersection_update(set(dbs))
+    zipline_bundles.intersection_update(set(dbs))
 
-    unknown_dbs = set(dbs) - history_dbs - realtime_agg_dbs
+    unknown_dbs = set(dbs) - history_dbs - realtime_agg_dbs - zipline_bundles
 
     if unknown_dbs:
         tick_dbs = set(realtime_dbs.keys()).intersection(unknown_dbs)
@@ -192,13 +196,14 @@ def get_prices(codes, start_date=None, end_date=None,
                                  "real-time aggregate databases are supported".format(
                                      ", ".join(tick_dbs)))
         raise ParameterError(
-            "no history or real-time aggregate databases called {}".format(
+            "no history or real-time aggregate databases or Zipline bundles called {}".format(
                 ", ".join(unknown_dbs)))
 
     db_bar_sizes = set()
     db_bar_sizes_parsed = set()
     history_db_fields = {}
     realtime_db_fields = {}
+    zipline_bundle_fields = {}
 
     for db in history_dbs:
         db_config = get_history_db_config(db)
@@ -223,6 +228,11 @@ def get_prices(codes, start_date=None, end_date=None,
         db_bar_sizes.add(bar_size)
         db_bar_sizes_parsed.add(pd.Timedelta(bar_size))
         realtime_db_fields[db] = db_config.get("fields", [])
+
+    for db in zipline_bundles:
+        db_bar_sizes.add("1 min")
+        db_bar_sizes_parsed.add(pd.Timedelta("1 min"))
+        zipline_bundle_fields[db] = ["Open", "High", "Low", "Close", "Volume"]
 
     if len(db_bar_sizes_parsed) > 1:
         raise ParameterError(
@@ -265,6 +275,8 @@ def get_prices(codes, start_date=None, end_date=None,
                     continue
 
             prices = pd.read_csv(tmp_filepath)
+            prices = prices.pivot(index="Sid", columns="Date").T
+            prices.index.set_names(["Field", "Date"], inplace=True)
             all_prices.append(prices)
 
             os.remove(tmp_filepath)
@@ -296,6 +308,40 @@ def get_prices(codes, start_date=None, end_date=None,
                     continue
 
             prices = pd.read_csv(tmp_filepath)
+            prices = prices.pivot(index="Sid", columns="Date").T
+            prices.index.set_names(["Field", "Date"], inplace=True)
+            all_prices.append(prices)
+
+            os.remove(tmp_filepath)
+
+        if db in zipline_bundles:
+
+            fields_for_db = set(fields).intersection(set(zipline_bundle_fields[db]))
+
+            kwargs = dict(
+                start_date=start_date,
+                end_date=end_date,
+                universes=universes,
+                sids=sids,
+                exclude_universes=exclude_universes,
+                exclude_sids=exclude_sids,
+                times=times,
+                fields=list(fields_for_db))
+
+            tmp_filepath = "{dir}{sep}zipline.{db}.{pid}.{time}.csv".format(
+                dir=TMP_DIR, sep=os.path.sep, db=db, pid=os.getpid(), time=time.time())
+
+            try:
+                download_minute_file(db, tmp_filepath, **kwargs)
+            except NoHistoricalData as e:
+                # don't complain about NoHistoricalData if we're checking
+                # multiple databases, unless none of them have data
+                if len(dbs) == 1:
+                    raise
+                else:
+                    continue
+
+            prices = pd.read_csv(tmp_filepath, index_col=["Field", "Date"])
             all_prices.append(prices)
 
             os.remove(tmp_filepath)
@@ -306,27 +352,12 @@ def get_prices(codes, start_date=None, end_date=None,
             ", ".join(dbs)
         ))
 
-    prices = pd.concat(all_prices, sort=False)
-
-    try:
-        prices = prices.pivot(index="Sid", columns="Date").T
-    except ValueError as e:
-        if "duplicate" not in repr(e):
-            raise
-        # There are duplicates, likely due to querying multiple databases,
-        # both of which return one or more identical dates for identical
-        # sids. To resolve, we group by sid and date and take the first
-        # available value for each field. This means that the orders of
-        # [codes] matters. The use of groupby.first() instead of simply
-        # drop_duplicates allows us to retain one field from one db and
-        # another field from another db.
-        grouped = prices.groupby(["Sid","Date"])
-        prices = pd.concat(
-            dict([(col, grouped[col].first()) for col in prices.columns
-                  if col not in ("Sid","Date")]), axis=1)
-        prices = prices.reset_index().pivot(index="Sid", columns="Date").T
-
-    prices.index.set_names(["Field", "Date"], inplace=True)
+    prices = None
+    for _prices in all_prices:
+        if prices is None:
+            prices = _prices
+        else:
+            prices = prices.combine_first(_prices)
 
     is_intraday = list(db_bar_sizes_parsed)[0] < pd.Timedelta("1 day")
 

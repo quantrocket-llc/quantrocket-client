@@ -30,7 +30,7 @@ def _read_moonshot_or_pnl_csv(filepath_or_buffer):
     -------
     DataFrame
         a multi-index (Field, Date[, Time]) DataFrame of backtest or PNL
-        results, with conids or strategy codes as columns
+        results, with sids or strategy codes as columns
     """
     try:
         import pandas as pd

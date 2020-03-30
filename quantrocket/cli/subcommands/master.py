@@ -414,7 +414,7 @@ Synchronously get a diff for specific securities by sid:
 
     quantrocket master diff-ibkr --sids FIBBG000LV0836 FIBBG000B9XRY4 --wait
 
-Synchronously get a diff for specific securities without knowing their conids:
+Synchronously get a diff for specific securities without knowing their sids:
 
     quantrocket master get -e NASDAQ -t STK -s AAPL FB GOOG | quantrocket master diff-ibkr --wait --infile -
 
@@ -564,7 +564,7 @@ Copy a universe but exclude delisted securities:
         "-f", "--infile",
         metavar="INFILE",
         dest="infilepath_or_buffer",
-        help="create the universe from the conids in this file (specify '-' to read file "
+        help="create the universe from the sids in this file (specify '-' to read file "
         "from stdin)")
     parser.add_argument(
         "--from-universes",

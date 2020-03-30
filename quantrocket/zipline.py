@@ -396,7 +396,7 @@ def download_minute_file(code, filepath_or_buffer=None,
     if fields:
         params["fields"] = fields
 
-    response = houston.get("/zipline/bundles/data/{code}.csv", params=params,
+    response = houston.get("/zipline/bundles/data/{0}.csv".format(code), params=params,
                            timeout=60*30)
 
     try:
