@@ -157,7 +157,7 @@ def get_alpaca_etb_reindexed_like(reindex_like):
 
 def collect_ibkr_shortable_shares(countries=None):
     """
-    Collect IBKR shortable shares data and save to database.
+    Collect Interactive Brokers shortable shares data and save to database.
 
     Data is organized by country and updated every 15 minutes. Historical
     data is available from April 2018.
@@ -187,7 +187,7 @@ def _cli_collect_ibkr_shortable_shares(*args, **kwargs):
 
 def collect_ibkr_borrow_fees(countries=None):
     """
-    Collect IBKR borrow fees data and save to database.
+    Collect Interactive Brokers borrow fees data and save to database.
 
     Data is organized by country and updated every 15 minutes. Historical
     data is available from April 2018.
@@ -220,7 +220,7 @@ def download_ibkr_shortable_shares(filepath_or_buffer=None, output="csv",
                                    universes=None, sids=None,
                                    exclude_universes=None, exclude_sids=None):
     """
-    Query IBKR shortable shares from the local database and download to file.
+    Query Interactive Brokers shortable shares from the local database and download to file.
 
     Data timestamps are UTC.
 
@@ -304,7 +304,7 @@ def download_ibkr_borrow_fees(filepath_or_buffer=None, output="csv",
                          universes=None, sids=None,
                          exclude_universes=None, exclude_sids=None):
     """
-    Query IBKR borrow fees from the local database and download to file.
+    Query Interactive Brokers borrow fees from the local database and download to file.
 
     Data timestamps are UTC.
 
@@ -522,8 +522,8 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
 
 def get_ibkr_shortable_shares_reindexed_like(reindex_like, time=None):
     """
-    Return a DataFrame of IBKR shortable shares, reindexed to match the index
-    (dates) and columns (sids) of `reindex_like`.
+    Return a DataFrame of Interactive Brokers shortable shares, reindexed to
+    match the index (dates) and columns (sids) of `reindex_like`.
 
     Parameters
     ----------
@@ -584,8 +584,8 @@ def get_ibkr_shortable_shares_reindexed_like(reindex_like, time=None):
 
 def get_ibkr_borrow_fees_reindexed_like(reindex_like, time=None):
     """
-    Return a DataFrame of IBKR borrow fees, reindexed to match the index
-    (dates) and columns (sids) of `reindex_like`.
+    Return a DataFrame of Interactive Brokers borrow fees, reindexed to match
+    the index (dates) and columns (sids) of `reindex_like`.
 
     Parameters
     ----------

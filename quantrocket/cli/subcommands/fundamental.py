@@ -249,7 +249,7 @@ Collect upcoming earnings dates for a particular security:
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_wsh_earnings_dates")
 
     examples = """
-Collect IBKR shortable shares data and save to database.
+Collect Interactive Brokers shortable shares data and save to database.
 
 Data is organized by country and updated every 15 minutes. Historical
 data is available from April 15, 2018.
@@ -266,7 +266,7 @@ Collect shortable shares data for all stocks:
     """
     parser = _subparsers.add_parser(
         "collect-ibkr-shortshares",
-        help="collect IBKR shortable shares data and save to database",
+        help="collect Interactive Brokers shortable shares data and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -278,7 +278,7 @@ Collect shortable shares data for all stocks:
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_ibkr_shortable_shares")
 
     examples = """
-Collect IBKR borrow fees data and save to database.
+Collect Interactive Brokers borrow fees data and save to database.
 
 Data is organized by country and updated every 15 minutes. Historical
 data is available from April 15, 2018.
@@ -295,7 +295,7 @@ Collect borrow fees for all stocks:
     """
     parser = _subparsers.add_parser(
         "collect-ibkr-shortfees",
-        help="collect IBKR borrow fees data and save to database",
+        help="collect Interactive Brokers borrow fees data and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -969,7 +969,7 @@ Query earnings dates for a universe of US stocks:
     parser.set_defaults(func="quantrocket.fundamental._cli_download_wsh_earnings_dates")
 
     examples = """
-Query IBKR shortable shares from the local database and download to file.
+Query Interactive Brokers shortable shares from the local database and download to file.
 
 Data timestamps are UTC.
 
@@ -981,7 +981,7 @@ Query shortable shares for a universe of Australian stocks:
     """
     parser = _subparsers.add_parser(
         "ibkr-shortshares",
-        help="query IBKR shortable shares from the local database and download to file",
+        help="query Interactive Brokers shortable shares from the local database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
@@ -1029,7 +1029,7 @@ Query shortable shares for a universe of Australian stocks:
     parser.set_defaults(func="quantrocket.fundamental._cli_download_ibkr_shortable_shares")
 
     examples = """
-Query IBKR borrow fees from the local database and download to file.
+Query Interactive Brokers borrow fees from the local database and download to file.
 
 Data timestamps are UTC.
 
@@ -1041,7 +1041,7 @@ Query borrow fees for a universe of Australian stocks:
     """
     parser = _subparsers.add_parser(
         "ibkr-shortfees",
-        help="query IBKR borrow fees from the local database and download to file",
+        help="query Interactive Brokers borrow fees from the local database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     filters = parser.add_argument_group("filtering options")
