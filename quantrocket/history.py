@@ -167,7 +167,7 @@ def create_ibkr_db(code, universes=None, sids=None, start_date=None, end_date=No
 def _cli_create_ibkr_db(*args, **kwargs):
     return json_to_cli(create_ibkr_db, *args, **kwargs)
 
-def create_sharadar_db(code, country="US"):
+def create_sharadar_db(code, sec_type, country="US"):
     """
     Create a new database for collecting historical data from Sharadar.
 
@@ -175,6 +175,9 @@ def create_sharadar_db(code, country="US"):
     ----------
     code : str, required
         the code to assign to the database (lowercase alphanumerics and hyphens only)
+
+    sec_type : str, required
+        the security type to collect. Possible choices: STK, ETF
 
     country : str, required
         country to collect listings for. Possible choices: US, FREE
@@ -186,6 +189,8 @@ def create_sharadar_db(code, country="US"):
 
     """
     params = {"vendor": "sharadar"}
+    if sec_type:
+        params["sec_type"] = sec_type
     if country:
         params["country"] = country
 

@@ -163,9 +163,9 @@ Create a new database for collecting historical data from Sharadar.
 
 Examples:
 
-Create a database for Sharadar US data and call it "usa-sharadar-1d":
+Create a database for Sharadar US stocks and call it "sharadar-us-stk-1d":
 
-    quantrocket history create-sharadar-db usa-sharadar-1d --country US
+    quantrocket history create-sharadar-db sharadar-us-stk-1d --sec-type STK --country US
 """
     parser = _subparsers.add_parser(
         "create-sharadar-db",
@@ -176,6 +176,11 @@ Create a database for Sharadar US data and call it "usa-sharadar-1d":
         "code",
         metavar="CODE",
         help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
+    parser.add_argument(
+        "-s", "--sec-type",
+        metavar="SEC_TYPE",
+        choices=["STK","ETF"],
+        help="country to collect listings for. Possible choices: %(choices)s")
     parser.add_argument(
         "-c", "--country",
         metavar="COUNTRY",
