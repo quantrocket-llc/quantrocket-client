@@ -1,4 +1,4 @@
-# Copyright 2017 QuantRocket - All Rights Reserved
+# Copyright 2020 QuantRocket - All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -336,7 +336,7 @@ def diff_ibkr_securities(universes=None, sids=None, infilepath_or_buffer=None,
         only diff these fields (field name should start with "ibkr")
 
     delist_missing : bool
-        auto-delist securities that are no longer available from IB
+        auto-delist securities that are no longer available from IBKR
 
     delist_exchanges : list of str, optional
         auto-delist securities that are associated with these exchanges
@@ -408,7 +408,7 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
         vendor's exchange code.
 
     sec_types : list of str, optional
-        limit to these security types. Possible choices: STK, ETF, FUT, CASH, CRYPTO, IND, OPT, FOP, BAG
+        limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND, OPT, FOP, BAG
 
     currencies : list of str, optional
         limit to these currencies
@@ -976,7 +976,7 @@ def _cli_load_or_show_rollrules(filename=None):
 def collect_ibkr_calendar(exchanges=None):
     """
     Collect upcoming trading hours from IBKR for exchanges and save to
-    securites master database.
+    securities master database.
 
     Parameters
     ----------

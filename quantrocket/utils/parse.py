@@ -34,6 +34,7 @@ def _read_moonshot_or_pnl_csv(filepath_or_buffer):
     """
     try:
         import pandas as pd
+        import numpy as np
     except ImportError:
         raise ImportError("pandas must be installed to use this function")
 
@@ -68,6 +69,6 @@ def _read_moonshot_or_pnl_csv(filepath_or_buffer):
     ]
     for field in float_fields:
         if field in fields_in_results:
-            results.loc[[field]] = results.loc[[field]].astype(pd.np.float64)
+            results.loc[[field]] = results.loc[[field]].astype(np.float64)
 
     return results

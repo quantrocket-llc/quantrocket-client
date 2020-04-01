@@ -180,7 +180,7 @@ def create_sharadar_db(code, sec_type, country="US"):
         the security type to collect. Possible choices: STK, ETF
 
     country : str, required
-        country to collect listings for. Possible choices: US, FREE
+        country to collect data for. Possible choices: US, FREE
 
     Returns
     -------
@@ -465,7 +465,7 @@ def download_history_file(code, filepath_or_buffer=None, output="csv",
         filepath to write the data to, or file-like object (defaults to stdout)
 
     output : str
-        output format (json, csv, txt, default is csv)
+        output format (json, csv, default is csv)
 
     start_date : str (YYYY-MM-DD), optional
         limit to history on or after this date

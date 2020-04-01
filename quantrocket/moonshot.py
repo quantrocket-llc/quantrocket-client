@@ -23,7 +23,7 @@ from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 from quantrocket.utils.parse import _read_moonshot_or_pnl_csv
 
 def backtest(strategies, start_date=None, end_date=None, segment=None, allocations=None,
-             nlv=None, params=None, details=None, output="csv", csv=None, filepath_or_buffer=None,
+             nlv=None, params=None, details=None, output="csv", filepath_or_buffer=None,
              no_cache=False):
     """
     Backtest one or more strategies.
@@ -179,7 +179,7 @@ def read_moonshot_csv(filepath_or_buffer):
 def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
                     param1=None, vals1=None, param2=None, vals2=None,
                     allocations=None, nlv=None, params=None, output="csv",
-                    csv=None, filepath_or_buffer=None, no_cache=False):
+                    filepath_or_buffer=None, no_cache=False):
     """
     Run a parameter scan for one or more strategies.
 

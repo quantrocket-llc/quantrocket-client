@@ -279,7 +279,7 @@ terminal display:
         "-t", "--sec-types",
         nargs="*",
         metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "CRYPTO", "IND", "OPT", "FOP", "BAG"],
+        choices=["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG"],
         help="limit to these security types. Possible choices: %(choices)s")
     filters.add_argument(
         "-c", "--currencies",
@@ -670,7 +670,7 @@ Show current rollover config:
     parser.set_defaults(func="quantrocket.master._cli_load_or_show_rollrules")
 
     examples = """
-Collect upcoming trading hours from IBKR for exchanges and save to securites
+Collect upcoming trading hours from IBKR for exchanges and save to securities
 master database.
 
 Examples:
@@ -681,7 +681,7 @@ Collect trading hours for ARCA:
     """
     parser = _subparsers.add_parser(
         "collect-ibkr-calendar",
-        help="collect upcoming trading hours from IBKR for exchanges and save to securites master database",
+        help="collect upcoming trading hours from IBKR for exchanges and save to securities master database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(

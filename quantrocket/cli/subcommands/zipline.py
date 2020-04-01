@@ -329,7 +329,7 @@ Run a backtest from a strategy file called etf_arb.py and save a CSV file of res
     parser.add_argument(
         "--data-frequency",
         choices=["daily", "minute"],
-        help="the data frequency of the simulation (default is daily)")
+        help="the data frequency of the simulation (default is minute)")
     parser.add_argument(
         "--capital-base",
         type=float,

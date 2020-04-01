@@ -180,13 +180,13 @@ Create a database for Sharadar US stocks and call it "sharadar-us-stk-1d":
         "-s", "--sec-type",
         metavar="SEC_TYPE",
         choices=["STK","ETF"],
-        help="country to collect listings for. Possible choices: %(choices)s")
+        help="the security type to collect. Possible choices: %(choices)s")
     parser.add_argument(
         "-c", "--country",
         metavar="COUNTRY",
         choices=["US","FREE"],
         default="US",
-        help="country to collect listings for. Possible choices: %(choices)s")
+        help="country to collect data for. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.history._cli_create_sharadar_db")
 
     examples = """

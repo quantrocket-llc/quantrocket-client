@@ -429,12 +429,12 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
         the file that contains the strategy to run
 
     data_frequency : str, optional
-        the data frequency of the simulation. Possible choices: daily, minute (default is daily)
+        the data frequency of the simulation. Possible choices: daily, minute (default is minute)
 
     capital_base : float, optional
         the starting capital for the simulation (default is 10000000.0)
 
-    bundle : str, option
+    bundle : str, optional
         the data bundle to use for the simulation. If omitted, the default bundle (if set)
         is used.
 
