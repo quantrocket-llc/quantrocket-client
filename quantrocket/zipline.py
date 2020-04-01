@@ -415,7 +415,7 @@ def _cli_download_minute_file(*args, **kwargs):
     return json_to_cli(download_minute_file, *args, **kwargs)
 
 def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
-             start=None, end=None, filepath_or_buffer=None):
+             start_date=None, end_date=None, filepath_or_buffer=None):
     """
     Backtest a Zipline strategy and write the test results to a CSV file.
 
@@ -438,10 +438,10 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
         the data bundle to use for the simulation. If omitted, the default bundle (if set)
         is used.
 
-    start : str (YYYY-MM-DD), required
+    start_date : str (YYYY-MM-DD), required
         the start date of the simulation
 
-    end : str (YYYY-MM-DD), required
+    end_date : str (YYYY-MM-DD), required
         the end date of the simulation
 
     filepath_or_buffer : str, optional
@@ -456,7 +456,7 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
     Run a backtest and save to CSV.
 
     >>> backtest("momentum_pipeline.py", bundle="my-bundle",
-                 start="2015-02-04", end="2015-12-31",
+                 start_date="2015-02-04", end_date="2015-12-31",
                  filepath_or_buffer="momentum_pipeline_results.csv")
 
     Get a pyfolio tear sheet from the results:
@@ -471,10 +471,10 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
         params["capital_base"] = capital_base
     if bundle:
         params["bundle"] = bundle
-    if start:
-        params["start"] = start
-    if end:
-        params["end"] = end
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
 
     response = houston.post("/zipline/backtests/{0}".format(strategy), params=params, timeout=60*60*3)
 

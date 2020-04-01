@@ -341,12 +341,12 @@ Run a backtest from a strategy file called etf_arb.py and save a CSV file of res
         help="the data bundle to use for the simulation. If omitted, the default "
         "bundle (if set) is used.")
     parser.add_argument(
-        "-s", "--start",
+        "-s", "--start-date",
         required=True,
         metavar="DATE",
         help="the start date of the simulation")
     parser.add_argument(
-        "-e", "--end",
+        "-e", "--end-date",
         required=True,
         metavar="DATE",
         help="the end date of the simulation")
