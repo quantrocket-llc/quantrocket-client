@@ -287,14 +287,14 @@ Examples:
 
 Collect borrow fees for US stocks:
 
-    quantrocket fundamental collect-ibkr-shortfees --countries usa
+    quantrocket fundamental collect-ibkr-borrowfees --countries usa
 
 Collect borrow fees for all stocks:
 
-    quantrocket fundamental collect-ibkr-shortfees
+    quantrocket fundamental collect-ibkr-borrowfees
     """
     parser = _subparsers.add_parser(
-        "collect-ibkr-shortfees",
+        "collect-ibkr-borrowfees",
         help="collect Interactive Brokers borrow fees data and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -1037,10 +1037,10 @@ Examples:
 
 Query borrow fees for a universe of Australian stocks:
 
-    quantrocket fundamental ibkr-shortfees -u asx-stk -o asx_borrow_fees.csv
+    quantrocket fundamental ibkr-borrowfees -u asx-stk -o asx_borrow_fees.csv
     """
     parser = _subparsers.add_parser(
-        "ibkr-shortfees",
+        "ibkr-borrowfees",
         help="query Interactive Brokers borrow fees from the local database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
