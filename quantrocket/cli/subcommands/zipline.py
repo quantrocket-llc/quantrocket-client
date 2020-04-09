@@ -161,10 +161,12 @@ Ingest data into a bundle called es-fut-1min:
         help="the bundle code")
     parser.add_argument(
         "-i", "--sids",
+        nargs="*",
         metavar="SID",
         help="limit to these sids, overriding stored config")
     parser.add_argument(
         "-u", "--universes",
+        nargs="*",
         metavar="UNIVERSE",
         help="limit to these universes, overriding stored config")
     parser.set_defaults(func="quantrocket.zipline._cli_ingest_bundle")
