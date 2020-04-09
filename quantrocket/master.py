@@ -84,13 +84,17 @@ def collect_edi_listings(exchanges=None):
 
     Examples
     --------
+    Collect sample listings:
+
+    >>> collect_edi_listings(exchanges="FREE")
+
     Collect listings for all permitted exchanges:
 
     >>> collect_edi_listings()
 
-    Collect all Toronto Stock Exchange stock listings:
+    Collect all Chinese stock listings:
 
-    >>> collect_edi_listings(exchanges="XTSE")
+    >>> collect_edi_listings(exchanges=["XSHG", "XSHE"])
     """
     params = {}
     if exchanges:
@@ -109,8 +113,8 @@ def collect_figi_listings():
     in securities master database.
 
     OpenFIGI provides several useful security attributes including
-    market sector and a detailed security type, as well as exchange-level,
-    country-level, and share class-level FIGI identifiers.
+    market sector, a detailed security type, and share class-level
+    FIGI identifier.
 
     The collected data fields show up in the master file with the
     prefix "figi_*".
@@ -263,10 +267,7 @@ def collect_ibkr_option_chains(universes=None, sids=None, infilepath_or_buffer=N
     Note: option chains often consist of hundreds, sometimes thousands of
     options per underlying security. Be aware that requesting option chains
     for large universes of underlying securities, such as all stocks on the
-    NYSE, can take numerous hours to complete, add hundreds of thousands of
-    rows to the securities master database, increase the database file size
-    by several hundred megabytes, and potentially add latency to database
-    queries.
+    NYSE, can take numerous hours to complete.
 
     Parameters
     ----------

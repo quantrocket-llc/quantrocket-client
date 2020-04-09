@@ -58,10 +58,10 @@ def set_credentials(gateway, username=None, password=None, trading_mode=None):
         name of IB Gateway service to set credentials for (for example, 'ibg1')
 
     username : str, optional
-        IB username (optional if only modifying trading environment)
+        IBKR username (optional if only modifying trading environment)
 
     password : str, optional
-        IB password (if omitted and username is provided, will be prompted
+        IBKR password (if omitted and username is provided, will be prompted
         for password)
 
     trading_mode : str, optional
@@ -77,7 +77,7 @@ def set_credentials(gateway, username=None, password=None, trading_mode=None):
         raise ValueError("no such IB Gateway: {0}".format(gateway))
 
     if username and not password:
-        password = getpass.getpass(prompt="Enter IB Password: ")
+        password = getpass.getpass(prompt="Enter IBKR Password: ")
 
     data = {}
     if username:

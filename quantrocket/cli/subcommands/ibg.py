@@ -58,11 +58,11 @@ live credentials):
     parser.add_argument(
         "-u", "--username",
         metavar="USERNAME",
-        help="IB username (optional if only modifying trading mode)")
+        help="IBKR username (optional if only modifying trading mode)")
     parser.add_argument(
         "-p", "--password",
         metavar="PASSWORD",
-        help="IB password (if omitted and user is provided, will be prompted "
+        help="IBKR password (if omitted and user is provided, will be prompted "
         "for password)")
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
