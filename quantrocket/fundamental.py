@@ -15,6 +15,7 @@
 import six
 import sys
 import os
+import datetime
 import requests
 from quantrocket.houston import houston
 from quantrocket.master import download_master_file
@@ -481,7 +482,7 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
                 raise ParameterError("could not parse time '{0}': {1}".format(
                     time, str(e)))
             index_at_time = pd.Index(reindex_like.index.to_series().apply(
-                lambda x: pd.datetime.combine(x, time)))
+                lambda x: datetime.datetime.combine(x, time)))
         else:
             index_at_time = reindex_like.index
 
@@ -1003,14 +1004,11 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
     # company)
     if reindex_like.index.tz:
         financials.loc[:, "Date"] = financials.Date.dt.tz_localize(reindex_like.index.tz.zone)
-        deduped_source_dates = financials.Date.drop_duplicates()
-    else:
-        # joining to tz-naive requires using values, whereas joining to
-        # tz-aware requires not using it. Why?
-        deduped_source_dates = financials.Date.drop_duplicates().values
+
+    deduped_source_dates = financials.Date.drop_duplicates()
 
     # Create a unioned index of input DataFrame and statement SourceDates
-    union_date_idx = reindex_like.index.union(deduped_source_dates).sort_values()
+    union_date_idx = reindex_like.index.union(pd.DatetimeIndex(deduped_source_dates)).sort_values()
 
     all_financials = {}
     for code in coa_codes:
@@ -1331,7 +1329,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
 
     # Convert to dates (i.e. time = 00:00:00)
     estimates.loc[:, "Date"] = pd.to_datetime(estimates.Date.apply(
-        lambda x: pd.datetime.combine(x, pd.Timestamp("00:00:00").time())))
+        lambda x: datetime.datetime.combine(x, pd.Timestamp("00:00:00").time())))
 
     # Drop any fields we don't need
     needed_fields = set(fields)
@@ -1348,14 +1346,11 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     # already converted above to the local timezone of the reported company)
     if reindex_like.index.tz:
         estimates.loc[:, "Date"] = estimates.Date.dt.tz_localize(reindex_like.index.tz.zone)
-        deduped_announce_dates = estimates.Date.drop_duplicates()
-    else:
-        # joining to tz-naive requires using values, whereas joining to
-        # tz-aware requires not using it. Why?
-        deduped_announce_dates = estimates.Date.drop_duplicates().values
+
+    deduped_announce_dates = estimates.Date.drop_duplicates()
 
     # Create a unioned index of input DataFrame and AnnounceDate
-    union_date_idx = reindex_like.index.union(deduped_announce_dates).sort_values()
+    union_date_idx = reindex_like.index.union(pd.DatetimeIndex(deduped_announce_dates)).sort_values()
 
     all_estimates = {}
     for code in codes:
@@ -2152,14 +2147,11 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
     # company)
     if reindex_like.index.tz:
         financials.loc[:, "Date"] = financials.Date.dt.tz_localize(reindex_like.index.tz.zone)
-        deduped_datekeys = financials.Date.drop_duplicates()
-    else:
-        # joining to tz-naive requires using values, whereas joining to
-        # tz-aware requires not using it. Why?
-        deduped_datekeys = financials.Date.drop_duplicates().values
+
+    deduped_datekeys = financials.Date.drop_duplicates()
 
     # Create a unioned index of input DataFrame and statement DATEKEYs
-    union_date_idx = reindex_like.index.union(deduped_datekeys).sort_values()
+    union_date_idx = reindex_like.index.union(pd.DatetimeIndex(deduped_datekeys)).sort_values()
 
     # There might be duplicate DATEKEYs if a company announced
     # reports for several fiscal periods at once. In this case we keep
@@ -2287,14 +2279,11 @@ def get_sharadar_institutions_reindexed_like(reindex_like, fields=None, shift=45
     # be joined
     if reindex_like.index.tz:
         institutions.loc[:, "Date"] = institutions.Date.dt.tz_localize(reindex_like.index.tz.zone)
-        deduped_datekeys = institutions.Date.drop_duplicates()
-    else:
-        # joining to tz-naive requires using values, whereas joining to
-        # tz-aware requires not using it. Why?
-        deduped_datekeys = institutions.Date.drop_duplicates().values
+
+    deduped_datekeys = institutions.Date.drop_duplicates()
 
     # Create a unioned index of input DataFrame and statement DATEKEYs
-    union_date_idx = reindex_like.index.union(deduped_datekeys).sort_values()
+    union_date_idx = reindex_like.index.union(pd.DatetimeIndex(deduped_datekeys)).sort_values()
 
     # Interpolate calendar days into unioned index
     union_date_idx = pd.date_range(start=union_date_idx.min(), end=union_date_idx.max(),
@@ -2483,14 +2472,11 @@ def get_sharadar_sp500_reindexed_like(reindex_like):
     # be joined
     if reindex_like.index.tz:
         sp500_changes.loc[:, "Date"] = sp500_changes.Date.dt.tz_localize(reindex_like.index.tz.zone)
-        deduped_datekeys = sp500_changes.Date.drop_duplicates()
-    else:
-        # joining to tz-naive requires using values, whereas joining to
-        # tz-aware requires not using it. Why?
-        deduped_datekeys = sp500_changes.Date.drop_duplicates().values
+
+    deduped_datekeys = sp500_changes.Date.drop_duplicates()
 
     # Create a unioned index of input DataFrame and statement DATEs
-    union_date_idx = reindex_like.index.union(deduped_datekeys).sort_values()
+    union_date_idx = reindex_like.index.union(pd.DatetimeIndex(deduped_datekeys)).sort_values()
 
     # Reindex with unioned index and ffill to create Boolean dataframe
     sp500_changes = sp500_changes.pivot(index="Sid",columns="Date").T
