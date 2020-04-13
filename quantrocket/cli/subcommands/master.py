@@ -825,8 +825,8 @@ Intended to be used as a conditional for running other commands.
 
 For --since/--until options, pass a Pandas frequency string, i.e. any string that
 is a valid `freq` argument to `pd.date_range`. See:
-https://pandas.pydata.org/pandas-docs/stable/timeseries.html#offset-aliases
-https://pandas.pydata.org/pandas-docs/stable/timeseries.html#anchored-offsets
+https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases
+https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#anchored-offsets
 
 Examples:
 
