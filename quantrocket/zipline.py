@@ -453,9 +453,9 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
 
     Examples
     --------
-    Run a backtest and save to CSV.
+    Run a backtest defined in momentum-pipeline.py and save to CSV.
 
-    >>> backtest("momentum_pipeline.py", bundle="my-bundle",
+    >>> backtest("momentum-pipeline", bundle="my-bundle",
                  start_date="2015-02-04", end_date="2015-12-31",
                  filepath_or_buffer="momentum_pipeline_results.csv")
 
@@ -551,9 +551,9 @@ def trade(strategy, bundle=None, account=None):
 
     Examples
     --------
-    Trade a strategy:
+    Trade a strategy defined in momentum-pipeline.py:
 
-    >>> trade("momentum_pipeline.py", bundle="my-bundle")
+    >>> trade("momentum-pipeline", bundle="my-bundle")
     """
     params = {}
     if bundle:
@@ -610,7 +610,7 @@ def cancel_strategies(strategies=None, accounts=None, cancel_all=False):
     --------
     Cancel a single strategy:
 
-    >>> cancel_strategies(strategies="momentum_pipeline.py")
+    >>> cancel_strategies(strategies="momentum-pipeline")
 
     Cancel all strategies:
 
@@ -693,28 +693,50 @@ class ZiplineBacktestResult(object):
 
         # Extract returns
         returns = results.loc["returns"].unstack()
-        returns.index = returns.index.droplevel(0).tz_localize("UTC")
+        is_tz_naive = returns.index.droplevel(0).tz is None
+        returns.index = returns.index.droplevel(0)
+        if is_tz_naive:
+            returns.index = returns.index.tz_localize("UTC")
+        else:
+            returns.index = returns.index.tz_convert("UTC")
         zipline_result.returns = returns["returns"].astype(float)
 
         # Extract positions
-        positions = results.loc["positions"].unstack()
-        positions.index = positions.index.droplevel(0).tz_localize("UTC")
-        zipline_result.positions = positions.astype(float)
+        if "positions" in results.index.get_level_values("dataframe"):
+            positions = results.loc["positions"].unstack()
+            positions.index = positions.index.droplevel(0)
+            if is_tz_naive:
+                positions.index = positions.index.tz_localize("UTC")
+            else:
+                positions.index = positions.index.tz_convert("UTC")
+            zipline_result.positions = positions.astype(float)
 
         # Extract transactions
         transactions = results.loc["transactions"].unstack()
-        transactions.index = transactions.index.droplevel(0).tz_localize("UTC")
+        transactions.index = transactions.index.droplevel(0)
+        if is_tz_naive:
+            transactions.index = transactions.index.tz_localize("UTC")
+        else:
+            transactions.index = transactions.index.tz_convert("UTC")
         zipline_result.transactions = transactions.apply(pd.to_numeric, errors='ignore')
 
         # Extract benchmark returns
         if "benchmark" in results.index.get_level_values("dataframe"):
             benchmark_returns = results.loc["benchmark"].unstack()
-            benchmark_returns.index = benchmark_returns.index.droplevel(0).tz_localize("UTC")
+            benchmark_returns.index = benchmark_returns.index.droplevel(0)
+            if is_tz_naive:
+                benchmark_returns.index = benchmark_returns.index.tz_localize("UTC")
+            else:
+                benchmark_returns.index = benchmark_returns.index.tz_convert("UTC")
             zipline_result.benchmark_returns = benchmark_returns["benchmark"].astype(float)
 
         # Extract performance dataframe
         perf = results.loc["perf"].unstack()
-        perf.index = perf.index.droplevel(0).tz_localize("UTC")
+        perf.index = perf.index.droplevel(0)
+        if is_tz_naive:
+            perf.index = perf.index.tz_localize("UTC")
+        else:
+            perf.index = perf.index.tz_convert("UTC")
         zipline_result.perf = perf.apply(pd.to_numeric, errors='ignore')
 
         return zipline_result

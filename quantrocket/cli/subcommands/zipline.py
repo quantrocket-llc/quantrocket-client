@@ -315,9 +315,9 @@ results.
 
 Examples:
 
-Run a backtest from a strategy file called etf_arb.py and save a CSV file of results:
+Run a backtest from a strategy file called etf-arb and save a CSV file of results:
 
-    quantrocket zipline backtest etf_arb.py --bundle arca-etf-eod -s 2010-04-01 -e 2016-02-01 -o results.csv
+    quantrocket zipline backtest etf-arb --bundle arca-etf-eod -s 2010-04-01 -e 2016-02-01 -o results.csv
     """
     parser = _subparsers.add_parser(
         "backtest",
@@ -397,9 +397,9 @@ Trade a Zipline strategy.
 
 Examples:
 
-Trade a strategy:
+Trade a strategy defined in momentum-pipeline.py:
 
-    quantrocket zipline trade momentum_pipeline.py --bundle my-bundle
+    quantrocket zipline trade momentum-pipeline --bundle my-bundle
     """
     parser = _subparsers.add_parser(
         "trade",
@@ -445,7 +445,7 @@ Examples:
 
 Cancel a single strategy:
 
-    quantrocket zipline cancel --strategies momentum_pipeline.py
+    quantrocket zipline cancel --strategies momentum-pipeline
 
 Cancel all strategies:
 
