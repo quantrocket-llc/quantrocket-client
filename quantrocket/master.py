@@ -570,6 +570,9 @@ def get_securities_reindexed_like(reindex_like, fields=None):
     download_master_file(f, sids=sids, fields=fields)
     securities = pd.read_csv(f, index_col="Sid")
 
+    if "Sid" in fields:
+        securities["Sid"] = securities.index
+
     all_master_fields = {}
 
     for col in securities.columns:
