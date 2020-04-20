@@ -426,7 +426,7 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
     Parameters
     ----------
     strategy : str, required
-        the file that contains the strategy to run
+        the strategy to run (strategy filename without extension)
 
     data_frequency : str, optional
         the data frequency of the simulation. Possible choices: daily, minute (default is minute)
@@ -534,7 +534,7 @@ def trade(strategy, bundle=None, account=None):
     Parameters
     ----------
     strategy : str, required
-        the file that contains the strategy to run
+        the strategy to run (strategy filename without extension)
 
     bundle : str, optional
         the data bundle to use. If omitted, the default bundle (if set)

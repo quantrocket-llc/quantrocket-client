@@ -315,7 +315,7 @@ results.
 
 Examples:
 
-Run a backtest from a strategy file called etf-arb and save a CSV file of results:
+Run a backtest from a strategy file called etf-arb.py and save a CSV file of results:
 
     quantrocket zipline backtest etf-arb --bundle arca-etf-eod -s 2010-04-01 -e 2016-02-01 -o results.csv
     """
@@ -326,8 +326,8 @@ Run a backtest from a strategy file called etf-arb and save a CSV file of result
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "strategy",
-        metavar="FILENAME",
-        help="the file that contains the strategy to run")
+        metavar="CODE",
+        help="the strategy to run (strategy filename without extension)")
     parser.add_argument(
         "--data-frequency",
         choices=["daily", "minute"],
@@ -371,7 +371,7 @@ Create a pyfolio tear sheet from a Zipline CSV results file:
 Run a Zipline backtest and create a pyfolio tear sheet without saving
 the CSV file:
 
-    quantrocket zipline backtest buy_aapl.py -s 2010-04-01 -e 2016-02-01 | quantrocket zipline tearsheet -o buy_aapl.pdf
+    quantrocket zipline backtest dma -s 2010-04-01 -e 2016-02-01 | quantrocket zipline tearsheet -o dma.pdf
     """
     parser = _subparsers.add_parser(
         "tearsheet",
@@ -408,8 +408,8 @@ Trade a strategy defined in momentum-pipeline.py:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "strategy",
-        metavar="FILENAME",
-        help="the file that contains the strategy to run")
+        metavar="CODE",
+        help="the strategy to run (strategy filename without extension)")
     parser.add_argument(
         "-b", "--bundle",
         metavar="CODE",
@@ -459,7 +459,7 @@ Cancel all strategies:
     parser.add_argument(
         "-s", "--strategies",
         nargs="*",
-        metavar="FILENAME",
+        metavar="CODE",
         help="limit to these strategies")
     parser.add_argument(
         "-a", "--accounts",
