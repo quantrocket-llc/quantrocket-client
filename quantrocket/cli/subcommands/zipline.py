@@ -247,7 +247,7 @@ Examples:
 Download a CSV of minute prices since 2015 for a single security from a bundle called
 "usstock-1min":
 
-    quantrocket history get usstock-1min --start-date 2015-01-01 -i FIBBG12345 -o minute_prices.csv
+    quantrocket zipline get usstock-1min --start-date 2015-01-01 -i FIBBG12345 -o minute_prices.csv
     """
     parser = _subparsers.add_parser(
         "get",
