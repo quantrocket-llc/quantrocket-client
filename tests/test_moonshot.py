@@ -39,7 +39,7 @@ EOD_AGGREGATE_RESULTS = {
         ('Turnover', '2016-03-18'): 0.0}}
 
 EOD_DETAILED_RESULTS = {
-    'AAPL(265598)': {
+    'AAPL(FI265598)': {
         ('AbsExposure', '2016-03-17'): 0.0,
         ('AbsExposure', '2016-03-18'): 0.0,
         ('AbsWeight', '2016-03-17'): 0.0,
@@ -62,7 +62,7 @@ EOD_DETAILED_RESULTS = {
         ('Turnover', '2016-03-18'): 0.0,
         ('Weight', '2016-03-17'): 0.0,
         ('Weight', '2016-03-18'): 0.0},
-    'AMZN(3691937)': {
+    'AMZN(FI3691937)': {
         ('AbsExposure', '2016-03-17'): 0.3333333333333333,
         ('AbsExposure', '2016-03-18'): 0.3333333333333333,
         ('AbsWeight', '2016-03-17'): 0.3333333333333333,
@@ -146,7 +146,7 @@ INTRADAY_AGGREGATE_RESULTS = {
 }
 
 INTRADAY_DETAILED_RESULTS = {
-    'EUR.USD(12087792)': {
+    'EUR.USD(FXEURUSD)': {
         ('AbsExposure', '2018-12-18', '09:00:00'): 0.0,
         ('AbsExposure', '2018-12-18', '10:00:00'): 0.0,
         ('AbsExposure', '2018-12-18', '11:00:00'): 0.0,
@@ -219,7 +219,7 @@ INTRADAY_DETAILED_RESULTS = {
         ('Weight', '2018-12-19', '09:00:00'): 0.1,
         ('Weight', '2018-12-19', '10:00:00'): 0.15,
         ('Weight', '2018-12-19', '11:00:00'): 0.2},
-    'GBP.USD(12087797)': {
+    'GBP.USD(FXGBPUSD)': {
         ('AbsExposure', '2018-12-18', '09:00:00'): 0.0,
         ('AbsExposure', '2018-12-18', '10:00:00'): 0.0,
         ('AbsExposure', '2018-12-18', '11:00:00'): 0.0,

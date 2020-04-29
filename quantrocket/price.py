@@ -342,6 +342,7 @@ def get_prices(codes, start_date=None, end_date=None,
                     continue
 
             prices = pd.read_csv(tmp_filepath, index_col=["Field", "Date"])
+            prices.columns.name = "Sid"
             all_prices.append(prices)
 
             os.remove(tmp_filepath)

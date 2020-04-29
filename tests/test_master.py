@@ -29,20 +29,20 @@ from quantrocket.exceptions import ParameterError
 class SecuritiesReindexedLikeTestCase(unittest.TestCase):
 
     @patch("quantrocket.master.download_master_file")
-    def test_pass_conids_and_domain_based_on_reindex_like(self, mock_download_master_file):
+    def test_pass_sids_based_on_reindex_like(self, mock_download_master_file):
         """
-        Tests that conids and domain are correctly passed to the download_master_file
+        Tests that sids are correctly passed to the download_master_file
         function based on reindex_like.
         """
         closes = pd.DataFrame(
             np.random.rand(3,2),
-            columns=[12345,23456],
+            columns=["FI12345","FI23456"],
             index=pd.date_range(start="2018-05-01", periods=3, freq="D", name="Date"))
 
         def _mock_download_master_file(f, *args, **kwargs):
             securities = pd.DataFrame(
-                dict(ConId=[12345,
-                            23456],
+                dict(Sid=["FI12345",
+                          "FI23456"],
                      Symbol=["ABC",
                              "DEF"],
                      Etf=[1,
@@ -56,13 +56,73 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
 
         mock_download_master_file.side_effect = _mock_download_master_file
 
-        get_securities_reindexed_like(closes, domain="main", fields=["Symbol", "Etf", "Delisted", "Currency"])
+        get_securities_reindexed_like(closes, fields=["Symbol", "Etf", "Delisted", "Currency"])
 
         download_master_file_call = mock_download_master_file.mock_calls[0]
         _, args, kwargs = download_master_file_call
-        self.assertListEqual(kwargs["conids"], [12345,23456])
-        self.assertEqual(kwargs["domain"], "main")
+        self.assertListEqual(kwargs["sids"], ["FI12345","FI23456"])
         self.assertListEqual(kwargs["fields"], ["Symbol", "Etf", "Delisted", "Currency"])
+
+    @patch("quantrocket.master.download_master_file")
+    def test_cast_boolean_fields(self, mock_download_master_file):
+        """
+        Tests that master fields Etf and Delisted are cast to boolean.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-05-01", periods=3, freq="D", name="Date"))
+
+        def _mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(Sid=["FI12345","FI23456"],
+                                           Symbol=["ABC","DEF"],
+                                           Delisted=[0, 1],
+                                           Etf=[1, 0],
+                                           edi_Delisted=[0,1],
+                                           ibkr_Etf=[1, 0]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        mock_download_master_file.side_effect = _mock_download_master_file
+
+        with patch("quantrocket.price.download_master_file", new=mock_download_master_file):
+
+            securities = get_securities_reindexed_like(
+                closes,
+                fields=["Symbol", "Etf", "Delisted", "edi_Delisted", "ibkr_Etf"])
+
+        symbols = securities.loc["Symbol"]
+        symbols = symbols.reset_index()
+        symbols.loc[:, "Date"] = symbols.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            symbols.to_dict(orient="records"),
+            [{'Date': '2018-05-01T00:00:00', "FI12345": "ABC", "FI23456": "DEF"},
+            {'Date': '2018-05-02T00:00:00', "FI12345": "ABC", "FI23456": "DEF"},
+            {'Date': '2018-05-03T00:00:00', "FI12345": "ABC", "FI23456": "DEF"}]
+        )
+
+        for field in ("Delisted", "edi_Delisted"):
+            delisted = securities.loc[field]
+            delisted = delisted.reset_index()
+            delisted.loc[:, "Date"] = delisted.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            self.assertListEqual(
+                delisted.to_dict(orient="records"),
+                [{'Date': '2018-05-01T00:00:00', "FI12345": False, "FI23456": True},
+                {'Date': '2018-05-02T00:00:00', "FI12345": False, "FI23456": True},
+                {'Date': '2018-05-03T00:00:00', "FI12345": False, "FI23456": True}]
+            )
+
+        for field in ("Etf", "ibkr_Etf"):
+            etfs = securities.loc[field]
+            etfs = etfs.reset_index()
+            etfs.loc[:, "Date"] = etfs.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            self.assertListEqual(
+                etfs.to_dict(orient="records"),
+                [{'Date': '2018-05-01T00:00:00', "FI12345": True, "FI23456": False},
+                {'Date': '2018-05-02T00:00:00', "FI12345": True, "FI23456": False},
+                {'Date': '2018-05-03T00:00:00', "FI12345": True, "FI23456": False},
+                ]
+            )
 
     def test_securities_reindexed_like(self):
         """
@@ -70,7 +130,7 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
         """
         closes = pd.DataFrame(
             np.random.rand(3,2),
-            columns=[12345,23456],
+            columns=["FI12345","FI23456"],
             index=pd.date_range(start="2018-05-01",
                                 periods=3,
                                 freq="D",
@@ -79,8 +139,8 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
 
         def mock_download_master_file(f, *args, **kwargs):
             securities = pd.DataFrame(
-                dict(ConId=[12345,
-                            23456],
+                dict(Sid=["FI12345",
+                            "FI23456"],
                      Symbol=["ABC",
                              "DEF"],
                      Etf=[1,
@@ -96,7 +156,6 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
 
             securities = get_securities_reindexed_like(
                 closes,
-                domain="main",
                 fields=["Symbol", "Etf", "Delisted", "Currency"])
 
             securities = securities.reset_index()
@@ -105,52 +164,52 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
                 securities.to_dict(orient="records"),
                 [{'Field': 'Currency',
                   'Date': '2018-05-01T00:00:00-0400',
-                  12345: 'USD',
-                  23456: 'EUR'},
+                  "FI12345": 'USD',
+                  "FI23456": 'EUR'},
                  {'Field': 'Currency',
                   'Date': '2018-05-02T00:00:00-0400',
-                  12345: 'USD',
-                  23456: 'EUR'},
+                  "FI12345": 'USD',
+                  "FI23456": 'EUR'},
                  {'Field': 'Currency',
                   'Date': '2018-05-03T00:00:00-0400',
-                  12345: 'USD',
-                  23456: 'EUR'},
+                  "FI12345": 'USD',
+                  "FI23456": 'EUR'},
                  {'Field': 'Delisted',
                   'Date': '2018-05-01T00:00:00-0400',
-                  12345: False,
-                  23456: True},
+                  "FI12345": False,
+                  "FI23456": True},
                  {'Field': 'Delisted',
                   'Date': '2018-05-02T00:00:00-0400',
-                  12345: False,
-                  23456: True},
+                  "FI12345": False,
+                  "FI23456": True},
                  {'Field': 'Delisted',
                   'Date': '2018-05-03T00:00:00-0400',
-                  12345: False,
-                  23456: True},
+                  "FI12345": False,
+                  "FI23456": True},
                  {'Field': 'Etf',
                   'Date': '2018-05-01T00:00:00-0400',
-                  12345: True,
-                  23456: False},
+                  "FI12345": True,
+                  "FI23456": False},
                  {'Field': 'Etf',
                   'Date': '2018-05-02T00:00:00-0400',
-                  12345: True,
-                  23456: False},
+                  "FI12345": True,
+                  "FI23456": False},
                  {'Field': 'Etf',
                   'Date': '2018-05-03T00:00:00-0400',
-                  12345: True,
-                  23456: False},
+                  "FI12345": True,
+                  "FI23456": False},
                  {'Field': 'Symbol',
                   'Date': '2018-05-01T00:00:00-0400',
-                  12345: 'ABC',
-                  23456: 'DEF'},
+                  "FI12345": 'ABC',
+                  "FI23456": 'DEF'},
                  {'Field': 'Symbol',
                   'Date': '2018-05-02T00:00:00-0400',
-                  12345: 'ABC',
-                  23456: 'DEF'},
+                  "FI12345": 'ABC',
+                  "FI23456": 'DEF'},
                  {'Field': 'Symbol',
                   'Date': '2018-05-03T00:00:00-0400',
-                  12345: 'ABC',
-                  23456: 'DEF'}]
+                  "FI12345": 'ABC',
+                  "FI23456": 'DEF'}]
             )
 
     def test_securities_reindexed_like_intraday(self):
@@ -159,7 +218,7 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
         """
         closes = pd.DataFrame(
             np.random.rand(4,2),
-            columns=[12345,23456],
+            columns=["FI12345","FI23456"],
             index=pd.MultiIndex.from_product([
                 pd.date_range(start="2018-05-01",
                               periods=2,
@@ -171,8 +230,8 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
 
         def mock_download_master_file(f, *args, **kwargs):
             securities = pd.DataFrame(
-                dict(ConId=[12345,
-                            23456],
+                dict(Sid=["FI12345",
+                            "FI23456"],
                      Symbol=["ABC",
                              "DEF"]))
             securities.to_csv(f, index=False)
@@ -182,7 +241,6 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
 
             securities = get_securities_reindexed_like(
                 closes,
-                domain="main",
                 fields="Symbol")
 
             securities = securities.reset_index()
@@ -190,23 +248,23 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
 
             self.assertListEqual(
                 securities.to_dict(orient="records"),
-                [{12345: 'ABC',
-                  23456: 'DEF',
+                [{"FI12345": 'ABC',
+                  "FI23456": 'DEF',
                   'Date': '2018-05-01T00:00:00-0400',
                   'Field': 'Symbol',
                   'Time': '09:30:00'},
-                 {12345: 'ABC',
-                  23456: 'DEF',
+                 {"FI12345": 'ABC',
+                  "FI23456": 'DEF',
                   'Date': '2018-05-01T00:00:00-0400',
                   'Field': 'Symbol',
                   'Time': '09:31:00'},
-                 {12345: 'ABC',
-                  23456: 'DEF',
+                 {"FI12345": 'ABC',
+                  "FI23456": 'DEF',
                   'Date': '2018-05-02T00:00:00-0400',
                   'Field': 'Symbol',
                   'Time': '09:30:00'},
-                 {12345: 'ABC',
-                  23456: 'DEF',
+                 {"FI12345": 'ABC',
+                  "FI23456": 'DEF',
                   'Date': '2018-05-02T00:00:00-0400',
                   'Field': 'Symbol',
                   'Time': '09:31:00'}]
@@ -214,21 +272,21 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
 class ContractNumsReindexedLikeTestCase(unittest.TestCase):
 
     @patch("quantrocket.master.download_master_file")
-    def test_pass_conids_based_on_reindex_like(self, mock_download_master_file):
+    def test_pass_sids_based_on_reindex_like(self, mock_download_master_file):
         """
-        Tests that conids are correctly passed to the download_master_file
+        Tests that sids are correctly passed to the download_master_file
         function based on reindex_like.
         """
         closes = pd.DataFrame(
             np.random.rand(3,2),
-            columns=[12345,23456],
+            columns=["FI12345","FI23456"],
             index=pd.date_range(start="2018-05-01", periods=3, freq="D", name="Date"))
 
         def _mock_download_master_file(f, *args, **kwargs):
             securities = pd.DataFrame(
-                dict(ConId=[12345,
-                            23456],
-                     UnderConId=[1,
+                dict(Sid=["FI12345",
+                            "FI23456"],
+                     ibkr_UnderConId=[1,
                                  1],
                      SecType=["FUT",
                               "FUT"],
@@ -245,8 +303,8 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
 
         download_master_file_call = mock_download_master_file.mock_calls[0]
         _, args, kwargs = download_master_file_call
-        self.assertListEqual(kwargs["conids"], [12345,23456])
-        self.assertListEqual(kwargs["fields"], ["RolloverDate", "UnderConId", "SecType"])
+        self.assertListEqual(kwargs["sids"], ["FI12345","FI23456"])
+        self.assertListEqual(kwargs["fields"], ["RolloverDate", "ibkr_UnderConId", "SecType"])
 
     def test_complain_if_no_fut(self):
         """
@@ -254,7 +312,7 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
         """
         closes = pd.DataFrame(
             np.random.rand(3,2),
-            columns=[12345,23456],
+            columns=["FI12345","FI23456"],
             index=pd.date_range(start="2018-05-01",
                                 periods=3,
                                 freq="D",
@@ -263,9 +321,9 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
 
         def mock_download_master_file(f, *args, **kwargs):
             securities = pd.DataFrame(
-                    dict(ConId=[12345,
-                                23456],
-                         UnderConId=[1,
+                    dict(Sid=["FI12345",
+                                "FI23456"],
+                         ibkr_UnderConId=[1,
                                      1],
                          SecType=["STK",
                                   "STK"],
@@ -290,7 +348,7 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
         """
         closes = pd.DataFrame(
             np.random.rand(4,6),
-            columns=[12345,23456, 34567, 45678, 56789, 67890],
+            columns=["FI12345","FI23456", "FI34567", "FI45678", "FI56789", "FI67890"],
             index=pd.date_range(start="2018-05-01",
                                 periods=4,
                                 freq="D",
@@ -299,13 +357,13 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
 
         def mock_download_master_file(f, *args, **kwargs):
             securities = pd.DataFrame(
-                dict(ConId=[12345,
-                            23456,
-                            34567,
-                            45678,
-                            56789,
-                            67890],
-                     UnderConId=[1,
+                dict(Sid=["FI12345",
+                            "FI23456",
+                            "FI34567",
+                            "FI45678",
+                            "FI56789",
+                            "FI67890"],
+                     ibkr_UnderConId=[1,
                                  2,
                                  1,
                                  2,
@@ -337,34 +395,34 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
         self.assertDictEqual(
             contract_nums.to_dict(orient="index"),
             {'2018-05-01': {
-                12345: 1.0,
-                23456: 2.0,
-                34567: 2.0,
-                45678: 1.0,
-                56789: 'nan',
-                67890: 3.0},
+                "FI12345": 1.0,
+                "FI23456": 2.0,
+                "FI34567": 2.0,
+                "FI45678": 1.0,
+                "FI56789": 'nan',
+                "FI67890": 3.0},
              '2018-05-02': {
-                 12345: 1.0,
-                 23456: 2.0,
-                 34567: 2.0,
-                 45678: 1.0,
-                 56789: 'nan',
-                 67890: 3.0
+                 "FI12345": 1.0,
+                 "FI23456": 2.0,
+                 "FI34567": 2.0,
+                 "FI45678": 1.0,
+                 "FI56789": 'nan',
+                 "FI67890": 3.0
                 },
              '2018-05-03': {
-                 12345: 'nan',
-                 23456: 2.0,
-                 34567: 1.0,
-                 45678: 1.0,
-                 56789: 'nan',
-                 67890: 3.0},
+                 "FI12345": 'nan',
+                 "FI23456": 2.0,
+                 "FI34567": 1.0,
+                 "FI45678": 1.0,
+                 "FI56789": 'nan',
+                 "FI67890": 3.0},
              '2018-05-04': {
-                 12345: 'nan',
-                 23456: 1.0,
-                 34567: 1.0,
-                 45678: 'nan',
-                 56789: 'nan',
-                 67890: 2.0}}
+                 "FI12345": 'nan',
+                 "FI23456": 1.0,
+                 "FI34567": 1.0,
+                 "FI45678": 'nan',
+                 "FI56789": 'nan',
+                 "FI67890": 2.0}}
         )
 
     def test_contract_nums_reindexed_like_tz_naive(self):
@@ -373,7 +431,7 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
         """
         closes = pd.DataFrame(
             np.random.rand(4,6),
-            columns=[12345,23456, 34567, 45678, 56789, 67890],
+            columns=["FI12345","FI23456", "FI34567", "FI45678", "FI56789", "FI67890"],
             index=pd.date_range(start="2018-05-01",
                                 periods=4,
                                 freq="D",
@@ -381,13 +439,13 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
 
         def mock_download_master_file(f, *args, **kwargs):
             securities = pd.DataFrame(
-                dict(ConId=[12345,
-                            23456,
-                            34567,
-                            45678,
-                            56789,
-                            67890],
-                     UnderConId=[1,
+                dict(Sid=["FI12345",
+                            "FI23456",
+                            "FI34567",
+                            "FI45678",
+                            "FI56789",
+                            "FI67890"],
+                     ibkr_UnderConId=[1,
                                  2,
                                  1,
                                  2,
@@ -419,34 +477,34 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
         self.assertDictEqual(
             contract_nums.to_dict(orient="index"),
             {'2018-05-01': {
-                12345: 1.0,
-                23456: 2.0,
-                34567: 2.0,
-                45678: 1.0,
-                56789: 'nan',
-                67890: 3.0},
+                "FI12345": 1.0,
+                "FI23456": 2.0,
+                "FI34567": 2.0,
+                "FI45678": 1.0,
+                "FI56789": 'nan',
+                "FI67890": 3.0},
              '2018-05-02': {
-                 12345: 1.0,
-                 23456: 2.0,
-                 34567: 2.0,
-                 45678: 1.0,
-                 56789: 'nan',
-                 67890: 3.0
+                 "FI12345": 1.0,
+                 "FI23456": 2.0,
+                 "FI34567": 2.0,
+                 "FI45678": 1.0,
+                 "FI56789": 'nan',
+                 "FI67890": 3.0
                 },
              '2018-05-03': {
-                 12345: 'nan',
-                 23456: 2.0,
-                 34567: 1.0,
-                 45678: 1.0,
-                 56789: 'nan',
-                 67890: 3.0},
+                 "FI12345": 'nan',
+                 "FI23456": 2.0,
+                 "FI34567": 1.0,
+                 "FI45678": 1.0,
+                 "FI56789": 'nan',
+                 "FI67890": 3.0},
              '2018-05-04': {
-                 12345: 'nan',
-                 23456: 1.0,
-                 34567: 1.0,
-                 45678: 'nan',
-                 56789: 'nan',
-                 67890: 2.0}}
+                 "FI12345": 'nan',
+                 "FI23456": 1.0,
+                 "FI34567": 1.0,
+                 "FI45678": 'nan',
+                 "FI56789": 'nan',
+                 "FI67890": 2.0}}
         )
 
     def test_limit_sequence_num(self):
@@ -455,7 +513,7 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
         """
         closes = pd.DataFrame(
             np.random.rand(4,6),
-            columns=[12345,23456, 34567, 45678, 56789, 67890],
+            columns=["FI12345","FI23456", "FI34567", "FI45678", "FI56789", "FI67890"],
             index=pd.date_range(start="2018-05-01",
                                 periods=4,
                                 freq="D",
@@ -464,13 +522,13 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
 
         def mock_download_master_file(f, *args, **kwargs):
             securities = pd.DataFrame(
-                dict(ConId=[12345,
-                            23456,
-                            34567,
-                            45678,
-                            56789,
-                            67890],
-                     UnderConId=[1,
+                dict(Sid=["FI12345",
+                            "FI23456",
+                            "FI34567",
+                            "FI45678",
+                            "FI56789",
+                            "FI67890"],
+                     ibkr_UnderConId=[1,
                                  2,
                                  1,
                                  2,
@@ -502,34 +560,34 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
         self.assertDictEqual(
             contract_nums.to_dict(orient="index"),
             {'2018-05-01': {
-                12345: 1.0,
-                23456: 2.0,
-                34567: 2.0,
-                45678: 1.0,
-                56789: 'nan',
-                67890: 'nan'},
+                "FI12345": 1.0,
+                "FI23456": 2.0,
+                "FI34567": 2.0,
+                "FI45678": 1.0,
+                "FI56789": 'nan',
+                "FI67890": 'nan'},
              '2018-05-02': {
-                 12345: 1.0,
-                 23456: 2.0,
-                 34567: 2.0,
-                 45678: 1.0,
-                 56789: 'nan',
-                 67890: 'nan'
+                 "FI12345": 1.0,
+                 "FI23456": 2.0,
+                 "FI34567": 2.0,
+                 "FI45678": 1.0,
+                 "FI56789": 'nan',
+                 "FI67890": 'nan'
                 },
              '2018-05-03': {
-                 12345: 'nan',
-                 23456: 2.0,
-                 34567: 1.0,
-                 45678: 1.0,
-                 56789: 'nan',
-                 67890: 'nan'},
+                 "FI12345": 'nan',
+                 "FI23456": 2.0,
+                 "FI34567": 1.0,
+                 "FI45678": 1.0,
+                 "FI56789": 'nan',
+                 "FI67890": 'nan'},
              '2018-05-04': {
-                 12345: 'nan',
-                 23456: 1.0,
-                 34567: 1.0,
-                 45678: 'nan',
-                 56789: 'nan',
-                 67890: 2.0}}
+                 "FI12345": 'nan',
+                 "FI23456": 1.0,
+                 "FI34567": 1.0,
+                 "FI45678": 'nan',
+                 "FI56789": 'nan',
+                 "FI67890": 2.0}}
         )
 
     def test_contract_nums_reindexed_like_intraday(self):
@@ -539,7 +597,7 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
         """
         closes = pd.DataFrame(
             np.random.rand(8,6),
-            columns=[12345,23456, 34567, 45678, 56789, 67890],
+            columns=["FI12345","FI23456", "FI34567", "FI45678", "FI56789", "FI67890"],
             index=pd.MultiIndex.from_product([
                 pd.date_range(start="2018-05-01",
                               periods=4,
@@ -551,13 +609,13 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
 
         def mock_download_master_file(f, *args, **kwargs):
             securities = pd.DataFrame(
-                dict(ConId=[12345,
-                            23456,
-                            34567,
-                            45678,
-                            56789,
-                            67890],
-                     UnderConId=[1,
+                dict(Sid=["FI12345",
+                            "FI23456",
+                            "FI34567",
+                            "FI45678",
+                            "FI56789",
+                            "FI67890"],
+                     ibkr_UnderConId=[1,
                                  2,
                                  1,
                                  2,
@@ -591,68 +649,68 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
 
         self.assertListEqual(
             contract_nums.to_dict(orient="records"),
-            [{12345: 1.0,
-              23456: 2.0,
-              34567: 2.0,
-              45678: 1.0,
-              56789: 'nan',
-              67890: 3.0,
+            [{"FI12345": 1.0,
+              "FI23456": 2.0,
+              "FI34567": 2.0,
+              "FI45678": 1.0,
+              "FI56789": 'nan',
+              "FI67890": 3.0,
               'Date': '2018-05-01',
               'Time': '09:30:00'},
-             {12345: 1.0,
-              23456: 2.0,
-              34567: 2.0,
-              45678: 1.0,
-              56789: 'nan',
-              67890: 3.0,
+             {"FI12345": 1.0,
+              "FI23456": 2.0,
+              "FI34567": 2.0,
+              "FI45678": 1.0,
+              "FI56789": 'nan',
+              "FI67890": 3.0,
               'Date': '2018-05-01',
               'Time': '09:31:00'},
-             {12345: 1.0,
-              23456: 2.0,
-              34567: 2.0,
-              45678: 1.0,
-              56789: 'nan',
-              67890: 3.0,
+             {"FI12345": 1.0,
+              "FI23456": 2.0,
+              "FI34567": 2.0,
+              "FI45678": 1.0,
+              "FI56789": 'nan',
+              "FI67890": 3.0,
               'Date': '2018-05-02',
               'Time': '09:30:00'},
-             {12345: 1.0,
-              23456: 2.0,
-              34567: 2.0,
-              45678: 1.0,
-              56789: 'nan',
-              67890: 3.0,
+             {"FI12345": 1.0,
+              "FI23456": 2.0,
+              "FI34567": 2.0,
+              "FI45678": 1.0,
+              "FI56789": 'nan',
+              "FI67890": 3.0,
               'Date': '2018-05-02',
               'Time': '09:31:00'},
-             {12345: 'nan',
-              23456: 2.0,
-              34567: 1.0,
-              45678: 1.0,
-              56789: 'nan',
-              67890: 3.0,
+             {"FI12345": 'nan',
+              "FI23456": 2.0,
+              "FI34567": 1.0,
+              "FI45678": 1.0,
+              "FI56789": 'nan',
+              "FI67890": 3.0,
               'Date': '2018-05-03',
               'Time': '09:30:00'},
-             {12345: 'nan',
-              23456: 2.0,
-              34567: 1.0,
-              45678: 1.0,
-              56789: 'nan',
-              67890: 3.0,
+             {"FI12345": 'nan',
+              "FI23456": 2.0,
+              "FI34567": 1.0,
+              "FI45678": 1.0,
+              "FI56789": 'nan',
+              "FI67890": 3.0,
               'Date': '2018-05-03',
               'Time': '09:31:00'},
-             {12345: 'nan',
-              23456: 1.0,
-              34567: 1.0,
-              45678: 'nan',
-              56789: 'nan',
-              67890: 2.0,
+             {"FI12345": 'nan',
+              "FI23456": 1.0,
+              "FI34567": 1.0,
+              "FI45678": 'nan',
+              "FI56789": 'nan',
+              "FI67890": 2.0,
               'Date': '2018-05-04',
               'Time': '09:30:00'},
-             {12345: 'nan',
-              23456: 1.0,
-              34567: 1.0,
-              45678: 'nan',
-              56789: 'nan',
-              67890: 2.0,
+             {"FI12345": 'nan',
+              "FI23456": 1.0,
+              "FI34567": 1.0,
+              "FI45678": 'nan',
+              "FI56789": 'nan',
+              "FI67890": 2.0,
               'Date': '2018-05-04',
               'Time': '09:31:00'}]
         )
