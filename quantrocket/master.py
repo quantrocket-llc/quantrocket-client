@@ -156,7 +156,8 @@ def collect_ibkr_listings(exchanges=None, sec_types=None, currencies=None,
     ----------
     exchanges : list or str
         one or more IBKR exchange codes to collect listings for (required
-        unless providing universes or sids)
+        unless providing universes or sids). For sample data use exchange
+        code 'FREE'
 
     sec_types : list of str, optional
         limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND
@@ -180,6 +181,10 @@ def collect_ibkr_listings(exchanges=None, sec_types=None, currencies=None,
 
     Examples
     --------
+    Collect free sample listings:
+
+    >>> collect_ibkr_listings(exchanges="FREE")
+
     Collect all Toronto Stock Exchange stock listings:
 
     >>> collect_ibkr_listings(exchanges="TSE", sec_types="STK")

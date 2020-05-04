@@ -101,6 +101,10 @@ sids to collect details from the IBKR API, bypassing the website.
 
 Examples:
 
+Collect free sample listings:
+
+    quantrocket master collect-ibkr --exchanges FREE
+
 Collect all Toronto Stock Exchange stock listings:
 
     quantrocket master collect-ibkr --exchanges TSE --sec-types STK
@@ -128,7 +132,7 @@ Re-collect contract details for an existing universe called "japan-fin":
         nargs="*",
         metavar="EXCHANGE",
         help="one or more exchange codes to collect listings for (required unless "
-        "providing universes or sids)")
+        "providing universes or sids). For sample data use exchange code 'FREE'")
     parser.add_argument(
         "-t", "--sec-types",
         nargs="*",
