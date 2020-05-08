@@ -1076,7 +1076,7 @@ def _cli_in_status_since(status, since=None, in_=None, ago=None):
                                    freq=since, normalize=False)
 
     # For >1D freq, normalize to midnight
-    if required_since.freq.isAnchored() or required_since.freq.rule_code == "D":
+    if required_since.freq.is_anchored() or required_since.freq.rule_code == "D":
         required_since = pd.date_range(periods=5, end=dt, freq=since, normalize=True)
         required_since = required_since[-1]
     else:
@@ -1105,7 +1105,7 @@ def _cli_in_status_until(status, until=None, in_=None, ago=None):
                                    freq=until, normalize=False)
 
     # For >1D freq, normalize to midnight
-    if required_until.freq.isAnchored() or required_until.freq.rule_code == "D":
+    if required_until.freq.is_anchored() or required_until.freq.rule_code == "D":
         required_until = pd.date_range(start=dt, periods=5,
                                    freq=until, normalize=True)
         # due to normalize=True, the date range might include a time before the
