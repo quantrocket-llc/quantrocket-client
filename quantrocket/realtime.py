@@ -281,9 +281,10 @@ def drop_db(code, confirm_by_typing_db_code_again=None, cascade=False):
 def _cli_drop_db(*args, **kwargs):
     return json_to_cli(drop_db, *args, **kwargs)
 
-def drop_ticks(code, older_than=None, cascade=False):
+def drop_ticks(code, older_than=None):
     """
-    Delete ticks from a tick database.
+    Delete ticks from a tick database. Does not delete any aggregate
+    database records.
 
     Deleting ticks is a way to free up disk space by deleting ticks older
     than a certain threshold while maintaining the ability to continue
@@ -295,15 +296,6 @@ def drop_ticks(code, older_than=None, cascade=False):
     some of the ticks are older but some are newer, the chunk is not deleted.
     This means you may still see older data returned in queries.
 
-    Note: when using cascade=True to also delete records from aggregate databases,
-    the only aggregate records that will be deleted are ones corresponding to the
-    ticks being deleted at the same time. This can have unintuitive consequences
-    if you sometimes use cascade=True and sometimes don't. For example, if you
-    delete ticks older than 1 hour without cascade, then repeat the function
-    with cascade=True, no aggregate records will be deleted. This is because the
-    tick records older than 1 hour were already deleted previously and thus there
-    can be no cascading delete of aggregate records on the subsequent call.
-
     Parameters
     ----------
     code : str, required
@@ -312,11 +304,6 @@ def drop_ticks(code, older_than=None, cascade=False):
     older_than : str, required
        delete ticks older than this (use a Pandas timedelta string, for example
         7d)
-
-    cascade : bool
-       also delete records that are older than older_than from this tick database's
-       aggregate database(s), if any. By default, does not delete any aggregate
-       database records.
 
     Returns
     -------
@@ -330,17 +317,11 @@ def drop_ticks(code, older_than=None, cascade=False):
     Examples
     --------
     Delete ticks older than 7 days in a database called 'usa-tech-stk-tick' (no
-    aggregate records are deleted by default):
+    aggregate records are deleted):
 
     >>> drop_ticks("usa-tech-stk-tick", older_than="7d")
-
-    Delete ticks older than 7 days, including the associated aggregate records:
-
-    >>> drop_ticks("usa-tech-stk-tick", older_than="7d", cascade=True)
     """
     params = {"older_than": older_than}
-    if cascade:
-        params["cascade"] = cascade
     response = houston.delete("/realtime/ticks/{0}".format(code), params=params)
     houston.raise_for_status_with_json(response)
     return response.json()
