@@ -79,11 +79,11 @@ def create_usstock_bundle(code, sids=None, universes=None, free=False):
 def _cli_create_usstock_bundle(*args, **kwargs):
     return json_to_cli(create_usstock_bundle, *args, **kwargs)
 
-def create_db_bundle(code, from_db, calendar,
-                     start_date=None, end_date=None,
-                     universes=None, sids=None,
-                     exclude_universes=None, exclude_sids=None,
-                     fields=None):
+def create_bundle_from_db(code, from_db, calendar,
+                         start_date=None, end_date=None,
+                         universes=None, sids=None,
+                        exclude_universes=None, exclude_sids=None,
+                        fields=None):
     """
     Create a Zipline bundle from a history database or real-time aggregate
     database.
@@ -138,14 +138,26 @@ def create_db_bundle(code, from_db, calendar,
     Create a bundle from a history database called "es-fut-1min" and name
     it like the history database:
 
-    >>> create_db_bundle("es-fut-1min", from_db="es-fut-1min", calendar="us_futures")
+    >>> create_bundle_from_db("es-fut-1min", from_db="es-fut-1min", calendar="us_futures")
 
     Create a bundle named "usa-stk-1min-2017" for ingesting a single year of
     US 1-minute stock data from a history database called "usa-stk-1min":
 
-    >>> create_db_bundle("usa-stk-1min-2017", from_db="usa-stk-1min",
-    >>>                  calendar="XNYS",
-    >>>                  start_date="2017-01-01", end_date="2017-12-31")
+    >>> create_bundle_from_db("usa-stk-1min-2017", from_db="usa-stk-1min",
+    >>>                      calendar="XNYS",
+    >>>                      start_date="2017-01-01", end_date="2017-12-31")
+
+    Create a bundle from a real-time aggregate database and specify how to map
+    Zipline fields to the database fields:
+
+    >>> create_bundle_from_db("free-stk-1min", from_db="free-stk-tick-1min",
+    >>>                       calendar="XNYS", start_date="2020-06-01",
+    >>>                       fields={
+    >>>                           "close": "LastPriceClose",
+    >>>                           "open": "LastPriceOpen",
+    >>>                           "high": "LastPriceHigh",
+    >>>                           "low": "LastPriceLow",
+    >>>                           "volume": "VolumeClose"})
     """
     params = {}
     params["ingest_type"] = "from_db"
@@ -171,11 +183,11 @@ def create_db_bundle(code, from_db, calendar,
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_create_db_bundle(*args, **kwargs):
+def _cli_create_bundle_from_db(*args, **kwargs):
     fields = kwargs.get("fields", None)
     if fields:
         kwargs["fields"] = dict_strs_to_dict(*fields)
-    return json_to_cli(create_db_bundle, *args, **kwargs)
+    return json_to_cli(create_bundle_from_db, *args, **kwargs)
 
 def ingest_bundle(code, sids=None, universes=None):
     """

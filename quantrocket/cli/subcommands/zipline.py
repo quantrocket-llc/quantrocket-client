@@ -77,15 +77,20 @@ Examples:
 Create a bundle from a history database called "es-fut-1min" and name
 it like the history database:
 
-    quantrocket zipline create-db-bundle es-fut-1min --from-db es-fut-1min --calendar us_futures --start-date 2015-01-01
+    quantrocket zipline create-bundle-from-db es-fut-1min --from-db es-fut-1min --calendar us_futures --start-date 2015-01-01
 
 Create a bundle named "usa-stk-1min-2017" for ingesting a single year of US
 1-minute stock data from a history database called "usa-stk-1min":
 
-    quantrocket zipline create-db-bundle usa-stk-1min-2017 --from-db usa-stk-1min -s 2017-01-01 -e 2017-12-31 --calendar XNYS
+    quantrocket zipline create-bundle-from-db usa-stk-1min-2017 --from-db usa-stk-1min -s 2017-01-01 -e 2017-12-31 --calendar XNYS
+
+Create a bundle from a real-time aggregate database and specify how to map
+Zipline fields to the database fields:
+
+    quantrocket zipline create-bundle-from-db free-stk-1min --from-db free-stk-tick-1min --calendar XNYS --start-date 2020-06-01 --fields close:LastPriceClose open:LastPriceOpen high:LastPriceHigh low:LastPriceLow volume:VolumeClose
     """
     parser = _subparsers.add_parser(
-        "create-db-bundle",
+        "create-bundle-from-db",
         help="create a Zipline bundle from a history database or real-time aggregate database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -141,7 +146,7 @@ Create a bundle named "usa-stk-1min-2017" for ingesting a single year of US
         nargs="*",
         metavar="SID",
         help="exclude these sids")
-    parser.set_defaults(func="quantrocket.zipline._cli_create_db_bundle")
+    parser.set_defaults(func="quantrocket.zipline._cli_create_bundle_from_db")
 
     examples = """
 Ingest data into a previously defined bundle.
