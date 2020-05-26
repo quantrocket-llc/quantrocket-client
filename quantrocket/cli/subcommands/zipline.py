@@ -77,7 +77,7 @@ Examples:
 Create a bundle from a history database called "es-fut-1min" and name
 it like the history database:
 
-    quantrocket zipline create-db-bundle es-fut-1min --from-db es-fut-1min --calendar us_futures
+    quantrocket zipline create-db-bundle es-fut-1min --from-db es-fut-1min --calendar us_futures --start-date 2015-01-01
 
 Create a bundle named "usa-stk-1min-2017" for ingesting a single year of US
 1-minute stock data from a history database called "usa-stk-1min":
@@ -114,7 +114,9 @@ Create a bundle named "usa-stk-1min-2017" for ingesting a single year of US
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to historical data on or after this date")
+        required=True,
+        help="limit to historical data on or after this date. This parameter is required "
+        "and also determines the default start date for backtests and queries.")
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
@@ -344,14 +346,12 @@ Run a backtest from a strategy file called etf-arb.py and save a CSV file of res
         "bundle (if set) is used.")
     parser.add_argument(
         "-s", "--start-date",
-        required=True,
-        metavar="DATE",
-        help="the start date of the simulation")
+        metavar="YYYY-MM-DD",
+        help="the start date of the simulation (defaults to the bundle start date)")
     parser.add_argument(
         "-e", "--end-date",
-        required=True,
-        metavar="DATE",
-        help="the end date of the simulation")
+        metavar="YYYY-MM-DD",
+        help="the end date of the simulation (defaults to today)")
     parser.add_argument(
         "-o", "--output",
         metavar="FILENAME",

@@ -105,8 +105,9 @@ def create_db_bundle(code, from_db, calendar,
         the name of the calendar to use with this bundle (provide '?' or
         any invalid calendar name to see available choices)
 
-    start_date : str (YYYY-MM-DD), optional
-        limit to historical data on or after this date
+    start_date : str (YYYY-MM-DD), required
+        limit to historical data on or after this date. This parameter is required
+        and also determines the default start date for backtests and queries.
 
     end_date : str (YYYY-MM-DD), optional
         limit to historical data on or before this date
@@ -438,11 +439,11 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
         the data bundle to use for the simulation. If omitted, the default bundle (if set)
         is used.
 
-    start_date : str (YYYY-MM-DD), required
-        the start date of the simulation
+    start_date : str (YYYY-MM-DD), optional
+        the start date of the simulation (defaults to the bundle start date)
 
-    end_date : str (YYYY-MM-DD), required
-        the end date of the simulation
+    end_date : str (YYYY-MM-DD), optional
+        the end date of the simulation (defaults to today)
 
     filepath_or_buffer : str, optional
         the location to write the output file (omit to write to stdout)
