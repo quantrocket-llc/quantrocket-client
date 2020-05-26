@@ -177,7 +177,7 @@ Create a database for Sharadar US stocks and call it "sharadar-us-stk-1d":
         metavar="CODE",
         help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
     parser.add_argument(
-        "-s", "--sec-type",
+        "-t", "--sec-type",
         metavar="SEC_TYPE",
         choices=["STK","ETF"],
         help="the security type to collect. Possible choices: %(choices)s")
