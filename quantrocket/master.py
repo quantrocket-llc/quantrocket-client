@@ -583,7 +583,7 @@ def get_securities_reindexed_like(reindex_like, fields=None):
     for col in securities.columns:
         this_col = securities[col]
         if col.endswith("Delisted") or col.endswith("Etf"):
-            this_col = this_col.astype(bool)
+            this_col = this_col.fillna(0).astype(bool)
         all_master_fields[col] = reindex_like.apply(lambda x: this_col, axis=1)
 
     names = list(reindex_like.index.names)
