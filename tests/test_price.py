@@ -569,6 +569,149 @@ class GetPricesTestCase(unittest.TestCase):
              {'Date': '2018-04-03T00:00:00', "FI12345": 12400, "FI23456": 142500, "FI56789": 5600}]
         )
 
+    def test_query_eod_history_and_realtime_db(self):
+        """
+        Tests querying of an EOD history db and EOD realtime aggregate db. This test
+        is to make sure we can handle combining a history db with dates like "2020-04-05"
+        and a 1-d realtime aggregate db with dates like "2020-04-05T00:00:00+00". It also
+        tests that dates are made uniform across all fields.
+        """
+        def mock_get_history_db_config(db):
+            return {
+                "bar_size": "1 day",
+                "universes": ["usa-stk"],
+                "vendor": "ibkr",
+                "fields": ["Close","Open","High","Low", "Volume"]
+            }
+
+        def mock_download_history_file(code, f, *args, **kwargs):
+
+            prices = pd.DataFrame(
+                dict(
+                    Sid=[
+                        "FI12345",
+                        "FI12345",
+                        "FI12345",
+                        "FI23456",
+                        "FI23456",
+                        "FI23456",
+                        ],
+                    Date=[
+                        "2018-04-01",
+                        "2018-04-02",
+                        "2018-04-03",
+                        "2018-04-01",
+                        "2018-04-02",
+                        "2018-04-03"
+                        ],
+                    Close=[
+                        20.10,
+                        20.50,
+                        19.40,
+                        50.5,
+                        52.5,
+                        51.59,
+                        ],
+                    Volume=[
+                        15000,
+                        7800,
+                        12400,
+                        98000,
+                        179000,
+                        142500
+                    ]
+                )
+            )
+            prices.to_csv(f, index=False)
+
+        def mock_download_market_data_file(code, f, *args, **kwargs):
+            prices = pd.DataFrame(
+                dict(
+                    Sid=[
+                        "FI12345",
+                        "FI12345",
+                        "FI23456",
+                        "FI23456",
+                        ],
+                    Date=[
+                        "2018-04-01T00:00:00+00",
+                        "2018-04-02T00:00:00+00",
+                        "2018-04-01T00:00:00+00",
+                        "2018-04-02T00:00:00+00",
+                        ],
+                    LastClose=[
+                        30.50,
+                        39.40,
+                        79.5,
+                        79.59,
+                        ],
+                    LastCount=[
+                        305,
+                        940,
+                        795,
+                        959,
+                        ]
+                ))
+            prices.to_csv(f, index=False)
+
+        def mock_list_history_databases():
+            return [
+                "usa-stk-1d",
+                "japan-stk-1d",
+                "usa-stk-15min",
+                "demo-stk-1min"
+            ]
+
+        def mock_list_realtime_databases():
+            return {"usa-stk-tick": ["usa-stk-tick-1d"]}
+
+        def mock_get_realtime_db_config(db):
+            return {
+                "bar_size": "1 day",
+                "universes": ["japan-stk"],
+                "vendor": "ibkr",
+                "fields": ["LastClose","LastOpen","LastHigh","LastLow", "VolumeClose"]
+            }
+
+        def mock_list_bundles():
+            return {"usstock-1min": True}
+
+        with patch('quantrocket.price.list_bundles', new=mock_list_bundles):
+            with patch('quantrocket.price.list_realtime_databases', new=mock_list_realtime_databases):
+                with patch('quantrocket.price.list_history_databases', new=mock_list_history_databases):
+                    with patch('quantrocket.price.get_history_db_config', new=mock_get_history_db_config):
+                        with patch('quantrocket.price.get_realtime_db_config', new=mock_get_realtime_db_config):
+                            with patch('quantrocket.price.download_history_file', new=mock_download_history_file):
+                                with patch('quantrocket.price.download_market_data_file', new=mock_download_market_data_file):
+
+                                    prices = get_prices(["usa-stk-1d", "usa-stk-tick-1d"], fields=["Close", "LastClose"])
+
+        self.assertListEqual(list(prices.index.names), ["Field", "Date"])
+        self.assertEqual(prices.columns.name, "Sid")
+        dt = prices.index.get_level_values("Date")
+        self.assertTrue(isinstance(dt, pd.DatetimeIndex))
+        self.assertIsNone(dt.tz) # EOD is tz-naive
+        self.assertListEqual(list(prices.columns), ["FI12345","FI23456"])
+        closes = prices.loc["Close"]
+        closes = closes.reset_index()
+        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            closes.to_dict(orient="records"),
+            [{'Date': '2018-04-01T00:00:00', "FI12345": 20.1, "FI23456": 50.5},
+             {'Date': '2018-04-02T00:00:00', "FI12345": 20.5, "FI23456": 52.5},
+             {'Date': '2018-04-03T00:00:00', "FI12345": 19.4, "FI23456": 51.59}]
+        )
+        last_closes = prices.loc["LastClose"]
+        last_closes = last_closes.reset_index()
+        last_closes.loc[:, "Date"] = last_closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+        self.assertListEqual(
+            last_closes.fillna("nan").to_dict(orient="records"),
+            [{'Date': '2018-04-01T00:00:00', "FI12345": 30.50, "FI23456": 79.50},
+             {'Date': '2018-04-02T00:00:00', "FI12345": 39.40, "FI23456": 79.59},
+             {'Date': '2018-04-03T00:00:00', "FI12345": "nan", "FI23456": "nan"}]
+        )
+
     def test_consolidate_intraday_history_and_realtime_distinct_fields(self):
         """
         Tests that when querying a history and real-time database with

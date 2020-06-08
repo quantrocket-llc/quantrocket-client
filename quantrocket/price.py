@@ -391,7 +391,10 @@ def get_prices(codes, start_date=None, end_date=None,
         if timezone:
             dates = dates.tz_convert(timezone)
     else:
-        dates = pd.to_datetime(prices.index.get_level_values("Date"))
+        # use .str[:10] because the format might be 2020-04-05 (history dbs)
+        # or 2020-04-05T00:00:00-00 (realtime aggregate dbs)
+        dates = pd.to_datetime(
+            prices.index.get_level_values("Date").str[:10])
 
     prices.index = pd.MultiIndex.from_arrays((
         prices.index.get_level_values("Field"),
@@ -418,13 +421,9 @@ def get_prices(codes, start_date=None, end_date=None,
     prices.index = pd.MultiIndex.from_tuples(prices.index)
     prices.index.set_names(["Field", "Date", "Time"], inplace=True)
 
-    # Drop time if not intraday
-    if not is_intraday:
-        prices.index = prices.index.droplevel("Time")
-        return prices
-
-    # If intraday, fill missing times so that each date has the same set of
-    # times, allowing easier comparisons. Example implications:
+    # Fill missing dates and times so that each field has the
+    # same set of dates and times, for easier vectorized operations.
+    # Example implications for intraday dbs:
     # - if history is retrieved intraday, this ensures that today will have NaN
     #   entries for future times
     # - early close dates will have a full set of times, with NaNs after the
@@ -442,6 +441,11 @@ def get_prices(codes, start_date=None, end_date=None,
 
     prices = prices.reindex(interpolated_index)
     prices.index.set_names(["Field", "Date", "Time"], inplace=True)
+
+    # Drop time if not intraday
+    if not is_intraday:
+        prices.index = prices.index.droplevel("Time")
+        return prices
 
     # Apply times filter if needed (see Notes in docstring)
     if times and realtime_agg_dbs:
