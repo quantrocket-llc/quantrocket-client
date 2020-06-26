@@ -428,7 +428,7 @@ def _cli_download_minute_file(*args, **kwargs):
     return json_to_cli(download_minute_file, *args, **kwargs)
 
 def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
-             start_date=None, end_date=None, filepath_or_buffer=None):
+             start_date=None, end_date=None, progress=None, filepath_or_buffer=None):
     """
     Backtest a Zipline strategy and write the test results to a CSV file.
 
@@ -445,7 +445,7 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
         the data frequency of the simulation. Possible choices: daily, minute (default is minute)
 
     capital_base : float, optional
-        the starting capital for the simulation (default is 10000000.0)
+        the starting capital for the simulation (default is 1e6 (1 million))
 
     bundle : str, optional
         the data bundle to use for the simulation. If omitted, the default bundle (if set)
@@ -456,6 +456,11 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
 
     end_date : str (YYYY-MM-DD), optional
         the end date of the simulation (defaults to today)
+
+    progress : str, optional
+        log backtest progress at this frequency (use a pandas offset alias,
+        for example "D" for daily, "W" for weeky, "M" for monthly,
+        "Y" for yearly)
 
     filepath_or_buffer : str, optional
         the location to write the output file (omit to write to stdout)
@@ -488,8 +493,10 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
         params["start_date"] = start_date
     if end_date:
         params["end_date"] = end_date
+    if progress:
+        params["progress"] = progress
 
-    response = houston.post("/zipline/backtests/{0}".format(strategy), params=params, timeout=60*60*3)
+    response = houston.post("/zipline/backtests/{0}".format(strategy), params=params, timeout=60*60*96)
 
     houston.raise_for_status_with_json(response)
 

@@ -343,7 +343,7 @@ Run a backtest from a strategy file called etf-arb.py and save a CSV file of res
         "--capital-base",
         type=float,
         metavar="FLOAT",
-        help="the starting capital for the simulation (default is 10000000.0)")
+        help="the starting capital for the simulation (default is 1e6 (1 million))")
     parser.add_argument(
         "-b", "--bundle",
         metavar="CODE",
@@ -357,6 +357,11 @@ Run a backtest from a strategy file called etf-arb.py and save a CSV file of res
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
         help="the end date of the simulation (defaults to today)")
+    parser.add_argument(
+        "-p", "--progress",
+        metavar="FREQ",
+        help="log backtest progress at this frequency (use a pandas offset alias, "
+        "for example 'D' for daily, 'W' for weeky, 'M' for monthly, 'Y' for yearly)")
     parser.add_argument(
         "-o", "--output",
         metavar="FILENAME",
