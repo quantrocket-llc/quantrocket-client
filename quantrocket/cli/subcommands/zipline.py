@@ -322,9 +322,10 @@ results.
 
 Examples:
 
-Run a backtest from a strategy file called etf-arb.py and save a CSV file of results:
+Run a backtest from a strategy file called etf-arb.py and save a CSV file of results,
+logging backtest progress at annual intervals:
 
-    quantrocket zipline backtest etf-arb --bundle arca-etf-eod -s 2010-04-01 -e 2016-02-01 -o results.csv
+    quantrocket zipline backtest etf-arb --bundle arca-etf-eod -s 2010-04-01 -e 2016-02-01 -o results.csv --progress A
     """
     parser = _subparsers.add_parser(
         "backtest",
@@ -360,8 +361,8 @@ Run a backtest from a strategy file called etf-arb.py and save a CSV file of res
     parser.add_argument(
         "-p", "--progress",
         metavar="FREQ",
-        help="log backtest progress at this frequency (use a pandas offset alias, "
-        "for example 'D' for daily, 'W' for weeky, 'M' for monthly, 'Y' for yearly)")
+        help="log backtest progress at this interval (use a pandas offset alias, "
+        "for example 'D' for daily, 'W' for weeky, 'M' for monthly, 'A' for annually)")
     parser.add_argument(
         "-o", "--output",
         metavar="FILENAME",

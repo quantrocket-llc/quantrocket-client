@@ -458,9 +458,9 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
         the end date of the simulation (defaults to today)
 
     progress : str, optional
-        log backtest progress at this frequency (use a pandas offset alias,
+        log backtest progress at this interval (use a pandas offset alias,
         for example "D" for daily, "W" for weeky, "M" for monthly,
-        "Y" for yearly)
+        "A" for annually)
 
     filepath_or_buffer : str, optional
         the location to write the output file (omit to write to stdout)
@@ -471,10 +471,12 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
 
     Examples
     --------
-    Run a backtest defined in momentum-pipeline.py and save to CSV.
+    Run a backtest defined in momentum-pipeline.py and save to CSV,
+    logging backtest progress at weekly intervals.
 
     >>> backtest("momentum-pipeline", bundle="my-bundle",
                  start_date="2015-02-04", end_date="2015-12-31",
+                 progress="W",
                  filepath_or_buffer="momentum_pipeline_results.csv")
 
     Get a pyfolio tear sheet from the results:
