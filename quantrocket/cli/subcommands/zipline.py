@@ -193,6 +193,26 @@ Examples:
     parser.set_defaults(func="quantrocket.zipline._cli_list_bundles")
 
     examples = """
+Return the configuration of a bundle.
+
+Examples:
+
+Return the configuration of a bundle called 'usstock-1min':
+
+    quantrocket zipline config usstock-1min
+    """
+    parser = _subparsers.add_parser(
+        "config",
+        help="return the configuration of a bundle",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the bundle code")
+    parser.set_defaults(func="quantrocket.zipline._cli_get_bundle_config")
+
+    examples = """
 Delete a bundle.
 
 Examples:

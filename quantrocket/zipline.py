@@ -248,6 +248,28 @@ def list_bundles():
 def _cli_list_bundles(*args, **kwargs):
     return json_to_cli(list_bundles, *args, **kwargs)
 
+def get_bundle_config(code):
+    """
+    Return the configuration of a bundle.
+
+    Parameters
+    ----------
+    code : str, required
+        the bundle code
+
+    Returns
+    -------
+    dict
+        config
+    """
+    response = houston.get(f"/zipline/bundles/config/{code}")
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_get_bundle_config(*args, **kwargs):
+    return json_to_cli(get_bundle_config, *args, **kwargs)
+
 def drop_bundle(code, confirm_by_typing_bundle_code_again=None):
     """
     Delete a bundle.
