@@ -2482,11 +2482,14 @@ def get_sharadar_sp500_reindexed_like(reindex_like):
     # Reindex with unioned index and ffill to create Boolean dataframe
     sp500_changes = sp500_changes.pivot(index="Sid",columns="Date").T
     sp500_changes = sp500_changes.loc["ACTION"]
-    sp500_changes = sp500_changes.reindex(index=union_date_idx, columns=reindex_like.columns)
+    sp500_changes = sp500_changes.reindex(index=union_date_idx)
     are_in_sp500 = sp500_changes.fillna(method="ffill").fillna("removed") == "added"
 
     # reindex like input DataFrame
-    are_in_sp500 = are_in_sp500.reindex(index=reindex_like.index)
+    are_in_sp500 = are_in_sp500.reindex(
+        index=reindex_like.index,
+        columns=reindex_like.columns,
+        fill_value=False)
 
     return are_in_sp500
 
