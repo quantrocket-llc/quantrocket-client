@@ -23,6 +23,7 @@ from six.moves import queue, urllib
 from .exceptions import ImproperlyConfigured
 from .houston import Houston, houston
 from quantrocket.cli.utils.output import json_to_cli
+from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
 FLIGHTLOG_PATH = "/flightlog/handler"
 
@@ -208,8 +209,8 @@ def download_logfile(outfile, detail=False, match=None):
 
     Parameters
     ----------
-    outfile: str, required
-        filename to write the logfile to
+    outfile: str or file-like object, required
+        filename or file object to write the logfile to
 
     detail : bool
         if True, show detailed logs from logspout, otherwise show log messages
@@ -237,10 +238,7 @@ def download_logfile(outfile, detail=False, match=None):
     if response.status_code == 204:
         return response.json()
 
-    with open(outfile, "wb") as f:
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
+    write_response_to_filepath_or_buffer(outfile, response)
 
 def _cli_download_logfile(*args, **kwargs):
     return json_to_cli(download_logfile, *args, **kwargs)
