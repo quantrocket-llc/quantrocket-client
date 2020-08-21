@@ -211,9 +211,9 @@ def ingest_bundle(code, sids=None, universes=None):
 
     Examples
     --------
-    Ingest data into a bundle called es-fut-1min:
+    Ingest data into a bundle called usstock-1min:
 
-    >>> ingest_bundle("es-fut-1min")
+    >>> ingest_bundle("usstock-1min")
     """
     params = {}
     if sids:
@@ -571,7 +571,7 @@ def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None):
 def _cli_create_tearsheet(*args, **kwargs):
     return json_to_cli(create_tearsheet, *args, **kwargs)
 
-def trade(strategy, bundle=None, account=None):
+def trade(strategy, bundle=None, account=None, data_frequency=None):
     """
     Trade a Zipline strategy.
 
@@ -589,6 +589,10 @@ def trade(strategy, bundle=None, account=None):
         if the strategy is allocated to more than one
         account in quantrocket.zipline.allocations.yml.
 
+    data_frequency : str, optional
+        the data frequency to use. Possible choices: daily, minute
+        (default is minute)
+
     Returns
     -------
     None
@@ -604,6 +608,8 @@ def trade(strategy, bundle=None, account=None):
         params["bundle"] = bundle
     if account:
         params["account"] = account
+    if data_frequency:
+        params["data_frequency"] = data_frequency
 
     response = houston.post("/zipline/trade/{0}".format(strategy), params=params)
 

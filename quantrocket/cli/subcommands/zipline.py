@@ -153,9 +153,9 @@ Ingest data into a previously defined bundle.
 
 Examples:
 
-Ingest data into a bundle called es-fut-1min:
+Ingest data into a bundle called usstock-1min:
 
-    quantrocket zipline ingest es-fut-1min
+    quantrocket zipline ingest usstock-1min
     """
     parser = _subparsers.add_parser(
         "ingest",
@@ -357,9 +357,10 @@ logging backtest progress at annual intervals:
         metavar="CODE",
         help="the strategy to run (strategy filename without extension)")
     parser.add_argument(
-        "--data-frequency",
+        "-f", "--data-frequency",
         choices=["daily", "minute"],
-        help="the data frequency of the simulation (default is minute)")
+        help="the data frequency to use. Possible choices: %(choices)s "
+        "(default is minute)")
     parser.add_argument(
         "--capital-base",
         type=float,
@@ -451,6 +452,11 @@ Trade a strategy defined in momentum-pipeline.py:
         help="the account to run the strategy in. Only required "
         "if the strategy is allocated to more than one "
         "account in quantrocket.zipline.allocations.yml")
+    parser.add_argument(
+        "-f", "--data-frequency",
+        choices=["daily", "minute"],
+        help="the data frequency to use. Possible choices: %(choices)s "
+        "(default is minute)")
     parser.set_defaults(func="quantrocket.zipline._cli_trade")
 
     examples = """
