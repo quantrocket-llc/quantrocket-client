@@ -14,22 +14,32 @@
 
 import argparse
 
-def _get_version():
-    import quantrocket
-    return quantrocket.__version__, 0
-
 def add_subparser(subparsers):
     examples = """
-Show version number.
+Show the QuantRocket version number.
 
 Examples:
 
+Show the version number:
+
     quantrocket version
+
+Show both the services and client version numbers:
+
+    quantrocket version -d
     """
     parser = subparsers.add_parser(
         "version",
-        description="QuantRocket version number",
-        help="Show version number",
+        description="show the QuantRocket version number",
+        help="show the QuantRocket version number",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.set_defaults(func="quantrocket.cli.subcommands.version._get_version")
+    parser.add_argument(
+        "-d", "--detail",
+        action="store_true",
+        help="show the services version number and "
+        "also the version number of the client library making "
+        "this API call. Default is to only show the services "
+        "version number, which is the main QuantRocket version "
+        "number.")
+    parser.set_defaults(func="quantrocket.version._cli_get_version")
