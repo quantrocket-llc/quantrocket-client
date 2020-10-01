@@ -82,13 +82,64 @@ Download detailed logs for the history service:
     parser.add_argument(
         "-d", "--detail",
         action="store_true",
-        help="download detailed logs from logspout, otherwise download log messages from "
-        "flightlog only")
+        help="download detailed logs from the logspout service, otherwise download "
+        "the standard logs from the flightlog service")
     parser.add_argument(
         "-m", "--match",
         metavar="PATTERN",
         help="filter the logfile to lines containing this string")
     parser.set_defaults(func="quantrocket.flightlog._cli_download_logfile")
+
+    examples = r"""
+Wait for a message to appear in the logs.
+
+Searches can be performed against the standard or detailed log file.
+When searching the detailed logs, note that the log file uses the
+syslog format, which differs from the format used when streaming
+detailed logs. Download the detailed log file to see the exact format
+your search will run against.
+
+Examples:
+
+Wait up to 10 minutes for a message to appear indicating that data
+ingestion has finished:
+
+    quantrocket flightlog wait '[usstock-1min] Completed ingesting data' --timeout 10m
+
+Using a regular expression, wait up to 1 hour for a message to appear
+indicating that data collection has finished:
+
+    quantrocket flightlog wait '\[usstock-1d\] Collected [0-9]+ monthly files' --regex --timeout 1h
+    """
+    parser = _subparsers.add_parser(
+        "wait",
+        help="wait for a message to appear in the logs",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "message",
+        help="the log message to search for")
+    parser.add_argument(
+        "-r", "--regex",
+        action="store_true",
+        help="if True, treat the `message` argument as a regular expression "
+        "(default is to treat it as a plain string)")
+    parser.add_argument(
+        "-d", "--detail",
+        action="store_true",
+        help="if True, search the detailed logs from the logspout service (default "
+        "is to search the standard logs from the flightlog service)")
+    parser.add_argument(
+        "--tail",
+        type=int,
+        help="search the most recent N lines of the logs in addition to searching "
+        "future logs (default is to only search future logs)")
+    parser.add_argument(
+        "--timeout",
+        help="fail if the message is not found after this much time (use Pandas "
+        "timedelta string, e.g. 30sec or 5min or 2h; default is to wait "
+        "indefinitely)")
+    parser.set_defaults(func="quantrocket.flightlog._cli_wait_for_message")
 
     examples = """
 Log a message.

@@ -16,6 +16,8 @@
 
 import logging, logging.handlers
 import socket
+import time
+import re
 import six
 import sys
 import os
@@ -213,8 +215,8 @@ def download_logfile(outfile, detail=False, match=None):
         filename or file object to write the logfile to
 
     detail : bool
-        if True, show detailed logs from logspout, otherwise show log messages
-        from flightlog only (default False)
+        download detailed logs from the logspout service, otherwise download
+        the standard logs from the flightlog service
 
     match : str, optional
         filter the logfile to lines containing this string
@@ -242,6 +244,75 @@ def download_logfile(outfile, detail=False, match=None):
 
 def _cli_download_logfile(*args, **kwargs):
     return json_to_cli(download_logfile, *args, **kwargs)
+
+def wait_for_message(message, regex=False, detail=False,
+                    tail=0, timeout=None):
+    r"""
+    Wait for a message to appear in the logs.
+
+    Searches can be performed against the standard or detailed log file.
+    When searching the detailed logs, note that the log file uses the
+    syslog format, which differs from the format used when streaming
+    detailed logs. Download the detailed log file to see the exact format
+    your search will run against.
+
+    Parameters
+    ----------
+    message : str, required
+        the log message to search for
+
+    regex : bool
+        if True, treat the `message` argument as a regular expression
+        (default is to treat it as a plain string)
+
+    detail : bool, optional
+        if True, search the detailed logs from the logspout service (default
+        is to search the standard logs from the flightlog service)
+
+    tail : int, optional
+        search the most recent N lines of the logs in addition to searching
+        future logs (default is to only search future logs)
+
+    timeout : str, optional
+        fail if the message is not found after this much time (use Pandas
+        timedelta string, e.g. 30sec or 5min or 2h; default is to wait
+        indefinitely)
+
+    Returns
+    -------
+    dict
+        status dict containing the matching log line
+
+    Examples
+    --------
+    Wait up to 10 minutes for a message to appear indicating that data
+    ingestion has finished:
+
+    >>> wait_for_message('[usstock-1min] Completed ingesting data', timeout='10m')
+
+    Using a regular expression, wait up to 1 hour for a message to appear
+    indicating that data collection has finished:
+
+    >>> wait_for_message(r'\[usstock-1d\] Collected [0-9]+ monthly files', regex=True, timeout='1h')
+    """
+    params = {}
+    if regex:
+        params["regex"] = regex
+    if detail:
+        params["detail"] = detail
+    if tail:
+        params["tail"] = tail
+    if timeout:
+        params["timeout"] = timeout
+
+    message = six.moves.urllib.parse.quote(message, safe='')
+    response = houston.get("/flightlog/messages/{0}".format(message), params=params, timeout=60*60*24*30)
+    houston.raise_for_status_with_json(response)
+
+    return response.json()
+
+def _cli_wait_for_message(*args, **kwargs):
+    return json_to_cli(wait_for_message, *args, **kwargs)
 
 def get_timezone():
     """
