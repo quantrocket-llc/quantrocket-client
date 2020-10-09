@@ -102,6 +102,10 @@ Show current configuration:
     parser.add_argument(
         "-b", "--bucket",
         help="the S3 bucket name to push to/pull from")
+    parser.add_argument(
+        "-r", "--region",
+        help="the AWS region in which to create the bucket (default us-east-1). "
+        "Ignored if the bucket already exists.")
     parser.set_defaults(func="quantrocket.db._cli_get_or_set_s3_config")
 
     examples = """

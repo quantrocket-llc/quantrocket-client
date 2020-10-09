@@ -86,7 +86,7 @@ def get_s3_config():
         return {}
     return response.json()
 
-def set_s3_config(access_key_id=None, secret_access_key=None, bucket=None):
+def set_s3_config(access_key_id=None, secret_access_key=None, bucket=None, region=None):
     """
     Set AWS S3 configuration for pushing and pulling databases to and from
     S3.
@@ -107,6 +107,10 @@ def set_s3_config(access_key_id=None, secret_access_key=None, bucket=None):
     bucket : str, optional
         the S3 bucket name to push to/pull from
 
+    region : str, optional
+        the AWS region in which to create the bucket (default us-east-1).
+        Ignored if the bucket already exists.
+
     Returns
     -------
     dict
@@ -122,15 +126,17 @@ def set_s3_config(access_key_id=None, secret_access_key=None, bucket=None):
         data["secret_access_key"] = secret_access_key
     if bucket:
         data["bucket"] = bucket
+    if region:
+        data["region"] = region
 
     response = houston.put("/db/s3config", data=data)
     houston.raise_for_status_with_json(response)
     return response.json()
 
 def _cli_get_or_set_s3_config(access_key_id=None, secret_access_key=None,
-                                   bucket=None, *args, **kwargs):
-    if access_key_id or secret_access_key or bucket:
-        return json_to_cli(set_s3_config, access_key_id, secret_access_key, bucket, *args, **kwargs)
+                                   bucket=None, region=None, *args, **kwargs):
+    if access_key_id or secret_access_key or bucket or region:
+        return json_to_cli(set_s3_config, access_key_id, secret_access_key, bucket, region, *args, **kwargs)
     else:
         return json_to_cli(get_s3_config, *args, **kwargs)
 
