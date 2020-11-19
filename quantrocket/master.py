@@ -526,6 +526,118 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
 def _cli_download_master_file(*args, **kwargs):
     return json_to_cli(download_master_file, *args, **kwargs)
 
+def get_securities(symbols=None, exchanges=None, sec_types=None,
+                   currencies=None, universes=None, sids=None,
+                   exclude_universes=None, exclude_sids=None,
+                   exclude_delisted=False, exclude_expired=False,
+                   frontmonth=False, vendors=None, fields=None):
+    """
+    Return a DataFrame of security details from the securities master database.
+
+    Parameters
+    ----------
+    symbols : list of str, optional
+        limit to these symbols
+
+    exchanges : list of str, optional
+        limit to these exchanges. You can specify exchanges using the MIC or the
+        vendor's exchange code.
+
+    sec_types : list of str, optional
+        limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND, OPT, FOP, BAG
+
+    currencies : list of str, optional
+        limit to these currencies
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    exclude_delisted : bool
+        exclude delisted securities (default is to include them)
+
+    exclude_expired : bool
+        exclude expired contracts (default is to include them)
+
+    frontmonth : bool
+        exclude backmonth and expired futures contracts (default False)
+
+    vendors : list of str, optional
+        limit to these vendors. Possible choices: alpaca, edi, ibkr,
+        sharadar, usstock
+
+    fields : list of str, optional
+        Return specific fields. By default a core set of fields is
+        returned, but additional vendor-specific fields are also available.
+        To return non-core fields, you can reference them by name, or pass "*"
+        to return all available fields. To return all fields for a specific
+        vendor, pass the vendor prefix followed by "*", for example "edi*"
+        for all EDI fields. Pass "?*" (or any invalid vendor prefix plus "*")
+        to see available vendor prefixes. Pass "?" or any invalid fieldname
+        to see all available fields.
+
+    Returns
+    -------
+    DataFrame
+        a DataFrame of securities, with Sids as the index
+
+    Examples
+    --------
+    Load default fields for NYSE and NASDAQ securities, using MICs to specify
+    the exchanges:
+
+    >>> securities = get_securities(exchanges=["XNYS","XNAS"])
+
+    Load sids for MSFT and AAPL:
+    >>> sids = get_securities(symbols=["MSFT", "AAPL"]).index.tolist()
+
+    Load NYSE and NASDAQ securities, using IBKR exchange codes to specify the
+    exchanges, and include all IBKR fields:
+
+    >>> securities = get_securities(exchanges=["NYSE","NASDAQ"], fields="ibkr*")
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    f = six.StringIO()
+    download_master_file(
+        f, exchanges=exchanges, sec_types=sec_types,
+        currencies=currencies, universes=universes,
+        symbols=symbols, sids=sids,
+        exclude_universes=exclude_universes,
+        exclude_sids=exclude_sids,
+        exclude_delisted=exclude_delisted,
+        exclude_expired=exclude_expired, frontmonth=frontmonth,
+        vendors=vendors, fields=fields)
+
+    securities = pd.read_csv(f, index_col="Sid")
+
+    for col in securities.columns:
+        col_without_vendor_prefix = col.split("_")[-1]
+        if col_without_vendor_prefix in (
+            "Delisted", "Etf", "EasyToBorrow", "Marginable", "Tradable", "Shortable",
+            "IsPrimaryListing"):
+            securities[col] = securities[col].fillna(0).astype(bool)
+        if (
+            col_without_vendor_prefix.endswith("Date")
+            or col_without_vendor_prefix.startswith("Date")
+            or col_without_vendor_prefix in (
+                "FirstAdded", "LastAdded", "RecordCreated", "RecordModified",
+                "LastUpdated", "FirstQuarter", "LastQuarter")):
+            securities[col] = securities[col].astype("datetime64[ns]")
+
+    return securities
+
 def get_securities_reindexed_like(reindex_like, fields=None):
     """
     Return a multiindex DataFrame of securities master data, reindexed to
@@ -571,19 +683,15 @@ def get_securities_reindexed_like(reindex_like, fields=None):
 
     sids = list(reindex_like.columns)
 
-    f = six.StringIO()
-    download_master_file(f, sids=sids, fields=fields)
-    securities = pd.read_csv(f, index_col="Sid")
+    securities = get_securities(sids=sids, fields=fields)
 
     if "Sid" in fields:
         securities["Sid"] = securities.index
 
     all_master_fields = {}
 
-    for col in securities.columns:
+    for col in sorted(securities.columns):
         this_col = securities[col]
-        if col.endswith("Delisted") or col.endswith("Etf"):
-            this_col = this_col.fillna(0).astype(bool)
         all_master_fields[col] = reindex_like.apply(lambda x: this_col, axis=1)
 
     names = list(reindex_like.index.names)
