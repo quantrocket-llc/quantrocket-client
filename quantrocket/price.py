@@ -27,7 +27,10 @@ from quantrocket.realtime import (
     download_market_data_file,
     get_db_config as get_realtime_db_config,
     list_databases as list_realtime_databases)
-from quantrocket.zipline import list_bundles, download_minute_file
+from quantrocket.zipline import (
+    list_bundles,
+    get_bundle_config,
+    download_bundle_file)
 
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", tempfile.gettempdir())
 
@@ -36,7 +39,7 @@ def get_prices(codes, start_date=None, end_date=None,
                exclude_universes=None, exclude_sids=None,
                times=None, fields=None,
                timezone=None, infer_timezone=None,
-               cont_fut=None):
+               cont_fut=None, data_frequency=None):
     """
     Query one or more history databases, real-time aggregate databases,
     and/or Zipline bundles and load prices into a DataFrame.
@@ -94,6 +97,12 @@ def get_prices(codes, start_date=None, end_date=None,
         stitch futures into continuous contracts using this method (default is not
         to stitch together). Only applicable to history databases. Possible choices:
         concat
+
+    data_frequency : str
+        for Zipline bundles, whether to query minute or daily data. If omitted,
+        defaults to minute data for minute bundles and to daily data for daily bundles.
+        This parameter only needs to be set to request daily data from a minute bundle.
+        Possible choices: daily, minute (or aliases d, m).
 
     Returns
     -------
@@ -230,8 +239,19 @@ def get_prices(codes, start_date=None, end_date=None,
         realtime_db_fields[db] = db_config.get("fields", [])
 
     for db in zipline_bundles:
-        db_bar_sizes.add("1 min")
-        db_bar_sizes_parsed.add(pd.Timedelta("1 min"))
+        # look up bundle data_frequency if not specified
+        if not data_frequency:
+            bundle_config = get_bundle_config(db)
+            data_frequency = bundle_config["data_frequency"]
+
+        if data_frequency in ("daily", "d"):
+            db_bar_sizes.add("1 day")
+            db_bar_sizes_parsed.add(pd.Timedelta("1 day"))
+        elif data_frequency in ("minute", "m"):
+            db_bar_sizes.add("1 min")
+            db_bar_sizes_parsed.add(pd.Timedelta("1 min"))
+        else:
+            raise ParameterError("invalid data_frequency: {}".format(data_frequency))
         zipline_bundle_fields[db] = ["Open", "High", "Low", "Close", "Volume"]
 
     if len(db_bar_sizes_parsed) > 1:
@@ -266,7 +286,7 @@ def get_prices(codes, start_date=None, end_date=None,
 
             try:
                 download_history_file(db, tmp_filepath, **kwargs)
-            except NoHistoricalData as e:
+            except NoHistoricalData:
                 # don't complain about NoHistoricalData if we're checking
                 # multiple databases, unless none of them have data
                 if len(dbs) == 1:
@@ -326,13 +346,14 @@ def get_prices(codes, start_date=None, end_date=None,
                 exclude_universes=exclude_universes,
                 exclude_sids=exclude_sids,
                 times=times,
+                data_frequency=data_frequency,
                 fields=list(fields_for_db))
 
             tmp_filepath = "{dir}{sep}zipline.{db}.{pid}.{time}.csv".format(
                 dir=TMP_DIR, sep=os.path.sep, db=db, pid=os.getpid(), time=time.time())
 
             try:
-                download_minute_file(db, tmp_filepath, **kwargs)
+                download_bundle_file(db, tmp_filepath, **kwargs)
             except NoHistoricalData as e:
                 # don't complain about NoHistoricalData if we're checking
                 # multiple databases, unless none of them have data

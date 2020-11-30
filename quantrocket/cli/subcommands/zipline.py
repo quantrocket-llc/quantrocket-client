@@ -267,7 +267,7 @@ Show current default bundle:
     parser.set_defaults(func="quantrocket.zipline._cli_get_or_set_default_bundle")
 
     examples = """
-Query minute data from a Zipline bundle and download to a CSV file.
+Query minute or daily data from a Zipline bundle and download to a CSV file.
 
 Examples:
 
@@ -278,7 +278,7 @@ Download a CSV of minute prices since 2015 for a single security from a bundle c
     """
     parser = _subparsers.add_parser(
         "get",
-        help="query minute data from a Zipline bundle and download to a CSV file",
+        help="query minute or daily data from a Zipline bundle and download to a CSV file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -294,6 +294,13 @@ Download a CSV of minute prices since 2015 for a single security from a bundle c
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
         help="limit to history on or before this date")
+    filters.add_argument(
+        "-d", "--data-frequency",
+        choices=["daily", "d", "minute", "m"],
+        help="whether to query minute or daily data. If omitted, defaults to "
+        "minute data for minute bundles and to daily data for daily bundles. "
+        "This parameter only needs to be set to request daily data from a minute "
+        "bundle. Possible choices: %(choices)s")
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
@@ -331,7 +338,7 @@ Download a CSV of minute prices since 2015 for a single security from a bundle c
         nargs="*",
         help="only return these fields (pass '?' or any invalid fieldname to see "
         "available fields)")
-    parser.set_defaults(func="quantrocket.zipline._cli_download_minute_file")
+    parser.set_defaults(func="quantrocket.zipline._cli_download_bundle_file")
 
     examples = """
 Backtest a Zipline strategy and write the test results to a CSV file.
@@ -358,7 +365,7 @@ logging backtest progress at annual intervals:
         help="the strategy to run (strategy filename without extension)")
     parser.add_argument(
         "-f", "--data-frequency",
-        choices=["daily", "minute"],
+        choices=["daily", "d", "minute", "m"],
         help="the data frequency to use. Possible choices: %(choices)s "
         "(default is minute)")
     parser.add_argument(
@@ -454,7 +461,7 @@ Trade a strategy defined in momentum-pipeline.py:
         "account in quantrocket.zipline.allocations.yml")
     parser.add_argument(
         "-f", "--data-frequency",
-        choices=["daily", "minute"],
+        choices=["daily", "d", "minute", "m"],
         help="the data frequency to use. Possible choices: %(choices)s "
         "(default is minute)")
     parser.set_defaults(func="quantrocket.zipline._cli_trade")

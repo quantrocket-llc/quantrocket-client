@@ -21,6 +21,7 @@ from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
+from quantrocket.utils.warn import deprecated_replaced_by
 
 def create_usstock_bundle(code, sids=None, universes=None, free=False):
     """
@@ -353,13 +354,14 @@ def _cli_get_or_set_default_bundle(bundle=None, *args, **kwargs):
     else:
         return json_to_cli(get_default_bundle, *args, **kwargs)
 
-def download_minute_file(code, filepath_or_buffer=None,
-                        start_date=None, end_date=None,
-                        universes=None, sids=None,
-                        exclude_universes=None, exclude_sids=None,
-                        times=None, fields=None):
+def download_bundle_file(code, filepath_or_buffer=None,
+                         start_date=None, end_date=None,
+                         data_frequency=None,
+                         universes=None, sids=None,
+                         exclude_universes=None, exclude_sids=None,
+                         times=None, fields=None):
     """
-    Query minute data from a Zipline bundle and download to a CSV file.
+    Query minute or daily data from a Zipline bundle and download to a CSV file.
 
     Parameters
     ----------
@@ -374,6 +376,12 @@ def download_minute_file(code, filepath_or_buffer=None,
 
     end_date : str (YYYY-MM-DD), optional
         limit to history on or before this date
+
+    data_frequency : str, optional
+        whether to query minute or daily data. If omitted, defaults to minute data
+        for minute bundles and to daily data for daily bundles. This parameter
+        only needs to be set to request daily data from a minute bundle. Possible
+        choices: daily, minute (or aliases d, m).
 
     universes : list of str, optional
         limit to these universes
@@ -402,7 +410,7 @@ def download_minute_file(code, filepath_or_buffer=None,
     --------
     Load minute prices into pandas:
 
-    >>> download_minute_file("usstock-1min", sids=["FIBBG12345"])
+    >>> download_bundle_file("usstock-1min", sids=["FIBBG12345"])
     >>> prices = pd.read_csv(f, parse_dates=["Date"], index_col=["Field","Date"])
 
     Isolate fields with .loc:
@@ -418,6 +426,8 @@ def download_minute_file(code, filepath_or_buffer=None,
         params["start_date"] = start_date
     if end_date:
         params["end_date"] = end_date
+    if data_frequency:
+        params["data_frequency"] = data_frequency
     if universes:
         params["universes"] = universes
     if sids:
@@ -446,8 +456,13 @@ def download_minute_file(code, filepath_or_buffer=None,
 
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
-def _cli_download_minute_file(*args, **kwargs):
-    return json_to_cli(download_minute_file, *args, **kwargs)
+def _cli_download_bundle_file(*args, **kwargs):
+    return json_to_cli(download_bundle_file, *args, **kwargs)
+
+@deprecated_replaced_by(download_bundle_file)
+def download_minute_file(*args, **kwargs):
+    kwargs["data_frequency"] = "minute"
+    return download_bundle_file(*args, **kwargs)
 
 def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
              start_date=None, end_date=None, progress=None, filepath_or_buffer=None):
@@ -464,7 +479,8 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
         the strategy to run (strategy filename without extension)
 
     data_frequency : str, optional
-        the data frequency of the simulation. Possible choices: daily, minute (default is minute)
+        the data frequency of the simulation. Possible choices: daily, minute
+        (or aliases d, m). Default is minute.
 
     capital_base : float, optional
         the starting capital for the simulation (default is 1e6 (1 million))
@@ -591,7 +607,7 @@ def trade(strategy, bundle=None, account=None, data_frequency=None):
 
     data_frequency : str, optional
         the data frequency to use. Possible choices: daily, minute
-        (default is minute)
+        (or aliases d, m). Default is minute.
 
     Returns
     -------

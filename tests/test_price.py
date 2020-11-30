@@ -148,12 +148,16 @@ class GetPricesTestCase(unittest.TestCase):
     @patch("quantrocket.price.list_bundles")
     @patch("quantrocket.price.get_realtime_db_config")
     @patch("quantrocket.price.get_history_db_config")
+    @patch("quantrocket.price.get_bundle_config")
     @patch("quantrocket.price.download_market_data_file")
     @patch("quantrocket.price.download_history_file")
+    @patch("quantrocket.price.download_bundle_file")
     def test_pass_args_correctly_multi_db(
                                         self,
+                                        mock_download_bundle_file,
                                         mock_download_history_file,
                                         mock_download_market_data_file,
+                                        mock_get_bundle_config,
                                         mock_get_history_db_config,
                                         mock_get_realtime_db_config,
                                         mock_list_bundles,
@@ -162,7 +166,7 @@ class GetPricesTestCase(unittest.TestCase):
         """
         Tests that args are correctly passed to download_history_file,
         download_master_file, and get_db_config, when there are multiple dbs,
-        including 2 history dbs and 1 realtime db.
+        including 2 history dbs, 1 realtime db, and 1 zipline bundle.
         """
         def _mock_get_history_db_config(db):
             if db == "usa-stk-1d":
@@ -186,6 +190,17 @@ class GetPricesTestCase(unittest.TestCase):
                 "fields": ["LastClose", "LastOpen", "VolumeClose"],
                 "tick_db_code": "demo-stk-taq"
             }
+
+        def _mock_get_bundle_config(db):
+            return {
+                "ingest_type": "usstock",
+                "sids": None,
+                "universes": None,
+                "free": False,
+                "data_frequency": "minute",
+                "calendar": "XNYS",
+                "start_date": "2007-01-03"
+                }
 
         def _mock_download_history_file(code, f, *args, **kwargs):
             if code == "usa-stk-1d":
@@ -264,6 +279,9 @@ class GetPricesTestCase(unittest.TestCase):
                     ]))
             prices.to_csv(f, index=False)
 
+        def _mock_download_bundle_file(code, f, *args, **kwargs):
+            raise NoHistoricalData("No minute data matches the query parameters")
+
         def _mock_list_history_databases():
             return [
                 "usa-stk-1d",
@@ -277,22 +295,27 @@ class GetPricesTestCase(unittest.TestCase):
             }
 
         def _mock_list_bundles():
-            return {}
+            return {
+                "usstock-1min": True
+            }
 
         mock_download_history_file.side_effect = _mock_download_history_file
+        mock_download_bundle_file.side_effect = _mock_download_bundle_file
         mock_download_market_data_file.side_effect = _mock_download_market_data_file
 
         mock_get_history_db_config.side_effect = _mock_get_history_db_config
         mock_get_realtime_db_config.side_effect = _mock_get_realtime_db_config
+        mock_get_bundle_config.side_effect = _mock_get_bundle_config
 
         mock_list_bundles.side_effect = _mock_list_bundles
         mock_list_history_databases.side_effect = _mock_list_history_databases
         mock_list_realtime_databases.side_effect = _mock_list_realtime_databases
 
         get_prices(
-            ["usa-stk-1d", "japan-stk-1d", "demo-stk-taq-1d"],
+            ["usa-stk-1d", "japan-stk-1d", "demo-stk-taq-1d", "usstock-1min"],
             start_date="2018-04-01", end_date="2018-04-03",
-            sids=["FI12345","FI23456","FI56789"], fields=["Close", "LastClose"])
+            sids=["FI12345","FI23456","FI56789"], fields=["Close", "LastClose"],
+            data_frequency="daily")
 
         mock_list_history_databases.assert_called_once_with()
         mock_list_realtime_databases.assert_called_once_with()
@@ -325,6 +348,7 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertEqual(kwargs["start_date"], "2018-04-01")
         self.assertEqual(kwargs["end_date"], "2018-04-03")
         self.assertListEqual(kwargs["fields"], ["Close"])
+        self.assertNotIn("data_frequency", kwargs)
 
         self.assertEqual(len(mock_get_realtime_db_config.mock_calls), 1)
         db_config_call = mock_get_realtime_db_config.mock_calls[0]
@@ -340,6 +364,22 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertEqual(kwargs["end_date"], "2018-04-03")
         # only supported subset of fields is requested
         self.assertListEqual(kwargs["fields"], ["LastClose"])
+        self.assertNotIn("data_frequency", kwargs)
+
+        # since we passed data_frequency, we didn't need to query the bundle config
+        self.assertEqual(len(mock_get_bundle_config.mock_calls), 0)
+
+        self.assertEqual(len(mock_download_bundle_file.mock_calls), 1)
+        zipline_call = mock_download_bundle_file.mock_calls[0]
+        _, args, kwargs = zipline_call
+        self.assertEqual(args[0], "usstock-1min")
+        self.assertListEqual(kwargs["sids"], ["FI12345","FI23456","FI56789"])
+        self.assertEqual(kwargs["start_date"], "2018-04-01")
+        self.assertEqual(kwargs["end_date"], "2018-04-03")
+        # only supported subset of fields is requested
+        self.assertListEqual(kwargs["fields"], ["Close"])
+        # data_frequency arg is passed
+        self.assertEqual(kwargs["data_frequency"], "daily")
 
     def test_query_eod_history_db(self):
         """
@@ -976,7 +1016,7 @@ class GetPricesTestCase(unittest.TestCase):
         Tests querying a single Zipline bundle, with no history
         db or realtime db in the query.
         """
-        def mock_download_minute_file(code, f, *args, **kwargs):
+        def mock_download_bundle_file(code, f, *args, **kwargs):
             prices = pd.concat(
                 dict(
                     Close=pd.DataFrame(
@@ -1041,16 +1081,27 @@ class GetPricesTestCase(unittest.TestCase):
         def mock_list_realtime_databases():
             return {"mexi-stk-tick": ["mexi-stk-tick-15min"]}
 
+        def mock_get_bundle_config(db):
+            return {
+                "ingest_type": "usstock",
+                "sids": None,
+                "universes": None,
+                "free": False,
+                "data_frequency": "minute",
+                "calendar": "XNYS",
+                "start_date": "2007-01-03"
+                }
+
         def mock_list_bundles():
             return {"usstock-1min": True}
 
         with patch('quantrocket.price.list_bundles', new=mock_list_bundles):
             with patch('quantrocket.price.list_realtime_databases', new=mock_list_realtime_databases):
                 with patch('quantrocket.price.list_history_databases', new=mock_list_history_databases):
-                    with patch('quantrocket.price.download_minute_file', new=mock_download_minute_file):
+                    with patch('quantrocket.price.download_bundle_file', new=mock_download_bundle_file):
                         with patch("quantrocket.price.download_master_file", new=mock_download_master_file):
-
-                            prices = get_prices("usstock-1min", fields=["Close","Volume"])
+                            with patch("quantrocket.price.get_bundle_config", new=mock_get_bundle_config):
+                                prices = get_prices("usstock-1min", fields=["Close","Volume"])
 
         self.assertListEqual(list(prices.index.names), ["Field", "Date", "Time"])
         self.assertEqual(prices.columns.name, "Sid")
@@ -1081,12 +1132,123 @@ class GetPricesTestCase(unittest.TestCase):
              {'Date': '2018-04-02T00:00:00', 'Time': '15:30:00', 'FI12345': 400, 'FI23456': 800}]
         )
 
+    @patch("quantrocket.price.download_bundle_file")
+    def test_pass_data_frequency_based_on_bundle_config(self, mock_download_bundle_file):
+        """
+        Tests that when querying a Zipline bundle and not providing a data_frequency
+        arg, the data frequency is determined from the bundle config.
+        """
+        def _mock_download_bundle_file(code, f, *args, **kwargs):
+            prices = pd.concat(
+                dict(
+                    Close=pd.DataFrame(
+                        dict(
+                            FI12345=[
+                                48.90,
+                                49.40,
+                                55.49,
+                                56.78
+                            ],
+                            FI23456=[
+                                59.5,
+                                59.59,
+                                59.34,
+                                51.56,
+                            ]
+                        ),
+                        index=[
+                            "2018-04-01T09:30:00-04:00",
+                            "2018-04-01T15:30:00-04:00",
+                            "2018-04-02T09:30:00-04:00",
+                            "2018-04-02T15:30:00-04:00",
+                            ]),
+                    Volume=pd.DataFrame(
+                        dict(
+                            FI12345=[
+                                100,
+                                200,
+                                300,
+                                400
+                            ],
+                            FI23456=[
+                                500,
+                                600,
+                                700,
+                                800,
+                            ]
+                        ),
+                        index=[
+                            "2018-04-01T09:30:00-04:00",
+                            "2018-04-01T15:30:00-04:00",
+                            "2018-04-02T09:30:00-04:00",
+                            "2018-04-02T15:30:00-04:00",
+                            ])
+                    ), names=["Field","Date"]
+            )
+            prices.to_csv(f)
+
+        def mock_download_master_file(f, *args, **kwargs):
+            securities = pd.DataFrame(dict(Sid=["FI12345","FI23456"],
+                                           Timezone=["America/New_York", "America/New_York"]))
+            securities.to_csv(f, index=False)
+            f.seek(0)
+
+        def mock_list_history_databases():
+            return [
+                "usa-stk-15min",
+                "japan-stk-1d",
+                "demo-stk-1min"
+            ]
+
+        def mock_list_realtime_databases():
+            return {"mexi-stk-tick": ["mexi-stk-tick-15min"]}
+
+        def mock_get_bundle_config(db):
+            return {
+                "ingest_type": "usstock",
+                "sids": None,
+                "universes": None,
+                "free": False,
+                "data_frequency": "minute",
+                "calendar": "XNYS",
+                "start_date": "2007-01-03"
+                }
+
+        def mock_list_bundles():
+            return {"usstock-1min": True}
+
+        mock_download_bundle_file.side_effect = _mock_download_bundle_file
+
+        with patch('quantrocket.price.list_bundles', new=mock_list_bundles):
+            with patch('quantrocket.price.list_realtime_databases', new=mock_list_realtime_databases):
+                with patch('quantrocket.price.list_history_databases', new=mock_list_history_databases):
+                    with patch("quantrocket.price.download_master_file", new=mock_download_master_file):
+                        with patch("quantrocket.price.get_bundle_config", new=mock_get_bundle_config):
+
+                            # query with no data_frequency arg
+                            get_prices("usstock-1min")
+
+                            self.assertEqual(len(mock_download_bundle_file.mock_calls), 1)
+                            zipline_call = mock_download_bundle_file.mock_calls[0]
+                            _, args, kwargs = zipline_call
+                            self.assertEqual(args[0], "usstock-1min")
+                            self.assertEqual(kwargs["data_frequency"], "minute")
+
+                            # query with data_frequency arg
+                            get_prices("usstock-1min", data_frequency='daily')
+
+                            self.assertEqual(len(mock_download_bundle_file.mock_calls), 2)
+                            zipline_call = mock_download_bundle_file.mock_calls[1]
+                            _, args, kwargs = zipline_call
+                            self.assertEqual(args[0], "usstock-1min")
+                            self.assertEqual(kwargs["data_frequency"], "daily")
+
     @patch("quantrocket.price.download_market_data_file")
     @patch("quantrocket.price.download_history_file")
-    @patch("quantrocket.price.download_minute_file")
+    @patch("quantrocket.price.download_bundle_file")
     def test_apply_times_filter_to_history_vs_realtime_database_vs_zipline_bundle(
         self,
-        mock_download_minute_file,
+        mock_download_bundle_file,
         mock_download_history_file,
         mock_download_market_data_file):
 
@@ -1108,6 +1270,18 @@ class GetPricesTestCase(unittest.TestCase):
                 "bar_size": "1 min",
                 "fields": ["LastClose","LastOpen","LastHigh","LastLow", "VolumeClose"]
             }
+
+        def mock_get_bundle_config(db):
+            return {
+                "ingest_type": "usstock",
+                "sids": None,
+                "universes": None,
+                "free": False,
+                "data_frequency": "minute",
+                "calendar": "XNYS",
+                "start_date": "2007-01-03"
+                }
+
         def _mock_download_history_file(code, f, *args, **kwargs):
             prices = pd.DataFrame(
                 dict(
@@ -1191,7 +1365,7 @@ class GetPricesTestCase(unittest.TestCase):
                 ))
             prices.to_csv(f, index=False)
 
-        def _mock_download_minute_file(code, f, *args, **kwargs):
+        def _mock_download_bundle_file(code, f, *args, **kwargs):
             prices = pd.concat(
                 dict(
                     Close=pd.DataFrame(
@@ -1240,7 +1414,7 @@ class GetPricesTestCase(unittest.TestCase):
 
         mock_download_history_file.side_effect = _mock_download_history_file
         mock_download_market_data_file.side_effect = _mock_download_market_data_file
-        mock_download_minute_file.side_effect = _mock_download_minute_file
+        mock_download_bundle_file.side_effect = _mock_download_bundle_file
 
         with patch('quantrocket.price.list_bundles', new=mock_list_bundles):
             with patch('quantrocket.price.list_realtime_databases', new=mock_list_realtime_databases):
@@ -1248,12 +1422,12 @@ class GetPricesTestCase(unittest.TestCase):
                     with patch('quantrocket.price.get_history_db_config', new=mock_get_history_db_config):
                         with patch('quantrocket.price.get_realtime_db_config', new=mock_get_realtime_db_config):
                             with patch("quantrocket.price.download_master_file", new=mock_download_master_file):
-
-                                prices = get_prices(
-                                    ["usa-stk-1min", "usa-stk-snapshot-1min", "usstock-1min"],
-                                    fields=["Close", "LastClose", "Volume", "Wap"],
-                                    times=["09:30:00", "15:30:00"],
-                                )
+                                with patch("quantrocket.price.get_bundle_config", new=mock_get_bundle_config):
+                                    prices = get_prices(
+                                        ["usa-stk-1min", "usa-stk-snapshot-1min", "usstock-1min"],
+                                        fields=["Close", "LastClose", "Volume", "Wap"],
+                                        times=["09:30:00", "15:30:00"],
+                                    )
 
         self.assertEqual(len(mock_download_history_file.mock_calls), 1)
         history_call = mock_download_history_file.mock_calls[0]
@@ -1273,8 +1447,8 @@ class GetPricesTestCase(unittest.TestCase):
         # times filter not passed
         self.assertNotIn("times", list(kwargs.keys()))
 
-        self.assertEqual(len(mock_download_minute_file.mock_calls), 1)
-        minute_call = mock_download_minute_file.mock_calls[0]
+        self.assertEqual(len(mock_download_bundle_file.mock_calls), 1)
+        minute_call = mock_download_bundle_file.mock_calls[0]
         _, args, kwargs = minute_call
         self.assertEqual(args[0], "usstock-1min")
         # only supported subset of fields is requested
@@ -1961,17 +2135,40 @@ class GetPricesTestCase(unittest.TestCase):
         def mock_list_bundles():
             return {"usstock-1min": True}
 
+        def mock_get_bundle_config(db):
+            return {
+                "ingest_type": "usstock",
+                "sids": None,
+                "universes": None,
+                "free": False,
+                "data_frequency": "minute",
+                "calendar": "XNYS",
+                "start_date": "2007-01-03"
+                }
+
         with patch('quantrocket.price.list_realtime_databases', new=mock_list_realtime_databases):
             with patch('quantrocket.price.list_history_databases', new=mock_list_history_databases):
                 with patch('quantrocket.price.get_history_db_config', new=mock_get_history_db_config):
                     with patch('quantrocket.price.list_bundles', new=mock_list_bundles):
-                        with self.assertRaises(ParameterError) as cm:
-                            get_prices(["usa-stk-1d", "japan-stk-15min", "usstock-1min"])
+                        with patch('quantrocket.price.get_bundle_config', new=mock_get_bundle_config):
 
-        self.assertIn((
-            "all databases must contain same bar size but usa-stk-1d, japan-stk-15min, usstock-1min have different "
-            "bar sizes:"
-            ), str(cm.exception))
+                            # two history dbs
+                            with self.assertRaises(ParameterError) as cm:
+                                get_prices(["usa-stk-1d", "japan-stk-15min"])
+
+                                self.assertIn((
+                                    "all databases must contain same bar size but usa-stk-1d, japan-stk-15min have different "
+                                    "bar sizes:"
+                                    ), str(cm.exception))
+
+                            # history db and zipline bundle
+                            with self.assertRaises(ParameterError) as cm:
+                                get_prices(["usa-stk-1d", "usstock-1min"])
+
+                                self.assertIn((
+                                    "all databases must contain same bar size but usa-stk-1d, usstock-1min have different "
+                                    "bar sizes:"
+                                    ), str(cm.exception))
 
     def test_intraday_pass_timezone(self):
         """
