@@ -479,6 +479,10 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
     >>> f = io.StringIO()
     >>> download_master_file(f, fields="*", universes="my-universe")
     >>> securities = pd.read_csv(f)
+
+    See Also
+    --------
+    quantrocket.master.get_securities : load securities into a DataFrame
     """
     params = {}
     if exchanges:
@@ -628,7 +632,7 @@ def get_securities(symbols=None, exchanges=None, sec_types=None,
             "Delisted", "Etf", "EasyToBorrow", "Marginable", "Tradable", "Shortable",
             "IsPrimaryListing"):
             securities[col] = securities[col].fillna(0).astype(bool)
-        if (
+        elif (
             col_without_vendor_prefix.endswith("Date")
             or col_without_vendor_prefix.startswith("Date")
             or col_without_vendor_prefix in (
@@ -813,7 +817,7 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
 
     return contract_nums
 
-def create_universe(code, infilepath_or_buffer=None, from_universes=None,
+def create_universe(code, infilepath_or_buffer=None, sids=None, from_universes=None,
                     exclude_delisted=False, append=False, replace=False):
     """
     Create a universe of securities.
@@ -825,6 +829,9 @@ def create_universe(code, infilepath_or_buffer=None, from_universes=None,
 
     infilepath_or_buffer : str or file-like object, optional
         create the universe from the sids in this file (specify '-' to read file from stdin)
+
+    sids : list of str, optional
+        create the universe from these sids
 
     from_universes : list of str, optional
         create the universe from these existing universes
@@ -850,12 +857,10 @@ def create_universe(code, infilepath_or_buffer=None, from_universes=None,
 
     >>> create_universe("usa-stk", "nyse_securities.csv")
 
-    Create a universe from a DataFrame:
+    Create a universe from a DataFrame of securities:
 
-    >>> import io
-    >>> f = io.StringIO()
-    >>> japan_securities.to_csv(f)
-    >>> create_universe("japan-stk", f)
+    >>> securities = get_securities(exchanges="TSEJ")
+    >>> create_universe("japan-stk", sids=securities.index.tolist())
     """
     if append and replace:
         raise ValueError("append and replace are mutually exclusive")
@@ -867,6 +872,8 @@ def create_universe(code, infilepath_or_buffer=None, from_universes=None,
         params["exclude_delisted"] = exclude_delisted
     if replace:
         params["replace"] = replace
+    if sids:
+        params["sids"] = sids
 
     url = "/master/universes/{0}".format(code)
 

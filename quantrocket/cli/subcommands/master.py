@@ -579,6 +579,11 @@ Copy a universe but exclude delisted securities:
         help="create the universe from the sids in this file (specify '-' to read file "
         "from stdin)")
     parser.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="create the universe from these sids")
+    parser.add_argument(
         "--from-universes",
         nargs="*",
         metavar="UNIVERSE",
