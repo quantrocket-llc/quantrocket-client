@@ -52,6 +52,11 @@ class _ImpatientHttpHandler(logging.handlers.HTTPHandler):
         super(_ImpatientHttpHandler, self).emit(record)
         socket.setdefaulttimeout(orig_timeout)
 
+# cache of bool(background): FlightlogHandler instance. This cache is used
+# to prevent unintentional creation of duplicate handlers (which results in
+# duplicate messages getting logged).
+_flightlog_handlers = {}
+
 def FlightlogHandler(background=None):
     """
     Returns a log handler that logs to flightlog.
@@ -112,14 +117,22 @@ def FlightlogHandler(background=None):
     elif background is None:
         background = True
 
+    if background in _flightlog_handlers:
+        return _flightlog_handlers[background]
+
     if background:
         log_queue = queue.Queue(-1)  # no limit on size
         queue_handler = logging.handlers.QueueHandler(log_queue)
         listener = logging.handlers.QueueListener(log_queue, http_handler)
         listener.start()
-        return queue_handler
+        handler = queue_handler
     else:
-        return http_handler
+        handler = http_handler
+
+    # cache handler by class (based on background arg) in case this function
+    # is called again
+    _flightlog_handlers[background] = handler
+    return handler
 
 def _cli_log_message(msg, logger_name=None, level="INFO"):
     """
