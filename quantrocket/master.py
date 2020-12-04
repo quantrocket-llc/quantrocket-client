@@ -638,7 +638,9 @@ def get_securities(symbols=None, exchanges=None, sec_types=None,
             or col_without_vendor_prefix in (
                 "FirstAdded", "LastAdded", "RecordCreated", "RecordModified",
                 "LastUpdated", "FirstQuarter", "LastQuarter")):
-            securities[col] = securities[col].astype("datetime64[ns]")
+            # pd.to_datetime handles NaNs in earlier pandas versions (0.22)
+            # while .astype("datetime64[ns]") does not
+            securities[col] = pd.to_datetime(securities[col])
 
     return securities
 
