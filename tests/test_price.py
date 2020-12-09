@@ -23,6 +23,7 @@ except ImportError:
 import pandas as pd
 import pytz
 import numpy as np
+import requests
 from quantrocket import get_prices
 from quantrocket.exceptions import ParameterError, MissingData, NoHistoricalData
 
@@ -2169,6 +2170,115 @@ class GetPricesTestCase(unittest.TestCase):
                                     "all databases must contain same bar size but usa-stk-1d, usstock-1min have different "
                                     "bar sizes:"
                                     ), str(cm.exception))
+
+    def test_warn_if_no_history_service(self):
+        """
+        Tests that a warning is triggered if the history service is not
+        available.
+        """
+        def mock_list_history_databases():
+            response = requests.models.Response()
+            response.status_code = 502
+            raise requests.HTTPError(response=response)
+
+        def mock_list_realtime_databases():
+            return {"demo-stk-taq": ["demo-stk-taq-1h"],
+                    "etf-taq": ["etf-taq-1h"],
+                    }
+
+        def mock_list_bundles():
+            return {"usstock-1min": True}
+
+        with patch('quantrocket.price.list_bundles', new=mock_list_bundles):
+            with patch('quantrocket.price.list_realtime_databases', new=mock_list_realtime_databases):
+                with patch('quantrocket.price.list_history_databases', new=mock_list_history_databases):
+
+                        with self.assertWarns(RuntimeWarning) as warning_cm:
+                            with self.assertRaises(ParameterError) as cm:
+                                get_prices(["asx-stk-1d"])
+
+        self.assertIn(
+            "Error while checking if asx-stk-1d is a history database, will assume it's not",
+            str(warning_cm.warning))
+        self.assertIn((
+           "no history or real-time aggregate databases or Zipline bundles called asx-stk-1d"
+            ), str(cm.exception))
+
+    def test_warn_if_no_realtime_service(self):
+        """
+        Tests that a warning is triggered if the realtime service is not
+        available.
+        """
+
+        def mock_list_history_databases():
+            return [
+                "usa-stk-1d",
+                "japan-stk-1d",
+                "usa-stk-15min",
+                "demo-stk-1min",
+                "japan-stk-15min"
+            ]
+
+        def mock_list_realtime_databases():
+            response = requests.models.Response()
+            response.status_code = 502
+            raise requests.HTTPError(response=response)
+
+        def mock_list_bundles():
+            return {"usstock-1min": True}
+
+        with patch('quantrocket.price.list_bundles', new=mock_list_bundles):
+            with patch('quantrocket.price.list_realtime_databases', new=mock_list_realtime_databases):
+                with patch('quantrocket.price.list_history_databases', new=mock_list_history_databases):
+
+                        with self.assertWarns(RuntimeWarning) as warning_cm:
+                            with self.assertRaises(ParameterError) as cm:
+                                get_prices(["asx-stk-1d"])
+
+        self.assertIn(
+            "Error while checking if asx-stk-1d is a realtime database, will assume it's not",
+            str(warning_cm.warning))
+        self.assertIn((
+           "no history or real-time aggregate databases or Zipline bundles called asx-stk-1d"
+            ), str(cm.exception))
+
+    def test_warn_if_no_zipline_service(self):
+        """
+        Tests that a warning is triggered if the zipline service is not
+        available.
+        """
+        def mock_list_history_databases():
+            return [
+                "usa-stk-1d",
+                "japan-stk-1d",
+                "usa-stk-15min",
+                "demo-stk-1min",
+                "japan-stk-15min"
+            ]
+        def mock_list_realtime_databases():
+            return {"demo-stk-taq": ["demo-stk-taq-1h"],
+                    "etf-taq": ["etf-taq-1h"],
+                    }
+
+        def mock_list_bundles():
+            response = requests.models.Response()
+            response.status_code = 502
+            raise requests.HTTPError(response=response)
+
+        with patch('quantrocket.price.list_bundles', new=mock_list_bundles):
+            with patch('quantrocket.price.list_realtime_databases', new=mock_list_realtime_databases):
+                with patch('quantrocket.price.list_history_databases', new=mock_list_history_databases):
+
+                        with self.assertWarns(RuntimeWarning) as warning_cm:
+                            with self.assertRaises(ParameterError) as cm:
+                                get_prices(["asx-stk-1d"])
+
+        self.assertIn(
+            "Error while checking if asx-stk-1d is a Zipline bundle, will assume it's not",
+            str(warning_cm.warning))
+        self.assertIn((
+           "no history or real-time aggregate databases or Zipline bundles called asx-stk-1d"
+            ), str(cm.exception))
 
     def test_intraday_pass_timezone(self):
         """

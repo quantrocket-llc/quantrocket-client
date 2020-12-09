@@ -17,6 +17,7 @@ import os
 import time
 import itertools
 import tempfile
+import requests
 from quantrocket.master import download_master_file
 from quantrocket.exceptions import ParameterError, NoHistoricalData, NoRealtimeData
 from quantrocket.history import (
@@ -185,11 +186,47 @@ def get_prices(codes, start_date=None, end_date=None,
     if not isinstance(fields, (list, tuple)):
         fields = [fields]
 
-    # separate history dbs from Zipline bundles from realtime dbs
-    history_dbs = set(list_history_databases())
-    realtime_dbs = list_realtime_databases()
-    realtime_agg_dbs = set(itertools.chain(*realtime_dbs.values()))
-    zipline_bundles = set(list_bundles())
+    # separate history dbs from Zipline bundles from realtime dbs; in case one or
+    # more of the services is not running, we print a warning and try the other
+    # services
+    try:
+        history_dbs = set(list_history_databases())
+    except requests.HTTPError as e:
+        if e.response.status_code == 502:
+            import warnings
+            warnings.warn(
+                f"Error while checking if {', '.join(dbs)} is a history database, "
+                f"will assume it's not. Error was: {e}", RuntimeWarning)
+            history_dbs = set()
+        else:
+            raise
+
+    try:
+        realtime_dbs = list_realtime_databases()
+    except requests.HTTPError as e:
+        if e.response.status_code == 502:
+            import warnings
+            warnings.warn(
+                f"Error while checking if {', '.join(dbs)} is a realtime database, "
+                f"will assume it's not. Error was: {e}", RuntimeWarning)
+            realtime_dbs = {}
+            realtime_agg_dbs = set()
+        else:
+            raise
+    else:
+        realtime_agg_dbs = set(itertools.chain(*realtime_dbs.values()))
+
+    try:
+        zipline_bundles = set(list_bundles())
+    except requests.HTTPError as e:
+        if e.response.status_code == 502:
+            import warnings
+            warnings.warn(
+                f"Error while checking if {', '.join(dbs)} is a Zipline bundle, "
+                f"will assume it's not. Error was: {e}", RuntimeWarning)
+            zipline_bundles = set()
+        else:
+            raise
 
     history_dbs.intersection_update(set(dbs))
     realtime_agg_dbs.intersection_update(set(dbs))
