@@ -461,6 +461,25 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
     -------
     None
 
+    Notes
+    -----
+    Parameters for filtering query results are combined according to the following
+    rules. First, the master service determines what to include in the result set,
+    based on the inclusion filters: `exchanges`, `sec_types`, `currencies`, `universes`,
+    `symbols`, and `sids`. With the exception of `sids`, these parameters are ANDed
+    together. That is, securities must satisfy all of the parameters to be included.
+    If `vendors` is provided, only those vendors are searched for the purpose of
+    determining matches.
+
+    The `sids` parameter is treated differently. Securities matching `sids` are always
+    included, regardless of whether they meet the other inclusion criteria.
+
+    After determining what to include, the master service then applies the exclusion
+    filters (`exclude_sids`, `exclude_universes`, `exclude_delisted`, `exclude_expired`,
+    and `frontmonth`) to determine what (if anything) should be removed from the result
+    set. Exclusion filters are ORed, that is, securities are excluded if they match any
+    of the exclusion criteria.
+
     Examples
     --------
     Download NYSE and NASDAQ securities to file, using MICs to specify
@@ -592,6 +611,25 @@ def get_securities(symbols=None, exchanges=None, sec_types=None,
     -------
     DataFrame
         a DataFrame of securities, with Sids as the index
+
+    Notes
+    -----
+    Parameters for filtering query results are combined according to the following
+    rules. First, the master service determines what to include in the result set,
+    based on the inclusion filters: `exchanges`, `sec_types`, `currencies`, `universes`,
+    `symbols`, and `sids`. With the exception of `sids`, these parameters are ANDed
+    together. That is, securities must satisfy all of the parameters to be included.
+    If `vendors` is provided, only those vendors are searched for the purpose of
+    determining matches.
+
+    The `sids` parameter is treated differently. Securities matching `sids` are always
+    included, regardless of whether they meet the other inclusion criteria.
+
+    After determining what to include, the master service then applies the exclusion
+    filters (`exclude_sids`, `exclude_universes`, `exclude_delisted`, `exclude_expired`,
+    and `frontmonth`) to determine what (if anything) should be removed from the result
+    set. Exclusion filters are ORed, that is, securities are excluded if they match any
+    of the exclusion criteria.
 
     Examples
     --------
