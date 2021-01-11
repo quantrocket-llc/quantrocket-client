@@ -23,7 +23,7 @@ from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 from quantrocket.utils.warn import deprecated_replaced_by
 
-def create_usstock_bundle(code, sids=None, universes=None, free=False):
+def create_usstock_bundle(code, sids=None, universes=None, free=False, data_frequency=None):
     """
     Create a Zipline bundle for US stocks.
 
@@ -36,13 +36,18 @@ def create_usstock_bundle(code, sids=None, universes=None, free=False):
         the code to assign to the bundle (lowercase alphanumerics and hyphens only)
 
     sids : list of str, optional
-        limit to these sids
+        limit to these sids (only supported for minute data bundles)
 
     universes : list of str, optional
-        limit to these universes
+        limit to these universes (only supported for minute data bundles)
 
     free : bool
         limit to free sample data
+
+    data_frequency : str, optional
+         whether to collect minute data (which also includes daily data) or only
+         daily data. Default is minute data. Possible choices: daily, minute (or
+         aliases d, m)
 
     Returns
     -------
@@ -51,15 +56,19 @@ def create_usstock_bundle(code, sids=None, universes=None, free=False):
 
     Examples
     --------
-    Create a bundle for all US stocks:
+    Create a minute data bundle for all US stocks:
 
     >>> create_usstock_bundle("usstock-1min")
 
-    Create a bundle based on a universe:
+    Create a bundle for daily data only:
+
+    >>> create_usstock_bundle("usstock-1d", data_frequency="daily")
+
+    Create a minute data bundle based on a universe:
 
     >>> create_usstock_bundle("usstock-tech-1min", universes="us-tech")
 
-    Create a bundle of free sample data:
+    Create a minute data bundle of free sample data:
 
     >>> create_usstock_bundle("usstock-free-1min", free=True)
     """
@@ -71,6 +80,8 @@ def create_usstock_bundle(code, sids=None, universes=None, free=False):
         params["universes"] = universes
     if free:
         params["free"] = free
+    if data_frequency:
+        params["data_frequency"] = data_frequency
 
     response = houston.put("/zipline/bundles/{}".format(code), params=params)
 

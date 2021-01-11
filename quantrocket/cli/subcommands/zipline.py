@@ -28,15 +28,19 @@ data. To ingest the data, see `quantrocket zipline ingest`.
 
 Examples:
 
-Create a bundle for all US stocks:
+Create a minute data bundle for all US stocks:
 
     quantrocket zipline create-usstock-bundle usstock-1min
 
-Create a bundle based on a universe:
+Create a bundle for daily data only:
+
+    quantrocket zipline create-usstock-bundle usstock-1d --data-frequency daily
+
+Create a minute data bundle based on a universe:
 
     quantrocket zipline create-usstock-bundle usstock-tech-1min --universes us-tech
 
-Create a bundle of free sample data:
+Create a minute data bundle of free sample data:
 
     quantrocket zipline create-usstock-bundle usstock-free-1min --free
     """
@@ -52,15 +56,20 @@ Create a bundle of free sample data:
     parser.add_argument(
         "-i", "--sids",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids (only supported for minute data bundles)")
     parser.add_argument(
         "-u", "--universes",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes (only supported for minute data bundles)")
     parser.add_argument(
         "--free",
         action="store_true",
         help="limit to free sample data")
+    parser.add_argument(
+        "-d", "--data-frequency",
+        choices=["daily", "d", "minute", "m"],
+        help="whether to collect minute data (which also includes daily data) or "
+        "only daily data. Default is minute data. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.zipline._cli_create_usstock_bundle")
 
     examples = """
