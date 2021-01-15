@@ -459,7 +459,8 @@ def download_bundle_file(code, filepath_or_buffer=None,
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "no history matches the query parameters" in repr(e).lower():
+        # This endpoint returns "no minute|daily data match the query parameters"
+        if "data match the query parameters" in repr(e).lower():
             raise NoHistoricalData(e)
         raise
 
