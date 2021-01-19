@@ -13,11 +13,52 @@
 # limitations under the License.
 
 import argparse
+from quantrocket.cli.utils.parse import dict_str
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("history", description="QuantRocket historical market data CLI", help="Collect and query historical data")
     _subparsers = _parser.add_subparsers(title="subcommands", dest="subcommand")
     _subparsers.required = True
+
+    examples = """
+Create a new database into which custom data can be loaded.
+
+Examples:
+
+Create a custom database for loading fundamental data:
+
+    quantrocket history create-custom-db custom-fundamentals --bar-size '1 day' --columns Revenue:int EPS:float Currency:str TotalAssets:int
+
+Create a custom database for loading intraday OHCLV data:
+
+    quantrocket history create-custom-db custom-stk-1sec --bar-size '1 sec' --columns Open:float High:float Low:float Close:float Volume:int
+"""
+    parser = _subparsers.add_parser(
+        "create-custom-db",
+        help="create a new database into which custom data can be loaded",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
+    parser.add_argument(
+        "-z", "--bar-size",
+        metavar="BAR_SIZE",
+        help="the bar size that will be loaded. This isn't enforced but facilitates efficient "
+        "querying and provides a hint to other parts of the API. Use a Pandas timedelta "
+        "string, for example, '1 day' or '1 min' or '1 sec'.")
+    parser.add_argument(
+        "-c", "--columns",
+        metavar="NAME:TYPE",
+        nargs="*",
+        type=dict_str,
+        help="the columns to create, specified as 'name:type'. For example, 'Close:float' "
+        " or 'Volume:int'. Valid column types are 'int', 'float', 'text', 'date', and "
+        "'datetime'. Column names must start with a letter and include only letters, "
+        "numbers, and underscores. Sid and Date columns are automatically created and "
+        "need not be specified. For boolean columns, choose type 'int' and store 1 or 0. ")
+    parser.set_defaults(func="quantrocket.history._cli_create_custom_db")
 
     examples = """
 Create a new database for collecting historical data from EDI.

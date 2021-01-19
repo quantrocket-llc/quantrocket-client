@@ -20,6 +20,7 @@ from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 from quantrocket.exceptions import NoHistoricalData
 
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", "/tmp")
@@ -243,6 +244,77 @@ def create_usstock_db(code, bar_size=None, universe=None):
 
 def _cli_create_usstock_db(*args, **kwargs):
     return json_to_cli(create_usstock_db, *args, **kwargs)
+
+def create_custom_db(code, bar_size=None, columns=None):
+    """
+    Create a new database into which custom data can be loaded.
+
+    Parameters
+    ----------
+    code : str, required
+        the code to assign to the database (lowercase alphanumerics and hyphens only)
+
+    bar_size : str, required
+        the bar size that will be loaded. This isn't enforced but facilitates efficient
+        querying and provides a hint to other parts of the API. Use a Pandas timedelta
+        string, for example, '1 day' or '1 min' or '1 sec'.
+
+    columns : dict of column name:type, required
+        the columns to create, specified as a Python dictionary mapping column names to
+        column types. For example, {"Close":"float", "Volume":"int"}. Valid column
+        types are "int", "float", "text", "date", and "datetime". Column names must
+        start with a letter and include only letters, numbers, and underscores.
+        Sid and Date columns are automatically created and need not be specified.
+        For boolean columns, choose type 'int' and store 1 or 0.
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Create a custom database for loading fundamental data:
+
+    create_custom_db(
+        "custom-fundamentals",
+        bar_size="1 day",
+        columns={
+            "Revenue":"int",
+            "EPS":"float",
+            "Currency":"str",
+            "TotalAssets":"int"})
+
+    Create a custom database for loading intraday OHCLV data:
+
+    create_custom_db(
+        "custom-stk-1sec",
+        bar_size="1 sec",
+        columns={
+            "Open":"float",
+            "High":"float",
+            "Low":"float",
+            "Close":"float",
+            "Volume":"int"})
+    """
+    params = {}
+    if bar_size:
+        params["bar_size"] = bar_size
+    if columns:
+        params["columns"] = dict_to_dict_strs(columns)
+
+    params["vendor"] = "custom"
+
+    response = houston.put("/history/databases/{0}".format(code), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_create_custom_db(*args, **kwargs):
+    columns = kwargs.get("columns", None)
+    if columns:
+        kwargs["columns"] = dict_strs_to_dict(*columns)
+    return json_to_cli(create_custom_db, *args, **kwargs)
 
 def get_db_config(code):
     """
