@@ -203,7 +203,7 @@ def create_sharadar_db(code, sec_type, country="US"):
 def _cli_create_sharadar_db(*args, **kwargs):
     return json_to_cli(create_sharadar_db, *args, **kwargs)
 
-def create_usstock_db(code, bar_size=None, universe=None):
+def create_usstock_db(code, bar_size=None, free=False, universe=None):
     """
     Create a new database for collecting historical US stock data from QuantRocket.
 
@@ -215,8 +215,14 @@ def create_usstock_db(code, bar_size=None, universe=None):
     bar_size : str, optional
         the bar size to collect. Possible choices: 1 day
 
+    free : bool
+        limit to free sample data. Default is to collect the full dataset.
+
     universe : str, optional
-        the universe to collect. Possible choices: US, FREE
+        [DEPRECATED] whether to collect free sample data or the full dataset. This
+        parameter is deprecated and will be removed in a future release. Please use
+        free=True to request free sample data or free=False (or omit the free parameter)
+        to request the full dataset.
 
     Returns
     -------
@@ -227,14 +233,25 @@ def create_usstock_db(code, bar_size=None, universe=None):
     --------
     Create a database for end-of-day US stock prices:
 
-    create_usstock_db('us-stk-1d', bar_size='1 day')
+    create_usstock_db('usstock-1d')
     """
     params = {
         "vendor": "usstock",
     }
     if bar_size:
         params["bar_size"] = bar_size
+    if free:
+        params["free"] = free
     if universe:
+        import warnings
+        # DeprecationWarning is ignored by default but we want the user
+        # to see it
+        warnings.simplefilter("always", DeprecationWarning)
+        warnings.warn(
+            "the `universe` parameter is deprecated and will be removed in a "
+            "future release, please use `free=True` to request free sample data "
+            "or free=False (or omit the free parameter) to request the full dataset",
+            DeprecationWarning)
         params["universe"] = universe
 
     response = houston.put("/history/databases/{0}".format(code), params=params)

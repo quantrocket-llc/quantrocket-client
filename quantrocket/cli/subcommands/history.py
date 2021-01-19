@@ -237,7 +237,7 @@ Examples:
 
 Create a database for end-of-day US stock prices:
 
-    quantrocket history create-usstock-db us-stk-1d --bar-size '1 day'
+    quantrocket history create-usstock-db usstock-1d
 """
     parser = _subparsers.add_parser(
         "create-usstock-db",
@@ -251,17 +251,21 @@ Create a database for end-of-day US stock prices:
     parser.add_argument(
         "-z", "--bar-size",
         metavar="BAR_SIZE",
-        choices=[
-            "1 day"
-            ],
+        choices=["1 day"],
         help="the bar size to collect. Possible choices: %(choices)s")
+    parser.add_argument(
+        "--free",
+        action="store_true",
+        help="limit to free sample data. Default is to collect the full dataset.")
     parser.add_argument(
         "-u", "--universe",
         choices=[
             "US",
             "FREE"
             ],
-        help="the universe to collect. Possible choices: %(choices)s")
+        help="[DEPRECATED] whether to collect free sample data or the full dataset. "
+        "This parameter is deprecated and will be removed in a future release. Please "
+        "use --free to request free sample data or omit --free to request the full dataset.")
     parser.set_defaults(func="quantrocket.history._cli_create_usstock_db")
 
     examples = """
