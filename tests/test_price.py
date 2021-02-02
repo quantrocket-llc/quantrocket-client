@@ -24,7 +24,7 @@ import pandas as pd
 import pytz
 import numpy as np
 import requests
-from quantrocket import get_prices
+from quantrocket import get_prices, get_prices_reindexed_like
 from quantrocket.exceptions import ParameterError, MissingData, NoHistoricalData
 
 class GetPricesTestCase(unittest.TestCase):
@@ -2907,4 +2907,640 @@ class GetPricesTestCase(unittest.TestCase):
         )
         self.assertEqual(
             closes.xs("14:00:00", level="Time").loc["2018-04-04"], "nan"
+        )
+
+class GetPricesReindexedLikeTestCase(unittest.TestCase):
+    """
+    Test cases for `quantrocket.get_prices_reindexed_like`.
+    """
+
+    def test_complain_if_date_level_not_in_index(self):
+        """
+        Tests error handling when reindex_like doesn't have an index named
+        Date.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-01-01", periods=3, freq="D"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_prices_reindexed_like(closes, "custom-fundamental-1d")
+
+        self.assertIn("reindex_like must have index called 'Date'", str(cm.exception))
+
+    def test_complain_if_not_datetime_index(self):
+        """
+        Tests error handling when the reindex_like index is named Date but is
+        not a DatetimeIndex.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=["FI12345","FI23456"],
+            index=pd.Index(["foo","bar","bat"], name="Date"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_prices_reindexed_like(closes, "custom-fundamental-1d")
+
+        self.assertIn("reindex_like must have a DatetimeIndex", str(cm.exception))
+
+    @patch("quantrocket.price.get_prices")
+    def test_pass_args_correctly(self, mock_get_prices):
+        """
+        Tests that codes, sids, date ranges and and other args are correctly
+        passed to get_prices.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-03-06", periods=6, freq="D", name="Date"))
+
+        def _mock_get_prices(*args, **kwargs):
+            dt_idx = pd.DatetimeIndex(["2018-03-04"])
+            fields = ["EPS","Revenue"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    "FI12345": [
+                        # EPS
+                        9,
+                        # Revenue
+                        10e5,
+                    ],
+                    "FI23456": [
+                        # EPS
+                        19.89,
+                        # Revenue
+                        5e8
+                    ],
+                 },
+                index=idx
+            )
+            return prices
+
+        mock_get_prices.return_value = _mock_get_prices()
+
+        get_prices_reindexed_like(
+            closes, "custom-fundamental-1d",
+            fields=["Revenue", "EPS"],
+            lookback_window=2,
+            timezone="America/New_York",
+            times=["11:00:00", "12:00:00"],
+            cont_fut=False,
+            data_frequency="daily")
+
+        get_prices_call = mock_get_prices.mock_calls[0]
+        _, args, kwargs = get_prices_call
+        self.assertEqual(args[0], "custom-fundamental-1d")
+        self.assertListEqual(kwargs["sids"], ["FI12345","FI23456"])
+        self.assertEqual(kwargs["start_date"], "2018-03-04") # 2018-03-06 - 2 day lookback window
+        self.assertEqual(kwargs["end_date"], "2018-03-11")
+        self.assertEqual(kwargs["fields"], ["Revenue", "EPS"])
+        self.assertEqual(kwargs["timezone"], "America/New_York")
+        self.assertEqual(kwargs["times"], ["11:00:00", "12:00:00"])
+        self.assertFalse(kwargs["cont_fut"])
+        self.assertEqual(kwargs["data_frequency"], "daily")
+
+        # repeat with default lookback
+        get_prices_reindexed_like(
+            closes, "custom-fundamental-1d",
+            fields="Revenue")
+
+        get_prices_call = mock_get_prices.mock_calls[1]
+        _, args, kwargs = get_prices_call
+        self.assertEqual(args[0], "custom-fundamental-1d")
+        self.assertListEqual(kwargs["sids"], ["FI12345","FI23456"])
+        self.assertEqual(kwargs["start_date"], "2018-02-24") # 2018-03-06 - 10 day lookback window
+        self.assertEqual(kwargs["end_date"], "2018-03-11")
+        self.assertEqual(kwargs["fields"], "Revenue")
+
+    def test_tz_aware_index(self):
+        """
+        Tests that reindex_like.index can be tz-naive or tz-aware.
+        """
+
+        def mock_get_prices(*args, **kwargs):
+            dt_idx = pd.DatetimeIndex(["2018-03-31", "2018-06-30"])
+            fields = ["EPS"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    "FI12345": [
+                        9,
+                        9.5,
+                    ],
+                    "FI23456": [
+                        19.89,
+                        17.60
+                    ],
+                 },
+                index=idx
+            )
+            return prices
+
+        with patch('quantrocket.price.get_prices', new=mock_get_prices):
+
+            # request with tz_naive
+            closes = pd.DataFrame(
+                np.random.rand(4,1),
+                columns=["FI12345"],
+                index=pd.date_range(start="2018-06-30", periods=4, freq="D", name="Date"))
+
+            data = get_prices_reindexed_like(
+                closes, "custom-fundamental", fields="EPS")
+
+        self.assertSetEqual(set(data.index.get_level_values("Field")), {"EPS"})
+
+        eps = data.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(closes.index))
+        self.assertListEqual(list(eps.columns), list(closes.columns))
+        eps = eps.reset_index()
+        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            eps.to_dict(orient="records"),
+            [{'Date': '2018-06-30T00:00:00', 'FI12345': 9.0},
+            {'Date': '2018-07-01T00:00:00', 'FI12345': 9.5},
+            {'Date': '2018-07-02T00:00:00', 'FI12345': 9.5},
+            {'Date': '2018-07-03T00:00:00', 'FI12345': 9.5}]
+        )
+
+        with patch('quantrocket.price.get_prices', new=mock_get_prices):
+
+            # request with tz aware
+            closes = pd.DataFrame(
+                np.random.rand(4,1),
+                columns=["FI12345"],
+                index=pd.date_range(start="2018-06-30", periods=4, freq="D",
+                    tz="America/New_York",name="Date"))
+
+            data = get_prices_reindexed_like(
+                closes, "custom-fundamental", fields="EPS")
+
+        self.assertSetEqual(set(data.index.get_level_values("Field")), {"EPS"})
+
+        eps = data.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(closes.index))
+        self.assertListEqual(list(eps.columns), list(closes.columns))
+        eps = eps.reset_index()
+        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            eps.to_dict(orient="records"),
+            [{'Date': '2018-06-30T00:00:00-0400', 'FI12345': 9.0},
+            {'Date': '2018-07-01T00:00:00-0400', 'FI12345': 9.5},
+            {'Date': '2018-07-02T00:00:00-0400', 'FI12345': 9.5},
+            {'Date': '2018-07-03T00:00:00-0400', 'FI12345': 9.5}])
+
+    def test_shift(self):
+        """
+        Tests handling of the shift parameter.
+        """
+
+        def mock_get_prices(*args, **kwargs):
+            dt_idx = pd.DatetimeIndex(["2018-03-31", "2018-06-30"])
+            fields = ["EPS"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    "FI12345": [
+                        9,
+                        9.5,
+                    ],
+                    "FI23456": [
+                        19.89,
+                        17.60
+                    ],
+                 },
+                index=idx
+            )
+            return prices
+
+        # the default shift is 1
+        with patch('quantrocket.price.get_prices', new=mock_get_prices):
+
+            closes = pd.DataFrame(
+                np.random.rand(4,1),
+                columns=["FI12345"],
+                index=pd.date_range(start="2018-06-30", periods=4, freq="D", name="Date"))
+
+            data = get_prices_reindexed_like(
+                closes, "custom-fundamental", fields="EPS",
+                lookback_window=180)
+
+        self.assertSetEqual(set(data.index.get_level_values("Field")), {"EPS"})
+
+        eps = data.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(closes.index))
+        self.assertListEqual(list(eps.columns), list(closes.columns))
+        eps = eps.reset_index()
+        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            eps.to_dict(orient="records"),
+            [{'Date': '2018-06-30T00:00:00', 'FI12345': 9.0},
+            {'Date': '2018-07-01T00:00:00', 'FI12345': 9.5},
+            {'Date': '2018-07-02T00:00:00', 'FI12345': 9.5},
+            {'Date': '2018-07-03T00:00:00', 'FI12345': 9.5}]
+        )
+
+        # try shifting 2
+        with patch('quantrocket.price.get_prices', new=mock_get_prices):
+
+            closes = pd.DataFrame(
+                np.random.rand(3,1),
+                columns=["FI12345"],
+                index=pd.date_range(start="2018-07-01", periods=3, freq="D", name="Date"))
+
+            data = get_prices_reindexed_like(
+                closes, "custom-fundamental", fields="EPS", shift=2,
+                lookback_window=180)
+
+        self.assertSetEqual(set(data.index.get_level_values("Field")), {"EPS"})
+
+        eps = data.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(closes.index))
+        self.assertListEqual(list(eps.columns), list(closes.columns))
+        eps = eps.reset_index()
+        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            eps.to_dict(orient="records"),
+            [{'Date': '2018-07-01T00:00:00', 'FI12345': 9.0},
+            {'Date': '2018-07-02T00:00:00', 'FI12345': 9.5},
+            {'Date': '2018-07-03T00:00:00', 'FI12345': 9.5}]
+        )
+
+        # try shift 0
+        with patch('quantrocket.price.get_prices', new=mock_get_prices):
+
+            closes = pd.DataFrame(
+                np.random.rand(4,1),
+                columns=["FI12345"],
+                index=pd.date_range(start="2018-06-30", periods=4, freq="D", name="Date"))
+
+            data = get_prices_reindexed_like(
+                closes, "custom-fundamental", fields="EPS",
+                shift=0,
+                lookback_window=180)
+
+        self.assertSetEqual(set(data.index.get_level_values("Field")), {"EPS"})
+
+        eps = data.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(closes.index))
+        self.assertListEqual(list(eps.columns), list(closes.columns))
+        eps = eps.reset_index()
+        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            eps.to_dict(orient="records"),
+            [{'Date': '2018-06-30T00:00:00', 'FI12345': 9.5},
+            {'Date': '2018-07-01T00:00:00', 'FI12345': 9.5},
+            {'Date': '2018-07-02T00:00:00', 'FI12345': 9.5},
+            {'Date': '2018-07-03T00:00:00', 'FI12345': 9.5}]
+        )
+
+    def test_no_ffill(self):
+        """
+        Tests handling of the ffill parameter.
+        """
+
+        def mock_get_prices(*args, **kwargs):
+            dt_idx = pd.DatetimeIndex(["2018-03-31", "2018-06-30"])
+            fields = ["EPS"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    "FI12345": [
+                        9,
+                        9.5,
+                    ],
+                    "FI23456": [
+                        19.89,
+                        17.60
+                    ],
+                 },
+                index=idx
+            )
+            return prices
+
+        # the default shift is forward-filled
+        with patch('quantrocket.price.get_prices', new=mock_get_prices):
+
+            closes = pd.DataFrame(
+                np.random.rand(4,1),
+                columns=["FI12345"],
+                index=pd.date_range(start="2018-06-30", periods=4, freq="D", name="Date"))
+
+            data = get_prices_reindexed_like(
+                closes, "custom-fundamental", fields="EPS",
+                lookback_window=180)
+
+        self.assertSetEqual(set(data.index.get_level_values("Field")), {"EPS"})
+
+        eps = data.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(closes.index))
+        self.assertListEqual(list(eps.columns), list(closes.columns))
+        eps = eps.reset_index()
+        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            eps.to_dict(orient="records"),
+            [{'Date': '2018-06-30T00:00:00', 'FI12345': 9.0},
+            {'Date': '2018-07-01T00:00:00', 'FI12345': 9.5},
+            {'Date': '2018-07-02T00:00:00', 'FI12345': 9.5},
+            {'Date': '2018-07-03T00:00:00', 'FI12345': 9.5}]
+        )
+
+        # try not forward-filling
+        with patch('quantrocket.price.get_prices', new=mock_get_prices):
+
+            closes = pd.DataFrame(
+                np.random.rand(4,1),
+                columns=["FI12345"],
+                index=pd.date_range(start="2018-06-30", periods=4, freq="D", name="Date"))
+
+            data = get_prices_reindexed_like(
+                closes, "custom-fundamental", fields="EPS", ffill=False,
+                lookback_window=180)
+
+        self.assertSetEqual(set(data.index.get_level_values("Field")), {"EPS"})
+
+        eps = data.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(closes.index))
+        self.assertListEqual(list(eps.columns), list(closes.columns))
+        eps = eps.reset_index()
+        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+        # replace Nan with "nan" to allow equality comparisons
+        eps = eps.fillna("nan")
+
+        self.assertListEqual(
+            eps.to_dict(orient="records"),
+            [{'Date': '2018-06-30T00:00:00', 'FI12345': 9.0},
+            {'Date': '2018-07-01T00:00:00', 'FI12345': 9.5},
+            {'Date': '2018-07-02T00:00:00', 'FI12345': 'nan'},
+            {'Date': '2018-07-03T00:00:00', 'FI12345': 'nan'}]
+        )
+
+    def test_daily_dataframe_with_daily_database(self):
+        """
+        Tests the scenario of using a daily dataframe to query a daily database.
+        """
+
+        def mock_get_prices(*args, **kwargs):
+            dt_idx = pd.DatetimeIndex(["2018-03-31", "2018-06-30"])
+            fields = ["EPS"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    "FI12345": [
+                        9,
+                        9.5,
+                    ],
+                    "FI23456": [
+                        19.89,
+                        17.60
+                    ],
+                 },
+                index=idx
+            )
+            return prices
+
+        with patch('quantrocket.price.get_prices', new=mock_get_prices):
+
+            closes = pd.DataFrame(
+                np.random.rand(4,3),
+                columns=["FI12345", "FI23456", "FI34567"],
+                index=pd.date_range(start="2018-06-30", periods=4, freq="D", name="Date"))
+
+            data = get_prices_reindexed_like(
+                closes, "custom-fundamental", fields="EPS",
+                lookback_window=180)
+
+        self.assertSetEqual(set(data.index.get_level_values("Field")), {"EPS"})
+
+        eps = data.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(closes.index))
+        self.assertListEqual(list(eps.columns), list(closes.columns))
+        eps = eps.reset_index()
+        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+        # replace Nan with "nan" to allow equality comparisons
+        eps = eps.fillna("nan")
+        self.assertListEqual(
+            eps.to_dict(orient="records"),
+            [
+                {'Date': '2018-06-30T00:00:00', 'FI12345': 9.0, 'FI23456': 19.89, 'FI34567': 'nan'},
+                {'Date': '2018-07-01T00:00:00', 'FI12345': 9.5, 'FI23456': 17.6, 'FI34567': 'nan'},
+                {'Date': '2018-07-02T00:00:00', 'FI12345': 9.5, 'FI23456': 17.6, 'FI34567': 'nan'},
+                {'Date': '2018-07-03T00:00:00', 'FI12345': 9.5, 'FI23456': 17.6, 'FI34567': 'nan'}
+            ]
+        )
+
+    def test_intraday_dataframe_with_daily_database(self):
+        """
+        Tests the scenario of using a intraday dataframe to query a daily database.
+        """
+
+        def mock_get_prices(*args, **kwargs):
+            dt_idx = pd.DatetimeIndex(["2018-03-31", "2018-06-30"])
+            fields = ["EPS"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx], names=["Field", "Date"])
+
+            prices = pd.DataFrame(
+                {
+                    "FI12345": [
+                        9,
+                        9.5,
+                    ],
+                    "FI23456": [
+                        19.89,
+                        17.60
+                    ],
+                 },
+                index=idx
+            )
+            return prices
+
+        with patch('quantrocket.price.get_prices', new=mock_get_prices):
+
+            dt_idx = pd.date_range(start="2018-06-30", periods=2, freq="D", name="Date")
+            times = ["11:00:00", "12:00:00"]
+            idx = pd.MultiIndex.from_product([dt_idx, times], names=["Date", "Time"])
+
+            closes = pd.DataFrame(
+                np.random.rand(4,3),
+                columns=["FI12345", "FI23456", "FI34567"],
+                index=idx)
+
+            data = get_prices_reindexed_like(
+                closes, "custom-fundamental", fields="EPS",
+                lookback_window=180)
+
+        self.assertSetEqual(set(data.index.get_level_values("Field")), {"EPS"})
+
+        eps = data.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(closes.index))
+        self.assertListEqual(list(eps.columns), list(closes.columns))
+        eps = eps.reset_index()
+        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+        # replace Nan with "nan" to allow equality comparisons
+        eps = eps.fillna("nan")
+        self.assertListEqual(
+            eps.to_dict(orient="records"),
+            [
+                {'Date': '2018-06-30T00:00:00', 'Time': '11:00:00', 'FI12345': 9.0, 'FI23456': 19.89, 'FI34567': 'nan'},
+                {'Date': '2018-06-30T00:00:00', 'Time': '12:00:00', 'FI12345': 9.0, 'FI23456': 19.89, 'FI34567': 'nan'},
+                {'Date': '2018-07-01T00:00:00', 'Time': '11:00:00', 'FI12345': 9.5, 'FI23456': 17.6, 'FI34567': 'nan'},
+                {'Date': '2018-07-01T00:00:00', 'Time': '12:00:00', 'FI12345': 9.5, 'FI23456': 17.6, 'FI34567': 'nan'}]
+        )
+
+    def test_intraday_agg(self):
+        """
+        Tests handling of the agg parameter when querying an intraday database.
+        """
+
+        def mock_get_prices(*args, **kwargs):
+            dt_idx = pd.DatetimeIndex(["2018-06-29", "2018-06-30"])
+            times = ["11:00:00", "12:00:00"]
+            fields = ["Close"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx, times], names=["Field", "Date", "Time"])
+
+            prices = pd.DataFrame(
+                {
+                    "FI12345": [
+                        9,
+                        9.5,
+                        10.20,
+                        10.30
+                    ],
+                    "FI23456": [
+                        19.89,
+                        17.60,
+                        20.20,
+                        20.10
+                    ],
+                 },
+                index=idx
+            )
+            return prices
+
+        # the default agg is last
+        with patch('quantrocket.price.get_prices', new=mock_get_prices):
+
+            closes = pd.DataFrame(
+                np.random.rand(3,3),
+                columns=["FI12345", "FI23456", "FI34567"],
+                index=pd.date_range(start="2018-06-30", periods=3, freq="D", name="Date"))
+
+            data = get_prices_reindexed_like(
+                closes, "custom-data", fields="Close")
+
+        self.assertSetEqual(set(data.index.get_level_values("Field")), {"Close"})
+
+        data = data.loc["Close"]
+        self.assertListEqual(list(data.index), list(closes.index))
+        self.assertListEqual(list(data.columns), list(closes.columns))
+        data = data.reset_index()
+        data.loc[:, "Date"] = data.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+        # replace Nan with "nan" to allow equality comparisons
+        data = data.fillna("nan")
+        self.assertListEqual(
+            data.to_dict(orient="records"),
+            [
+                {'Date': '2018-06-30T00:00:00', 'FI12345': 9.5, 'FI23456': 17.6, 'FI34567': 'nan'},
+                {'Date': '2018-07-01T00:00:00', 'FI12345': 10.3, 'FI23456': 20.1, 'FI34567': 'nan'},
+                {'Date': '2018-07-02T00:00:00', 'FI12345': 10.3, 'FI23456': 20.1, 'FI34567': 'nan'}]
+        )
+
+        # repeat with agg "mean"
+        with patch('quantrocket.price.get_prices', new=mock_get_prices):
+
+            closes = pd.DataFrame(
+                np.random.rand(3,3),
+                columns=["FI12345", "FI23456", "FI34567"],
+                index=pd.date_range(start="2018-06-30", periods=3, freq="D", name="Date"))
+
+            data = get_prices_reindexed_like(
+                closes, "custom-data", fields="Close", agg="mean")
+
+        data = data.loc["Close"]
+        data = data.reset_index()
+        data.loc[:, "Date"] = data.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+        # replace Nan with "nan" to allow equality comparisons
+        data = data.fillna("nan")
+        self.assertListEqual(
+            data.to_dict(orient="records"),
+            [
+                {'Date': '2018-06-30T00:00:00', 'FI12345': 9.25, 'FI23456': 18.745, 'FI34567': 'nan'},
+                {'Date': '2018-07-01T00:00:00', 'FI12345': 10.25, 'FI23456': 20.15, 'FI34567': 'nan'},
+                {'Date': '2018-07-02T00:00:00', 'FI12345': 10.25, 'FI23456': 20.15, 'FI34567': 'nan'}]
+        )
+
+    def test_intraday_dataframe_with_intraday_database(self):
+        """
+        Tests the scenario of using a intraday dataframe to query an intraday database.
+        """
+
+        def mock_get_prices(*args, **kwargs):
+            dt_idx = pd.DatetimeIndex(["2018-06-29", "2018-06-30"])
+            times = ["11:00:00", "12:00:00"]
+            fields = ["Close"]
+            idx = pd.MultiIndex.from_product([fields, dt_idx, times], names=["Field", "Date", "Time"])
+
+            prices = pd.DataFrame(
+                {
+                    "FI12345": [
+                        9,
+                        9.5,
+                        10.20,
+                        10.30
+                    ],
+                    "FI23456": [
+                        19.89,
+                        17.60,
+                        20.20,
+                        20.10
+                    ],
+                 },
+                index=idx
+            )
+            return prices
+
+        dt_idx = pd.date_range(start="2018-06-30", periods=2, freq="D", name="Date")
+        times = ["11:00:00", "12:00:00"]
+        idx = pd.MultiIndex.from_product([dt_idx, times], names=["Date", "Time"])
+
+        closes = pd.DataFrame(
+            np.random.rand(4,3),
+            columns=["FI12345", "FI23456", "FI34567"],
+            index=idx)
+
+        with patch('quantrocket.price.get_prices', new=mock_get_prices):
+
+            data = get_prices_reindexed_like(
+                closes, "custom-data", fields="Close")
+
+        self.assertSetEqual(set(data.index.get_level_values("Field")), {"Close"})
+
+        data = data.loc["Close"]
+        self.assertListEqual(list(data.index), list(closes.index))
+        self.assertListEqual(list(data.columns), list(closes.columns))
+        data = data.reset_index()
+        data.loc[:, "Date"] = data.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+        # replace Nan with "nan" to allow equality comparisons
+        data = data.fillna("nan")
+        self.assertListEqual(
+            data.to_dict(orient="records"),
+            [
+                {'Date': '2018-06-30T00:00:00', 'Time': '11:00:00', 'FI12345': 9.5, 'FI23456': 17.6, 'FI34567': 'nan'},
+                {'Date': '2018-06-30T00:00:00', 'Time': '12:00:00', 'FI12345': 9.5, 'FI23456': 17.6, 'FI34567': 'nan'},
+                {'Date': '2018-07-01T00:00:00', 'Time': '11:00:00', 'FI12345': 10.3, 'FI23456': 20.1, 'FI34567': 'nan'},
+                {'Date': '2018-07-01T00:00:00', 'Time': '12:00:00', 'FI12345': 10.3, 'FI23456': 20.1, 'FI34567': 'nan'}]
         )

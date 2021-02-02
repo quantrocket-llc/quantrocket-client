@@ -53,7 +53,7 @@ def get_prices(codes, start_date=None, end_date=None,
     ----------
     codes : str or list of str, required
         the code(s) of one or more databases to query. If multiple databases
-        are specified, they must have the same bar size. List databses in order of
+        are specified, they must have the same bar size. List databases in order of
         priority (highest priority first). If multiple databases provide the same
         field for the same sid on the same datetime, the first database's value will
         be used.
@@ -108,7 +108,7 @@ def get_prices(codes, start_date=None, end_date=None,
     Returns
     -------
     DataFrame
-        a MultiIndex
+        a MultiIndex (Field, Date) or (Field, Date, Time) DataFrame of prices
 
     Notes
     -----
@@ -510,5 +510,215 @@ def get_prices(codes, start_date=None, end_date=None,
         if not isinstance(times, (list, tuple)):
             times = [times]
         prices = prices.loc[prices.index.get_level_values("Time").isin(times)]
+
+    return prices
+
+def get_prices_reindexed_like(reindex_like, codes, fields=None,
+                              shift=1, ffill=True, lookback_window=10,
+                              agg="last",
+                              timezone=None, infer_timezone=None,
+                              times=None, cont_fut=None,
+                              data_frequency=None):
+    """
+    Returns a multiindex (Field, Date) DataFrame of prices for one or more history
+    databases, real-time aggregate databases, or Zipline bundles, reindexed to match
+    the index (dates) and columns (sids) of `reindex_like`.
+
+    Prices are loaded with `quantrocket.get_prices` and shifted forward one period
+    (configurable with the `shift` parameter) to avoid lookahead bias. In the case
+    of sparse data, values are then forward-filled by default (configurable with the
+    `ffill` parameter).
+
+    The queried databases need not contain price data. This function can be used to query
+    custom history databases containing any kind of data.
+
+    Pay attention to the `lookback_window` parameter, which controls how much back data
+    in advance of the input DataFrame's start date to load. For example, if the input
+    DataFrame contains daily data and you are querying quarterly fundamental data,
+    the `lookback_window` must extend far enough back in time to access the most recent
+    quarterly value prior to the input DataFrame's start date. Setting `lookback_window`
+    too low will result in leading NaNs in the resulting DataFrame. Setting it too high
+    is okay but will load a larger amount of data into memory.
+
+    If you query an intraday database, it will be treated as a daily database. Specifically,
+    the intraday values will be aggregated (using the method specified by the `agg`
+    parameter) to produce a single value per day.
+
+    If the input DataFrame has levels in the index other than Date (for example, Time, in
+    the case of an intraday input DataFrame), the queried values will be broadcast across
+    the additional levels of the index.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame with dates for the index (or, if DataFrame has a MultiIndex, with
+        dates for one level of the index) and sids for the columns, to which the shape
+        of the resulting DataFrame will be conformed.
+
+    codes : str or list of str, required
+        the code(s) of one or more databases to query. If multiple databases
+        are specified, they must have the same bar size. List databases in order of
+        priority (highest priority first). If multiple databases provide the same
+        field for the same sid on the same datetime, the first database's value will
+        be used.
+
+    fields : list of str, optional
+        only return these fields. (If querying multiple databases that have different fields,
+        provide the complete list of desired fields; only the supported fields for each
+        database will be queried.)
+
+    shift : int, optional
+        number of periods (in the date index) to shift the resulting data forward to
+        avoid lookahead bias. Default is 1. Shifting one period implies that data
+        timestamped to a particular date is available and actionable on the following
+        date.
+
+    ffill : bool
+        forward-fill values in the resulting DataFrame so that each date reflects
+        the latest available value as of that date. If False, values appear only
+        on the first date they were available, followed by NaNs. Default True.
+
+    lookback_window : int, optional
+        how many calendar days of back data prior to the reindex_like start date
+        should be loaded, to ensure an adequate cushion of data is available before
+        shifting. Default is 10. Sparse data such as fundamentals will require a
+        higher value.
+
+    times: list of str (HH:MM:SS), optional
+        limit to these times, specified in the timezone of the relevant exchange. Only
+        applicable to querying intraday databases. See additional information in the
+        Notes section of `quantrocket.get_prices` regarding the timezone to use.
+
+    timezone : str, optional
+        convert timestamps to this timezone, for example America/New_York (see
+        `pytz.all_timezones` for choices); ignored for non-intraday databases
+
+    infer_timezone : bool
+        infer the timezone from the securities master Timezone field; defaults to
+        True if querying intraday databases and no `timezone` specified; ignored for
+        non-intraday databases, or if `timezone` is passed
+
+    agg : str or function, optional
+        when querying intraday databases, how to aggregate each day's intraday values to
+        produce a single value per day. Default is "last", meaning use the last non-null
+        value of each day. This parameter is passed directly to the pandas `agg` function.
+        Example choices include "last", "first", "min", "max", "mean", "sum", etc. See
+        https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.core.groupby.DataFrameGroupBy.aggregate.html
+        for more info. Note that aggregation occurs after the `times` filters are applied.
+
+    cont_fut : str
+        stitch futures into continuous contracts using this method (default is not
+        to stitch together). Only applicable to history databases. Possible choices:
+        concat
+
+    data_frequency : str
+        for Zipline bundles, whether to query minute or daily data. If omitted,
+        defaults to minute data for minute bundles and to daily data for daily bundles.
+        This parameter only needs to be set to request daily data from a minute bundle.
+        Possible choices: daily, minute (or aliases d, m).
+
+    Returns
+    -------
+    DataFrame
+        a MultiIndex DataFrame of prices shaped like reindex_like
+
+    Examples
+    --------
+    Use a DataFrame of closing prices to query a DataFrame of fundamentals in a
+    database called "custom-fundamentals". Since the fundamental data is sparse,
+    we specify a lookback window of 180 days to ensure that a previous value can
+    be forward-filled into the resulting DataFrame:
+
+    >>> closes = prices.loc["Close"]
+    >>> fundamentals = get_prices_reindexed_like(
+        closes, "custom-fundamentals", fields="Revenue",
+        lookback_window=180)
+    >>> revenues = fundamentals.loc["Revenue"]
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+
+    if "Date" not in index_levels:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join([str(name) for name in index_levels])))
+
+    reindex_like_dates = reindex_like.index.get_level_values("Date")
+
+    is_multiindex = len(reindex_like.index.names) > 1
+
+    if not hasattr(reindex_like_dates, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    sids = list(reindex_like.columns)
+    start_date = reindex_like_dates.min().date()
+    start_date -= pd.Timedelta(days=lookback_window)
+    start_date = start_date.isoformat()
+    end_date = reindex_like_dates.max().date().isoformat()
+
+    prices = get_prices(
+        codes,
+        sids=sids,
+        fields=fields,
+        start_date=start_date,
+        end_date=end_date,
+        timezone=timezone,
+        times=times,
+        cont_fut=cont_fut,
+        data_frequency=data_frequency)
+
+    all_fields = {}
+
+    # default values are set in the signature for docstring purposes, but we
+    # also set them here in case Nones were passed
+    if shift is None:
+        shift = 1
+    if lookback_window is None:
+        lookback_window = 10
+    if agg is None:
+        agg = "last"
+
+    fields = prices.index.get_level_values("Field").unique()
+
+    for field in fields:
+
+        prices_for_field = prices.loc[field]
+
+        # For intraday databases, drop Time and aggregate per date
+        if "Time" in prices_for_field.index.names:
+            prices_for_field.index = prices_for_field.index.get_level_values("Date")
+            prices_for_field = prices_for_field.groupby(prices_for_field.index).agg(agg)
+
+        # get_prices returns tz-naive dates, localize to match reindex_like
+        prices_for_field = prices_for_field.tz_localize(reindex_like_dates.tz)
+
+        # union indexes and reindex in case there are any price dates not in
+        # reindex_like or vice versa
+        unioned_idx = reindex_like_dates.union(prices_for_field.index).drop_duplicates()
+        prices_for_field = prices_for_field.reindex(index=unioned_idx)
+
+        if ffill:
+            prices_for_field = prices_for_field.fillna(method="ffill")
+
+        # shift forward to avoid lookahead bias
+        prices_for_field = prices_for_field.shift(shift)
+
+        # Reindex to requested shape
+        if is_multiindex:
+            prices_for_field = prices_for_field.reindex(
+                index=reindex_like.index, level="Date").reindex(
+                    columns=reindex_like.columns)
+        else:
+            prices_for_field = prices_for_field.reindex(
+                index=reindex_like.index, columns=reindex_like.columns)
+
+        all_fields[field] = prices_for_field
+
+    names = ["Field"] + reindex_like.index.names
+    prices = pd.concat(all_fields, names=names)
 
     return prices

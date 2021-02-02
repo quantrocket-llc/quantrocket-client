@@ -16,4 +16,4 @@ from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
-from quantrocket.price import get_prices
+from quantrocket.price import get_prices, get_prices_reindexed_like
