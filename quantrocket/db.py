@@ -239,3 +239,169 @@ def optimize_databases(services=None, codes=None):
 
 def _cli_optimize_databases(*args, **kwargs):
     return json_to_cli(optimize_databases, *args, **kwargs)
+
+def connect_sqlite(db_path):
+    """
+    Returns a connection to a SQLite database.
+
+    Parameters
+    ----------
+    db_path : str, required
+        full path to a SQLite database
+
+    Returns
+    -------
+    sqlalchemy.engine.Engine
+        database connection
+    """
+    try:
+        from sqlalchemy import create_engine
+    except ImportError:
+        raise ValueError(
+            "this function requires sqlalchemy and must be run in a QuantRocket container")
+
+    conn = create_engine("sqlite:///{0}".format(db_path),
+                         connect_args={"isolation_level": None})
+    # Set some speed optimizations
+    # Hand off writes to the OS and don't wait
+    conn.execute("PRAGMA synchronous = 0")
+    # Each page is ~1K; allow ~50MB
+    conn.execute("PRAGMA cache_size = 50000")
+    # Store temp tables in memory
+    conn.execute("PRAGMA temp_store = 2")
+    # Wait up to 10 seconds rather than instantly failing on SQLITE_BUSY
+    conn.execute("PRAGMA busy_timeout = 10000")
+
+    return conn
+
+def _insert_into(df, table_name, conn, on_conflict):
+
+    import time
+    import subprocess
+    import os
+
+    temp_table_name = "temp_{0}".format(str(time.time()).replace(".", ""))
+
+    # Get the db path from the engine object
+    db_path = conn.url.database
+
+    temp_file_name = "/tmp/sqlite_{}.csv".format(temp_table_name)
+
+    # Cast booleans to ints or they will load into SQLite as strings
+    df_bools = df.select_dtypes(['bool'])
+    if not df_bools.empty:
+        df.loc[:, df_bools.columns] = df_bools.astype(int)
+
+    df.to_csv(temp_file_name, index=False)
+
+    # Close connection to avoid Database Is Locked
+    conn.dispose()
+
+    from_cols = [f"NULLIF({col}, '')" for col in df.columns]
+
+    queries = """
+PRAGMA busy_timeout = 10000;
+.bail on
+.mode csv
+.import {tempfile} {temptable}
+INSERT OR {on_conflict} INTO {table} ({into_cols}) SELECT {from_cols} FROM {temptable};
+DROP TABLE {temptable};
+    """.format(
+        table=table_name,
+        on_conflict=on_conflict,
+        into_cols=",".join(df.columns),
+        from_cols=",".join(from_cols),
+        tempfile=temp_file_name,
+        temptable=temp_table_name)
+
+    try:
+        subprocess.check_output(
+            ["sqlite3", db_path],
+            input=bytes(queries.encode("utf-8")),
+            stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        print(e.output)
+        raise
+
+    os.remove(temp_file_name)
+
+def insert_or_fail(df, table_name, conn):
+    """
+    Insert a DataFrame into a SQLite database.
+
+    In the case of a duplicate record insertion, the function
+    will fail.
+
+    Parameters
+    ----------
+    df : DataFrame, required
+        the DataFrame to insert. All DataFrame columns must
+        exist in the destination table. The DataFrame index
+        will not be inserted.
+
+    table_name : str, required
+        the name of the table to insert the DataFrame into.
+        The table must already exist in the database.
+
+    conn : sqlalchemy.engine.Engine, required
+        a connection object for the SQLite database
+
+    Returns
+    -------
+    None
+    """
+    _insert_into(df, table_name, conn, "FAIL")
+
+def insert_or_replace(df, table_name, conn):
+    """
+    Insert a DataFrame into a SQLite database.
+
+    In the case of a duplicate record insertion, the incoming
+    record will replace the existing record.
+
+    Parameters
+    ----------
+    df : DataFrame, required
+        the DataFrame to insert. All DataFrame columns must
+        exist in the destination table. The DataFrame index
+        will not be inserted.
+
+    table_name : str, required
+        the name of the table to insert the DataFrame into.
+        The table must already exist in the database.
+
+    conn : sqlalchemy.engine.Engine, required
+        a connection object for the SQLite database
+
+    Returns
+    -------
+    None
+    """
+    _insert_into(df, table_name, conn, "REPLACE")
+
+def insert_or_ignore(df, table_name, conn):
+    """
+    Insert a DataFrame into a SQLite database.
+
+    In the case of a duplicate record insertion, the incoming
+    record will be ignored.
+
+    Parameters
+    ----------
+    df : DataFrame, required
+        the DataFrame to insert. All DataFrame columns must
+        exist in the destination table. The DataFrame index
+        will not be inserted.
+
+    table_name : str, required
+        the name of the table to insert the DataFrame into.
+        The table must already exist in the database.
+
+    conn : sqlalchemy.engine.Engine, required
+        a connection object for the SQLite database
+
+    Returns
+    -------
+    None
+    """
+    _insert_into(df, table_name, conn, "IGNORE")
