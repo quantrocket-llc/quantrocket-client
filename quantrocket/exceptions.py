@@ -44,3 +44,6 @@ class NoRealtimeData(NoData):
 
 class NoFundamentalData(NoData):
     pass
+
+class DataInsertionError(Exception):
+    pass

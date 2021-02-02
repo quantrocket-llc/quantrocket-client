@@ -14,6 +14,7 @@
 
 import getpass
 from quantrocket.houston import houston
+from quantrocket.exceptions import DataInsertionError
 from quantrocket.cli.utils.output import json_to_cli
 
 def list_databases(services=None, codes=None, detail=False, expand=False):
@@ -320,8 +321,7 @@ DROP TABLE {temptable};
             input=bytes(queries.encode("utf-8")),
             stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
-        print(e.output)
-        raise
+        raise DataInsertionError(e.output)
 
     os.remove(temp_file_name)
 
@@ -349,6 +349,12 @@ def insert_or_fail(df, table_name, conn):
     Returns
     -------
     None
+
+    Raises
+    ------
+    quantrocket.exceptions.DataInsertionError
+        catch-all exception class for errors that occur when writing to the
+        SQLite database
     """
     _insert_into(df, table_name, conn, "FAIL")
 
@@ -376,6 +382,12 @@ def insert_or_replace(df, table_name, conn):
     Returns
     -------
     None
+
+    Raises
+    ------
+    quantrocket.exceptions.DataInsertionError
+        catch-all exception class for errors that occur when writing to the
+        SQLite database
     """
     _insert_into(df, table_name, conn, "REPLACE")
 
@@ -403,5 +415,11 @@ def insert_or_ignore(df, table_name, conn):
     Returns
     -------
     None
+
+    Raises
+    ------
+    quantrocket.exceptions.DataInsertionError
+        catch-all exception class for errors that occur when writing to the
+        SQLite database
     """
     _insert_into(df, table_name, conn, "IGNORE")
