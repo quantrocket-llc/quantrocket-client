@@ -293,26 +293,26 @@ def create_custom_db(code, bar_size=None, columns=None):
     --------
     Create a custom database for loading fundamental data:
 
-    create_custom_db(
-        "custom-fundamentals",
-        bar_size="1 day",
-        columns={
-            "Revenue":"int",
-            "EPS":"float",
-            "Currency":"str",
-            "TotalAssets":"int"})
+    >>> create_custom_db(
+            "custom-fundamentals",
+            bar_size="1 day",
+            columns={
+                "Revenue":"int",
+                "EPS":"float",
+                "Currency":"str",
+                "TotalAssets":"int"})
 
     Create a custom database for loading intraday OHCLV data:
 
-    create_custom_db(
-        "custom-stk-1sec",
-        bar_size="1 sec",
-        columns={
-            "Open":"float",
-            "High":"float",
-            "Low":"float",
-            "Close":"float",
-            "Volume":"int"})
+    >>> create_custom_db(
+            "custom-stk-1sec",
+            bar_size="1 sec",
+            columns={
+                "Open":"float",
+                "High":"float",
+                "Low":"float",
+                "Close":"float",
+                "Volume":"int"})
     """
     params = {}
     if bar_size:
