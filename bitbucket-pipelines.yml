@@ -6,5 +6,5 @@ pipelines:
             - step:
                 script:
                     - pip install -U tox wheel
-                    - tox -e py36-pandas23
+                    - tox -e py36-pandas22
                     - ./deploy.bash
