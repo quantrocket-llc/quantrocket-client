@@ -520,7 +520,7 @@ def get_prices_reindexed_like(reindex_like, codes, fields=None,
                               times=None, cont_fut=None,
                               data_frequency=None):
     """
-    Returns a multiindex (Field, Date) DataFrame of prices for one or more history
+    Return a multiindex (Field, Date) DataFrame of prices for one or more history
     databases, real-time aggregate databases, or Zipline bundles, reindexed to match
     the index (dates) and columns (sids) of `reindex_like`.
 
