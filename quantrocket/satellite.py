@@ -45,7 +45,9 @@ def execute_command(cmd, return_file=None, filepath_or_buffer=None,
     Returns
     -------
     dict or None
-        None if return_file, otherwise status message
+        None if return_file, otherwise status message. If cmd uses Python dot
+        notation and the Python function returns a value, it will be included in
+        the status message as the "output" key. Return values must be JSON-serializable.
 
     Examples
     --------
@@ -54,6 +56,13 @@ def execute_command(cmd, return_file=None, filepath_or_buffer=None,
 
     >>> execute_command("codeload.scripts.combos.create_calendar_spread",
                         params={"universe":"cl-fut", "contract_months":[1,2]})
+
+    Run a Python function called 'calculate_signal' defined in '/codeload/scripts/custom.py'
+    and retrieve the return value:
+
+    >>> response = execute_command("codeload.scripts.custom.calculate_signal")
+    >>> if response["status"] == "success":
+            print(response["output"])
 
     Run a backtrader backtest and save the performance chart to file:
 
