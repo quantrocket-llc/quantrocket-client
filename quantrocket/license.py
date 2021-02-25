@@ -79,7 +79,7 @@ def get_alpaca_key():
         return {}
     return response.json()
 
-def set_alpaca_key(api_key, trading_mode, secret_key=None):
+def set_alpaca_key(api_key, trading_mode, secret_key=None, realtime_data="iex"):
     """
     Set Alpaca API key.
 
@@ -97,6 +97,10 @@ def set_alpaca_key(api_key, trading_mode, secret_key=None):
     secret_key : str, optional
         Alpaca secret key (if omitted, will be prompted for secret key)
 
+    realtime_data : str, optional
+        the real-time data feed to which this API key is subscribed. Possible
+        choices: 'iex', 'sip'. Default is 'iex'.
+
     Returns
     -------
     dict
@@ -109,6 +113,7 @@ def set_alpaca_key(api_key, trading_mode, secret_key=None):
     data["api_key"] = api_key
     data["secret_key"] = secret_key
     data["trading_mode"] = trading_mode
+    data["realtime_data"] = realtime_data
 
     response = houston.put("/license-service/credentials/alpaca", data=data)
     houston.raise_for_status_with_json(response)

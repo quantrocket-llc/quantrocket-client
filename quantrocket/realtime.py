@@ -138,6 +138,58 @@ def create_polygon_tick_db(code, universes=None, sids=None, fields=None):
 def _cli_create_polygon_tick_db(*args, **kwargs):
     return json_to_cli(create_polygon_tick_db, *args, **kwargs)
 
+def create_alpaca_tick_db(code, universes=None, sids=None, fields=None):
+    """
+    Create a new database for collecting real-time tick data from Alpaca.
+
+    The market data requirements you specify when you create a new database are
+    applied each time you collect data for that database.
+
+    Parameters
+    ----------
+    code : str, required
+        the code to assign to the database (lowercase alphanumerics and hyphens only)
+
+    universes : list of str
+        include these universes
+
+    sids : list of str
+        include these sids
+
+    fields : list of str
+        collect these fields (pass '?' or any invalid fieldname to see
+        available fields, default fields are 'LastPrice' and 'LastSize')
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Create a database for collecting real-time trade prices and sizes for US stocks:
+
+    >>> create_alpaca_tick_db("usa-stk-trades", universes="usa-stk", fields=["LastPrice", "LastSize"])
+
+    """
+    params = {}
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if fields:
+        params["fields"] = fields
+
+    params["vendor"] = "alpaca"
+
+    response = houston.put("/realtime/databases/{0}".format(code), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_create_alpaca_tick_db(*args, **kwargs):
+    return json_to_cli(create_alpaca_tick_db, *args, **kwargs)
+
 def create_agg_db(code, tick_db_code, bar_size, fields=None):
     """
     Create an aggregate database from a tick database.

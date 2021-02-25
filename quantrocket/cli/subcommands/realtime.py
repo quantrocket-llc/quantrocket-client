@@ -106,6 +106,45 @@ Create a database for collecting real-time trade prices and sizes for US stocks:
     parser.set_defaults(func="quantrocket.realtime._cli_create_polygon_tick_db")
 
     examples = """
+Create a new database for collecting real-time tick data from Alpaca.
+
+The market data requirements you specify when you create a new database are
+applied each time you collect data for that database.
+
+Examples:
+
+Create a database for collecting real-time trade prices and sizes for US stocks:
+
+    quantrocket realtime create-alpaca-tick-db usa-stk-trades -u usa-stk --fields LastPrice LastSize
+    """
+    parser = _subparsers.add_parser(
+        "create-alpaca-tick-db",
+        help="create a new database for collecting real-time tick data from Alpaca",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
+    parser.add_argument(
+        "-u", "--universes",
+        metavar="UNIVERSE",
+        nargs="*",
+        help="include these universes")
+    parser.add_argument(
+        "-i", "--sids",
+        metavar="SID",
+        nargs="*",
+        help="include these sids")
+    parser.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="collect these fields (pass '?' or any invalid fieldname to see "
+        "available fields, default fields are 'LastPrice' and 'LastSize')")
+    parser.set_defaults(func="quantrocket.realtime._cli_create_alpaca_tick_db")
+
+    examples = """
 Create an aggregate database from a tick database.
 
 Aggregate databases provide rolled-up views of the underlying tick data,

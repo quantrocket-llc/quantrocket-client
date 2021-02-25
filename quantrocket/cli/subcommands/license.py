@@ -70,9 +70,10 @@ View current live and paper API keys:
 
     quantrocket license alpaca-key
 
-Set Alpaca live API key (will prompt for secret key):
+Set Alpaca live API key (will prompt for secret key) and specify SIP as the
+real-time data permission for this account:
 
-    quantrocket license alpaca-key --api-key AK123 --live
+    quantrocket license alpaca-key --api-key AK123 --live --realtime-data sip
 
 Set Alpaca paper API key (will prompt for secret key):
 
@@ -104,6 +105,12 @@ Set Alpaca paper API key (will prompt for secret key):
         dest="trading_mode",
         const="live",
         help="set trading mode to live trading")
+    parser.add_argument(
+        "-r", "--realtime-data",
+        choices=["iex", "sip"],
+        metavar="DATA_FEED",
+        help="the real-time data feed to which this API key is subscribed. Possible "
+        "choices: %(choices)s. Default is 'iex'.")
     parser.set_defaults(func="quantrocket.license._cli_get_or_set_alpaca_key")
 
     examples = """
