@@ -40,10 +40,10 @@ Clone a Bitbucket repo:
 
     quantrocket codeload clone https://bitbucket.org/myuser/myrepo.git
 
-Clone a private GitHub repo by including authentication credentials in the URL
-(also works for Bitbucket):
+Clone a private Bitbucket repo by including authentication credentials in the URL (not
+supported for GitHub):
 
-    quantrocket codeload clone https://myuser:mypassword@github.com/myuser/myrepo.git
+    quantrocket codeload clone https://myuser:mypassword@bitbucket.org/myuser/myrepo.git
     """
     parser = _subparsers.add_parser(
         "clone",
@@ -69,4 +69,8 @@ Clone a private GitHub repo by including authentication credentials in the URL
         action="store_true",
         help="if a file already exists locally, skip it (mutually exclusive with "
         "--replace)")
+    parser.add_argument(
+        "-d", "--target-dir",
+        help="the directory into which files should be cloned. Default is '/codeload'"
+    )
     parser.set_defaults(func="quantrocket.codeload._cli_clone")

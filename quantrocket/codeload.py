@@ -15,7 +15,7 @@
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 
-def clone(repo, branch=None, replace=None, skip_existing=None):
+def clone(repo, branch=None, replace=None, skip_existing=None, target_dir=None):
     """
     Clone files from a Git repository.
 
@@ -41,6 +41,9 @@ def clone(repo, branch=None, replace=None, skip_existing=None):
         if a file already exists locally, skip it (mutually exclusive with
         replace)
 
+    target_dir : str, optional
+        the directory into which files should be cloned. Default is '/codeload'
+
     Returns
     -------
     dict
@@ -60,10 +63,10 @@ def clone(repo, branch=None, replace=None, skip_existing=None):
 
     >>> clone("https://bitbucket.org/myuser/myrepo.git")
 
-    Clone a private GitHub repo by including authentication credentials
-    in the URL (also works for Bitbucket):
+    Clone a private Bitbucket repo by including authentication credentials
+    in the URL (not supported for GitHub):
 
-    >>> clone("https://myuser:mypassword@github.com/myuser/myrepo.git")
+    >>> clone("https://myuser:mypassword@bitbucket.org/myuser/myrepo.git")
     """
     data = {
         "repo": repo
@@ -74,6 +77,8 @@ def clone(repo, branch=None, replace=None, skip_existing=None):
         data["replace"] = replace
     if skip_existing:
         data["skip_existing"] = skip_existing
+    if target_dir:
+        data["target_dir"] = target_dir
 
     response = houston.post("/codeload/repo", data=data)
     houston.raise_for_status_with_json(response)
