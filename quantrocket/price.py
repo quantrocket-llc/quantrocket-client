@@ -474,10 +474,16 @@ def get_prices(codes, start_date=None, end_date=None,
     # timezone vs real-time db in UTC). After parsing these dates into a
     # common timezone, they will align properly, but we pivoted before
     # parsing the dates (for performance reasons), so they may not be
-    # aligned. Thus we need to dedupe the index.
-    prices = prices.groupby(prices.index).first()
-    prices.index = pd.MultiIndex.from_tuples(prices.index)
-    prices.index.set_names(["Field", "Date", "Time"], inplace=True)
+    # aligned. Thus we need to dedupe the index. NOTE: first() is slow
+    # when prices contains categorical/object dtypes (which can happen
+    # with custom fundamental databases, for example), so only do this
+    # if we have to. nth(0) would be an alternative to first() but it
+    # doesn't ignore nans (nth()'s dropna param doesn't help here), so
+    # a universal solution is as yet elusive.
+    if prices.index.duplicated().any():
+        prices = prices.groupby(prices.index).first()
+        prices.index = pd.MultiIndex.from_tuples(prices.index)
+        prices.index.set_names(["Field", "Date", "Time"], inplace=True)
 
     # Fill missing dates and times so that each field has the
     # same set of dates and times, for easier vectorized operations.
