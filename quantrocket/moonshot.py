@@ -601,7 +601,7 @@ def trade(strategies, accounts=None, review_date=None, output="csv", filepath_or
     if output not in ("csv", "json"):
         raise ValueError("invalid output: {0} (choices are csv or json".format(output))
 
-    response = houston.get("/moonshot/orders.{0}".format(output), params=params, timeout=60*5)
+    response = houston.get("/moonshot/orders.{0}".format(output), params=params, timeout=60*30)
 
     houston.raise_for_status_with_json(response)
 
