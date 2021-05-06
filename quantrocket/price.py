@@ -496,7 +496,7 @@ def get_prices(codes, start_date=None, end_date=None,
     unique_dates = prices.index.get_level_values("Date").unique()
     unique_times = prices.index.get_level_values("Time").unique()
     interpolated_index = None
-    for field in unique_fields:
+    for field in sorted(unique_fields):
         field_idx = pd.MultiIndex.from_product([[field], unique_dates, unique_times]).sort_values()
         if interpolated_index is None:
             interpolated_index = field_idx
