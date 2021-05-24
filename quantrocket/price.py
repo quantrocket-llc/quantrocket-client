@@ -351,6 +351,13 @@ def get_prices(codes, start_date=None, end_date=None,
                 exclude_sids=exclude_sids,
                 fields=list(fields_for_db))
 
+            # pass timezone to realtime service if provided, for interpreting start/end
+            # dates
+            if timezone and start_date:
+                kwargs["start_date"] = f"{start_date} {timezone}"
+            if timezone and end_date:
+                kwargs["end_date"] = f"{end_date} {timezone}"
+
             tmp_filepath = "{dir}{sep}realtime.{db}.{pid}.{time}.csv".format(
                 dir=TMP_DIR, sep=os.path.sep, db=db, pid=os.getpid(), time=time.time())
 

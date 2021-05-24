@@ -382,6 +382,102 @@ class GetPricesTestCase(unittest.TestCase):
         # data_frequency arg is passed
         self.assertEqual(kwargs["data_frequency"], "daily")
 
+    @patch("quantrocket.price.download_market_data_file")
+    def test_maybe_pass_timezone_to_realtime_db(
+                                        self,
+                                        mock_download_market_data_file):
+        """
+        Tests that the timezone, if passed, is appended to the start_date and/or
+        end_date, if passed when querying a realtime db.
+        """
+        def mock_get_realtime_db_config(db):
+            return {
+                "bar_size": "1 day",
+                "fields": ["LastClose", "LastOpen", "VolumeClose"],
+                "tick_db_code": "demo-stk-taq"
+            }
+
+        def _mock_download_market_data_file(code, f, *args, **kwargs):
+            prices = pd.DataFrame(
+                dict(
+                    Sid=[
+                        "FI12345",
+                        "FI12345",
+                        "FI12345",
+                        "FI23456",
+                        "FI23456",
+                        "FI23456"
+                        ],
+                    Date=[
+                        "2018-04-01",
+                        "2018-04-02",
+                        "2018-04-03",
+                        "2018-04-01",
+                        "2018-04-02",
+                        "2018-04-03"
+                        ],
+                    LastClose=[
+                        20.10,
+                        20.50,
+                        19.40,
+                        50.5,
+                        52.5,
+                        51.59,
+                    ]))
+            prices.to_csv(f, index=False)
+
+        def mock_list_history_databases():
+            return []
+
+        def mock_list_realtime_databases():
+            return {
+                "demo-stk-taq": ["demo-stk-taq-1d"]
+            }
+
+        def mock_list_bundles():
+            return {}
+
+        mock_download_market_data_file.side_effect = _mock_download_market_data_file
+
+        with patch('quantrocket.price.get_realtime_db_config', new=mock_get_realtime_db_config):
+            with patch('quantrocket.price.list_bundles', new=mock_list_bundles):
+                with patch('quantrocket.price.list_history_databases', new=mock_list_history_databases):
+                    with patch('quantrocket.price.list_realtime_databases', new=mock_list_realtime_databases):
+
+                        # First, don't pass timezone
+                        get_prices(
+                            "demo-stk-taq-1d",
+                            start_date="2018-04-01", end_date="2018-04-03")
+
+                        self.assertEqual(len(mock_download_market_data_file.mock_calls), 1)
+                        realtime_call = mock_download_market_data_file.mock_calls[0]
+                        _, args, kwargs = realtime_call
+                        self.assertEqual(kwargs["start_date"], "2018-04-01")
+                        self.assertEqual(kwargs["end_date"], "2018-04-03")
+
+                        # Pass timezone and start_date but not end date
+                        get_prices(
+                            "demo-stk-taq-1d",
+                            start_date="2018-04-01", timezone="America/New_York")
+
+                        self.assertEqual(len(mock_download_market_data_file.mock_calls), 2)
+                        realtime_call = mock_download_market_data_file.mock_calls[1]
+                        _, args, kwargs = realtime_call
+                        self.assertEqual(kwargs["start_date"], "2018-04-01 America/New_York")
+                        self.assertEqual(kwargs["end_date"], None)
+
+                        # Pass timezone and start_date and end date
+                        get_prices(
+                            "demo-stk-taq-1d",
+                            start_date="2018-04-01", end_date="2018-04-03 15:00:00",
+                            timezone="America/New_York")
+
+                        self.assertEqual(len(mock_download_market_data_file.mock_calls), 3)
+                        realtime_call = mock_download_market_data_file.mock_calls[2]
+                        _, args, kwargs = realtime_call
+                        self.assertEqual(kwargs["start_date"], "2018-04-01 America/New_York")
+                        self.assertEqual(kwargs["end_date"], "2018-04-03 15:00:00 America/New_York")
+
     def test_query_eod_history_db(self):
         """
         Tests maniuplation of a single EOD db.
