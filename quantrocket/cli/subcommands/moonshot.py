@@ -391,7 +391,7 @@ Generate orders for multiple strategies for a particular account:
 
     quantrocket moonshot trade umd-japan hml-japan --accounts DU12345 -o orders.csv
 
-Generate orders as if it were an earlier date (for prupose of review):
+Generate orders as if it were an earlier date (for purpose of review):
 
     quantrocket moonshot trade umd-nyse -o orders.csv --review-date 2018-05-11
     """

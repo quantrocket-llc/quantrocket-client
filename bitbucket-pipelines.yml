@@ -1,4 +1,4 @@
-image: python:3.6
+image: python:3.8
 
 pipelines:
     tags:
@@ -6,5 +6,5 @@ pipelines:
             - step:
                 script:
                     - pip install -U tox wheel
-                    - tox -e py36-pandas22
+                    - tox -e py38
                     - ./deploy.bash
