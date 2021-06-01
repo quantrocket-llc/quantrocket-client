@@ -281,6 +281,10 @@ Generate orders to close positions.
 Doesn't actually place any orders but returns an orders file that can be placed
 separately. Additional order parameters can be appended with the `--params` option.
 
+This endpoint can also be used to generate executions for marking a position as
+closed due to a tender offer, merger/acquisition, etc. (See `quantrocket blotter record`
+for more info.)
+
 Examples:
 
 Generate MKT orders to close positions for a particular strategy:
@@ -290,6 +294,11 @@ Generate MKT orders to close positions for a particular strategy:
 Generate orders and also place them:
 
     quantrocket blotter close -r my-strategy -p OrderType:MKT Tif:DAY Exchange:SMART | quantrocket blotter order -f -
+
+After receiving 23.50 per share in a tender offer for a position, record the execution
+in the blotter in order to mark the position as closed:
+
+    quantrocket blotter close --sids FIBBG123456 --params Price:23.50 | quantrocket blotter record -f -
     """
     parser = _subparsers.add_parser(
         "close",
@@ -378,6 +387,54 @@ Get a CSV of all executions:
         dest="filepath_or_buffer",
         help="filename to write the data to (default is stdout)")
     parser.set_defaults(func="quantrocket.blotter._cli_download_executions")
+
+    examples = """
+Record executions that happened outside of QuantRocket.
+
+This endpoint does not interact with the broker but simply adds one or more
+executions to the blotter database and updates the blotter's record of current
+positions accordingly. It can be used to bring the blotter in line with the broker
+when they differ. For example, when a position is liquidated because of a tender
+offer or merger/acquisition, you can use this endpoint to record the price
+received for your shares.
+
+Returns a list of execution IDs inserted into the database.
+
+Examples:
+
+After receiving 23.50 per share in a tender offer for a position, record the execution
+in the blotter in order to mark the position as closed:
+
+    quantrocket blotter close --sids FIBBG123456 --params Price:23.50 | quantrocket blotter record -f -
+
+Record executions from a CSV file.
+
+    quantrocket blotter record -f executions.csv
+
+Record an execution by specifying the parameters on the command line:
+
+    quantrocket blotter record --params Sid:FIBBG123456 Action:BUY TotalQuantity:100 Account:DU12345 OrderRef:my-strategy Price:23.50
+    """
+    parser = _subparsers.add_parser(
+        "record",
+        help="record executions that happened outside of QuantRocket",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    source_group = parser.add_mutually_exclusive_group()
+    source_group.add_argument(
+        "-f", "--infile",
+        metavar="INFILE",
+        dest="infilepath_or_buffer",
+        help="record executions from this CSV or JSON file (specify '-' to read file "
+            "from stdin)")
+    source_group.add_argument(
+        "-p", "--params",
+        nargs="*",
+        type=dict_str,
+        metavar="PARAM:VALUE",
+        help="execution details as multiple key-value pairs (pass as 'param:value', for "
+        "example Price:23.50)")
+    parser.set_defaults(func="quantrocket.blotter._cli_record_executions")
 
     examples = """
 Query trading performance and return a PDF tearsheet or CSV of results.

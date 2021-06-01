@@ -407,6 +407,10 @@ def close_positions(filepath_or_buffer=None, output="csv",
     Doesn't actually place any orders but returns an orders file that can be placed
     separately. Additional order parameters can be appended with the `params` argument.
 
+    This endpoint can also be used to generate executions for marking a position
+    as closed due to a tender offer, merger/acquisition, etc. (See `quantrocket.blotter.record_executions`
+    for more info.)
+
     Parameters
     ----------
     filepath_or_buffer : str or file-like object
@@ -441,6 +445,18 @@ def close_positions(filepath_or_buffer=None, output="csv",
     >>> orders_file = io.StringIO()
     >>> close_positions(orders_file, params={"OrderType":"MKT", "Tif":"DAY", "Exchange":"SMART"})
     >>> place_orders(infilepath_or_buffer=orders_file)
+
+    After receiving 23.50 per share in a tender offer for a position, record the
+    execution in the blotter in order to mark the position as closed:
+
+    >>> executions_file = io.StringIO()
+    >>> close_positions(executions_file, sids="FIBBG123456", params={"Price": 23.50})
+    >>> record_executions(infilepath_or_buffer=executions_file)
+
+    See Also
+    --------
+    place_orders : place one or more orders
+    record_executions : record one or more executions
     """
     _params = {}
     if order_refs:
@@ -527,6 +543,87 @@ def download_executions(filepath_or_buffer=None,
 
 def _cli_download_executions(*args, **kwargs):
     return json_to_cli(download_executions, *args, **kwargs)
+
+def record_executions(executions=None, infilepath_or_buffer=None):
+    """
+    Record executions that happened outside of QuantRocket.
+
+    This endpoint does not interact with the broker but simply adds one or more
+    executions to the blotter database and updates the blotter's record of current
+    positions accordingly. It can be used to bring the blotter in line with the broker
+    when they differ. For example, when a position is liquidated because of a tender
+    offer or merger/acquisition, you can use this endpoint to record the price
+    received for your shares.
+
+    Returns a list of execution IDs inserted into the database.
+
+    Parameters
+    ----------
+    executions : list of dict of PARAM:VALUE, optional
+        a list of one or more executions, where each execution is a dict specifying
+        the execution parameters (see examples)
+
+    infilepath_or_buffer : str or file-like object, optional
+        record executions from this CSV or JSON file (specify '-' to read file
+        from stdin). Mutually exclusive with `executions` argument.
+
+    Returns
+    -------
+    list
+        execution IDs
+
+    Examples
+    --------
+    >>> executions = []
+    >>> execution1 = {
+            'Sid':'FIBBG123456',
+            'Action':'BUY',
+            'TotalQuantity':100,
+            'Account':'DU12345',
+            'OrderRef':'my-strategy',
+            'Price': 23.50
+        }
+    >>> executions.append(execution1)
+    >>> execution_ids = record_executions(executions)
+
+    See Also
+    --------
+    close_positions : generate orders to close positions, or generate executions
+      to mark positions as closed
+    """
+    if executions and infilepath_or_buffer:
+        raise ValueError("executions and infilepath_or_buffer are mutually exclusive")
+
+    url = "/blotter/executions"
+
+    if executions:
+        response = houston.post(url, json=executions)
+
+    elif infilepath_or_buffer == "-":
+        response = houston.post(url, data=to_bytes(sys.stdin))
+
+    elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
+        if infilepath_or_buffer.seekable():
+            infilepath_or_buffer.seek(0)
+        response = houston.post(url, data=to_bytes(infilepath_or_buffer))
+
+    elif infilepath_or_buffer:
+        with open(infilepath_or_buffer, "rb") as f:
+            response = houston.post(url, data=f)
+    else:
+        response = houston.post(url)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_record_executions(*args, **kwargs):
+    params = kwargs.pop("params", None)
+    if params:
+        executions = []
+        execution1 = dict_strs_to_dict(*params)
+        executions.append(execution1)
+        kwargs["executions"] = executions
+    return json_to_cli(record_executions, *args, **kwargs)
 
 def download_pnl(filepath_or_buffer=None,
                  order_refs=None, accounts=None, sids=None,
