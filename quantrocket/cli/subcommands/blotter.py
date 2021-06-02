@@ -389,7 +389,7 @@ Get a CSV of all executions:
     parser.set_defaults(func="quantrocket.blotter._cli_download_executions")
 
     examples = """
-Record executions that happened outside of QuantRocket.
+Record executions that happened outside of QuantRocket's knowledge.
 
 This endpoint does not interact with the broker but simply adds one or more
 executions to the blotter database and updates the blotter's record of current
@@ -407,17 +407,32 @@ in the blotter in order to mark the position as closed:
 
     quantrocket blotter close --sids FIBBG123456 --params Price:23.50 | quantrocket blotter record -f -
 
-Record executions from a CSV file.
+Record executions from a CSV file:
 
     quantrocket blotter record -f executions.csv
 
 Record an execution by specifying the parameters on the command line:
 
     quantrocket blotter record --params Sid:FIBBG123456 Action:BUY TotalQuantity:100 Account:DU12345 OrderRef:my-strategy Price:23.50
+
+The required params are:
+
+- Account
+- Action ("BUY" or "SELL")
+- OrderRef
+- Price
+- Sid
+- TotalQuantity
+
+Optional params (rarely needed):
+
+- Commission (default is 0)
+- OrderId (default is an auto-generated ID)
+- Time (the time of execution, default is now)
     """
     parser = _subparsers.add_parser(
         "record",
-        help="record executions that happened outside of QuantRocket",
+        help="record executions that happened outside of QuantRocket's knowledge",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     source_group = parser.add_mutually_exclusive_group()
