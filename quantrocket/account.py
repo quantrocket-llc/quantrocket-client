@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import sys
+import requests
 from quantrocket.houston import houston
+from quantrocket.exceptions import NoAccountData
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
@@ -93,7 +95,13 @@ def download_account_balances(filepath_or_buffer=None, output="csv",
 
     response = houston.get("/account/balances.{0}".format(output), params=params)
 
-    houston.raise_for_status_with_json(response)
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no account balances match the query parameters" in repr(e).lower():
+            raise NoAccountData(e)
+        raise
 
     # Don't write a null response to file when using below filters
     if below and response.content[:4] == b"null":

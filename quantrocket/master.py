@@ -15,11 +15,12 @@
 import sys
 import six
 import json
+import requests
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
-from quantrocket.exceptions import ParameterError
+from quantrocket.exceptions import ParameterError, NoMasterData
 
 def list_ibkr_exchanges(regions=None, sec_types=None):
     """
@@ -540,7 +541,13 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
 
     response = houston.get(url, params=params)
 
-    houston.raise_for_status_with_json(response)
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no securities match the query parameters" in repr(e).lower():
+            raise NoMasterData(e)
+        raise
 
     filepath_or_buffer = filepath_or_buffer or sys.stdout
 
