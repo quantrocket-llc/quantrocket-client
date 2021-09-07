@@ -175,7 +175,7 @@ Collect Reuters financial statements for a particular security:
     examples = """
 Collect Reuters estimates and actuals from Interactive Brokers and save to database.
 
-This data provides analyst estimates and actuals for a variety of indicators.
+DEPRECATED. This data is no longer available from Interactive Brokers.
 
 Examples:
 
@@ -189,7 +189,7 @@ Collect Reuters estimates and actuals for a particular security:
     """
     parser = _subparsers.add_parser(
         "collect-reuters-estimates",
-        help="collect Reuters estimates and actuals from Interactive Brokers and save to database",
+        help="[DEPRECATED] collect Reuters estimates and actuals from Interactive Brokers and save to database",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -821,8 +821,8 @@ minimal set of fields (several required fields will always be returned)
 Query estimates and actuals from the Reuters estimates database and
 download to file.
 
-You can query one or more indicator codes. Run `quantrocket fundamental reuters-codes` to see
-available codes.
+DEPRECATED. This data is no longer available from Interactive Brokers. Only
+data that was previously saved to the local database can be queried.
 
 Examples:
 
@@ -832,7 +832,7 @@ Query EPS estimates and actuals for a universe of Australian stocks:
     """
     parser = _subparsers.add_parser(
         "reuters-estimates",
-        help="query estimates and actuals from the Reuters estimates database and download to file",
+        help="[DEPRECATED] query estimates and actuals from the Reuters estimates database and download to file",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(

@@ -679,7 +679,7 @@ def collect_reuters_estimates(universes=None, sids=None, force=False):
     """
     Collect Reuters estimates and actuals from Interactive Brokers and save to database.
 
-    This data provides analyst estimates and actuals for a variety of indicators.
+    DEPRECATED. This data is no longer available from Interactive Brokers.
 
     Parameters
     ----------
@@ -1077,8 +1077,8 @@ def download_reuters_estimates(codes, filepath_or_buffer=None, output="csv",
     Query estimates and actuals from the Reuters estimates database and
     download to file.
 
-    You can query one or more indicator codes. Use the `list_reuters_codes`
-    function to see available codes.
+    DEPRECATED. This data is no longer available from Interactive Brokers. Only
+    data that was previously saved to the local database can be queried.
 
     Parameters
     ----------
@@ -1186,6 +1186,9 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     reading at any given date, indexed to the UpdatedDate field (which usually
     corresponds to the announcement date). By default UpdatedDate is shifted
     forward 1 day to avoid lookahead bias.
+
+    DEPRECATED. This data is no longer available from Interactive Brokers. Only
+    data that was previously saved to the local database can be queried.
 
     Parameters
     ----------
