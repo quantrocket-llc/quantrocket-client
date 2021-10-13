@@ -374,7 +374,8 @@ queue to jump in front of other queued IBKR collections:
     parser.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="collect history back to this start date, overriding config")
+        help="collect history back to this start date, overriding config. "
+        "Only supported for IBKR databases.")
     parser.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
