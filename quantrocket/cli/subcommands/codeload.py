@@ -40,10 +40,10 @@ Clone a Bitbucket repo:
 
     quantrocket codeload clone https://bitbucket.org/myuser/myrepo.git
 
-Clone a private Bitbucket repo by including authentication credentials in the URL (not
-supported for GitHub):
+Clone a private repo by including username and app password (Bitbucket) or
+personal access token (GitHub) in the URL:
 
-    quantrocket codeload clone https://myuser:mypassword@bitbucket.org/myuser/myrepo.git
+    quantrocket codeload clone https://myuser:myapppassword@bitbucket.org/myuser/myrepo.git
     """
     parser = _subparsers.add_parser(
         "clone",

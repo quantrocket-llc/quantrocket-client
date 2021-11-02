@@ -63,10 +63,10 @@ def clone(repo, branch=None, replace=None, skip_existing=None, target_dir=None):
 
     >>> clone("https://bitbucket.org/myuser/myrepo.git")
 
-    Clone a private Bitbucket repo by including authentication credentials
-    in the URL (not supported for GitHub):
+    Clone a private repo by including username and app password (Bitbucket)
+    or personal access token (GitHub) in the URL:
 
-    >>> clone("https://myuser:mypassword@bitbucket.org/myuser/myrepo.git")
+    >>> clone("https://myuser:myapppassword@bitbucket.org/myuser/myrepo.git")
     """
     data = {
         "repo": repo
