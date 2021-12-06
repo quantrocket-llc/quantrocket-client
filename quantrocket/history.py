@@ -279,7 +279,7 @@ def create_custom_db(code, bar_size=None, columns=None):
     columns : dict of column name:type, required
         the columns to create, specified as a Python dictionary mapping column names to
         column types. For example, {"Close":"float", "Volume":"int"}. Valid column
-        types are "int", "float", "text", "date", and "datetime". Column names must
+        types are "int", "float", "str", "date", and "datetime". Column names must
         start with a letter and include only letters, numbers, and underscores.
         Sid and Date columns are automatically created and need not be specified.
         For boolean columns, choose type 'int' and store 1 or 0.

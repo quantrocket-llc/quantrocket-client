@@ -54,7 +54,7 @@ Create a custom database for loading intraday OHCLV data:
         nargs="*",
         type=dict_str,
         help="the columns to create, specified as 'name:type'. For example, 'Close:float' "
-        " or 'Volume:int'. Valid column types are 'int', 'float', 'text', 'date', and "
+        " or 'Volume:int'. Valid column types are 'int', 'float', 'str', 'date', and "
         "'datetime'. Column names must start with a letter and include only letters, "
         "numbers, and underscores. Sid and Date columns are automatically created and "
         "need not be specified. For boolean columns, choose type 'int' and store 1 or 0. ")
