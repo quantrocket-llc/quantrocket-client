@@ -59,6 +59,7 @@ def _read_moonshot_or_pnl_csv(filepath_or_buffer):
         "Turnover",
         "Commission",
         "CommissionAmount",
+        "Dividend",
         "Slippage",
         "Benchmark",
         "AbsWeight",
