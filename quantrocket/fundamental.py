@@ -675,45 +675,6 @@ def collect_reuters_financials(universes=None, sids=None, force=True):
 def _cli_collect_reuters_financials(*args, **kwargs):
     return json_to_cli(collect_reuters_financials, *args, **kwargs)
 
-def collect_reuters_estimates(universes=None, sids=None, force=False):
-    """
-    Collect Reuters estimates and actuals from Interactive Brokers and save to database.
-
-    DEPRECATED. This data is no longer available from Interactive Brokers.
-
-    Parameters
-    ----------
-    universes : list of str, optional
-        limit to these universes (must provide universes, sids, or both)
-
-    sids : list of str, optional
-        limit to these sids (must provide universes, sids, or both)
-
-    force : bool
-        collect estimates for all securities even if they were collected recently
-        (default is to skip securities that were updated in the last 12 hours)
-
-    Returns
-    -------
-    dict
-        status message
-
-    """
-    params = {}
-    if universes:
-        params["universes"] = universes
-    if sids:
-        params["sids"] = sids
-    if force:
-        params["force"] = force
-    response = houston.post("/fundamental/reuters/estimates", params=params)
-
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_reuters_estimates(*args, **kwargs):
-    return json_to_cli(collect_reuters_estimates, *args, **kwargs)
-
 def list_reuters_codes(codes=None, report_types=None, statement_types=None):
     """
     List available Chart of Account (COA) codes from the Reuters financials database

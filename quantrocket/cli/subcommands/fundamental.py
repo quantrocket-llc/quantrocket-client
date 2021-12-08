@@ -173,44 +173,6 @@ Collect Reuters financial statements for a particular security:
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_reuters_financials")
 
     examples = """
-Collect Reuters estimates and actuals from Interactive Brokers and save to database.
-
-DEPRECATED. This data is no longer available from Interactive Brokers.
-
-Examples:
-
-Collect Reuters estimates and actuals for a universe of Japanese banks:
-
-    quantrocket fundamental collect-reuters-estimates --universes 'japan-bank'
-
-Collect Reuters estimates and actuals for a particular security:
-
-    quantrocket fundamental collect-reuters-estimates --sids FIBBG123456
-    """
-    parser = _subparsers.add_parser(
-        "collect-reuters-estimates",
-        help="[DEPRECATED] collect Reuters estimates and actuals from Interactive Brokers and save to database",
-        epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes (must provide universes, sids, or both)")
-    parser.add_argument(
-        "-i", "--sids",
-        nargs="*",
-        metavar="SID",
-        help="limit to these sids (must provide universes, sids, or both)")
-    parser.add_argument(
-        "-f", "--force",
-        action="store_true",
-        help="collect estimates for all securities even if they were collected "
-        "recently (default is to skip securities that were updated in the last "
-        "12 hours)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_reuters_estimates")
-
-    examples = """
 Collect Wall Street Horizon upcoming earnings announcement dates from Interactive
 Brokers and save to database.
 
