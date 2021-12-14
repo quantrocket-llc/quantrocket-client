@@ -452,6 +452,53 @@ Optional params (rarely needed):
     parser.set_defaults(func="quantrocket.blotter._cli_record_executions")
 
     examples = """
+Apply a stock split to an open position.
+
+This endpoint does not interact with the broker but simply applies the
+split in the blotter database to bring the blotter in line with the broker.
+The split is also applied to the executions that created the open
+position, so that PNL calculations will be accurate.
+
+The --old-shares and --new-shares parameters can be specified either using the
+published split ratio (for example, 2-for-1) or the actual number of pre-
+and post-split shares in your account.
+
+Examples:
+
+Record a 2-for-1 split:
+
+    quantrocket blotter split --sid FIBBG12345 --old-shares 1 --new-shares 2
+
+Record a 1-for-10 reverse split:
+
+    quantrocket blotter split --sid FIBBG98765 --old-shares 10 --new-shares 1
+    """
+    parser = _subparsers.add_parser(
+        "split",
+        help="apply a stock split to an open position",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-i", "--sid",
+        metavar="SID",
+        required=True,
+        help="the sid that underwent a split. There must currently be an open "
+        "position in this security.")
+    parser.add_argument(
+        "-o", "--old-shares",
+        type=int,
+        required=True,
+        metavar="INT",
+        help="the number of pre-split shares")
+    parser.add_argument(
+        "-n", "--new-shares",
+        type=int,
+        required=True,
+        metavar="INT",
+        help="the number of post-split shares")
+    parser.set_defaults(func="quantrocket.blotter._cli_apply_split")
+
+    examples = """
 Query trading performance and return a PDF tearsheet or CSV of results.
 
 Trading performance is broken down by account and order ref and optionally by

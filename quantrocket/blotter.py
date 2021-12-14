@@ -638,6 +638,58 @@ def _cli_record_executions(*args, **kwargs):
         kwargs["executions"] = executions
     return json_to_cli(record_executions, *args, **kwargs)
 
+def apply_split(sid, old_shares, new_shares):
+    """
+    Apply a stock split to an open position.
+
+    This endpoint does not interact with the broker but simply applies the
+    split in the blotter database to bring the blotter in line with the broker.
+    The split is also applied to the executions that created the open
+    position, so that PNL calculations will be accurate.
+
+    The old_shares and new_shares parameters can be specified either using the
+    published split ratio (for example, 2-for-1) or the actual number of pre-
+    and post-split shares in your account.
+
+    Parameters
+    ----------
+    sid : str, required
+        the sid that underwent a split. There must currently be an open
+        position in this security.
+
+    old_shares : int, required
+        the number of pre-split shares
+
+    new_shares : int, required
+        the number of post-split shares
+
+    Returns
+    -------
+    list
+        the old and new position for this sid, by account and order ref
+
+    Examples
+    --------
+    Record a 2-for-1 split:
+
+    >>> record_split("FIBBG12345", old_shares=1, new_shares=2)
+
+    Record a 1-for-10 reverse split:
+
+    >>> record_split("FIBBG98765", old_shares=10, new_shares=1)
+    """
+    params = {
+        "sid": sid,
+        "old_shares": old_shares,
+        "new_shares": new_shares
+    }
+    response = houston.patch("/blotter/positions", params=params)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_apply_split(*args, **kwargs):
+    return json_to_cli(apply_split, *args, **kwargs)
+
 def download_pnl(filepath_or_buffer=None,
                  order_refs=None, accounts=None, sids=None,
                  start_date=None, end_date=None, timezone=None,
