@@ -668,7 +668,7 @@ def _cli_download_market_data_file(*args, **kwargs):
 
 def _cli_stream_market_data(sids, exclude_sids, fields):
 
-    url = houston.base_url + "/realtime/stream"
+    url = houston.base_url.replace("http", "ws") + "/realtime/stream"
 
     params = {}
 
