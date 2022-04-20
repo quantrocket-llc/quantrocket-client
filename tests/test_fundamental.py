@@ -29,6 +29,7 @@ from quantrocket.fundamental import (
     get_alpaca_etb_reindexed_like,
     get_ibkr_borrow_fees_reindexed_like,
     get_ibkr_shortable_shares_reindexed_like,
+    get_ibkr_margin_requirements_reindexed_like,
     get_sharadar_fundamentals_reindexed_like,
     get_sharadar_institutions_reindexed_like,
     get_sharadar_sec8_reindexed_like,
@@ -1612,7 +1613,9 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
 
     @patch("quantrocket.fundamental.download_ibkr_borrow_fees")
     @patch("quantrocket.fundamental.download_ibkr_shortable_shares")
+    @patch("quantrocket.fundamental.download_ibkr_margin_requirements")
     def test_pass_sids_and_dates_based_on_reindex_like(self,
+                                                         mock_download_ibkr_margin_requirements,
                                                          mock_download_ibkr_shortable_shares,
                                                          mock_download_ibkr_borrow_fees):
         """
@@ -1668,6 +1671,39 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
 
         borrow_fees_call = mock_download_ibkr_borrow_fees.mock_calls[0]
         _, args, kwargs = borrow_fees_call
+        self.assertListEqual(kwargs["sids"], ["FI12345","FI23456"])
+        self.assertEqual(kwargs["start_date"], "2018-03-17") # 45 days before reindex_like min date
+        self.assertEqual(kwargs["end_date"], "2018-05-03")
+
+        def _mock_download_ibkr_margin_requirements(f, *args, **kwargs):
+            margin_requirements = pd.DataFrame(
+                dict(Date=["2018-05-01T21:45:02",
+                           "2018-05-01T22:00:03",
+                           "2018-05-01T21:45:02"],
+                     Sid=["FI12345",
+                            "FI12345",
+                            "FI23456"],
+                     ShortInitialMargin=[100,
+                                        100,
+                                        50],
+                     ShortMaintenanceMargin=[100,
+                                        100,
+                                        50],
+                     LongInitialMargin=[100,
+                                        100,
+                                        50],
+                     LongMaintenanceMargin=[100,
+                                        100,
+                                        50]))
+            margin_requirements.to_csv(f, index=False)
+            f.seek(0)
+
+        mock_download_ibkr_margin_requirements.side_effect = _mock_download_ibkr_margin_requirements
+
+        get_ibkr_margin_requirements_reindexed_like(closes, time="00:00:00 America/Toronto")
+
+        margin_requirements_call = mock_download_ibkr_margin_requirements.mock_calls[0]
+        _, args, kwargs = margin_requirements_call
         self.assertListEqual(kwargs["sids"], ["FI12345","FI23456"])
         self.assertEqual(kwargs["start_date"], "2018-03-17") # 45 days before reindex_like min date
         self.assertEqual(kwargs["end_date"], "2018-05-03")
@@ -2149,7 +2185,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
     def test_fillna_0_after_start_date(self):
         """
         Tests that NaN data after 2018-04-15 is converted to 0 but NaN data
-        before is not.
+        before is not. Applies to shortable shares and margin requirements.
         """
         closes = pd.DataFrame(
             np.random.rand(5,2),
@@ -2191,6 +2227,126 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
                  {'Date': '2018-04-15T00:00:00-0400', "FI12345": "nan", "FI23456": "nan"},
                  {'Date': '2018-04-16T00:00:00-0400', "FI12345": 10000.0, "FI23456": 0.0},
                  {'Date': '2018-04-17T00:00:00-0400', "FI12345": 9000.0, "FI23456": 0.0}]
+            )
+
+        def mock_download_ibkr_margin_requirements(f, *args, **kwargs):
+            margin_requirements = pd.DataFrame(
+                dict(Date=["2018-04-15T21:45:02",
+                           "2018-04-16T13:45:02",
+                           "2018-04-17T12:30:03",
+                           ],
+                     Sid=["FI12345",
+                            "FI12345",
+                            "FI12345",
+                           ],
+                     ShortInitialMargin=[100,
+                                        50,
+                                        75,
+                                        ],
+                     ShortMaintenanceMargin=[100,
+                                        50,
+                                        75,
+                                        ],
+                     LongInitialMargin=[100,
+                                        50,
+                                        75,
+                                        ],
+                     LongMaintenanceMargin=[100,
+                                        50,
+                                        75,
+                                        ]))
+            margin_requirements.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_ibkr_margin_requirements', new=mock_download_ibkr_margin_requirements):
+
+            margin_requirements = get_ibkr_margin_requirements_reindexed_like(closes)
+            # replace nan with "nan" to allow equality comparisons
+            margin_requirements = margin_requirements.where(margin_requirements.notnull(), "nan")
+            margin_requirements = margin_requirements.reset_index()
+            margin_requirements.loc[:, "Date"] = margin_requirements.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            self.assertListEqual(
+                margin_requirements.to_dict(orient="records"),
+                [{'Date': '2018-04-13T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'ShortInitialMargin'},
+                {'Date': '2018-04-14T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'ShortInitialMargin'},
+                {'Date': '2018-04-15T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'ShortInitialMargin'},
+                {'Date': '2018-04-16T00:00:00-0400',
+                'FI12345': 100.0,
+                'FI23456': 0.0,
+                'Field': 'ShortInitialMargin'},
+                {'Date': '2018-04-17T00:00:00-0400',
+                'FI12345': 50.0,
+                'FI23456': 0.0,
+                'Field': 'ShortInitialMargin'},
+                {'Date': '2018-04-13T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'ShortMaintenanceMargin'},
+                {'Date': '2018-04-14T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'ShortMaintenanceMargin'},
+                {'Date': '2018-04-15T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'ShortMaintenanceMargin'},
+                {'Date': '2018-04-16T00:00:00-0400',
+                'FI12345': 100.0,
+                'FI23456': 0.0,
+                'Field': 'ShortMaintenanceMargin'},
+                {'Date': '2018-04-17T00:00:00-0400',
+                'FI12345': 50.0,
+                'FI23456': 0.0,
+                'Field': 'ShortMaintenanceMargin'},
+                {'Date': '2018-04-13T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'LongInitialMargin'},
+                {'Date': '2018-04-14T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'LongInitialMargin'},
+                {'Date': '2018-04-15T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'LongInitialMargin'},
+                {'Date': '2018-04-16T00:00:00-0400',
+                'FI12345': 100.0,
+                'FI23456': 0.0,
+                'Field': 'LongInitialMargin'},
+                {'Date': '2018-04-17T00:00:00-0400',
+                'FI12345': 50.0,
+                'FI23456': 0.0,
+                'Field': 'LongInitialMargin'},
+                {'Date': '2018-04-13T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'LongMaintenanceMargin'},
+                {'Date': '2018-04-14T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'LongMaintenanceMargin'},
+                {'Date': '2018-04-15T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'LongMaintenanceMargin'},
+                {'Date': '2018-04-16T00:00:00-0400',
+                'FI12345': 100.0,
+                'FI23456': 0.0,
+                'Field': 'LongMaintenanceMargin'},
+                {'Date': '2018-04-17T00:00:00-0400',
+                'FI12345': 50.0,
+                'FI23456': 0.0,
+                'Field': 'LongMaintenanceMargin'}]
             )
 
     def test_borrow_fees(self):
@@ -2249,6 +2405,158 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
                 [{'Date': '2018-05-01T00:00:00-0400', "FI12345": 1.5, "FI23456": 0.35},
                  {'Date': '2018-05-02T00:00:00-0400', "FI12345": 1.7, "FI23456": 0.40},
                  {'Date': '2018-05-03T00:00:00-0400', "FI12345": 1.7, "FI23456": 0.23}]
+            )
+
+    def test_get_ibkr_margin_requirements_reindexed_like(self):
+        """
+        Tests get_ibkr_margin_requirements_reindexed_like.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(2,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-04-16",
+                                periods=2,
+                                freq="D",
+                                tz="America/New_York",
+                                name="Date"))
+
+        def mock_download_ibkr_margin_requirements(f, *args, **kwargs):
+            margin_requirements = pd.DataFrame(
+                dict(Date=["2018-04-15T21:45:02",
+                           "2018-04-16T13:45:02",
+                            "2018-04-15T21:45:02",
+                           "2018-04-16T13:45:02"
+                           ],
+                     Sid=["FI12345",
+                            "FI12345",
+                            "FI23456",
+                            "FI23456"
+                           ],
+                     ShortInitialMargin=[100,
+                                        50,
+                                        75,
+                                        0
+                                        ],
+                     ShortMaintenanceMargin=[100,
+                                        50,
+                                        75,
+                                        0,
+                                        ],
+                     LongInitialMargin=[100,
+                                        50,
+                                        75,
+                                        200
+                                        ],
+                     LongMaintenanceMargin=[100,
+                                        50,
+                                        75,
+                                        300
+                                        ]))
+            margin_requirements.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_ibkr_margin_requirements', new=mock_download_ibkr_margin_requirements):
+
+            margin_requirements = get_ibkr_margin_requirements_reindexed_like(closes)
+            # replace nan with "nan" to allow equality comparisons
+            margin_requirements = margin_requirements.where(margin_requirements.notnull(), "nan")
+            margin_requirements = margin_requirements.reset_index()
+            margin_requirements.loc[:, "Date"] = margin_requirements.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            self.assertListEqual(
+                margin_requirements.to_dict(orient="records"),
+                [{'Date': '2018-04-16T00:00:00-0400',
+                'FI12345': 100.0,
+                'FI23456': 75.0,
+                'Field': 'ShortInitialMargin'},
+                {'Date': '2018-04-17T00:00:00-0400',
+                'FI12345': 50.0,
+                'FI23456': 0.0,
+                'Field': 'ShortInitialMargin'},
+                {'Date': '2018-04-16T00:00:00-0400',
+                'FI12345': 100.0,
+                'FI23456': 75.0,
+                'Field': 'ShortMaintenanceMargin'},
+                {'Date': '2018-04-17T00:00:00-0400',
+                'FI12345': 50.0,
+                'FI23456': 0.0,
+                'Field': 'ShortMaintenanceMargin'},
+                {'Date': '2018-04-16T00:00:00-0400',
+                'FI12345': 100.0,
+                'FI23456': 75.0,
+                'Field': 'LongInitialMargin'},
+                {'Date': '2018-04-17T00:00:00-0400',
+                'FI12345': 50.0,
+                'FI23456': 200.0,
+                'Field': 'LongInitialMargin'},
+                {'Date': '2018-04-16T00:00:00-0400',
+                'FI12345': 100.0,
+                'FI23456': 75.0,
+                'Field': 'LongMaintenanceMargin'},
+                {'Date': '2018-04-17T00:00:00-0400',
+                'FI12345': 50.0,
+                'FI23456': 300.0,
+                'Field': 'LongMaintenanceMargin'}]
+            )
+
+    def test_get_ibkr_margin_requirements_reindexed_like_with_no_data(self):
+        """
+        Tests that get_ibkr_margin_requirements_reindexed_like returns 0s (or
+        nans, pre data start date) when no margin requirements data is available
+        for the requested sids.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(2,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-04-15",
+                                periods=2,
+                                freq="D",
+                                tz="America/New_York",
+                                name="Date"))
+
+        def mock_download_ibkr_margin_requirements(f, *args, **kwargs):
+            raise NoFundamentalData("no data")
+
+        with patch('quantrocket.fundamental.download_ibkr_margin_requirements', new=mock_download_ibkr_margin_requirements):
+
+            margin_requirements = get_ibkr_margin_requirements_reindexed_like(closes)
+            # replace nan with "nan" to allow equality comparisons
+            margin_requirements = margin_requirements.where(margin_requirements.notnull(), "nan")
+            margin_requirements = margin_requirements.reset_index()
+            margin_requirements.loc[:, "Date"] = margin_requirements.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            self.assertListEqual(
+                margin_requirements.to_dict(orient="records"),
+                [{'Date': '2018-04-15T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'LongInitialMargin'},
+                {'Date': '2018-04-16T00:00:00-0400',
+                'FI12345': 0.0,
+                'FI23456': 0.0,
+                'Field': 'LongInitialMargin'},
+                {'Date': '2018-04-15T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'LongMaintenanceMargin'},
+                {'Date': '2018-04-16T00:00:00-0400',
+                'FI12345': 0.0,
+                'FI23456': 0.0,
+                'Field': 'LongMaintenanceMargin'},
+                {'Date': '2018-04-15T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'ShortInitialMargin'},
+                {'Date': '2018-04-16T00:00:00-0400',
+                'FI12345': 0.0,
+                'FI23456': 0.0,
+                'Field': 'ShortInitialMargin'},
+                {'Date': '2018-04-15T00:00:00-0400',
+                'FI12345': 'nan',
+                'FI23456': 'nan',
+                'Field': 'ShortMaintenanceMargin'},
+                {'Date': '2018-04-16T00:00:00-0400',
+                'FI12345': 0.0,
+                'FI23456': 0.0,
+                'Field': 'ShortMaintenanceMargin'}]
             )
 
     def test_alpaca_etb(self):

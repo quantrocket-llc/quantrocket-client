@@ -151,8 +151,8 @@ def get_alpaca_etb_reindexed_like(reindex_like):
     >>> are_etb = get_alpaca_etb_reindexed_like(closes)
     """
     etb = _get_stockloan_data_reindexed_like(
-        download_alpaca_etb, "EasyToBorrow",
-        reindex_like=reindex_like, is_intraday=False)
+        download_alpaca_etb,
+        reindex_like=reindex_like, is_intraday=False).loc["EasyToBorrow"]
 
     return etb.fillna(0).astype(bool)
 
@@ -215,6 +215,40 @@ def collect_ibkr_borrow_fees(countries=None):
 
 def _cli_collect_ibkr_borrow_fees(*args, **kwargs):
     return json_to_cli(collect_ibkr_borrow_fees, *args, **kwargs)
+
+def collect_ibkr_margin_requirements(country):
+    """
+    Collect Interactive Brokers margin requirements data and save to database.
+
+    The `country` parameter refers to the country of the IBKR subsidiary
+    where your account is located. (Margin requirements vary by IBKR
+    subsidiary.) Note that this differs from the IBKR shortable shares
+    or borrow fees APIs, where the `countries` parameter refers to the
+    country of the security rather than the country of the account.
+
+    Historical data is available from April 2018.
+
+    Parameters
+    ----------
+    country : str, required
+        the country of the IBKR subsidiary where your account is located (pass
+        '?' or any invalid country to see available countries)
+
+    Returns
+    -------
+    dict
+        status message
+
+    """
+    params = {}
+    params["countries"] = country
+    response = houston.post("/fundamental/ibkr/stockloan/margin", params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_ibkr_margin_requirements(*args, **kwargs):
+    return json_to_cli(collect_ibkr_margin_requirements, *args, **kwargs)
 
 def download_ibkr_shortable_shares(filepath_or_buffer=None, output="csv",
                                    start_date=None, end_date=None,
@@ -384,7 +418,100 @@ def download_ibkr_borrow_fees(filepath_or_buffer=None, output="csv",
 def _cli_download_ibkr_borrow_fees(*args, **kwargs):
     return json_to_cli(download_ibkr_borrow_fees, *args, **kwargs)
 
-def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_like,
+def download_ibkr_margin_requirements(filepath_or_buffer=None, output="csv",
+                                      start_date=None, end_date=None,
+                                      universes=None, sids=None,
+                                      exclude_universes=None, exclude_sids=None):
+    """
+    Query Interactive Brokers margin requirements from the local database and
+    download to file.
+
+    Only stocks with special margin requirements are included in the dataset.
+    Default margin requirements apply to stocks that are omitted from the
+    dataset. 0 in the dataset is a placeholder value that also indicates that
+    default margin requirements apply.
+
+    Margin requirements are expressed in percentages, as whole numbers, for
+    example 50 means 50% margin requirement, which is equivalent to 0.5.
+
+    Data timestamps are UTC.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to data on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to data on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Query margin requirements for a universe of US stocks:
+
+    >>> f = io.StringIO()
+    >>> download_ibkr_margin_requirements("usa_margin_requirements.csv", universes=["usa-stk"])
+    >>> margin = pd.read_csv("usa_margin_requirements.csv", parse_dates=["Date"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/ibkr/stockloan/margin.{0}".format(output), params=params,
+                           timeout=60*5)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        if "no margin requirements data match the query parameters" in repr(e).lower():
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_ibkr_margin_requirements(*args, **kwargs):
+    return json_to_cli(download_ibkr_margin_requirements, *args, **kwargs)
+
+def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
                                        time=None, is_intraday=True):
     """
     Common base function for get_ibkr_shortable_shares_reindexed_like and
@@ -395,9 +522,6 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
 
     stockloan_func : func
         the download function for the stockloan data
-
-    stockloan_field : str
-        the field in the stockloan data to be returned
 
     reindex_like : DataFrame
         the input DataFrame to conform the stockloan data to
@@ -498,26 +622,38 @@ def _get_stockloan_data_reindexed_like(stockloan_func, stockloan_field, reindex_
             index_at_time = index_at_time.tz_localize(None)
 
     stockloan_data = stockloan_data.pivot(index="Sid",columns="Date").T
-    stockloan_data = stockloan_data.loc[stockloan_field]
 
-    # Create a unioned index of requested times and stockloan data timestamps
-    unioned_idx = index_at_time.union(stockloan_data.index)
-    # performance boost: don't need to reindex and ffill earlier than the
-    # stockloan data start date
-    unioned_idx = unioned_idx[unioned_idx >= stockloan_data.index.min()]
-    stockloan_data = stockloan_data.reindex(index=unioned_idx, columns=reindex_like.columns)
+    all_fields = {}
+    for fieldname in stockloan_data.index.get_level_values(0).unique():
 
-    stockloan_data = stockloan_data.fillna(method="ffill")
+        field = stockloan_data.loc[fieldname]
 
-    # Keep only the requested times, now that we've ffilled
-    stockloan_data = stockloan_data.reindex(index=index_at_time)
+        # Create a unioned index of requested times and stockloan data timestamps
+        unioned_idx = index_at_time.union(field.index)
 
-    # Replace index_at_time with the original reindex_like index (this needs
-    # to be done because index_at_time is tz-aware and reindex_like may not
-    # be, and because index_at_time uses the requested `time` if provided.
-    # Since index_at_time was derived from reindex_like.index and has the
-    # same shape, it is safe to replace it.)
-    stockloan_data.index = reindex_like.index
+        # performance boost: don't need to reindex and ffill earlier than the
+        # stockloan data start date
+        unioned_idx = unioned_idx[
+            unioned_idx >= stockloan_data.index.get_level_values("Date").min()]
+
+        field = field.reindex(
+            index=unioned_idx, columns=reindex_like.columns)
+
+        field = field.fillna(method="ffill")
+
+        # Keep only the requested times, now that we've ffilled
+        field = field.reindex(index=index_at_time)
+
+        # Replace index_at_time with the original reindex_like index (this needs
+        # to be done because index_at_time is tz-aware and reindex_like may not
+        # be, and because index_at_time uses the requested `time` if provided.
+        # Since index_at_time was derived from reindex_like.index and has the
+        # same shape, it is safe to replace it.)
+        field.index = reindex_like.index
+
+        all_fields[fieldname] = field
+
+    stockloan_data = pd.concat(all_fields, names=["Field", "Date"])
 
     return stockloan_data
 
@@ -570,8 +706,8 @@ def get_ibkr_shortable_shares_reindexed_like(reindex_like, time=None):
     >>> shortables = get_ibkr_shortable_shares_reindexed_like(closes, time="09:20:00 America/New_York")
     """
     shortable_shares = _get_stockloan_data_reindexed_like(
-        download_ibkr_shortable_shares, "Quantity",
-        reindex_like=reindex_like, time=time, is_intraday=True)
+        download_ibkr_shortable_shares,
+        reindex_like=reindex_like, time=time, is_intraday=True).loc["Quantity"]
 
     # fillna(0) where date > 2018-04-15, the data start date (NaNs after that
     # date indicate no shortable shares, NaNs before that date indicate don't
@@ -632,8 +768,99 @@ def get_ibkr_borrow_fees_reindexed_like(reindex_like, time=None):
     >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes, time="16:30:00 America/New_York")
     """
     return _get_stockloan_data_reindexed_like(
-        download_ibkr_borrow_fees, "FeeRate",
-        reindex_like=reindex_like, time=time, is_intraday=True)
+        download_ibkr_borrow_fees,
+        reindex_like=reindex_like, time=time, is_intraday=True).loc["FeeRate"]
+
+def get_ibkr_margin_requirements_reindexed_like(reindex_like, time=None):
+    """
+    Return a multiindex (Field, Date) DataFrame of Interactive Brokers margin
+    requirements, reindexed to match the index (dates) and columns (sids) of
+    `reindex_like`.
+
+    Returned fields are LongInitialMargin, LongMaintenanceMargin,
+    ShortInitialMargin, and ShortMaintenanceMargin. Margin requirements
+    are expressed in percentages, as whole numbers, for example 50 means
+    50% margin requirement, which is equivalent to 0.5.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and sids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    time : str (HH:MM:SS[ TZ]), optional
+        return margin requirements as of this time of day. If omitted, margin
+        requirements will be returned as of the times of day in `reindex_like`'s
+        DatetimeIndex. (Note that for a DatetimeIndex containing dates only,
+        the time is 00:00:00, meaning margin requirements will be returned as
+        of midnight at the start of the day.) A time and timezone can be passed
+        as a space-separated string (e.g. "09:30:00 America/New_York"). If
+        timezone is omitted, the timezone of `reindex_like`'s DatetimeIndex
+        will be used; if `reindex_like`'s timezone is not set, the timezone
+        will be inferred from the component securities, if all securities
+        share the same timezone.
+
+    Returns
+    -------
+    DataFrame
+        a multiindex (Field, Date) DataFrame of margin requirements, shaped
+        like the input DataFrame
+
+    Examples
+    --------
+    Get margin requirements as of midnight for a DataFrame of US stocks and
+    calculate the greater of ShortInitialMargin and ShortMaintenanceMargin:
+
+    >>> closes = prices.loc["Close"]
+    >>> margin_requirements = get_ibkr_margin_requirements_reindexed_like(closes)
+    >>> short_initial_margins = margin_requirements.loc["ShortInitialMargin"]
+    >>> short_maintenance_margins = margin_requirements.loc["ShortInitialMargin"]
+    >>> short_margins = short_initial_margins.where(
+        short_initial_margins.fillna(0) > short_maintenance_margins.fillna(0),
+        short_maintenance_margins)
+
+    Get margin requirements as of 4:30 PM for a DataFrame of US stocks
+    (timezone inferred from component stocks):
+
+    >>> closes = prices.loc["Close"]
+    >>> margin_requirements = get_ibkr_margin_requirements_reindexed_like(
+        closes, time="16:30:00")
+
+    Get margin requirements as of 4:30 PM New York time for a multi-timezone
+    DataFrame of stocks:
+
+    >>> closes = prices.loc["Close"]
+    >>> margin_requirements = get_ibkr_margin_requirements_reindexed_like(
+        closes, time="16:30:00 America/New_York")
+    """
+    try:
+        margin_requirements = _get_stockloan_data_reindexed_like(
+            download_ibkr_margin_requirements,
+            reindex_like=reindex_like, time=time, is_intraday=True)
+    except NoFundamentalData:
+        import pandas as pd
+        import numpy as np
+        multiidx = pd.MultiIndex.from_product(
+            (("LongInitialMargin",
+            "LongMaintenanceMargin",
+            "ShortInitialMargin",
+            "ShortMaintenanceMargin"), reindex_like.index),
+            names=["Field", "Date"])
+        margin_requirements = pd.DataFrame(
+            np.nan,
+            index=multiidx,
+            columns=reindex_like.columns)
+
+    # fillna(0) where date > 2018-04-15, the data start date (NaNs after that
+    # date indicate no shortable shares, NaNs before that date indicate don't
+    # know)
+    data_start_date = os.environ.get("STOCKLOAN_DATA_START_DATE", "2018-04-15")
+    after_start_date_selector = margin_requirements.index.get_level_values("Date") > data_start_date
+    margin_requirements.loc[after_start_date_selector, :] = margin_requirements.loc[
+        after_start_date_selector].fillna(0)
+
+    return margin_requirements
 
 def collect_reuters_financials(universes=None, sids=None, force=True):
     """
