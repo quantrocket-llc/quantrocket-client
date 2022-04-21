@@ -1,4 +1,4 @@
-# Copyright 2017 QuantRocket - All Rights Reserved
+# Copyright 2017-2022 QuantRocket - All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -815,9 +815,9 @@ def get_ibkr_margin_requirements_reindexed_like(reindex_like, time=None):
     >>> closes = prices.loc["Close"]
     >>> margin_requirements = get_ibkr_margin_requirements_reindexed_like(closes)
     >>> short_initial_margins = margin_requirements.loc["ShortInitialMargin"]
-    >>> short_maintenance_margins = margin_requirements.loc["ShortInitialMargin"]
+    >>> short_maintenance_margins = margin_requirements.loc["ShortMaintenanceMargin"]
     >>> short_margins = short_initial_margins.where(
-        short_initial_margins.fillna(0) > short_maintenance_margins.fillna(0),
+        short_initial_margins > short_maintenance_margins,
         short_maintenance_margins)
 
     Get margin requirements as of 4:30 PM for a DataFrame of US stocks
