@@ -834,12 +834,12 @@ def get_ibkr_margin_requirements_reindexed_like(reindex_like, time=None):
     >>> margin_requirements = get_ibkr_margin_requirements_reindexed_like(
         closes, time="16:30:00 America/New_York")
     """
+    import pandas as pd
     try:
         margin_requirements = _get_stockloan_data_reindexed_like(
             download_ibkr_margin_requirements,
             reindex_like=reindex_like, time=time, is_intraday=True)
     except NoFundamentalData:
-        import pandas as pd
         import numpy as np
         multiidx = pd.MultiIndex.from_product(
             (("LongInitialMargin",
@@ -856,9 +856,15 @@ def get_ibkr_margin_requirements_reindexed_like(reindex_like, time=None):
     # date indicate no shortable shares, NaNs before that date indicate don't
     # know)
     data_start_date = os.environ.get("STOCKLOAN_DATA_START_DATE", "2018-04-15")
-    after_start_date_selector = margin_requirements.index.get_level_values("Date") > data_start_date
-    margin_requirements.loc[after_start_date_selector, :] = margin_requirements.loc[
-        after_start_date_selector].fillna(0)
+    all_fields = {}
+    for fieldname in margin_requirements.index.get_level_values("Field").unique():
+        field = margin_requirements.loc[fieldname]
+        after_start_date_selector = field.index > data_start_date
+        field.loc[after_start_date_selector, :] = field.loc[
+            after_start_date_selector].fillna(0)
+        all_fields[fieldname] = field
+
+    margin_requirements = pd.concat(all_fields, names=["Field", "Date"])
 
     return margin_requirements
 
