@@ -721,11 +721,11 @@ class ZiplineBacktestResult(object):
     Run a Zipline backtest and parse the CSV results:
 
     >>> f = io.StringIO()
-    >>> run_algorithm("momentum_pipeline.py",
-              bundle="etf-sampler-1d",
-              start="2015-02-04",
-              end="2015-12-31",
-              filepath_or_buffer=f)
+    >>> backtest("momentum_pipeline.py",
+                 bundle="etf-sampler-1d",
+                 start="2015-02-04",
+                 end="2015-12-31",
+                 filepath_or_buffer=f)
     >>> zipline_result = ZiplineBacktestResult.from_csv(f)
 
     The ZiplineBacktestResult object contains returns, positions, transactions,
