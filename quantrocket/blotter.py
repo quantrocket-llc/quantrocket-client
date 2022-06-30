@@ -22,6 +22,20 @@ from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.utils.parse import _read_moonshot_or_pnl_csv
 
+__all__ = [
+    "place_orders",
+    "cancel_orders",
+    "download_order_statuses",
+    "download_positions",
+    "list_positions",
+    "close_positions",
+    "download_executions",
+    "record_executions",
+    "apply_split",
+    "download_pnl",
+    "read_pnl_csv",
+]
+
 def place_orders(orders=None, infilepath_or_buffer=None):
     """
     Place one or more orders.

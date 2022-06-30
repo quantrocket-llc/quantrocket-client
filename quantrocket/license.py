@@ -16,6 +16,17 @@ import getpass
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 
+__all__ = [
+    "get_license_profile",
+    "set_license",
+    "get_alpaca_key",
+    "set_alpaca_key",
+    "get_polygon_key",
+    "set_polygon_key",
+    "get_quandl_key",
+    "set_quandl_key",
+]
+
 def get_license_profile(force_refresh=False):
     """
     Return the current license profile.

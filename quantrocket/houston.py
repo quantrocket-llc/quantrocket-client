@@ -20,6 +20,12 @@ import uuid
 from .exceptions import ImproperlyConfigured, CannotConnectToHouston
 from quantrocket.cli.utils.output import json_to_cli
 
+__all__ = [
+    "Houston",
+    "houston",
+    "ping",
+]
+
 CANNOT_CONNECT_TO_HOUSTON_ERROR_LOCAL = """{error}
 
 Could not connect to houston at {scheme}://{netloc}

@@ -22,6 +22,32 @@ from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.exceptions import ParameterError, NoMasterData
 
+__all__ = [
+    "list_ibkr_exchanges",
+    "collect_alpaca_listings",
+    "collect_edi_listings",
+    "collect_figi_listings",
+    "collect_ibkr_listings",
+    "collect_sharadar_listings",
+    "collect_usstock_listings",
+    "collect_ibkr_option_chains",
+    "diff_ibkr_securities",
+    "download_master_file",
+    "get_securities",
+    "get_securities_reindexed_like",
+    "get_contract_nums_reindexed_like",
+    "create_universe",
+    "delete_universe",
+    "list_universes",
+    "delist_ibkr_security",
+    "create_ibkr_combo",
+    "load_rollrules_config",
+    "get_rollrules_config",
+    "collect_ibkr_calendar",
+    "list_calendar_statuses",
+    "round_to_tick_sizes",
+]
+
 def list_ibkr_exchanges(regions=None, sec_types=None):
     """
     List exchanges by security type and country as found on the IBKR website.
@@ -502,7 +528,7 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
 
     See Also
     --------
-    quantrocket.master.get_securities : load securities into a DataFrame
+    get_securities : load securities into a DataFrame
     """
     params = {}
     if exchanges:

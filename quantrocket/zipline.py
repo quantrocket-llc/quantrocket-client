@@ -23,6 +23,24 @@ from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 from quantrocket.utils.warn import deprecated_replaced_by
 
+__all__ = [
+    "create_usstock_bundle",
+    "create_bundle_from_db",
+    "ingest_bundle",
+    "list_bundles",
+    "get_bundle_config",
+    "drop_bundle",
+    "get_default_bundle",
+    "set_default_bundle",
+    "download_bundle_file",
+    "backtest",
+    "create_tearsheet",
+    "trade",
+    "list_active_strategies",
+    "cancel_strategies",
+    "ZiplineBacktestResult",
+]
+
 def create_usstock_bundle(code, sids=None, universes=None, free=False, data_frequency=None):
     """
     Create a Zipline bundle for US stocks.

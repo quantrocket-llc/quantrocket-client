@@ -15,6 +15,10 @@
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 
+__all__ = [
+    "clone",
+]
+
 def clone(repo, branch=None, replace=None, skip_existing=None, target_dir=None):
     """
     Clone files from a Git repository.

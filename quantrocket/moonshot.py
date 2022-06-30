@@ -22,6 +22,14 @@ from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 from quantrocket.utils.parse import _read_moonshot_or_pnl_csv
 
+__all__ = [
+    "backtest",
+    "read_moonshot_csv",
+    "scan_parameters",
+    "ml_walkforward",
+    "trade",
+]
+
 def backtest(strategies, start_date=None, end_date=None, segment=None, allocations=None,
              nlv=None, params=None, details=None, output="csv", filepath_or_buffer=None,
              no_cache=False):

@@ -33,6 +33,11 @@ from quantrocket.zipline import (
     get_bundle_config,
     download_bundle_file)
 
+__all__ = [
+    "get_prices",
+    "get_prices_reindexed_like",
+]
+
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", tempfile.gettempdir())
 
 def get_prices(codes, start_date=None, end_date=None,

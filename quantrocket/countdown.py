@@ -22,6 +22,13 @@ def _load_or_show_crontab(filename=None, *args, **kwargs):
         exit_code = 0
         return get_crontab(*args, **kwargs), exit_code
 
+__all__ = [
+    "get_crontab",
+    "load_crontab",
+    "get_timezone",
+    "set_timezone",
+]
+
 def get_crontab(service=None):
     """
     Return the current crontab.

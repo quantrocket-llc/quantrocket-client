@@ -18,6 +18,10 @@ from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 
+__all__ = [
+    "execute_command",
+]
+
 def execute_command(cmd, return_file=None, filepath_or_buffer=None,
                     params=None,
                     service="satellite"):

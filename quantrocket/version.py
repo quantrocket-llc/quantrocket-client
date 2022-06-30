@@ -17,6 +17,10 @@ from quantrocket import __version__
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 
+__all__ = [
+    "get_version",
+]
+
 def get_version(detail=False):
     """
     Show the QuantRocket version number.

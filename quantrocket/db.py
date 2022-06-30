@@ -17,6 +17,19 @@ from quantrocket.houston import houston
 from quantrocket.exceptions import DataInsertionError
 from quantrocket.cli.utils.output import json_to_cli
 
+__all__ = [
+    "list_databases",
+    "get_s3_config",
+    "set_s3_config",
+    "s3_push_databases",
+    "s3_pull_databases",
+    "optimize_databases",
+    "connect_sqlite",
+    "insert_or_fail",
+    "insert_or_replace",
+    "insert_or_ignore",
+]
+
 def list_databases(services=None, codes=None, detail=False, expand=False):
     """
     List databases.
