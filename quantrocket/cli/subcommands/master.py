@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+from quantrocket.cli.utils.parse import HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("master", description="QuantRocket securities master CLI", help="Manage and query the securities master database")
@@ -25,13 +25,15 @@ database.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket master collect-alpaca
     """
     parser = _subparsers.add_parser(
         "collect-alpaca",
         help="collect securities listings from Alpaca and store in securities master database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.set_defaults(func="quantrocket.master._cli_collect_alpaca_listings")
 
     examples = """
@@ -42,13 +44,19 @@ Examples:
 
 Collect sample listings:
 
+.. code-block:: bash
+
     quantrocket master collect-edi --exchanges FREE
 
 Collect listings for all permitted exchanges
 
+.. code-block:: bash
+
     quantrocket master collect-edi
 
 Collect all Chinese stock listings:
+
+.. code-block:: bash
 
     quantrocket master collect-edi -e XSHG XSHE
     """
@@ -56,7 +64,7 @@ Collect all Chinese stock listings:
         "collect-edi",
         help="collect securities listings from EDI and store in securities master database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-e", "--exchanges",
         nargs="*",
@@ -81,13 +89,15 @@ mapped to securities from other vendors.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket master collect-figi
     """
     parser = _subparsers.add_parser(
         "collect-figi",
         help="collect securities listings from Bloomberg OpenFIGI and store in securities master database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.set_defaults(func="quantrocket.master._cli_collect_figi_listings")
 
     examples = """
@@ -103,21 +113,31 @@ Examples:
 
 Collect free sample listings:
 
+.. code-block:: bash
+
     quantrocket master collect-ibkr --exchanges FREE
 
 Collect all Toronto Stock Exchange stock listings:
+
+.. code-block:: bash
 
     quantrocket master collect-ibkr --exchanges TSE --sec-types STK
 
 Collect all NYSE ARCA ETF listings:
 
+.. code-block:: bash
+
     quantrocket master collect-ibkr -e ARCA --sec-types ETF
 
 Collect specific symbols from Nasdaq:
 
+.. code-block:: bash
+
     quantrocket master collect-ibkr -e NASDAQ --symbols AAPL GOOG NFLX
 
 Re-collect contract details for an existing universe called "japan-fin":
+
+.. code-block:: bash
 
     quantrocket master collect-ibkr --universes japan-fin
     """
@@ -126,7 +146,7 @@ Re-collect contract details for an existing universe called "japan-fin":
         help="collect securities listings from Interactive Brokers and store "
         "in securities master database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-e", "--exchanges",
         nargs="*",
@@ -169,9 +189,13 @@ Examples:
 
 Collect sample listings:
 
+.. code-block:: bash
+
     quantrocket master collect-sharadar --countries FREE
 
 Collect all US listings:
+
+.. code-block:: bash
 
     quantrocket master collect-sharadar --countries US
     """
@@ -179,7 +203,7 @@ Collect all US listings:
         "collect-sharadar",
         help="collect securities listings from Sharadar and store in securities master database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-c", "--countries",
         nargs="*",
@@ -195,13 +219,15 @@ database.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket master collect-usstock
     """
     parser = _subparsers.add_parser(
         "collect-usstock",
         help="collect US stock listings from QuantRocket and store in securities master database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.set_defaults(func="quantrocket.master._cli_collect_usstock_listings")
 
     examples = """
@@ -216,13 +242,19 @@ Examples:
 
 Collect option chains for several underlying securities:
 
+.. code-block:: bash
+
     quantrocket master collect-ibkr-options --sids FIBBG000LV0836 FIBBG000B9XRY4
 
 Collect option chains for NQ futures:
 
+.. code-block:: bash
+
     quantrocket master get -e GLOBEX -s NQ -t FUT | quantrocket master collect-ibkr-options -f -
 
 Collect option chains for a large universe of stocks called "nyse-stk" (see note above):
+
+.. code-block:: bash
 
     quantrocket master collect-ibkr-options -u "nyse-stk"
     """
@@ -230,7 +262,7 @@ Collect option chains for a large universe of stocks called "nyse-stk" (see note
         "collect-ibkr-options",
         help="collect IBKR option chains for underlying securities",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-u", "--universes",
         nargs="*",
@@ -258,20 +290,28 @@ Examples:
 Download NYSE and NASDAQ securities to file, using MICs to specify
 the exchanges:
 
+.. code-block:: bash
+
     quantrocket master get --exchanges XNYS XNAS -o securities.csv
 
 Download NYSE and NASDAQ securities to file, using IBKR exchange codes
 to specify the exchanges, and include all IBKR fields:
+
+.. code-block:: bash
 
     quantrocket master get --exchanges NYSE NASDAQ -f 'ibkr*' -o securities.csv
 
 Download a CSV of all ARCA ETFs and use it to create a universe called
 "arca-etf":
 
+.. code-block:: bash
+
     quantrocket master get --exchanges ARCA --sec-types ETF | quantrocket master universe "arca-etf" --infile -
 
 Query the exchange and currency for all listings of AAPL and format for
 terminal display:
+
+.. code-block:: bash
 
     quantrocket master get --symbols AAPL --fields Exchange Currency | csvlook -I
 
@@ -298,7 +338,7 @@ excluded if they match any of the exclusion criteria.
         "get",
         help="query security details from the securities master database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-e", "--exchanges",
@@ -397,9 +437,13 @@ Examples:
 
 List all exchanges:
 
+.. code-block:: bash
+
     quantrocket master list-ibkr-exchanges
 
 List stock exchanges in North America:
+
+.. code-block:: bash
 
     quantrocket master list-ibkr-exchanges --regions north_america --sec-types STK
     """
@@ -407,7 +451,7 @@ List stock exchanges in North America:
         "list-ibkr-exchanges",
         help="list exchanges by security type and country as found on the IBKR website",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-r", "--regions",
         nargs="*",
@@ -434,24 +478,34 @@ Examples:
 Asynchronously generate a diff for all securities in a universe called
 "italy-stk" and log the results, if any, to flightlog:
 
+.. code-block:: bash
+
     quantrocket master diff-ibkr -u "italy-stk"
 
 Asynchronously generate a diff for all securities in a universe called
 "italy-stk", looking only for sector or industry changes:
 
+.. code-block:: bash
+
     quantrocket master diff-ibkr -u "italy-stk" --fields ibkr_Sector ibkr_Industry
 
 Synchronously get a diff for specific securities by sid:
 
+.. code-block:: bash
+
     quantrocket master diff-ibkr --sids FIBBG000LV0836 FIBBG000B9XRY4 --wait
 
 Synchronously get a diff for specific securities without knowing their sids:
+
+.. code-block:: bash
 
     quantrocket master get -e NASDAQ -t STK -s AAPL FB GOOG | quantrocket master diff-ibkr --wait --infile -
 
 Asynchronously generate a diff for all securities in a universe called
 "nasdaq-sml" and auto-delist any symbols that are no longer available from IBKR
 or that are now associated with the PINK exchange:
+
+.. code-block:: bash
 
     quantrocket master diff-ibkr -u "nasdaq-sml" --delist-missing --delist-exchanges PINK
     """
@@ -460,7 +514,7 @@ or that are now associated with the PINK exchange:
         help="flag security details that have changed in IBKR's system since the time "
         "they were last collected into the securities master database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-u", "--universes",
         nargs="*",
@@ -514,9 +568,13 @@ Examples:
 
 Delist a security by sid:
 
+.. code-block:: bash
+
     quantrocket master delist-ibkr -i FIBBG1234567890
 
 Delist a security by symbol + exchange:
+
+.. code-block:: bash
 
     quantrocket master delist-ibkr -s ABC -e NYSE
     """
@@ -524,7 +582,7 @@ Delist a security by symbol + exchange:
         "delist-ibkr",
         help="mark an IBKR security as delisted",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-i", "--sid",
         help="the sid of the security to be delisted")
@@ -549,13 +607,15 @@ List universes and their size.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket master list-universes
     """
     parser = _subparsers.add_parser(
         "list-universes",
         help="list universes and their size",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.set_defaults(func="quantrocket.master._cli_list_universes")
 
     examples = """
@@ -566,19 +626,29 @@ Examples:
 Download a CSV of Italian stocks then upload it to create a universe called
 "italy-stk":
 
+.. code-block:: bash
+
     quantrocket master get --exchanges BVME --sec-types STK -f italy.csv
+.. code-block:: bash
+
     quantrocket master universe "italy-stk" -f italy.csv
 
 In one line, download a CSV of all ARCA ETFs and append to a universe called
 "arca-etf":
 
+.. code-block:: bash
+
     quantrocket master get --exchanges ARCA --sec-types ETF | quantrocket master universe "arca-etf" --append --infile -
 
 Create a universe consisting of several existing universes:
 
+.. code-block:: bash
+
     quantrocket master universe "asx" --from-universes "asx-sml" "asx-mid" "asx-lrg"
 
 Copy a universe but exclude delisted securities:
+
+.. code-block:: bash
 
     quantrocket master universe "hong-kong-active" --from-universes "hong-kong" --exclude-delisted
     """
@@ -586,7 +656,7 @@ Copy a universe but exclude delisted securities:
         "universe",
         help="create a universe of securities",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -633,13 +703,15 @@ Examples:
 
 Delete the universe called "italy-stk":
 
+.. code-block:: bash
+
     quantrocket master delete-universe 'italy-stk'
     """
     parser = _subparsers.add_parser(
         "delete-universe",
         help="delete a universe",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         help="the universe code")
@@ -662,6 +734,8 @@ Examples:
 
 Create a spread from a JSON file:
 
+.. code-block:: bash
+
     cat spread.json
     [["BUY", 1, QF12345],
      ["SELL", 1, QF23456]]
@@ -672,7 +746,7 @@ Create a spread from a JSON file:
         "create-ibkr-combo",
         help="Create an IBKR combo (aka spread)",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "combo_filepath",
         metavar="PATH",
@@ -687,9 +761,13 @@ Examples:
 
 Upload a new rollover config (replaces current config):
 
+.. code-block:: bash
+
     quantrocket master rollrules myrolloverrules.yml
 
 Show current rollover config:
+
+.. code-block:: bash
 
     quantrocket master rollrules
     """
@@ -697,7 +775,7 @@ Show current rollover config:
         "rollrules",
         help="upload a new rollover rules config, or return the current rollover rules",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "filename",
         nargs="?",
@@ -713,13 +791,15 @@ Examples:
 
 Collect trading hours for ARCA:
 
+.. code-block:: bash
+
     quantrocket master collect-ibkr-calendar -e ARCA
     """
     parser = _subparsers.add_parser(
         "collect-ibkr-calendar",
         help="collect upcoming trading hours from IBKR for exchanges and save to securities master database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-e", "--exchanges",
         nargs="*",
@@ -734,13 +814,19 @@ Examples:
 
 Check whether NYSE is open or closed now:
 
+.. code-block:: bash
+
     quantrocket master calendar NYSE
 
 Check whether the Tokyo Stock Exchange was open or closed 5 hours ago:
 
+.. code-block:: bash
+
     quantrocket master calendar TSEJ --ago 5h
 
 Check whether GLOBEX will be open or closed in 30 minutes:
+
+.. code-block:: bash
 
     quantrocket master calendar GLOBEX --in 30min
     """
@@ -748,7 +834,7 @@ Check whether GLOBEX will be open or closed in 30 minutes:
         "calendar",
         help="check whether exchanges are open or closed",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "exchanges",
         metavar="EXCHANGE",
@@ -788,13 +874,19 @@ Examples:
 
 Place Moonshot orders if NYSE is open now:
 
+.. code-block:: bash
+
     quantrocket master isopen NYSE && quantrocket moonshot orders my-strategy | quantrocket blotter order -f -
 
 Collect historical data for Australian stocks if the exchange was open 4 hours ago:
 
+.. code-block:: bash
+
     quantrocket master isopen ASX --ago 4h && quantrocket history collect asx-stk-1d
 
 Log a message if the London Stock Exchange will be open in 30 minutes:
+
+.. code-block:: bash
 
     quantrocket master isopen LSE --in 30min && quantrocket flightlog log 'the market opens soon!'
     """
@@ -802,7 +894,7 @@ Log a message if the London Stock Exchange will be open in 30 minutes:
         "isopen",
         help="assert that one or more exchanges are open and exit non-zero if closed",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "exchanges",
         metavar="EXCHANGE",
@@ -860,18 +952,26 @@ Examples:
 
 Place Moonshot orders if the NYSE will be closed NYSE in 1 hour:
 
+.. code-block:: bash
+
     quantrocket master isclosed NYSE --in 1h && quantrocket moonshot orders my-strategy | quantrocket blotter order -f -
 
 Collect historical data for Australian stocks if the exchange is closed now but was
 open 4 hours ago:
 
+.. code-block:: bash
+
     quantrocket master isclosed ASX && quantrocket master isopen ASX --ago 4h && quantrocket history collect asx-stk-1d
 
 Place Moonshot orders if the NYSE has been closed since month end:
 
+.. code-block:: bash
+
     quantrocket master isclosed NYSE --since M && quantrocket moonshot orders monthly-rebalancing-strategy | quantrocket blotter order -f -
 
 Place Moonshot orders if the NYSE will be closed in 1 hour and remain closed through quarter end:
+
+.. code-block:: bash
 
     quantrocket master isclosed NYSE --in 1H --until Q && quantrocket moonshot orders end-of-quarter-strategy | quantrocket blotter order -f -
     """
@@ -879,7 +979,7 @@ Place Moonshot orders if the NYSE will be closed in 1 hour and remain closed thr
         "isclosed",
         help="assert that one or more exchanges are closed and exit non-zero if open",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "exchanges",
         metavar="EXCHANGE",
@@ -933,14 +1033,20 @@ Examples:
 
 Round the LmtPrice column in a CSV of orders and return a new CSV:
 
+.. code-block:: bash
+
     quantrocket master ticksize -f orders.csv --round LmtPrice -o rounded_orders.csv
 
 Round the StopPrice column in a CSV of orders and append the tick size as a
 new column (called StopPriceTickSize):
 
+.. code-block:: bash
+
     quantrocket master ticksize -f orders.csv -r StopPrice --append-ticksize -o rounded_orders.csv
 
 Round the LmtPrice column in a CSV of Moonshot orders then place the orders:
+
+.. code-block:: bash
 
     quantrocket moonshot orders umd-japan | quantrocket master ticksize -f - -r LmtPrice | quantrocket blotter order -f -
     """
@@ -948,7 +1054,7 @@ Round the LmtPrice column in a CSV of Moonshot orders then place the orders:
         "ticksize",
         help="round prices in a CSV to valid tick sizes",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-f", "--infile",
         required=True,

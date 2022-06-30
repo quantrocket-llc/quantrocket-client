@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+from quantrocket.cli.utils.parse import HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("flightlog", description="QuantRocket logging service CLI", help="Monitor and download logs")
@@ -26,9 +26,13 @@ Examples:
 
 Stream application logs:
 
+.. code-block:: bash
+
     quantrocket flightlog stream
 
 Stream detailed logs:
+
+.. code-block:: bash
 
     quantrocket flightlog stream --detail
     """
@@ -36,7 +40,7 @@ Stream detailed logs:
         "stream",
         help="stream application logs, `tail -f` style",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-d", "--detail",
         action="store_true",
@@ -60,13 +64,19 @@ Examples:
 
 Download application logs:
 
+.. code-block:: bash
+
     quantrocket flightlog get app.log
 
 Download detailed logs:
 
+.. code-block:: bash
+
     quantrocket flightlog get --detail sys.log
 
 Download detailed logs for the history service:
+
+.. code-block:: bash
 
     quantrocket flightlog get --detail --match quantrocket_history sys.log
     """
@@ -74,7 +84,7 @@ Download detailed logs for the history service:
         "get",
         help="download the logfile",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "outfile",
         metavar="OUTFILE",
@@ -104,10 +114,14 @@ Examples:
 Wait up to 10 minutes for a message to appear indicating that data
 ingestion has finished:
 
+.. code-block:: bash
+
     quantrocket flightlog wait '[usstock-1min] Completed ingesting data' --timeout 10m
 
 Using a regular expression, wait up to 1 hour for a message to appear
 indicating that data collection has finished:
+
+.. code-block:: bash
 
     quantrocket flightlog wait '\[usstock-1d\] Collected [0-9]+ monthly files' --regex --timeout 1h
     """
@@ -115,7 +129,7 @@ indicating that data collection has finished:
         "wait",
         help="wait for a message to appear in the logs",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "message",
         help="the log message to search for")
@@ -148,9 +162,13 @@ Examples:
 
 Log a message under the name "myapp":
 
+.. code-block:: bash
+
     quantrocket flightlog log "this is a test" --name myapp --level INFO
 
 Log the output from another command:
+
+.. code-block:: bash
 
     quantrocket account balance --below-cushion 0.02 | quantrocket flightlog log --name quantrocket.account --level CRITICAL
     """
@@ -158,7 +176,7 @@ Log the output from another command:
         "log",
         help="log a message",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "msg",
         nargs="?",
@@ -184,9 +202,13 @@ Examples:
 
 Set the flightlog timezone to America/New_York:
 
+.. code-block:: bash
+
     quantrocket flightlog timezone America/New_York
 
 Show the current flightlog timezone:
+
+.. code-block:: bash
 
     quantrocket flightlog timezone
     """
@@ -194,7 +216,7 @@ Show the current flightlog timezone:
         "timezone",
         help="set or show the flightlog timezone",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "tz",
         nargs="?",
@@ -212,9 +234,13 @@ Examples:
 
 Set the Papertrail host and port to log to:
 
+.. code-block:: bash
+
     quantrocket flightlog papertrail --host logs.papertrailapp.com --port 55555
 
 Show the current papertrail config:
+
+.. code-block:: bash
 
     quantrocket flightlog papertrail
     """
@@ -222,7 +248,7 @@ Show the current papertrail config:
         "papertrail",
         help="set or show the Papertrail log configuration",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "--host",
         metavar="HOST",

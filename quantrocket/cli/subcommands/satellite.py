@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-from quantrocket.cli.utils.parse import dict_str
+from quantrocket.cli.utils.parse import dict_str, HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("satellite", description="QuantRocket Satellite CLI", help="Run custom scripts")
@@ -28,9 +27,13 @@ Examples:
 Run a Python function called 'create_calendar_spread' defined in '/codeload/scripts/combos.py'
 and pass it arguments:
 
+.. code-block:: bash
+
     quantrocket satellite exec 'codeload.scripts.combos.create_calendar_spread' --params 'universe:cl-fut' 'contract_months:[1,2]'
 
 Run a backtrader backtest and save the performance chart to file:
+
+.. code-block:: bash
 
     quantrocket satellite exec 'python /codeload/backtrader/dual_moving_average.py' --return-file '/tmp/backtrader-plot.pdf' --outfile 'backtrader-plot.pdf'
     """
@@ -38,7 +41,7 @@ Run a backtrader backtest and save the performance chart to file:
         "exec",
         help="execute a Python function or abitrary shell command on a satellite service",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "cmd",
         metavar="CMD",

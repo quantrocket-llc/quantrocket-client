@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+from quantrocket.cli.utils.parse import HelpFormatter
 
 def add_subparser(subparsers):
     examples = """
@@ -22,9 +22,13 @@ Examples:
 
 Show the version number:
 
+.. code-block:: bash
+
     quantrocket version
 
 Show both the services and client version numbers:
+
+.. code-block:: bash
 
     quantrocket version -d
     """
@@ -33,7 +37,7 @@ Show both the services and client version numbers:
         description="show the QuantRocket version number",
         help="show the QuantRocket version number",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-d", "--detail",
         action="store_true",

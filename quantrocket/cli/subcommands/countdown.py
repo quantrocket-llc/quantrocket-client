@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+from quantrocket.cli.utils.parse import HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("countdown", description="QuantRocket cron service CLI", help="Manage crontabs")
@@ -27,9 +27,13 @@ Examples:
 Upload a new crontab to a service called countdown-australia (replaces
 current crontab):
 
+.. code-block:: bash
+
     quantrocket countdown crontab mycron.crontab -s countdown-australia
 
 Show current crontab for a service called countdown-australia:
+
+.. code-block:: bash
 
     quantrocket countdown crontab -s countdown-australia
     """
@@ -37,7 +41,7 @@ Show current crontab for a service called countdown-australia:
         "crontab",
         help="upload a new crontab, or return the current crontab",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "filename",
         nargs="?",
@@ -56,13 +60,19 @@ Examples:
 
 Set the timezone of the countdown service to America/New_York:
 
+.. code-block:: bash
+
     quantrocket countdown timezone America/New_York
 
 Show the current timezone of the countdown service:
 
+.. code-block:: bash
+
     quantrocket countdown timezone
 
 Show the timezone for a service called countdown-australia:
+
+.. code-block:: bash
 
     quantrocket countdown timezone -s countdown-australia
     """
@@ -70,7 +80,7 @@ Show the timezone for a service called countdown-australia:
         "timezone",
         help="set or show the countdown service timezone",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "tz",
         nargs="?",

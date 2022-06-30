@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-from quantrocket.cli.utils.parse import dict_str, list_or_int_or_float_or_str
+from quantrocket.cli.utils.parse import dict_str, list_or_int_or_float_or_str, HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("moonshot", description="QuantRocket Moonshot CLI", help="Backtest and trade Moonshot strategies")
@@ -35,14 +34,20 @@ Examples:
 Backtest several HML (High Minus Low) strategies from 2005-2015 and return a
 CSV of results:
 
+.. code-block:: bash
+
     quantrocket moonshot backtest hml-us hml-eur hml-asia -s 2005-01-01 -e 2015-12-31 -o hml_results.csv
 
 Backtest a single strategy called demo using all available history and return a
 PDF tear sheet:
 
+.. code-block:: bash
+
     quantrocket moonshot backtest demo --pdf -o tearsheet.pdf
 
 Run a backtest in 1-year segments to reduce memory usage:
+
+.. code-block:: bash
 
     quantrocket moonshot backtest big-strategy -s 2000-01-01 -e 2018-01-01 --segment A -o results.csv
     """
@@ -50,7 +55,7 @@ Run a backtest in 1-year segments to reduce memory usage:
         "backtest",
         help="backtest one or more strategies",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "strategies",
         nargs="+",
@@ -129,13 +134,19 @@ Examples:
 Run a parameter scan for several different moving averages on a strategy
 called trend-friend and return a PDF:
 
+.. code-block:: bash
+
     quantrocket moonshot paramscan trend-friend -p MAVG_WINDOW -v 20 50 100 --pdf -o tearsheet.pdf
 
 Run a 2-D parameter scan for multiple strategies and return a PDF:
 
+.. code-block:: bash
+
     quantrocket moonshot paramscan strat1 strat2 strat3 -p MIN_STD -v 1 1.5 2 --param2 STD_WINDOW --vals2 20 50 100 200 --pdf -o tearsheet.pdf
 
 Run a parameter scan in 1-year segments to reduce memory usage:
+
+.. code-block:: bash
 
     quantrocket moonshot paramscan big-strategy -s 2000-01-01 -e 2018-01-01 --segment A -p MAVG_WINDOW -v 20 50 100 --pdf -o tearsheet.pdf
     """
@@ -143,7 +154,7 @@ Run a parameter scan in 1-year segments to reduce memory usage:
         "paramscan",
         help="run a parameter scan for one or more strategies",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "strategies",
         nargs="+",
@@ -259,6 +270,8 @@ Run a walk-forward optimization using the default model and retrain the model an
 writing the backtest results and trained model to demo_ml_results.csv and
 demo_ml_trained_model.joblib, respectively:
 
+.. code-block:: bash
+
     quantrocket moonshot ml-walkforward demo-ml -s 2007-01-01 -e 2018-12-31 --train A -o demo_ml*
 
 Run a walk-forward optimization using a custom model (serialized with joblib), retrain the
@@ -266,13 +279,15 @@ model annually, don't perform backtesting until after 5 years of initial trainin
 and further split the training and backtesting into quarterly segments to reduce
 memory usage:
 
+.. code-block:: bash
+
     quantrocket moonshot ml-walkforward demo-ml -s 2007-01-01 -e 2018-12-31 --model my_model.joblib --train A --min-train 5Y --segment Q -o demo_ml*
     """
     parser = _subparsers.add_parser(
         "ml-walkforward",
         help="run a walk-forward optimization of a machine learning strategy",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "strategy",
         metavar="CODE",
@@ -381,17 +396,25 @@ Examples:
 
 Generate orders for a single strategy called umd-nyse:
 
+.. code-block:: bash
+
     quantrocket moonshot trade umd-nyse -o orders.csv
 
 Generate orders and automatically place them (if any) through the blotter:
+
+.. code-block:: bash
 
     quantrocket moonshot trade umd-nyse | quantrocket blotter order -f -
 
 Generate orders for multiple strategies for a particular account:
 
+.. code-block:: bash
+
     quantrocket moonshot trade umd-japan hml-japan --accounts DU12345 -o orders.csv
 
 Generate orders as if it were an earlier date (for purpose of review):
+
+.. code-block:: bash
 
     quantrocket moonshot trade umd-nyse -o orders.csv --review-date 2018-05-11
     """
@@ -399,7 +422,7 @@ Generate orders as if it were an earlier date (for purpose of review):
         "trade",
         help="run one or more strategies and generate orders.",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "strategies",
         nargs="+",

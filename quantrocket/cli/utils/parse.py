@@ -12,6 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+
+class HelpFormatter(argparse.RawDescriptionHelpFormatter):
+
+    def format_help(self):
+        help_text = super().format_help()
+        # Strip the RST code blocks directives which are used for doc
+        # generation but not desired for end-user viewing
+        help_text = help_text.replace(".. code-block:: bash\n\n", "")
+        return help_text
+
 def list_or_int_or_float_or_str(value):
     """
     Parses the value as an int, else a float, else a string. If the value

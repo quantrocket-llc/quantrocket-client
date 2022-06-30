@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+from quantrocket.cli.utils.parse import HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("db", description="QuantRocket database service CLI", help="Backup, restore, and manage databases")
@@ -26,14 +26,20 @@ Examples:
 
 List all databases:
 
+.. code-block:: bash
+
     quantrocket db list
 
 List all history databases and include details such as file size:
+
+.. code-block:: bash
 
     quantrocket db list --services history --detail
 
 List details for a sharded history database called usa-stk-15min
 and list each shard individually:
+
+.. code-block:: bash
 
     quantrocket db list --services history --codes usa-stk-15min --detail --expand
     """
@@ -41,7 +47,7 @@ and list each shard individually:
         "list",
         help="list databases",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-s", "--services",
         nargs="*",
@@ -76,13 +82,19 @@ Examples:
 
 Configure S3 (will prompt for secret access key):
 
+.. code-block:: bash
+
     quantrocket db s3config --access-key-id XXXXXXXX --bucket my-bucket
 
 Preserve existing credentials but point to a new bucket:
 
+.. code-block:: bash
+
     quantrocket db s3config --bucket my-other-bucket
 
 Show current configuration:
+
+.. code-block:: bash
 
     quantrocket db s3config
     """
@@ -91,7 +103,7 @@ Show current configuration:
         help="set or show Amazon S3 configuration for pushing and "
         "pulling databases to and from S3",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-a", "--access-key-id",
         help="AWS access key ID")
@@ -117,13 +129,19 @@ Examples:
 
 Push all databases:
 
+.. code-block:: bash
+
     quantrocket db s3push
 
 Push all databases for the history service:
 
+.. code-block:: bash
+
     quantrocket db s3push --services history
 
 Push a database called quantrocket.history.nyse.sqlite:
+
+.. code-block:: bash
 
     quantrocket db s3push --services history --codes nyse
     """
@@ -131,7 +149,7 @@ Push a database called quantrocket.history.nyse.sqlite:
         "s3push",
         help="push database(s) to Amazon S3",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-s", "--services",
         nargs="*",
@@ -153,13 +171,15 @@ Examples:
 
 Pull a database stored on S3 as quantrocket.history.nyse.sqlite.gz:
 
+.. code-block:: bash
+
     quantrocket db s3pull --services history --codes nyse
     """
     parser = _subparsers.add_parser(
         "s3pull",
         help="pull database(s) from Amazon S3",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-s", "--services",
         nargs="*",
@@ -188,13 +208,15 @@ Examples:
 
 Optimize all blotter databases:
 
+.. code-block:: bash
+
     quantrocket db optimize --services blotter
     """
     parser = _subparsers.add_parser(
         "optimize",
         help="optimize databases to improve performance",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-s", "--services",
         nargs="*",

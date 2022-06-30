@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-from quantrocket.cli.utils.parse import dict_str
+from quantrocket.cli.utils.parse import dict_str, HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("account", description="QuantRocket account CLI", help="Query account balances and exchange rates")
@@ -27,18 +26,26 @@ Examples:
 
 Query the latest account balances.
 
+.. code-block:: bash
+
     quantrocket account balance --latest
 
 Query the latest NLV (Net Liquidation Value) for a particular account:
+
+.. code-block:: bash
 
     quantrocket account balance --latest --fields NetLiquidation --accounts U123456
 
 Check for accounts that have fallen below a 5% cushion and log the results,
 if any, to flightlog:
 
+.. code-block:: bash
+
     quantrocket account balance --latest --below Cushion:0.05 | quantrocket flightlog log --name quantrocket.account --level CRITICAL
 
 Query historical account balances over a date range:
+
+.. code-block:: bash
 
     quantrocket account balance --start-date 2017-06-01 --end-date 2018-01-31
     """
@@ -46,7 +53,7 @@ Query historical account balances over a date range:
         "balance",
         help="query account balances",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",
@@ -108,9 +115,13 @@ Examples:
 
 View current portfolio in terminal:
 
+.. code-block:: bash
+
     quantrocket account portfolio | csvlook
 
 Download current portfolio for a particular account and save to file:
+
+.. code-block:: bash
 
     quantrocket account portfolio --accounts U12345 -o portfolio.csv
     """
@@ -118,7 +129,7 @@ Download current portfolio for a particular account and save to file:
         "portfolio",
         help="download current portfolio",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-b", "--brokers",
@@ -189,13 +200,15 @@ Examples:
 
 Query the latest exchange rates.
 
+.. code-block:: bash
+
     quantrocket account rates --latest
     """
     parser = _subparsers.add_parser(
         "rates",
         help="query exchange rates for the base currency",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",

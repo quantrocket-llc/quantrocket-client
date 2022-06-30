@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+from quantrocket.cli.utils.parse import HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("realtime", description="QuantRocket real-time market data CLI", help="Collect and query real-time market data")
@@ -29,9 +29,13 @@ Examples:
 
 Create a database for collecting real-time trades and volume for US stocks:
 
+.. code-block:: bash
+
     quantrocket realtime create-ibkr-tick-db usa-stk-trades -u usa-stk --fields LastPrice Volume
 
 Create a database for collecting trades and quotes for a universe of futures:
+
+.. code-block:: bash
 
     quantrocket realtime create-ibkr-tick-db globex-fut-taq -u globex-fut --fields LastPrice Volume BidPrice AskPrice BidSize AskSize
     """
@@ -39,7 +43,7 @@ Create a database for collecting trades and quotes for a universe of futures:
         "create-ibkr-tick-db",
         help="create a new database for collecting real-time tick data from Interactive Brokers",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -76,13 +80,15 @@ Examples:
 
 Create a database for collecting real-time trade prices and sizes for US stocks:
 
+.. code-block:: bash
+
     quantrocket realtime create-polygon-tick-db usa-stk-trades -u usa-stk --fields LastPrice LastSize
     """
     parser = _subparsers.add_parser(
         "create-polygon-tick-db",
         help="create a new database for collecting real-time tick data from Polygon",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -115,13 +121,15 @@ Examples:
 
 Create a database for collecting real-time trade prices and sizes for US stocks:
 
+.. code-block:: bash
+
     quantrocket realtime create-alpaca-tick-db usa-stk-trades -u usa-stk --fields LastPrice LastSize
     """
     parser = _subparsers.add_parser(
         "create-alpaca-tick-db",
         help="create a new database for collecting real-time tick data from Alpaca",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -156,11 +164,15 @@ Create an aggregate database of 1 minute bars consisting of OHLC trades and volu
 from a tick database of US stocks, resulting in fields called LastPriceOpen, LastPriceHigh,
 LastPriceLow, LastPriceClose, and VolumeClose:
 
+.. code-block:: bash
+
     quantrocket realtime create-agg-db usa-stk-trades-1min --tick-db usa-stk-trades -z 1m -f LastPrice:Open,High,Low,Close Volume:Close
 
 Create an aggregate database of 1 second bars containing the closing bid and ask and
 the mean bid size and ask size, from a tick database of futures trades and
 quotes, resulting in fields called BidPriceClose, AskPriceClose, BidSizeMean, and AskSizeMean:
+
+.. code-block:: bash
 
     quantrocket realtime create-agg-db globex-fut-taq-1sec --tick-db globex-fut-taq -z 1s -f BidPrice:Close AskPrice:Close BidSize:Mean AskSize:Mean
     """
@@ -168,7 +180,7 @@ quotes, resulting in fields called BidPriceClose, AskPriceClose, BidSizeMean, an
         "create-agg-db",
         help="create an aggregate database from a tick database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -203,9 +215,13 @@ Examples:
 
 Return the configuration for a tick database called "globex-fut-taq":
 
+.. code-block:: bash
+
     quantrocket realtime config globex-fut-taq
 
 Return the configuration for an aggregate database called "globex-fut-taq-1s":
+
+.. code-block:: bash
 
     quantrocket realtime config globex-fut-taq-1s
     """
@@ -213,7 +229,7 @@ Return the configuration for an aggregate database called "globex-fut-taq-1s":
         "config",
         help="return the configuration for a tick database or aggregate database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         help="the tick database code or aggregate database code")
@@ -232,13 +248,15 @@ Examples:
 
 Delete a database called "usa-stk-trades":
 
+.. code-block:: bash
+
     quantrocket realtime drop-db usa-stk-trades --confirm-by-typing-db-code-again usa-stk-trades
     """
     parser = _subparsers.add_parser(
         "drop-db",
         help="delete a tick database or aggregate database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         help="the tick database code or aggregate database code")
@@ -274,13 +292,15 @@ Examples:
 Delete ticks older than 7 days in a database called 'usa-tech-stk-tick' (no
 aggregate records are deleted):
 
+.. code-block:: bash
+
     quantrocket realtime drop-ticks usa-tech-stk-tick --older-than 7d
     """
     parser = _subparsers.add_parser(
         "drop-ticks",
         help="delete ticks from a tick database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         help="the tick database code")
@@ -297,13 +317,15 @@ List tick databases and associated aggregate databases.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket realtime list
     """
     parser = _subparsers.add_parser(
         "list",
         help="list tick databases and associated aggregate databases",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.set_defaults(func="quantrocket.realtime._cli_list_databases")
 
     examples = """
@@ -320,14 +342,20 @@ Examples:
 
 Collect market data for all securities in a tick database called 'japan-banks-trades':
 
+.. code-block:: bash
+
     quantrocket realtime collect japan-banks-trades
 
 Collect market data for a subset of securities in a tick database called 'usa-stk-trades'
 and automatically cancel the data collection in 30 minutes:
 
+.. code-block:: bash
+
     quantrocket realtime collect usa-stk-trades --sids FIBBG12345 FIBBG23456 FIBBG34567 --until 30m
 
 Collect a market data snapshot and wait until it completes:
+
+.. code-block:: bash
 
     quantrocket realtime collect usa-stk-trades --snapshot --wait
     """
@@ -335,7 +363,7 @@ Collect a market data snapshot and wait until it completes:
         "collect",
         help="collect real-time market data and save it to a tick database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "codes",
         metavar="CODE",
@@ -382,13 +410,15 @@ Return the number of tickers currently being collected, by vendor and database.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket realtime active
     """
     parser = _subparsers.add_parser(
         "active",
         help="return the number of tickers currently being collected, by vendor and database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-d", "--detail",
         action="store_true",
@@ -402,9 +432,13 @@ Examples:
 
 Cancel market data collection for a tick database called 'globex-fut-taq':
 
+.. code-block:: bash
+
     quantrocket realtime cancel globex-fut-taq
 
 Cancel all market data collection:
+
+.. code-block:: bash
 
     quantrocket realtime cancel --all
     """
@@ -412,7 +446,7 @@ Cancel all market data collection:
         "cancel",
         help="cancel market data collection",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "codes",
         metavar="CODE",
@@ -442,13 +476,15 @@ Examples:
 
 Download a CSV of futures market data since 08:00 AM Chicago time:
 
+.. code-block:: bash
+
     quantrocket realtime get globex-fut-taq --start-date '08:00:00 America/Chicago' -o globex_taq.csv
     """
     parser = _subparsers.add_parser(
         "get",
         help="query market data from a tick database or aggregate database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -519,9 +555,13 @@ Examples:
 
 Stream all incoming market data:
 
+.. code-block:: bash
+
     quantrocket realtime stream
 
 Stream a subset of fields and sids:
+
+.. code-block:: bash
 
     quantrocket realtime stream --sids FIBBG265598 --fields BidPrice AskPrice
     """
@@ -529,7 +569,7 @@ Stream a subset of fields and sids:
         "stream",
         help="stream incoming market data",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-i", "--sids",
         nargs="*",

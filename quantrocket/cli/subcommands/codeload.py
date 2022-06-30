@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+from quantrocket.cli.utils.parse import HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("codeload", description="QuantRocket code management CLI", help="Clone and manage code")
@@ -30,18 +30,26 @@ Examples:
 
 Clone QuantRocket's "umd" demo repository:
 
+.. code-block:: bash
+
     quantrocket codeload clone umd
 
 Clone a GitHub repo and skip files that already exist locally:
+
+.. code-block:: bash
 
     quantrocket codeload clone myuser/myrepo --skip-existing
 
 Clone a Bitbucket repo:
 
+.. code-block:: bash
+
     quantrocket codeload clone https://bitbucket.org/myuser/myrepo.git
 
 Clone a private repo by including username and app password (Bitbucket) or
 personal access token (GitHub) in the URL:
+
+.. code-block:: bash
 
     quantrocket codeload clone https://myuser:myapppassword@bitbucket.org/myuser/myrepo.git
     """
@@ -49,7 +57,7 @@ personal access token (GitHub) in the URL:
         "clone",
         help="clone files from a Git repository",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "repo",
         help="the name or URL of the repo. Can be the name of a QuantRocket demo "

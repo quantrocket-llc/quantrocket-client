@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+from quantrocket.cli.utils.parse import HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("license", description="QuantRocket license service CLI", help="Query license details")
@@ -26,13 +26,15 @@ Examples:
 
 View the current license profile:
 
+.. code-block:: bash
+
     quantrocket license get
     """
     parser = _subparsers.add_parser(
         "get",
         help="return the current license profile",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "--force-refresh",
         action="store_true",
@@ -45,13 +47,15 @@ Set QuantRocket license key.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket license set XXXXXXXXXX
     """
     parser = _subparsers.add_parser(
         "set",
         help="set QuantRocket license key",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "key",
         metavar="LICENSEKEY",
@@ -68,14 +72,20 @@ Examples:
 
 View current live and paper API keys:
 
+.. code-block:: bash
+
     quantrocket license alpaca-key
 
 Set Alpaca live API key (will prompt for secret key) and specify SIP as the
 real-time data permission for this account:
 
+.. code-block:: bash
+
     quantrocket license alpaca-key --api-key AK123 --live --realtime-data sip
 
 Set Alpaca paper API key (will prompt for secret key):
+
+.. code-block:: bash
 
     quantrocket license alpaca-key --api-key PK123 --paper
     """
@@ -83,7 +93,7 @@ Set Alpaca paper API key (will prompt for secret key):
         "alpaca-key",
         help="set Alpaca API key, or view the current API key",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-a", "--api-key",
         metavar="API_KEY",
@@ -123,9 +133,13 @@ Examples:
 
 View current API key:
 
+.. code-block:: bash
+
     quantrocket license polygon-key
 
 Set Polygon API key:
+
+.. code-block:: bash
 
     quantrocket license polygon-key K123
     """
@@ -133,7 +147,7 @@ Set Polygon API key:
         "polygon-key",
         help="set Polygon API key, or view the current API key",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "api_key",
         nargs="?",
@@ -151,9 +165,13 @@ Examples:
 
 View current API key:
 
+.. code-block:: bash
+
     quantrocket license quandl-key
 
 Set Polygon API key:
+
+.. code-block:: bash
 
     quantrocket license quandl-key K123
     """
@@ -161,7 +179,7 @@ Set Polygon API key:
         "quandl-key",
         help="set Quandl API key, or view the current API key",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "api_key",
         nargs="?",

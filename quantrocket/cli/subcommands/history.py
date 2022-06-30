@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-from quantrocket.cli.utils.parse import dict_str
+from quantrocket.cli.utils.parse import dict_str, HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("history", description="QuantRocket historical market data CLI", help="Collect and query historical data")
@@ -27,9 +26,13 @@ Examples:
 
 Create a custom database for loading fundamental data:
 
+.. code-block:: bash
+
     quantrocket history create-custom-db custom-fundamentals --bar-size '1 day' --columns Revenue:int EPS:float Currency:str TotalAssets:int
 
 Create a custom database for loading intraday OHCLV data:
+
+.. code-block:: bash
 
     quantrocket history create-custom-db custom-stk-1sec --bar-size '1 sec' --columns Open:float High:float Low:float Close:float Volume:int
 """
@@ -37,7 +40,7 @@ Create a custom database for loading intraday OHCLV data:
         "create-custom-db",
         help="create a new database into which custom data can be loaded",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -67,13 +70,15 @@ Examples:
 
 Create a database for end-of-day China stock prices from EDI:
 
+.. code-block:: bash
+
     quantrocket history create-edi-db china-1d -e XSHG XSHE
 """
     parser = _subparsers.add_parser(
         "create-edi-db",
         help="create a new database for collecting historical data from EDI",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -95,20 +100,28 @@ Examples:
 
 Create an end-of-day database called "arca-etf-eod" for a universe called "arca-etf":
 
+.. code-block:: bash
+
     quantrocket history create-ibkr-db 'arca-etf-eod' --universes 'arca-etf' --bar-size '1 day'
 
 Create a similar end-of-day database, but collect primary exchange prices instead of
 consolidated prices, adjust prices for dividends (=ADJUSTED_LAST), and use an explicit
 start date:
 
+.. code-block:: bash
+
     quantrocket history create-ibkr-db 'arca-etf-eod' -u 'arca-etf' -z '1 day' --primary-exchange --bar-type 'ADJUSTED_LAST' -s 2010-01-01
 
 Create a database of 1-minute bars showing the midpoint for a universe of FX pairs:
+
+.. code-block:: bash
 
     quantrocket history create-ibkr-db 'fx-1m' -u 'fx' -z '1 min' --bar-type MIDPOINT
 
 Create a database of 1-second bars just before the open for a universe of Canadian energy
 stocks in 2016:
+
+.. code-block:: bash
 
     quantrocket history create-ibkr-db 'tse-enr-929' -u 'tse-enr' -z '1 secs' --outside-rth --times 09:29:55 09:29:56 09:29:57 09:29:58 09:29:59 -s 2016-01-01 -e 2016-12-31
     """
@@ -116,7 +129,7 @@ stocks in 2016:
         "create-ibkr-db",
         help="create a new database for collecting historical data from Interactive Brokers",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -206,13 +219,15 @@ Examples:
 
 Create a database for Sharadar US stocks and call it "sharadar-us-stk-1d":
 
+.. code-block:: bash
+
     quantrocket history create-sharadar-db sharadar-us-stk-1d --sec-type STK --country US
 """
     parser = _subparsers.add_parser(
         "create-sharadar-db",
         help="create a new database for collecting historical data from Sharadar",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -237,13 +252,15 @@ Examples:
 
 Create a database for end-of-day US stock prices:
 
+.. code-block:: bash
+
     quantrocket history create-usstock-db usstock-1d
 """
     parser = _subparsers.add_parser(
         "create-usstock-db",
         help="create a new database for collecting historical US stock data from QuantRocket",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -273,13 +290,15 @@ List history databases.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket history list
     """
     parser = _subparsers.add_parser(
         "list",
         help="list history databases",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.set_defaults(func="quantrocket.history._cli_list_databases")
 
     examples = """
@@ -289,13 +308,15 @@ Examples:
 
 Return the configuration for a database called "jpn-lrg-15m":
 
+.. code-block:: bash
+
     quantrocket history config jpn-lrg-15m
     """
     parser = _subparsers.add_parser(
         "config",
         help="return the configuration for a history database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         help="the database code")
@@ -310,6 +331,8 @@ Examples:
 
 Delete a database called "jpn-lrg-15m":
 
+.. code-block:: bash
+
     quantrocket history drop-db jpn-lrg-15m --confirm-by-typing-db-code-again jpn-lrg-15m
 
     """
@@ -317,7 +340,7 @@ Delete a database called "jpn-lrg-15m":
         "drop-db",
         help="delete a history database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         help="the database code")
@@ -340,10 +363,14 @@ Examples:
 
 Collect historical data for a database of Chinese stock prices:
 
+.. code-block:: bash
+
     quantrocket history collect china-1d
 
 Collect historical data for an IBKR database of US futures, using the priority
 queue to jump in front of other queued IBKR collections:
+
+.. code-block:: bash
 
     quantrocket history collect globex-10m --priority
     """
@@ -351,7 +378,7 @@ queue to jump in front of other queued IBKR collections:
         "collect",
         help="collect historical market data from a vendor and save it to a history database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "codes",
         metavar="CODE",
@@ -393,13 +420,15 @@ Get the current queue of historical data collections.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket history queue
     """
     parser = _subparsers.add_parser(
         "queue",
         help="get the current queue of historical data collections",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.set_defaults(func="quantrocket.history._cli_get_history_queue")
 
     examples = """
@@ -409,13 +438,15 @@ Examples:
 
 Cancel collections for a database called japan-1d:
 
+.. code-block:: bash
+
     quantrocket history cancel japan-1d
     """
     parser = _subparsers.add_parser(
         "cancel",
         help="cancel running or pending historical data collections",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "codes",
         metavar="CODE",
@@ -430,13 +461,15 @@ Examples:
 
 Wait at most 10 minutes for data collection to finish for a database called 'fx-1h':
 
+.. code-block:: bash
+
     quantrocket history wait 'fx-1h' -t 10min
     """
     parser = _subparsers.add_parser(
         "wait",
         help="wait for historical data collection to finish",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "codes",
         metavar="CODE",
@@ -457,13 +490,15 @@ Examples:
 Download a CSV of all historical market data since 2015 from a database called
 "arca-eod" to a file called arca.csv:
 
+.. code-block:: bash
+
     quantrocket history get arca-eod --start-date 2015-01-01 -o arca.csv
     """
     parser = _subparsers.add_parser(
         "get",
         help="query historical market data from a history database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",

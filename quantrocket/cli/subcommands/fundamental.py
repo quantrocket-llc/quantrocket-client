@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+from quantrocket.cli.utils.parse import HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("fundamental", description="QuantRocket fundamental data CLI", help="Collect and query fundamental data")
@@ -24,13 +24,15 @@ Collect fundamental data from Sharadar and save to database.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket fundamental collect-sharadar-fundamentals
     """
     parser = _subparsers.add_parser(
         "collect-sharadar-fundamentals",
         help="collect fundamental data from Sharadar and save to database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-c", "--country",
         metavar="COUNTRY",
@@ -44,13 +46,15 @@ Collect insider holdings data from Sharadar and save to database.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket fundamental collect-sharadar-insiders
     """
     parser = _subparsers.add_parser(
         "collect-sharadar-insiders",
         help="collect insider holdings data from Sharadar and save to database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-c", "--country",
         metavar="COUNTRY",
@@ -66,9 +70,13 @@ Examples:
 
 Collect institutional investor data aggregated by security:
 
+.. code-block:: bash
+
     quantrocket fundamental collect-sharadar-institutions
 
 Collect detailed institutional investor data (not aggregated by security):
+
+.. code-block:: bash
 
     quantrocket fundamental collect-sharadar-institutions -d
     """
@@ -76,7 +84,7 @@ Collect detailed institutional investor data (not aggregated by security):
         "collect-sharadar-institutions",
         help="collect institutional investor data from Sharadar and save to database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-c", "--country",
         metavar="COUNTRY",
@@ -97,13 +105,15 @@ Collect SEC Form 8-K events from Sharadar and save to database.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket fundamental collect-sharadar-sec8
     """
     parser = _subparsers.add_parser(
         "collect-sharadar-sec8",
         help="collect SEC Form 8-K events from Sharadar and save to database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-c", "--country",
         metavar="COUNTRY",
@@ -118,13 +128,15 @@ database.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket fundamental collect-sharadar-sp500
     """
     parser = _subparsers.add_parser(
         "collect-sharadar-sp500",
         help="collect historical S&P 500 index constituents from Sharadar and save to database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-c", "--country",
         metavar="COUNTRY",
@@ -143,9 +155,13 @@ Examples:
 
 Collect Reuters financial statements for a universe of Japanese banks:
 
+.. code-block:: bash
+
     quantrocket fundamental collect-reuters-financials --universes 'japan-bank'
 
 Collect Reuters financial statements for a particular security:
+
+.. code-block:: bash
 
     quantrocket fundamental collect-reuters-financials --sids FIBBG123456
     """
@@ -153,7 +169,7 @@ Collect Reuters financial statements for a particular security:
         "collect-reuters-financials",
         help="collect Reuters financial statements from Interactive Brokers and save to database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-u", "--universes",
         nargs="*",
@@ -180,9 +196,13 @@ Examples:
 
 Collect upcoming earnings dates for a universe of US stocks:
 
+.. code-block:: bash
+
     quantrocket fundamental collect-wsh --universes 'usa-stk'
 
 Collect upcoming earnings dates for a particular security:
+
+.. code-block:: bash
 
     quantrocket fundamental collect-wsh --sids FIBBG123456
     """
@@ -191,7 +211,7 @@ Collect upcoming earnings dates for a particular security:
         help=("collect Wall Street Horizon upcoming earnings announcement dates from "
         "Interactive Brokers and save to database"),
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-u", "--universes",
         nargs="*",
@@ -220,9 +240,13 @@ Examples:
 
 Collect shortable shares data for US stocks:
 
+.. code-block:: bash
+
     quantrocket fundamental collect-ibkr-shortshares --countries usa
 
 Collect shortable shares data for all stocks:
+
+.. code-block:: bash
 
     quantrocket fundamental collect-ibkr-shortshares
     """
@@ -230,7 +254,7 @@ Collect shortable shares data for all stocks:
         "collect-ibkr-shortshares",
         help="collect Interactive Brokers shortable shares data and save to database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-c", "--countries",
         nargs="*",
@@ -249,9 +273,13 @@ Examples:
 
 Collect borrow fees for US stocks:
 
+.. code-block:: bash
+
     quantrocket fundamental collect-ibkr-borrowfees --countries usa
 
 Collect borrow fees for all stocks:
+
+.. code-block:: bash
 
     quantrocket fundamental collect-ibkr-borrowfees
     """
@@ -259,7 +287,7 @@ Collect borrow fees for all stocks:
         "collect-ibkr-borrowfees",
         help="collect Interactive Brokers borrow fees data and save to database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-c", "--countries",
         nargs="*",
@@ -283,13 +311,15 @@ Examples:
 
 Collect margin requirements for a US-based account:
 
+.. code-block:: bash
+
     quantrocket fundamental collect-ibkr-margin --country usa
     """
     parser = _subparsers.add_parser(
         "collect-ibkr-margin",
         help="collect Interactive Brokers margin requirements data and save to database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-c", "--country",
         required=True,
@@ -307,13 +337,15 @@ Examples:
 
 Collect easy-to-borrow data:
 
+.. code-block:: bash
+
     quantrocket fundamental collect-alpaca-etb
     """
     parser = _subparsers.add_parser(
         "collect-alpaca-etb",
         help="collect Alpaca easy-to-borrow data and save to database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_alpaca_etb")
 
     examples = """
@@ -324,9 +356,13 @@ Examples:
 Query as-reported trailing twelve month (ART) fundamentals for all indicators for
 a particular sid:
 
+.. code-block:: bash
+
     quantrocket fundamental sharadar-fundamentals -i FIBBG12345 --dimensions ART -o aapl_fundamentals.csv
 
 Query as-reported quarterly (ARQ) fundamentals for select indicators for a universe:
+
+.. code-block:: bash
 
     quantrocket fundamental sharadar-fundamentals -u usa-stk --dimensions ARQ -f REVENUE EPS -o sharadar_fundamentals.csv
     """
@@ -334,7 +370,7 @@ Query as-reported quarterly (ARQ) fundamentals for select indicators for a unive
         "sharadar-fundamentals",
         help="query Sharadar Fundamentals from the local database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",
@@ -400,13 +436,15 @@ Examples:
 
 Query insider holdings data for a particular sid:
 
+.. code-block:: bash
+
     quantrocket fundamental sharadar-insiders -i FIBBG000B9XRY4 -o aapl_insiders.csv
     """
     parser = _subparsers.add_parser(
         "sharadar-insiders",
         help="query Sharadar insider holdings data from the local database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",
@@ -465,13 +503,15 @@ Examples:
 
 Query institutional investor data aggregated by security:
 
+.. code-block:: bash
+
     quantrocket fundamental sharadar-institutions -u usa-stk -s 2019-01-01 -o institutions.csv
     """
     parser = _subparsers.add_parser(
         "sharadar-institutions",
         help="query Sharadar institutional investor data from the local database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",
@@ -538,13 +578,15 @@ Examples:
 
 Query event code 13 (Bankruptcy) for a universe of securities:
 
+.. code-block:: bash
+
     quantrocket fundamental sharadar-sec8 -u usa-stk --event-codes 13 -o bankruptcies.csv
     """
     parser = _subparsers.add_parser(
         "sharadar-sec8",
         help="query Sharadar SEC Form 8-K events data from the local database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",
@@ -609,13 +651,15 @@ Examples:
 
 Query S&P 500 index changes since 2010:
 
+.. code-block:: bash
+
     quantrocket fundamental sharadar-sp500 -s 2010-01-01 -o sp500_changes.csv
     """
     parser = _subparsers.add_parser(
         "sharadar-sp500",
         help="query Sharadar S&P 500 index changes (additions and removals) from the local database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",
@@ -677,13 +721,19 @@ Examples:
 
 List all codes:
 
+.. code-block:: bash
+
     quantrocket fundamental reuters-codes
 
 List COA codes for balance sheets only:
 
+.. code-block:: bash
+
     quantrocket fundamental reuters-codes --report-types financials --statement-types BAL
 
 List the description of a specific COA code:
+
+.. code-block:: bash
 
     quantrocket fundamental reuters-codes --codes TIAT
     """
@@ -693,7 +743,7 @@ List the description of a specific COA code:
         "database and/or indicator codes from the Reuters estimates/actuals "
         "database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-c", "--codes",
         nargs="*",
@@ -728,15 +778,21 @@ Examples:
 
 Query total revenue (COA code RTLR) for a universe of Australian stocks:
 
+.. code-block:: bash
+
     quantrocket fundamental reuters-financials RTLR -u asx-stk -s 2014-01-01 -e 2017-01-01 -o rtlr.csv
 
 Query net income (COA code NINC) from interim reports for two securities
 (identified by sid) and exclude restatements:
 
+.. code-block:: bash
+
     quantrocket fundamental reuters-financials NINC -i FIBBG123456 FIBBG234567 --interim --exclude-restatements -o ninc.csv
 
 Query common and preferred shares outstanding (COA codes QTCO and QTPO) and return a
 minimal set of fields (several required fields will always be returned)
+
+.. code-block:: bash
 
     quantrocket fundamental reuters-financials QTCO QTPO -u nyse-stk --fields Amount -o nyse_float.csv
     """
@@ -744,7 +800,7 @@ minimal set of fields (several required fields will always be returned)
         "reuters-financials",
         help="query financial statements from the Reuters financials database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "codes",
         metavar="CODE",
@@ -820,13 +876,15 @@ Examples:
 
 Query EPS estimates and actuals for a universe of Australian stocks:
 
+.. code-block:: bash
+
     quantrocket fundamental reuters-estimates EPS -u asx-stk -s 2014-01-01 -e 2017-01-01 -o eps_estimates.csv
     """
     parser = _subparsers.add_parser(
         "reuters-estimates",
         help="[DEPRECATED] query estimates and actuals from the Reuters estimates database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "codes",
         metavar="CODE",
@@ -897,13 +955,15 @@ Examples:
 
 Query earnings dates for a universe of US stocks:
 
+.. code-block:: bash
+
     quantrocket fundamental wsh -u usa-stk -s 2019-01-01 -e 2019-04-01 -o announcements.csv
     """
     parser = _subparsers.add_parser(
         "wsh",
         help="query earnings announcement dates from the Wall Street Horizon announcements database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",
@@ -969,13 +1029,15 @@ Examples:
 
 Query shortable shares for a universe of Australian stocks:
 
+.. code-block:: bash
+
     quantrocket fundamental ibkr-shortshares -u asx-stk -o asx_shortables.csv
     """
     parser = _subparsers.add_parser(
         "ibkr-shortshares",
         help="query Interactive Brokers shortable shares from the local database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",
@@ -1029,13 +1091,15 @@ Examples:
 
 Query borrow fees for a universe of Australian stocks:
 
+.. code-block:: bash
+
     quantrocket fundamental ibkr-borrowfees -u asx-stk -o asx_borrow_fees.csv
     """
     parser = _subparsers.add_parser(
         "ibkr-borrowfees",
         help="query Interactive Brokers borrow fees from the local database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",
@@ -1098,13 +1162,15 @@ Examples:
 
 Query margin requirements for a universe of US stocks:
 
+.. code-block:: bash
+
     quantrocket fundamental ibkr-margin -u usa-stk -o usa_margin_requirements.csv
     """
     parser = _subparsers.add_parser(
         "ibkr-margin",
         help="query Interactive Brokers margin requirements from the local database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",
@@ -1156,13 +1222,15 @@ Examples:
 
 Query easy-to-borrow data for a universe of US stocks:
 
+.. code-block:: bash
+
     quantrocket fundamental alpaca-etb -u usa-stk -o usa_etb.csv
     """
     parser = _subparsers.add_parser(
         "alpaca-etb",
         help="query Alpaca easy-to-borrow data from the local database and download to file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",

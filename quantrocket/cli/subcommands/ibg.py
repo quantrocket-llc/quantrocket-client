@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+from quantrocket.cli.utils.parse import HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("ibg", description="QuantRocket IB Gateway service CLI", help="Start and stop IB Gateway")
@@ -34,14 +34,20 @@ Examples:
 View current credentials for IB Gateway service named ibg1 (shows username and
 trading mode only):
 
+.. code-block:: bash
+
     quantrocket ibg credentials ibg1
 
 Set credentials for ibg1 (will prompt for password):
+
+.. code-block:: bash
 
     quantrocket ibg credentials ibg1 -u myuser --paper
 
 Leave credentials as-is but switch to live trading (must have previously entered
 live credentials):
+
+.. code-block:: bash
 
     quantrocket ibg credentials ibg1 --live
     """
@@ -49,7 +55,7 @@ live credentials):
         "credentials",
         help="set username/password and trading mode (paper/live) for IB Gateway",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "gateway",
         metavar="SERVICE_NAME",
@@ -86,9 +92,13 @@ Examples:
 
 List the status of all gateways:
 
+.. code-block:: bash
+
     quantrocket ibg status
 
 Get a list of gateways that are running:
+
+.. code-block:: bash
 
     quantrocket ibg status --status running
     """
@@ -96,7 +106,7 @@ Get a list of gateways that are running:
         "status",
         help=" query statuses of IB Gateways",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-s", "--status",
         choices=["running", "stopped", "error"],
@@ -115,13 +125,19 @@ Examples:
 
 Asynchronously start all gateways (that aren't already running):
 
+.. code-block:: bash
+
     quantrocket ibg start
 
 Start specific gateways and wait for them to come up:
 
+.. code-block:: bash
+
     quantrocket ibg start --gateways ibg1 ibg3 --wait
 
 Restart all gateways:
+
+.. code-block:: bash
 
     quantrocket ibg stop --wait && quantrocket ibg start
     """
@@ -129,7 +145,7 @@ Restart all gateways:
         "start",
         help="start one or more IB Gateways",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-g", "--gateways",
         metavar="SERVICE_NAME",
@@ -150,9 +166,13 @@ Examples:
 
 Stop all gateways (that aren't already stopped):
 
+.. code-block:: bash
+
     quantrocket ibg stop
 
 Stop specific gateways and wait for them to stop:
+
+.. code-block:: bash
 
     quantrocket ibg stop --gateways ibg1 ibg3 --wait
     """
@@ -160,7 +180,7 @@ Stop specific gateways and wait for them to stop:
         "stop",
         help="stop one or more IB Gateways",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-g", "--gateways",
         metavar="SERVICE_NAME",
@@ -184,9 +204,13 @@ Examples:
 
 Upload a new config (replaces current config):
 
+.. code-block:: bash
+
     quantrocket ibg config myconfig.yml
 
 Show current config:
+
+.. code-block:: bash
 
     quantrocket ibg config
     """
@@ -194,7 +218,7 @@ Show current config:
         "config",
         help="upload a new config, or return the current configuration",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "filename",
         nargs="?",

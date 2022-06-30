@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+from quantrocket.cli.utils.parse import HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("houston", description="QuantRocket Houston API Gateway CLI", help="Connect to houston API gateway")
@@ -24,11 +24,13 @@ Ping houston.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket houston ping
     """
     parser = _subparsers.add_parser(
         "ping",
         help="ping houston",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.set_defaults(func="quantrocket.houston._cli_ping")

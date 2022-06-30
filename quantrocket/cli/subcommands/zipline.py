@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-from quantrocket.cli.utils.parse import dict_str
+from quantrocket.cli.utils.parse import dict_str, HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("zipline", description="QuantRocket CLI for Zipline", help="Backtest and trade Zipline strategies")
@@ -30,17 +29,25 @@ Examples:
 
 Create a minute data bundle for all US stocks:
 
+.. code-block:: bash
+
     quantrocket zipline create-usstock-bundle usstock-1min
 
 Create a bundle for daily data only:
+
+.. code-block:: bash
 
     quantrocket zipline create-usstock-bundle usstock-1d --data-frequency daily
 
 Create a minute data bundle based on a universe:
 
+.. code-block:: bash
+
     quantrocket zipline create-usstock-bundle usstock-tech-1min --universes us-tech
 
 Create a minute data bundle of free sample data:
+
+.. code-block:: bash
 
     quantrocket zipline create-usstock-bundle usstock-free-1min --free
     """
@@ -48,7 +55,7 @@ Create a minute data bundle of free sample data:
         "create-usstock-bundle",
         help="create a Zipline bundle for US stocks",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -86,15 +93,21 @@ Examples:
 Create a bundle from a history database called "es-fut-1min" and name
 it like the history database:
 
+.. code-block:: bash
+
     quantrocket zipline create-bundle-from-db es-fut-1min --from-db es-fut-1min --calendar us_futures --start-date 2015-01-01
 
 Create a bundle named "usa-stk-1min-2017" for ingesting a single year of US
 1-minute stock data from a history database called "usa-stk-1min":
 
+.. code-block:: bash
+
     quantrocket zipline create-bundle-from-db usa-stk-1min-2017 --from-db usa-stk-1min -s 2017-01-01 -e 2017-12-31 --calendar XNYS
 
 Create a bundle from a real-time aggregate database and specify how to map
 Zipline fields to the database fields:
+
+.. code-block:: bash
 
     quantrocket zipline create-bundle-from-db free-stk-1min --from-db free-stk-tick-1min --calendar XNYS --start-date 2020-06-01 --fields close:LastPriceClose open:LastPriceOpen high:LastPriceHigh low:LastPriceLow volume:VolumeClose
     """
@@ -102,7 +115,7 @@ Zipline fields to the database fields:
         "create-bundle-from-db",
         help="create a Zipline bundle from a history database or real-time aggregate database",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -164,13 +177,15 @@ Examples:
 
 Ingest data into a bundle called usstock-1min:
 
+.. code-block:: bash
+
     quantrocket zipline ingest usstock-1min
     """
     parser = _subparsers.add_parser(
         "ingest",
         help="ingest data into a previously defined bundle",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -192,13 +207,15 @@ List available data bundles and whether data has been ingested into them.
 
 Examples:
 
+.. code-block:: bash
+
     quantrocket zipline list-bundles
     """
     parser = _subparsers.add_parser(
         "list-bundles",
         help="list available data bundles and whether data has been ingested into them",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.set_defaults(func="quantrocket.zipline._cli_list_bundles")
 
     examples = """
@@ -208,13 +225,15 @@ Examples:
 
 Return the configuration of a bundle called 'usstock-1min':
 
+.. code-block:: bash
+
     quantrocket zipline config usstock-1min
     """
     parser = _subparsers.add_parser(
         "config",
         help="return the configuration of a bundle",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -228,13 +247,15 @@ Examples:
 
 Delete a bundle called 'es-fut-1min':
 
+.. code-block:: bash
+
     quantrocket zipline drop-bundle es-fut-1min --confirm-by-typing-bundle-code-again es-fut-1min
     """
     parser = _subparsers.add_parser(
         "drop-bundle",
         help="delete a bundle",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -258,9 +279,13 @@ Examples:
 
 Set a bundle named usstock-1min as the default:
 
+.. code-block:: bash
+
     quantrocket zipline default-bundle usstock-1min
 
 Show current default bundle:
+
+.. code-block:: bash
 
     quantrocket zipline default-bundle
     """
@@ -268,7 +293,7 @@ Show current default bundle:
         "default-bundle",
         help="set or show the default bundle to use for backtesting and trading",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "bundle",
         nargs="?",
@@ -283,13 +308,15 @@ Examples:
 Download a CSV of minute prices since 2015 for a single security from a bundle called
 "usstock-1min":
 
+.. code-block:: bash
+
     quantrocket zipline get usstock-1min --start-date 2015-01-01 -i FIBBG12345 -o minute_prices.csv
     """
     parser = _subparsers.add_parser(
         "get",
         help="query minute or daily data from a Zipline bundle and download to a CSV file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
         metavar="CODE",
@@ -361,13 +388,15 @@ Examples:
 Run a backtest from a strategy file called etf-arb.py and save a CSV file of results,
 logging backtest progress at annual intervals:
 
+.. code-block:: bash
+
     quantrocket zipline backtest etf-arb --bundle arca-etf-eod -s 2010-04-01 -e 2016-02-01 -o results.csv --progress A
     """
     parser = _subparsers.add_parser(
         "backtest",
         help="backtest a Zipline strategy and write the test results to a CSV file",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "strategy",
         metavar="CODE",
@@ -414,10 +443,14 @@ Examples:
 
 Create a pyfolio tear sheet from a Zipline CSV results file:
 
+.. code-block:: bash
+
     quantrocket zipline tearsheet results.csv -o results.pdf
 
 Run a Zipline backtest and create a pyfolio tear sheet without saving
 the CSV file:
+
+.. code-block:: bash
 
     quantrocket zipline backtest dma -s 2010-04-01 -e 2016-02-01 | quantrocket zipline tearsheet -o dma.pdf
     """
@@ -425,7 +458,7 @@ the CSV file:
         "tearsheet",
         help="create a pyfolio tear sheet from a Zipline backtest result",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "infilepath_or_buffer",
         metavar="FILENAME",
@@ -447,13 +480,15 @@ Examples:
 
 Trade a strategy defined in momentum-pipeline.py:
 
+.. code-block:: bash
+
     quantrocket zipline trade momentum-pipeline --bundle my-bundle
     """
     parser = _subparsers.add_parser(
         "trade",
         help="trade a Zipline strategy",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "strategy",
         metavar="CODE",
@@ -482,13 +517,15 @@ Examples:
 
 List strategies:
 
+.. code-block:: bash
+
     quantrocket zipline active
     """
     parser = _subparsers.add_parser(
         "active",
         help="list actively trading Zipline strategies",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.set_defaults(func="quantrocket.zipline._cli_list_active_strategies")
 
     examples = """
@@ -498,9 +535,13 @@ Examples:
 
 Cancel a single strategy:
 
+.. code-block:: bash
+
     quantrocket zipline cancel --strategies momentum-pipeline
 
 Cancel all strategies:
+
+.. code-block:: bash
 
     quantrocket zipline cancel --all
     """
@@ -508,7 +549,7 @@ Cancel all strategies:
         "cancel",
         help="cancel actively trading strategies",
         epilog=examples,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=HelpFormatter)
     parser.add_argument(
         "-s", "--strategies",
         nargs="*",
