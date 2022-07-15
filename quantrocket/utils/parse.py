@@ -38,7 +38,11 @@ def _read_moonshot_or_pnl_csv(filepath_or_buffer):
     except ImportError:
         raise ImportError("pandas must be installed to use this function")
 
-    results = pd.read_csv(filepath_or_buffer, parse_dates=["Date"])
+    results = pd.read_csv(
+        filepath_or_buffer,
+        parse_dates=["Date"],
+        # columns can have mixed types, silence warning
+        low_memory=False)
     index_cols = ["Field", "Date"]
     if "Time" in results.columns:
         index_cols.append("Time")
