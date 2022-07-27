@@ -2661,6 +2661,21 @@ class SharadarFundamentalsReindexedLikeTestCase(unittest.TestCase):
 
         self.assertIn("reindex_like must have a DatetimeIndex", str(cm.exception))
 
+    def test_complain_if_period_offset_positive(self):
+        """
+        Tests error handling when period_offset is positive.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-01-01", periods=3, freq="D", name="Date"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_sharadar_fundamentals_reindexed_like(closes, period_offset=1)
+
+        self.assertIn("period_offset must be a negative integer or 0", str(cm.exception))
+
     @patch("quantrocket.fundamental.download_sharadar_fundamentals")
     def test_pass_args_correctly(self,
                                  mock_download_sharadar_fundamentals):
@@ -2722,6 +2737,82 @@ class SharadarFundamentalsReindexedLikeTestCase(unittest.TestCase):
         self.assertEqual(kwargs["end_date"], "2018-08-01")
         self.assertEqual(kwargs["fields"], ["EPS", "DATEKEY"])
         self.assertEqual(kwargs["dimensions"], "ARQ")
+
+    @patch("quantrocket.fundamental.download_sharadar_fundamentals")
+    def test_pass_args_correctly_period_offset(self,
+                                 mock_download_sharadar_fundamentals):
+        """
+        Tests that the start_date passed to download_sharadar_fundamentals
+        is appropriately modified by period_offset.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-03-01", periods=6, freq="MS", name="Date"))
+
+        def _mock_download_sharadar_fundamentals(filepath_or_buffer, *args, **kwargs):
+            fundamentals = pd.DataFrame(
+                dict(
+                    DATEKEY=[
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-06-30",
+                        "2018-06-30"
+                        ],
+                    REPORTPERIOD=[
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-03-31",
+                        "2018-06-30",
+                        "2018-06-30"
+                        ],
+                    Sid=[
+                         "FI12345",
+                         "FI12345",
+                         "FI23456",
+                         "FI23456",
+                         "FI12345",
+                         "FI12345",
+                         ],
+                     EPS=[
+                         565,
+                         89,
+                         235,
+                         73,
+                         580,
+                         92
+                     ]))
+            fundamentals.to_csv(filepath_or_buffer, index=False)
+            filepath_or_buffer.seek(0)
+
+        mock_download_sharadar_fundamentals.side_effect = _mock_download_sharadar_fundamentals
+
+        get_sharadar_fundamentals_reindexed_like(
+            closes, fields=["EPS", "DATEKEY"], dimension="ARQ", period_offset=-2)
+
+        sharadar_fundamentals_call = mock_download_sharadar_fundamentals.mock_calls[0]
+        _, args, kwargs = sharadar_fundamentals_call
+        self.assertEqual(kwargs["start_date"], "2016-03-02") # (92*2+365+180 days before reindex_like min date
+        self.assertEqual(kwargs["end_date"], "2018-08-01")
+
+        get_sharadar_fundamentals_reindexed_like(
+            closes, fields=["EPS", "DATEKEY"], dimension="ART", period_offset=-1)
+
+        sharadar_fundamentals_call = mock_download_sharadar_fundamentals.mock_calls[1]
+        _, args, kwargs = sharadar_fundamentals_call
+        self.assertEqual(kwargs["start_date"], "2016-06-02") # (92*1+365+180 days before reindex_like min date
+        self.assertEqual(kwargs["end_date"], "2018-08-01")
+
+        get_sharadar_fundamentals_reindexed_like(
+            closes, fields=["EPS", "DATEKEY"], dimension="ARY", period_offset=-3)
+
+        sharadar_fundamentals_call = mock_download_sharadar_fundamentals.mock_calls[2]
+        _, args, kwargs = sharadar_fundamentals_call
+        self.assertEqual(kwargs["start_date"], "2013-09-03") # (365*3+365+180 days before reindex_like min date
+        self.assertEqual(kwargs["end_date"], "2018-08-01")
 
     def test_dedupe_datekey(self):
         """
@@ -2811,6 +2902,134 @@ class SharadarFundamentalsReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(eps.columns), list(eps.columns))
         self.assertEqual(eps["FI12345"].loc["2018-07-23"], 565)
         self.assertEqual(eps["FI12345"].loc["2018-07-24"], 580)
+
+    def test_period_offset(self):
+        """
+        Tests that period_offset can be used to return financial statement metrics
+        for a prior fiscal period.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=["FI12345", "FI23456"],
+            index=pd.date_range(start="2018-07-20", periods=6, freq="D", name="Date"))
+
+        def mock_download_sharadar_fundamentals(filepath_or_buffer, *args, **kwargs):
+            fundamentals = pd.DataFrame(
+                dict(
+                    REPORTPERIOD=[
+                        "2017-06-30",
+                        "2017-09-30",
+                        "2017-12-31",
+                        "2018-03-30",
+                        "2018-06-30",
+                        "2017-06-30",
+                        "2017-09-30",
+                        "2017-12-31",
+                        "2018-03-30",
+                        "2018-06-30"
+                        ],
+                    DATEKEY=[
+                        "2017-07-23",
+                        "2017-10-23",
+                        "2018-01-23",
+                        "2018-04-23",
+                        "2018-07-23",
+                        "2017-09-22",
+                        "2017-12-22",
+                        "2018-03-22",
+                        "2018-06-22",
+                        "2018-09-22",
+                        ],
+                     Sid=[
+                         "FI12345",
+                         "FI12345",
+                         "FI12345",
+                         "FI12345",
+                         "FI12345",
+                         "FI23456",
+                         "FI23456",
+                         "FI23456",
+                         "FI23456",
+                         "FI23456",
+                         ],
+                     EPS=[
+                         400,
+                         450,
+                         500,
+                         565,
+                         580,
+                         40,
+                         45,
+                         50,
+                         56,
+                         58
+                     ]))
+            fundamentals.to_csv(filepath_or_buffer, index=False)
+            filepath_or_buffer.seek(0)
+
+        # no period offset
+        with patch('quantrocket.fundamental.download_sharadar_fundamentals', new=mock_download_sharadar_fundamentals):
+
+            fundamentals = get_sharadar_fundamentals_reindexed_like(
+                closes, fields=["EPS"], dimension="ART")
+
+        self.assertSetEqual(set(fundamentals.index.get_level_values("Field")), {"EPS"})
+
+        eps = fundamentals.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(eps.index))
+        self.assertListEqual(list(eps.columns), list(eps.columns))
+        self.assertEqual(eps["FI12345"].loc["2018-07-23"], 565)
+        self.assertEqual(eps["FI12345"].loc["2018-07-24"], 580)
+        self.assertEqual(eps["FI23456"].loc["2018-07-23"], 56)
+        self.assertEqual(eps["FI23456"].loc["2018-07-24"], 56)
+
+        # period_offset = -1
+        with patch('quantrocket.fundamental.download_sharadar_fundamentals', new=mock_download_sharadar_fundamentals):
+
+            fundamentals = get_sharadar_fundamentals_reindexed_like(
+                closes, fields=["EPS"], dimension="ART", period_offset=-1)
+
+        self.assertSetEqual(set(fundamentals.index.get_level_values("Field")), {"EPS"})
+
+        eps = fundamentals.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(eps.index))
+        self.assertListEqual(list(eps.columns), list(eps.columns))
+        self.assertEqual(eps["FI12345"].loc["2018-07-23"], 500)
+        self.assertEqual(eps["FI12345"].loc["2018-07-24"], 565)
+        self.assertEqual(eps["FI23456"].loc["2018-07-23"], 50)
+        self.assertEqual(eps["FI23456"].loc["2018-07-24"], 50)
+
+        # period_offset = -2
+        with patch('quantrocket.fundamental.download_sharadar_fundamentals', new=mock_download_sharadar_fundamentals):
+
+            fundamentals = get_sharadar_fundamentals_reindexed_like(
+                closes, fields=["EPS"], dimension="ART", period_offset=-2)
+
+        self.assertSetEqual(set(fundamentals.index.get_level_values("Field")), {"EPS"})
+
+        eps = fundamentals.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(eps.index))
+        self.assertListEqual(list(eps.columns), list(eps.columns))
+        self.assertEqual(eps["FI12345"].loc["2018-07-23"], 450)
+        self.assertEqual(eps["FI12345"].loc["2018-07-24"], 500)
+        self.assertEqual(eps["FI23456"].loc["2018-07-23"], 45)
+        self.assertEqual(eps["FI23456"].loc["2018-07-24"], 45)
+
+        # period_offset = -3
+        with patch('quantrocket.fundamental.download_sharadar_fundamentals', new=mock_download_sharadar_fundamentals):
+
+            fundamentals = get_sharadar_fundamentals_reindexed_like(
+                closes, fields=["EPS"], dimension="ART", period_offset=-3)
+
+        self.assertSetEqual(set(fundamentals.index.get_level_values("Field")), {"EPS"})
+
+        eps = fundamentals.loc["EPS"]
+        self.assertListEqual(list(eps.index), list(eps.index))
+        self.assertListEqual(list(eps.columns), list(eps.columns))
+        self.assertEqual(eps["FI12345"].loc["2018-07-23"], 400)
+        self.assertEqual(eps["FI12345"].loc["2018-07-24"], 450)
+        self.assertEqual(eps["FI23456"].loc["2018-07-23"], 40)
+        self.assertEqual(eps["FI23456"].loc["2018-07-24"], 40)
 
     def test_tz_aware_index(self):
         """

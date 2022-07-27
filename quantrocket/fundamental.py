@@ -2269,8 +2269,11 @@ def download_sharadar_sp500(filepath_or_buffer=None,
 def _cli_download_sharadar_sp500(*args, **kwargs):
     return json_to_cli(download_sharadar_sp500, *args, **kwargs)
 
-def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
-                                              dimension="ART"):
+def get_sharadar_fundamentals_reindexed_like(
+    reindex_like,
+    fields=None,
+    dimension="ART",
+    period_offset=0):
     """
     Return a multiindex (Field, Date) DataFrame of point-in-time
     Sharadar fundamentals, reindexed to match the index (dates)
@@ -2291,11 +2294,18 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
         including all fields. For faster performance, limiting fields to
         those needed is highly recommended, especially for large universes.
 
-    dimension: bool
+    dimension : bool
         the dimension of the data. Defaults to As Reported Trailing Twelve
         Month (ART). Possible choices: ARQ, ARY, ART, MRQ,
         MRY, MRT. AR=As Reported, MR=Most Recent Reported, Q=Quarterly,
         Y=Annual, T=Trailing Twelve Month.
+
+    period_offset : int, optional
+        which fiscal period to return data for. If period_offset is 0 (the default),
+        returns the most recent point-in-time fundamentals as of each date in
+        `reindex_like`. If period_offset is -1, returns fundamentals for the prior
+        fiscal period as of each date; if -2, two fiscal periods ago, etc. Value
+        should be a negative integer or 0.
 
     Returns
     -------
@@ -2326,6 +2336,14 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
     >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes,
                                                                 fields=["SHARESWA"])
     >>> shares_out = fundamentals.loc["SHARESWA"]
+
+    Query outstanding shares as of the previous fiscal period:
+
+    >>> closes = prices.loc["Close"]
+    >>> fundamentals = get_sharadar_fundamentals_reindexed_like(closes,
+                                                                fields=["SHARESWA"].
+                                                                period_offset=-1)
+    >>> previous_shares_out = fundamentals.loc["SHARESWA"]
     """
     try:
         import pandas as pd
@@ -2346,11 +2364,21 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
     if not hasattr(reindex_like.index, "date"):
         raise ParameterError("reindex_like must have a DatetimeIndex")
 
+    period_offset = period_offset or 0
+    if period_offset > 0:
+        raise ParameterError("period_offset must be a negative integer or 0")
+
     sids = list(reindex_like.columns)
     start_date = reindex_like.index.min().date()
     # Since financial reports are sparse, start well before the reindex_like
     # min date
     start_date -= pd.Timedelta(days=365+180)
+    # If there's a period_offset, rewind the start date by a corresponding amount
+    if period_offset < 0:
+        if dimension.endswith("Y"):
+            start_date -= pd.Timedelta(days=365 * abs(period_offset))
+        else:
+            start_date -= pd.Timedelta(days=92 * abs(period_offset))
     start_date = start_date.isoformat()
     end_date = reindex_like.index.max().date().isoformat()
 
@@ -2384,6 +2412,10 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
 
     deduped_datekeys = financials.Date.drop_duplicates()
 
+    if period_offset != 0:
+        # add a column to mark report dates
+        financials["IsReportDate"] = 1.0
+
     # Create a unioned index of input DataFrame and statement DATEKEYs
     union_date_idx = reindex_like.index.union(pd.DatetimeIndex(deduped_datekeys)).sort_values()
 
@@ -2399,8 +2431,22 @@ def get_sharadar_fundamentals_reindexed_like(reindex_like, fields=None,
 
     # financial values are sparse so ffill (one field at a time)
     all_fields = {}
+    if period_offset != 0:
+        are_report_dates = financials.loc["IsReportDate"].notnull()
+
     for fieldname in financials.index.get_level_values("Field").unique():
-        field = financials.loc[fieldname].fillna(method="ffill")
+        if fieldname == "IsReportDate":
+            continue
+
+        field = financials.loc[fieldname]
+
+        for _ in range(abs(period_offset)):
+            # to get the previous period, we forward-fill, shift, then keep
+            # only the shifted values falling on report dates
+            field = field.fillna(method="ffill").shift().where(are_report_dates)
+
+        # forward-fill values
+        field = field.fillna(method="ffill")
 
         # Shift to avoid lookahead bias
         field = field.shift()
