@@ -785,7 +785,8 @@ class ZiplineBacktestResult(object):
         results = pd.read_csv(
             filepath_or_buffer,
             parse_dates=["date"],
-            index_col=["dataframe", "index", "date", "column"])["value"]
+            index_col=["dataframe", "index", "date", "column"],
+            low_memory=False)["value"]
 
         # Extract returns
         returns = results.loc["returns"].unstack()
