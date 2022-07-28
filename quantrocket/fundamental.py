@@ -2304,8 +2304,10 @@ def get_sharadar_fundamentals_reindexed_like(
         which fiscal period to return data for. If period_offset is 0 (the default),
         returns the most recent point-in-time fundamentals as of each date in
         `reindex_like`. If period_offset is -1, returns fundamentals for the prior
-        fiscal period as of each date; if -2, two fiscal periods ago, etc. Value
-        should be a negative integer or 0.
+        fiscal period as of each date; if -2, two fiscal periods ago, etc. For
+        quarterly and trailing-twelve-month dimensions, previous period means
+        previous quarter, while for annual dimensions, previous period means
+        previous year. Value should be a negative integer or 0.
 
     Returns
     -------
