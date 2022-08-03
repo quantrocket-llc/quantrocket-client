@@ -685,6 +685,7 @@ def get_prices_reindexed_like(reindex_like, codes, fields=None,
         start_date=start_date,
         end_date=end_date,
         timezone=timezone,
+        infer_timezone=infer_timezone,
         times=times,
         cont_fut=cont_fut,
         data_frequency=data_frequency)
