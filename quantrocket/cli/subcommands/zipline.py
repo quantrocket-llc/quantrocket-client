@@ -508,6 +508,13 @@ Trade a strategy defined in momentum-pipeline.py:
         choices=["daily", "d", "minute", "m"],
         help="the data frequency to use. Possible choices: %(choices)s "
         "(default is minute)")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="write orders to file instead of sending them to the blotter. "
+        "Orders will be written to "
+        "/codeload/zipline/{strategy}.{account}.orders.{date}.csv. "
+        "If omitted, orders are sent to the blotter and not written to file.")
     parser.set_defaults(func="quantrocket.zipline._cli_trade")
 
     examples = """

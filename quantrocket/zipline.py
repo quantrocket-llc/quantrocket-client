@@ -617,7 +617,7 @@ def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None):
 def _cli_create_tearsheet(*args, **kwargs):
     return json_to_cli(create_tearsheet, *args, **kwargs)
 
-def trade(strategy, bundle=None, account=None, data_frequency=None):
+def trade(strategy, bundle=None, account=None, data_frequency=None, dry_run=False):
     """
     Trade a Zipline strategy.
 
@@ -639,6 +639,13 @@ def trade(strategy, bundle=None, account=None, data_frequency=None):
         the data frequency to use. Possible choices: daily, minute
         (or aliases d, m). Default is minute.
 
+    dry_run : bool
+        write orders to file instead of sending them to the blotter.
+        Orders will be written to
+        /codeload/zipline/{strategy}.{account}.orders.{date}.csv.
+        Default is False, meaning orders will be sent to the blotter
+        and not written to file.
+
     Returns
     -------
     None
@@ -656,6 +663,8 @@ def trade(strategy, bundle=None, account=None, data_frequency=None):
         params["account"] = account
     if data_frequency:
         params["data_frequency"] = data_frequency
+    if dry_run:
+        params["dry_run"] = dry_run
 
     response = houston.post("/zipline/trade/{0}".format(strategy), params=params)
 
