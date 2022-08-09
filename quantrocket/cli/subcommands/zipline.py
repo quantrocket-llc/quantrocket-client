@@ -430,6 +430,14 @@ logging backtest progress at annual intervals:
         help="log backtest progress at this interval (use a pandas offset alias, "
         "for example 'D' for daily, 'W' for weeky, 'M' for monthly, 'A' for annually)")
     parser.add_argument(
+        "--params",
+        nargs="*",
+        type=dict_str,
+        metavar="PARAM:VALUE",
+        help="one or more strategy parameters (defined as module-level attributes "
+        "in the algo file) to modify on the fly before backtesting (pass as "
+        "'param:value')")
+    parser.add_argument(
         "-o", "--output",
         metavar="FILENAME",
         dest="filepath_or_buffer",

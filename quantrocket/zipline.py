@@ -18,7 +18,6 @@ import requests
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoHistoricalData
 from quantrocket.cli.utils.output import json_to_cli
-from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 from quantrocket.utils.warn import deprecated_replaced_by
@@ -495,7 +494,8 @@ def download_minute_file(*args, **kwargs):
     return download_bundle_file(*args, **kwargs)
 
 def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
-             start_date=None, end_date=None, progress=None, filepath_or_buffer=None):
+             start_date=None, end_date=None, progress=None, params=None,
+             filepath_or_buffer=None):
     """
     Backtest a Zipline strategy and write the test results to a CSV file.
 
@@ -530,6 +530,11 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
         for example "D" for daily, "W" for weeky, "M" for monthly,
         "A" for annually)
 
+    params : dict of PARAM:VALUE, optional
+        one or more strategy parameters (defined as module-level attributes
+        in the algo file) to modify on the fly before backtesting (pass as
+        {param:value}).
+
     filepath_or_buffer : str, optional
         the location to write the output file (omit to write to stdout)
 
@@ -552,21 +557,23 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
     >>> import pyfolio as pf
     >>> pf.from_zipline_csv("momentum_pipeline_results.csv")
     """
-    params = {}
+    _params = {}
     if data_frequency:
-        params["data_frequency"] = data_frequency
+        _params["data_frequency"] = data_frequency
     if capital_base:
-        params["capital_base"] = capital_base
+        _params["capital_base"] = capital_base
     if bundle:
-        params["bundle"] = bundle
+        _params["bundle"] = bundle
     if start_date:
-        params["start_date"] = start_date
+        _params["start_date"] = start_date
     if end_date:
-        params["end_date"] = end_date
+        _params["end_date"] = end_date
+    if params:
+        _params["params"] = dict_to_dict_strs(params)
     if progress:
-        params["progress"] = progress
+        _params["progress"] = progress
 
-    response = houston.post("/zipline/backtests/{0}".format(strategy), params=params, timeout=60*60*96)
+    response = houston.post("/zipline/backtests/{0}".format(strategy), params=_params, timeout=60*60*96)
 
     houston.raise_for_status_with_json(response)
 
@@ -574,6 +581,9 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
     write_response_to_filepath_or_buffer(filepath_or_buffer, response)
 
 def _cli_backtest(*args, **kwargs):
+    params = kwargs.get("params", None)
+    if params:
+        kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(backtest, *args, **kwargs)
 
 def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None):
