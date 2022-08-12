@@ -524,8 +524,17 @@ class ReadPnlCsvTestCase(unittest.TestCase):
 
         results = results.where(results.notnull(), None)
 
+        results = results.to_dict()
+
+        # round results to 7 decimal places
+        for _results in (results, INTRADAY_DETAILED_RESULTS):
+            for top_level_k, top_level_v in _results.items():
+                for k, v in top_level_v.items():
+                    if isinstance(v, float):
+                        top_level_v[k] = round(v, 7)
+
         self.assertDictEqual(
-            results.to_dict(),
+            results,
             INTRADAY_DETAILED_RESULTS
         )
 
