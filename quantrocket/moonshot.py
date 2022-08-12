@@ -235,8 +235,8 @@ def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
         as {currency:nlv})
 
     params : dict of PARAM:VALUE, optional
-        one or more strategy params to set on the fly before backtesting
-        (pass as {param:value})
+        one or more strategy params to set on the fly before running the
+        parameter scan (pass as {param:value})
 
     output : str, required
         the output format (choices are csv or pdf)

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from quantrocket.cli.utils.parse import dict_str, HelpFormatter
+from quantrocket.cli.utils.parse import dict_str, list_or_int_or_float_or_str, HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("zipline", description="QuantRocket CLI for Zipline", help="Backtest and trade Zipline strategies")
@@ -443,6 +443,110 @@ logging backtest progress at annual intervals:
         dest="filepath_or_buffer",
         help="the location to write the output file (omit to write to stdout)")
     parser.set_defaults(func="quantrocket.zipline._cli_backtest")
+
+    examples = """
+Run a parameter scan for a Zipline strategy. The resulting CSV can be plotted with
+moonchart.ParamscanTearsheet.
+
+Examples:
+
+Run a parameter scan for a moving average strategy called dma:
+
+.. code-block:: bash
+
+    quantrocket zipline paramscan dma -b usstock-1min -f daily -s 2015-01-03 -e 2022-06-30 -p MAVG_WINDOW -v 20 50 100 -o dma_MAVG_WINDOW.csv
+    """
+    parser = _subparsers.add_parser(
+        "paramscan",
+        help="run a parameter scan for a Zipline strategy",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    parser.add_argument(
+        "strategy",
+        metavar="CODE",
+        help="the strategy to run (strategy filename without extension)")
+    parser.add_argument(
+        "-f", "--data-frequency",
+        choices=["daily", "d", "minute", "m"],
+        help="the data frequency to use. Possible choices: %(choices)s "
+        "(default is minute)")
+    parser.add_argument(
+        "--capital-base",
+        type=float,
+        metavar="FLOAT",
+        help="the starting capital for the simulation (default is 1e6 (1 million))")
+    parser.add_argument(
+        "-b", "--bundle",
+        metavar="CODE",
+        help="the data bundle to use for the simulation. If omitted, the default "
+        "bundle (if set) is used.")
+    parser.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="the start date of the simulation (defaults to the bundle start date)")
+    parser.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="the end date of the simulation (defaults to today)")
+    parser.add_argument(
+        "-p", "--param1",
+        metavar="PARAM",
+        type=str,
+        required=True,
+        help="the name of the parameter to test (a module-level attribute in the "
+        "algo file)")
+    parser.add_argument(
+        "-v", "--vals1",
+        type=list_or_int_or_float_or_str,
+        metavar="VALUE",
+        nargs="+",
+        required=True,
+        help="parameter values to test (values can be integers, floats, strings, 'True', "
+        "'False', 'None', or 'default' (to test current param value); for lists/tuples, "
+        "use comma-separated values)")
+    parser.add_argument(
+        "--param2",
+        metavar="PARAM",
+        type=str,
+        help="name of a second parameter to test (for 2-D parameter scans)")
+    parser.add_argument(
+        "--vals2",
+        type=list_or_int_or_float_or_str,
+        metavar="VALUE",
+        nargs="*",
+        help="values to test for parameter 2 (values can be integers, floats, strings, "
+        "'True', 'False', 'None', or 'default' (to test current param value); for "
+        "lists/tuples, use comma-separated values)")
+    parser.add_argument(
+        "--params",
+        nargs="*",
+        type=dict_str,
+        metavar="PARAM:VALUE",
+        help="one or more strategy parameters (defined as module-level attributes "
+        "in the algo file) to modify on the fly before running the parameter scan "
+        "(pass as 'param:value')")
+    parser.add_argument(
+        "-n", "--num-workers",
+        type=int,
+        metavar="INT",
+        help="the number of parallel workers to run. Running in parallel can speed "
+        "up the parameter scan if your system has adequate resources. Default "
+        "is 1, meaning no parallel processing.")
+    parser.add_argument(
+        "--progress",
+        metavar="FREQ",
+        help="log backtest progress at this interval (use a pandas offset alias, "
+        "for example 'D' for daily, 'W' for weeky, 'M' for monthly, 'A' for annually). "
+        "This parameter controls logging in the underlying backtests; a summary of scan "
+        "results will be logged regardless of this parameter. Using this parameter when "
+        "--num-workers is greater than 1 will result in messy and interleaved log output "
+        "and is not recommended.")
+    parser.add_argument(
+        "-o", "--output",
+        metavar="FILENAME",
+        dest="filepath_or_buffer",
+        help="the location to write the output file (omit to write to stdout)")
+    parser.set_defaults(func="quantrocket.zipline._cli_scan_parameters")
 
     examples = """
 Create a pyfolio PDF tear sheet from a Zipline backtest result.

@@ -33,6 +33,7 @@ __all__ = [
     "set_default_bundle",
     "download_bundle_file",
     "backtest",
+    "scan_parameters",
     "create_tearsheet",
     "trade",
     "list_active_strategies",
@@ -585,6 +586,150 @@ def _cli_backtest(*args, **kwargs):
     if params:
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(backtest, *args, **kwargs)
+
+def scan_parameters(strategy,  data_frequency=None, capital_base=None, bundle=None,
+                    start_date=None, end_date=None,
+                    param1=None, vals1=None, param2=None, vals2=None,
+                    progress=None, params=None, num_workers=None,
+                    filepath_or_buffer=None):
+    """
+    Run a parameter scan for a Zipline strategy. The resulting CSV can be
+    plotted with moonchart.ParamscanTearsheet.
+
+    Parameters
+    ----------
+    strategy : str, required
+        the strategy to run (strategy filename without extension)
+
+    data_frequency : str, optional
+        the data frequency of the simulation. Possible choices: daily, minute
+        (or aliases d, m). Default is minute.
+
+    capital_base : float, optional
+        the starting capital for the simulation (default is 1e6 (1 million))
+
+    bundle : str, optional
+        the data bundle to use for the simulation. If omitted, the default bundle (if set)
+        is used.
+
+    start_date : str (YYYY-MM-DD), optional
+        the start date of the simulation (defaults to the bundle start date)
+
+    end_date : str (YYYY-MM-DD), optional
+        the end date of the simulation (defaults to today)
+
+    param1 : str, required
+        the name of the parameter to test (a module-level attribute
+        in the algo file)
+
+    vals1 : list of int/float/str/tuple, required
+        parameter values to test (values can be ints, floats, strings, False,
+        True, None, 'default' (to test current param value), or lists of
+        ints/floats/strings)
+
+    param2 : str, optional
+        name of a second parameter to test (for 2-D parameter scans)
+
+    vals2 : list of int/float/str/tuple, optional
+        values to test for parameter 2 (values can be ints, floats, strings,
+        False, True, None, 'default' (to test current param value), or lists
+        of ints/floats/strings)
+
+    params : dict of PARAM:VALUE, optional
+        one or more strategy parameters (defined as module-level attributes
+        in the algo file) to modify on the fly before running the parameter
+        scan (pass as {param:value}).
+
+    num_workers : int, optional
+        the number of parallel workers to run. Running in parallel can speed
+        up the parameter scan if your system has adequate resources. Default
+        is 1, meaning no parallel processing.
+
+    progress : str, optional
+        log backtest progress at this interval (use a pandas offset alias,
+        for example "D" for daily, "W" for weeky, "M" for monthly,
+        "A" for annually). This parameter controls logging in the underlying
+        backtests; a summary of scan results will be logged regardless of this
+        parameter. Using this parameter when num_workers is greater than 1 will
+        result in messy and interleaved log output and is not recommended.
+
+    filepath_or_buffer : str, optional
+        the location to write the output file (omit to write to stdout)
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    Run a parameter scan for a moving average strategy called dma, then
+    view a tear sheet of the results:
+
+    >>> from moonchart import ParamscanTearsheet
+    >>> scan_parameters("dma",
+                        bundle="usstock-1min",
+                        data_frequency="daily",
+                        start_date="2015-01-03",
+                        end_date="2022-06-30",
+                        param1="MAVG_WINDOW",
+                        vals1=[20, 50, 100],
+                        filepath_or_buffer="dma_MAVG_WINDOW.csv")
+    >>> ParamscanTearsheet.from_csv("dma_MAVG_WINDOW.csv")
+
+    Run a 2-D parameter scan testing combinations of values for a long and
+    short moving average, using 3 parallel worker processes:
+
+    >>> scan_parameters("dma",
+                        bundle="usstock-1min",
+                        data_frequency="daily",
+                        start_date="2015-01-03",
+                        end_date="2022-06-30",
+                        param1="LONG_MAVG_WINDOW",
+                        vals1=[100, 200],
+                        param2="SHORT_MAVG_WINDOW",
+                        vals2=[20, 50],
+                        num_workers=3,
+                        filepath_or_buffer="dma_LONG_MAVG_WINDOW_and_SHORT_MAVG_WINDOW.csv")
+    >>> ParamscanTearsheet.from_csv("dma_LONG_MAVG_WINDOW_and_SHORT_MAVG_WINDOW.csv")
+    """
+    _params = {}
+    if data_frequency:
+        _params["data_frequency"] = data_frequency
+    if capital_base:
+        _params["capital_base"] = capital_base
+    if bundle:
+        _params["bundle"] = bundle
+    if start_date:
+        _params["start_date"] = start_date
+    if end_date:
+        _params["end_date"] = end_date
+    if progress:
+        _params["progress"] = progress
+    if param1:
+        _params["param1"] = param1
+    if vals1:
+        _params["vals1"] = [str(v) for v in vals1]
+    if param2:
+        _params["param2"] = param2
+    if vals2:
+        _params["vals2"] = [str(v) for v in vals2]
+    if params:
+        _params["params"] = dict_to_dict_strs(params)
+    if num_workers:
+        _params["num_workers"] = num_workers
+
+    response = houston.post("/zipline/paramscans/{0}".format(strategy), params=_params, timeout=60*60*96)
+
+    houston.raise_for_status_with_json(response)
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_scan_parameters(*args, **kwargs):
+    params = kwargs.get("params", None)
+    if params:
+        kwargs["params"] = dict_strs_to_dict(*params)
+    return json_to_cli(scan_parameters, *args, **kwargs)
 
 def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None):
     """

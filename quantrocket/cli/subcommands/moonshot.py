@@ -223,8 +223,8 @@ Run a parameter scan in 1-year segments to reduce memory usage:
         nargs="*",
         type=dict_str,
         metavar="PARAM:VALUE",
-        help="one or more strategy params to set on the fly before backtesting "
-        "(pass as 'param:value')")
+        help="one or more strategy params to set on the fly before running the "
+        "parameter scan (pass as 'param:value')")
     backtest_options.add_argument(
         "--no-cache",
         action="store_true",
