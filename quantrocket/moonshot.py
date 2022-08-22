@@ -186,8 +186,8 @@ def read_moonshot_csv(filepath_or_buffer):
 
 def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
                     param1=None, vals1=None, param2=None, vals2=None,
-                    allocations=None, nlv=None, params=None, output="csv",
-                    filepath_or_buffer=None, no_cache=False):
+                    allocations=None, nlv=None, params=None, num_workers=None,
+                    output="csv", filepath_or_buffer=None, no_cache=False):
     """
     Run a parameter scan for one or more strategies.
 
@@ -237,6 +237,11 @@ def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
     params : dict of PARAM:VALUE, optional
         one or more strategy params to set on the fly before running the
         parameter scan (pass as {param:value})
+
+    num_workers : int, optional
+        the number of parallel workers to run. Running in parallel can speed
+        up the parameter scan if your system has adequate resources. Default
+        is 1, meaning no parallel processing.
 
     output : str, required
         the output format (choices are csv or pdf)
@@ -310,6 +315,8 @@ def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
         _params["nlv"] = dict_to_dict_strs(nlv)
     if params:
         _params["params"] = dict_to_dict_strs(params)
+    if num_workers:
+        _params["num_workers"] = num_workers
     if no_cache:
         _params["no_cache"] = no_cache
 

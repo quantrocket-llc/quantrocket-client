@@ -226,6 +226,13 @@ Run a parameter scan in 1-year segments to reduce memory usage:
         help="one or more strategy params to set on the fly before running the "
         "parameter scan (pass as 'param:value')")
     backtest_options.add_argument(
+        "--num-workers",
+        type=int,
+        metavar="INT",
+        help="the number of parallel workers to run. Running in parallel can speed "
+        "up the parameter scan if your system has adequate resources. Default "
+        "is 1, meaning no parallel processing.")
+    backtest_options.add_argument(
         "--no-cache",
         action="store_true",
         help="don't use cached files even if available. Using cached files speeds "
