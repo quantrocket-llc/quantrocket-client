@@ -127,7 +127,8 @@ Run a backtest in 1-year segments to reduce memory usage:
     examples="""
 Run a parameter scan for one or more strategies.
 
-By default returns a CSV of scan results but can also return a PDF tear sheet.
+By default, returns a CSV of scan results which can be plotted with
+`moonchart.ParamscanTearsheet`, but can also return a PDF tear sheet.
 
 Examples:
 

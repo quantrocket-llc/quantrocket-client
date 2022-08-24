@@ -593,8 +593,10 @@ def scan_parameters(strategy,  data_frequency=None, capital_base=None, bundle=No
                     progress=None, params=None, num_workers=None,
                     filepath_or_buffer=None):
     """
-    Run a parameter scan for a Zipline strategy. The resulting CSV can be
-    plotted with moonchart.ParamscanTearsheet.
+    Run a parameter scan for a Zipline strategy.
+
+    Returns a CSV of scan results which can be plotted with
+    `moonchart.ParamscanTearsheet`.
 
     Parameters
     ----------

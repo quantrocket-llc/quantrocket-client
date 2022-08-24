@@ -191,7 +191,8 @@ def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
     """
     Run a parameter scan for one or more strategies.
 
-    By default returns a CSV of scan results but can also return a PDF tear sheet.
+    By default, returns a CSV of scan results which can be plotted with
+    `moonchart.ParamscanTearsheet`, but can also return a PDF tear sheet.
 
     Parameters
     ----------
@@ -261,12 +262,14 @@ def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
     Examples
     --------
     Run a parameter scan for several different moving averages on a strategy
-    called trend-friend and return a CSV (which can be rendered with Moonchart):
+    called trend-friend, then view a tear sheet of the results:
 
+    >>> from moonchart import ParamscanTearsheet
     >>> scan_parameters("trend-friend",
                         param1="MAVG_WINDOW",
                         vals1=[20, 50, 100],
                         filepath_or_buffer="trend_friend_MAVG_WINDOW.csv")
+    >>> ParamscanTearsheet.from_csv("trend_friend_MAVG_WINDOW.csv")
 
     Run a 2-D parameter scan for multiple strategies and return a CSV:
 
@@ -276,6 +279,7 @@ def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
                         param2="STD_WINDOW",
                         vals2=[20, 50, 100, 200],
                         filepath_or_buffer="strategies_MIN_STD_and_STD_WINDOW.csv")
+    >>> ParamscanTearsheet.from_csv("strategies_MIN_STD_and_STD_WINDOW.csv")
 
     Run a parameter scan in 1-year segments to reduce memory usage:
 
