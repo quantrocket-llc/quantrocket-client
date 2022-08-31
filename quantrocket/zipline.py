@@ -128,8 +128,11 @@ def create_bundle_from_db(code, from_db, calendar,
     code : str, required
         the code to assign to the bundle (lowercase alphanumerics and hyphens only)
 
-    from_db : str, required
-        the code of a history database or real-time aggregate database to ingest
+    from_db : str or list of str, required
+        the code(s) of one or more history databases or real-time aggregate databases
+        to ingest. If multiple databases are specified, they must have the same bar
+        size and the same fields. If a security is present in multiple databases, the
+        first database's values will be used.
 
     calendar : str, required
         the name of the calendar to use with this bundle (provide '?' or

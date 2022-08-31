@@ -123,7 +123,12 @@ Zipline fields to the database fields:
     parser.add_argument(
         "-d", "--from-db",
         metavar="CODE",
-        help="the code of a history database or real-time aggregate database to ingest")
+        nargs="+",
+        required=True,
+        help="the code(s) of one or more history databases or real-time aggregate databases "
+        "to ingest. If multiple databases are specified, they must have the same bar "
+        "size and same fields. If a security is present in multiple databases, the first "
+        "database's values will be used.")
     parser.add_argument(
         "-c", "--calendar",
         metavar="NAME",
