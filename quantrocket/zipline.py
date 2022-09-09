@@ -24,6 +24,7 @@ from quantrocket.utils.warn import deprecated_replaced_by
 
 __all__ = [
     "create_usstock_bundle",
+    "create_sharadar_bundle",
     "create_bundle_from_db",
     "ingest_bundle",
     "list_bundles",
@@ -108,6 +109,59 @@ def create_usstock_bundle(code, sids=None, universes=None, free=False, data_freq
 
 def _cli_create_usstock_bundle(*args, **kwargs):
     return json_to_cli(create_usstock_bundle, *args, **kwargs)
+
+def create_sharadar_bundle(code, sec_types=None, free=False):
+    """
+    Create a Zipline bundle of daily data for Sharadar stocks and/or ETFs.
+
+    This function defines the bundle parameters but does not ingest the actual
+    data. To ingest the data, see `ingest_bundle`.
+
+    Parameters
+    ----------
+    code : str, required
+        the code to assign to the bundle (lowercase alphanumerics and hyphens only)
+
+    sec_types : list of str, optional
+        limit to these security types. Possible choices: STK, ETF. Default is to
+        include both stocks and ETFs.
+
+    free : bool
+        limit to free sample data
+
+    Returns
+    -------
+    dict
+        status message
+
+    Examples
+    --------
+    Create a bundle for all Sharadar stocks and ETFs:
+
+    >>> create_sharadar_bundle("sharadar-1d")
+
+    Create a bundle for ETFs only:
+
+    >>> create_sharadar_bundle("sharadar-etf-1d", sec_types="ETF")
+
+    Create a bundle of free sample data:
+
+    >>> create_sharadar_bundle("sharadar-free-1d", free=True)
+    """
+    params = {}
+    params["ingest_type"] = "sharadar"
+    if sec_types:
+        params["sec_types"] = sec_types
+    if free:
+        params["free"] = free
+
+    response = houston.put("/zipline/bundles/{}".format(code), params=params)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_create_sharadar_bundle(*args, **kwargs):
+    return json_to_cli(create_sharadar_bundle, *args, **kwargs)
 
 def create_bundle_from_db(code, from_db, calendar,
                          start_date=None, end_date=None,

@@ -80,6 +80,54 @@ Create a minute data bundle of free sample data:
     parser.set_defaults(func="quantrocket.zipline._cli_create_usstock_bundle")
 
     examples = """
+Create a Zipline bundle of daily data for Sharadar stocks and/or ETFs.
+
+This command defines the bundle parameters but does not ingest the actual
+data. To ingest the data, see `quantrocket zipline ingest`.
+
+Examples:
+
+Create a bundle for all Sharadar stocks and ETFs:
+
+.. code-block:: bash
+
+    quantrocket zipline create-sharadar-bundle sharadar-1d
+
+Create a bundle for ETFs only:
+
+.. code-block:: bash
+
+    quantrocket zipline create-sharadar-bundle sharadar-etf-1d --sec-types ETF
+
+Create a bundle of free sample data:
+
+.. code-block:: bash
+
+    quantrocket zipline create-sharadar-bundle sharadar-free-1d --free
+    """
+    parser = _subparsers.add_parser(
+        "create-sharadar-bundle",
+        help="create a Zipline bundle of daily data for Sharadar stocks and/or ETFs",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the code to assign to the bundle (lowercase alphanumerics and hyphens only)")
+    parser.add_argument(
+        "-t", "--sec-types",
+        nargs="*",
+        metavar="SEC_TYPE",
+        choices=["STK", "ETF"],
+        help="limit to these security types. Possible choices: %(choices)s. "
+        "Default is to include both stocks and ETFs.")
+    parser.add_argument(
+        "--free",
+        action="store_true",
+        help="limit to free sample data")
+    parser.set_defaults(func="quantrocket.zipline._cli_create_sharadar_bundle")
+
+    examples = """
 Create a Zipline bundle from a history database or real-time aggregate
 database.
 
