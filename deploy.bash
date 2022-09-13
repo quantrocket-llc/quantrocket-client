@@ -14,5 +14,5 @@ password=$PYPI_PASSWORD
 EOF
 
 # Deploy to pip
-python setup.py register
-python setup.py sdist bdist_wheel upload
+python -m build
+twine upload dist/*
