@@ -234,7 +234,8 @@ Collect upcoming earnings dates for a particular security:
 Collect Interactive Brokers shortable shares data and save to database.
 
 Data is organized by country and updated every 15 minutes. Historical
-data is available from April 15, 2018.
+data is available from April 15, 2018. Detailed intraday data as well as
+aggregated daily data will be saved to the database.
 
 Examples:
 
@@ -266,8 +267,8 @@ Collect shortable shares data for all stocks:
     examples = """
 Collect Interactive Brokers borrow fees data and save to database.
 
-Data is organized by country and updated every 15 minutes. Historical
-data is available from April 15, 2018.
+Data is organized by country. Historical data is available from April
+2018.
 
 Examples:
 
@@ -1021,9 +1022,10 @@ Query earnings dates for a universe of US stocks:
     parser.set_defaults(func="quantrocket.fundamental._cli_download_wsh_earnings_dates")
 
     examples = """
-Query Interactive Brokers shortable shares from the local database and download to file.
+Query intraday or daily Interactive Brokers shortable shares data from the
+local database and download to file.
 
-Data timestamps are UTC.
+Intraday data timestamps are UTC.
 
 Examples:
 
@@ -1032,10 +1034,17 @@ Query shortable shares for a universe of Australian stocks:
 .. code-block:: bash
 
     quantrocket fundamental ibkr-shortshares -u asx-stk -o asx_shortables.csv
+
+Query aggregated daily data instead:
+
+.. code-block:: bash
+
+    quantrocket fundamental ibkr-shortshares -u asx-stk -o asx_shortables.csv --aggregate
     """
     parser = _subparsers.add_parser(
         "ibkr-shortshares",
-        help="query Interactive Brokers shortable shares from the local database and download to file",
+        help="query intraday or daily Interactive Brokers shortable shares data from the "
+        "local database and download to file",
         epilog=examples,
         formatter_class=HelpFormatter)
     filters = parser.add_argument_group("filtering options")
@@ -1080,12 +1089,16 @@ Query shortable shares for a universe of Australian stocks:
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-a", "--aggregate",
+        action="store_true",
+        help="return aggregated daily data containing the min, max, mean, and last "
+        "shortable share quantities per security per day. If omitted, "
+        "return intraday data.")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_ibkr_shortable_shares")
 
     examples = """
 Query Interactive Brokers borrow fees from the local database and download to file.
-
-Data timestamps are UTC.
 
 Examples:
 

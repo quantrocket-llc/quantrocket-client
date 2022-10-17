@@ -1561,6 +1561,10 @@ class WSHEarningsDatesReindexedLikeTestCase(unittest.TestCase):
         )
 
 class StockloanDataReindexedLikeTestCase(unittest.TestCase):
+    """
+    Contains tests which are common to get_ibkr_shortable_shares_reindexed_like
+    and get_ibkr_margin_requirements_reindexed_like.
+    """
 
     def test_complain_if_time_level_in_index(self):
         """
@@ -1650,12 +1654,23 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(kwargs["sids"], ["FI12345","FI23456"])
         self.assertEqual(kwargs["start_date"], "2018-03-17") # 45 days before reindex_like min date
         self.assertEqual(kwargs["end_date"], "2018-05-03")
+        self.assertNotIn("aggregate", kwargs)
+
+        # aggregate shortable shares
+        get_ibkr_shortable_shares_reindexed_like(closes, aggregate=True)
+
+        shortable_shares_call = mock_download_ibkr_shortable_shares.mock_calls[1]
+        _, args, kwargs = shortable_shares_call
+        self.assertListEqual(kwargs["sids"], ["FI12345","FI23456"])
+        self.assertEqual(kwargs["start_date"], "2018-03-17") # 45 days before reindex_like min date
+        self.assertEqual(kwargs["end_date"], "2018-05-03")
+        self.assertTrue(kwargs["aggregate"])
 
         def _mock_download_ibkr_borrow_fees(f, *args, **kwargs):
             borrow_fees = pd.DataFrame(
-                dict(Date=["2018-05-01T21:45:02",
-                           "2018-05-01T22:00:03",
-                           "2018-05-01T21:45:02"],
+                dict(Date=["2018-05-01",
+                           "2018-05-02",
+                           "2018-05-03"],
                      Sid=["FI12345",
                             "FI12345",
                             "FI23456"],
@@ -1667,7 +1682,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
 
         mock_download_ibkr_borrow_fees.side_effect = _mock_download_ibkr_borrow_fees
 
-        get_ibkr_borrow_fees_reindexed_like(closes, time="00:00:00 America/Toronto")
+        get_ibkr_borrow_fees_reindexed_like(closes)
 
         borrow_fees_call = mock_download_ibkr_borrow_fees.mock_calls[0]
         _, args, kwargs = borrow_fees_call
@@ -1677,9 +1692,9 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
 
         def _mock_download_ibkr_margin_requirements(f, *args, **kwargs):
             margin_requirements = pd.DataFrame(
-                dict(Date=["2018-05-01T21:45:02",
-                           "2018-05-01T22:00:03",
-                           "2018-05-01T21:45:02"],
+                dict(Date=["2018-05-01",
+                           "2018-05-02",
+                           "2018-05-03"],
                      Sid=["FI12345",
                             "FI12345",
                             "FI23456"],
@@ -2197,19 +2212,48 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
                                 name="Date"))
 
         def mock_download_ibkr_shortable_shares(f, *args, **kwargs):
-            shortable_shares = pd.DataFrame(
-                dict(Date=["2018-04-15T21:45:02",
-                           "2018-04-16T13:45:02",
-                           "2018-04-17T12:30:03",
-                           ],
-                     Sid=["FI12345",
+            if kwargs.get("aggregate"):
+                shortable_shares = pd.DataFrame(
+                    dict(Date=[
+                        "2018-04-15",
+                        "2018-04-16",
+                        "2018-04-17",
+                        ],
+                        Sid=["FI12345",
                             "FI12345",
                             "FI12345",
-                           ],
-                     Quantity=[10000,
-                               9000,
-                               80000,
-                               ]))
+                            ],
+                        MinQuantity=[
+                            10,
+                            900,
+                            800],
+                        MaxQuantity=[
+                            12000,
+                            19000,
+                            84000],
+                        MeanQuantity=[
+                            5300,
+                            4334,
+                            42344],
+                        LastQuantity=[
+                            10000,
+                            9000,
+                            80000],
+                        ))
+            else:
+                shortable_shares = pd.DataFrame(
+                    dict(Date=["2018-04-15T21:45:02",
+                            "2018-04-16T13:45:02",
+                            "2018-04-17T12:30:03",
+                            ],
+                        Sid=["FI12345",
+                                "FI12345",
+                                "FI12345",
+                            ],
+                        Quantity=[10000,
+                                9000,
+                                80000,
+                                ]))
             shortable_shares.to_csv(f, index=False)
             f.seek(0)
 
@@ -2227,6 +2271,36 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
                  {'Date': '2018-04-15T00:00:00-0400', "FI12345": "nan", "FI23456": "nan"},
                  {'Date': '2018-04-16T00:00:00-0400', "FI12345": 10000.0, "FI23456": 0.0},
                  {'Date': '2018-04-17T00:00:00-0400', "FI12345": 9000.0, "FI23456": 0.0}]
+            )
+
+            # aggregate shortable shares
+            shortable_shares = get_ibkr_shortable_shares_reindexed_like(closes, aggregate=True)
+            # replace nan with "nan" to allow equality comparisons
+            shortable_shares = shortable_shares.where(shortable_shares.notnull(), "nan")
+            shortable_shares = shortable_shares.reset_index()
+            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%d")
+            self.assertListEqual(
+                shortable_shares.to_dict(orient="records"),
+                [{'Field': 'MinQuantity', 'Date': '2018-04-13', 'FI12345': 'nan', 'FI23456': 'nan'},
+                {'Field': 'MinQuantity', 'Date': '2018-04-14', 'FI12345': 'nan', 'FI23456': 'nan'},
+                {'Field': 'MinQuantity', 'Date': '2018-04-15', 'FI12345': 10.0, 'FI23456': 'nan'},
+                {'Field': 'MinQuantity', 'Date': '2018-04-16', 'FI12345': 900.0, 'FI23456': 0.0},
+                {'Field': 'MinQuantity', 'Date': '2018-04-17', 'FI12345': 800.0, 'FI23456': 0.0},
+                {'Field': 'MaxQuantity', 'Date': '2018-04-13', 'FI12345': 'nan', 'FI23456': 'nan'},
+                {'Field': 'MaxQuantity', 'Date': '2018-04-14', 'FI12345': 'nan', 'FI23456': 'nan'},
+                {'Field': 'MaxQuantity', 'Date': '2018-04-15', 'FI12345': 12000.0, 'FI23456': 'nan'},
+                {'Field': 'MaxQuantity', 'Date': '2018-04-16', 'FI12345': 19000.0, 'FI23456': 0.0},
+                {'Field': 'MaxQuantity', 'Date': '2018-04-17', 'FI12345': 84000.0, 'FI23456': 0.0},
+                {'Field': 'MeanQuantity', 'Date': '2018-04-13', 'FI12345': 'nan', 'FI23456': 'nan'},
+                {'Field': 'MeanQuantity', 'Date': '2018-04-14', 'FI12345': 'nan', 'FI23456': 'nan'},
+                {'Field': 'MeanQuantity', 'Date': '2018-04-15', 'FI12345': 5300.0, 'FI23456': 'nan'},
+                {'Field': 'MeanQuantity', 'Date': '2018-04-16', 'FI12345': 4334.0, 'FI23456': 0.0},
+                {'Field': 'MeanQuantity', 'Date': '2018-04-17', 'FI12345': 42344.0, 'FI23456': 0.0},
+                {'Field': 'LastQuantity', 'Date': '2018-04-13', 'FI12345': 'nan', 'FI23456': 'nan'},
+                {'Field': 'LastQuantity', 'Date': '2018-04-14', 'FI12345': 'nan', 'FI23456': 'nan'},
+                {'Field': 'LastQuantity', 'Date': '2018-04-15', 'FI12345': 10000.0, 'FI23456': 'nan'},
+                {'Field': 'LastQuantity', 'Date': '2018-04-16', 'FI12345': 9000.0, 'FI23456': 0.0},
+                {'Field': 'LastQuantity', 'Date': '2018-04-17', 'FI12345': 80000.0, 'FI23456': 0.0}]
             )
 
         def mock_download_ibkr_margin_requirements(f, *args, **kwargs):
@@ -2349,6 +2423,116 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
                 'Field': 'LongMaintenanceMargin'}]
             )
 
+class IBKRShortableSharesReindexedLikeTestCase(unittest.TestCase):
+    """
+    See also StockloanDataReindexedLikeTestCase.
+    """
+
+    def test_complain_if_aggregate_and_time(self):
+        """
+        Tests error handling when you request aggregate=True and specify a time.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=["FI12345","FI23456"],
+            index=pd.Index(["foo","bar","bat"], name="Date"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_ibkr_shortable_shares_reindexed_like(closes, aggregate=True, time="14:00:00")
+
+        self.assertIn("the time argument is only supported if aggregate=False", str(cm.exception))
+
+    def test_complain_if_intraday_and_fields(self):
+        """
+        Tests error handling when you request aggregate=False and specify fields.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=["FI12345","FI23456"],
+            index=pd.Index(["foo","bar","bat"], name="Date"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_ibkr_shortable_shares_reindexed_like(closes, fields="MinQuantity")
+
+        self.assertIn("the fields parameter is only supported if aggregate=True", str(cm.exception))
+
+    def test_aggregate_shortable_shares_limit_fields(self):
+        """
+        Tests limiting fields for aggregate shortable shares.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-05-15",
+                                periods=3,
+                                freq="D",
+                                name="Date"))
+
+        def mock_download_ibkr_shortable_shares(f, *args, **kwargs):
+            if kwargs.get("aggregate"):
+                shortable_shares = pd.DataFrame(
+                    dict(Date=[
+                        "2018-05-15",
+                        "2018-05-16",
+                        "2018-05-17",
+                        "2018-05-16",
+                        ],
+                        Sid=["FI12345",
+                            "FI12345",
+                            "FI12345",
+                            "FI23456",
+                            ],
+                        MinQuantity=[
+                            10,
+                            900,
+                            800,
+                            600],
+                        MaxQuantity=[
+                            12000,
+                            19000,
+                            84000,
+                            6000],
+                        MeanQuantity=[
+                            5300,
+                            4334,
+                            42344,
+                            678],
+                        LastQuantity=[
+                            10000,
+                            9000,
+                            80000,
+                            5600],
+                        ))
+            else:
+                raise NotImplementedError()
+            shortable_shares.to_csv(f, index=False)
+            f.seek(0)
+
+        with patch('quantrocket.fundamental.download_ibkr_shortable_shares', new=mock_download_ibkr_shortable_shares):
+
+            shortable_shares = get_ibkr_shortable_shares_reindexed_like(
+                closes,
+                aggregate=True,
+                fields=["MeanQuantity", "LastQuantity"])
+
+            # replace nan with "nan" to allow equality comparisons
+            shortable_shares = shortable_shares.where(shortable_shares.notnull(), "nan")
+            shortable_shares = shortable_shares.reset_index()
+            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%d")
+            self.assertListEqual(
+                shortable_shares.to_dict(orient="records"),
+                [{'Field': 'MeanQuantity', 'Date': '2018-05-15', 'FI12345': 5300.0, 'FI23456': 0.0},
+                {'Field': 'MeanQuantity', 'Date': '2018-05-16', 'FI12345': 4334.0, 'FI23456': 678.0},
+                {'Field': 'MeanQuantity', 'Date': '2018-05-17', 'FI12345': 42344.0, 'FI23456': 678.0},
+                {'Field': 'LastQuantity', 'Date': '2018-05-15', 'FI12345': 10000.0, 'FI23456': 0.0},
+                {'Field': 'LastQuantity', 'Date': '2018-05-16', 'FI12345': 9000.0, 'FI23456': 5600.0},
+                {'Field': 'LastQuantity', 'Date': '2018-05-17', 'FI12345': 80000.0, 'FI23456': 5600.0}]
+            )
+
+class IBKRBorrowFeesReindexedLikeTestCase(unittest.TestCase):
+
     def test_borrow_fees(self):
         """
         Tests get_ibkr_borrow_fees_reindexed_like. (get_ibkr_borrow_fees_reindexed_like
@@ -2361,18 +2545,17 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
             index=pd.date_range(start="2018-05-01",
                                 periods=3,
                                 freq="D",
-                                tz="America/New_York",
                                 name="Date"))
 
         def mock_download_ibkr_borrow_fees(f, *args, **kwargs):
             borrow_fees = pd.DataFrame(
-                dict(Date=["2018-04-20T21:45:02",
-                           "2018-05-01T13:45:02",
-                           "2018-05-02T12:30:03",
-                           "2018-04-20T21:45:02",
-                           "2018-05-01T14:15:02",
-                           "2018-05-02T14:30:03",
-                           "2018-05-03T08:30:00",
+                dict(Date=["2018-04-20",
+                           "2018-05-01",
+                           "2018-05-02",
+                           "2018-04-20",
+                           "2018-05-01",
+                           "2018-05-02",
+                           "2018-05-03",
                            ],
                      Sid=["FI12345",
                             "FI12345",
@@ -2394,18 +2577,18 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
 
         with patch('quantrocket.fundamental.download_ibkr_borrow_fees', new=mock_download_ibkr_borrow_fees):
 
-            borrow_fees = get_ibkr_borrow_fees_reindexed_like(
-                closes,
-                time="09:30:00")
+            borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes)
 
             borrow_fees = borrow_fees.reset_index()
-            borrow_fees.loc[:, "Date"] = borrow_fees.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            borrow_fees.loc[:, "Date"] = borrow_fees.Date.dt.strftime("%Y-%m-%d")
             self.assertListEqual(
                 borrow_fees.to_dict(orient="records"),
-                [{'Date': '2018-05-01T00:00:00-0400', "FI12345": 1.5, "FI23456": 0.35},
-                 {'Date': '2018-05-02T00:00:00-0400', "FI12345": 1.7, "FI23456": 0.40},
-                 {'Date': '2018-05-03T00:00:00-0400', "FI12345": 1.7, "FI23456": 0.23}]
+                [{'Date': '2018-05-01', "FI12345": 1.65, "FI23456": 0.40},
+                 {'Date': '2018-05-02', "FI12345": 1.7, "FI23456": 0.44},
+                 {'Date': '2018-05-03', "FI12345": 1.7, "FI23456": 0.23}]
             )
+
+class IBKRMarginRequirementsReindexedLikeTestCase(unittest.TestCase):
 
     def test_get_ibkr_margin_requirements_reindexed_like(self):
         """
@@ -2558,6 +2741,8 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
                 'FI23456': 0.0,
                 'Field': 'ShortMaintenanceMargin'}]
             )
+
+class AlpacaETBReindexedLikeTestCase(unittest.TestCase):
 
     def test_alpaca_etb(self):
         """

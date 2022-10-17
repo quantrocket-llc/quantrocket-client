@@ -197,7 +197,8 @@ def collect_ibkr_shortable_shares(countries=None):
     Collect Interactive Brokers shortable shares data and save to database.
 
     Data is organized by country and updated every 15 minutes. Historical
-    data is available from April 2018.
+    data is available from April 2018. Detailed intraday data as well as
+    aggregated daily data will be saved to the database.
 
     Parameters
     ----------
@@ -226,8 +227,8 @@ def collect_ibkr_borrow_fees(countries=None):
     """
     Collect Interactive Brokers borrow fees data and save to database.
 
-    Data is organized by country and updated every 15 minutes. Historical
-    data is available from April 2018.
+    Data is organized by country. Historical data is available from April
+    2018.
 
     Parameters
     ----------
@@ -289,11 +290,13 @@ def _cli_collect_ibkr_margin_requirements(*args, **kwargs):
 def download_ibkr_shortable_shares(filepath_or_buffer=None, output="csv",
                                    start_date=None, end_date=None,
                                    universes=None, sids=None,
-                                   exclude_universes=None, exclude_sids=None):
+                                   exclude_universes=None, exclude_sids=None,
+                                   aggregate=False):
     """
-    Query Interactive Brokers shortable shares from the local database and download to file.
+    Query intraday or daily Interactive Brokers shortable shares data from the
+    local database and download to file.
 
-    Data timestamps are UTC.
+    Intraday data timestamps are UTC.
 
     Parameters
     ----------
@@ -321,16 +324,27 @@ def download_ibkr_shortable_shares(filepath_or_buffer=None, output="csv",
     exclude_sids : list of str, optional
         exclude these sids
 
+    aggregate : bool
+        if True, return aggregated daily data containing the min, max, mean,
+        and last shortable share quantities per security per day. If False or
+        omitted, return intraday data.
+
     Returns
     -------
     None
 
     Examples
     --------
-    Query shortable shares for a universe of Australian stocks.
+    Query shortable shares for a universe of Australian stocks:
 
     >>> f = io.StringIO()
     >>> download_ibkr_shortable_shares("asx_shortables.csv", universes=["asx-stk"])
+    >>> shortables = pd.read_csv("asx_shortables.csv", parse_dates=["Date"])
+
+    Query aggregated daily data instead:
+
+    >>> f = io.StringIO()
+    >>> download_ibkr_shortable_shares("asx_shortables.csv", universes=["asx-stk"], aggregate=True)
     >>> shortables = pd.read_csv("asx_shortables.csv", parse_dates=["Date"])
     """
     params = {}
@@ -346,6 +360,8 @@ def download_ibkr_shortable_shares(filepath_or_buffer=None, output="csv",
         params["exclude_universes"] = exclude_universes
     if exclude_sids:
         params["exclude_sids"] = exclude_sids
+    if aggregate:
+        params["aggregate"] = aggregate
 
     output = output or "csv"
 
@@ -376,8 +392,6 @@ def download_ibkr_borrow_fees(filepath_or_buffer=None, output="csv",
                          exclude_universes=None, exclude_sids=None):
     """
     Query Interactive Brokers borrow fees from the local database and download to file.
-
-    Data timestamps are UTC.
 
     Parameters
     ----------
@@ -548,7 +562,8 @@ def _cli_download_ibkr_margin_requirements(*args, **kwargs):
     return json_to_cli(download_ibkr_margin_requirements, *args, **kwargs)
 
 def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
-                                       time=None, is_intraday=True):
+                                       time=None, is_intraday=True,
+                                       aggregate=False, fields=None):
     """
     Common base function for get_ibkr_shortable_shares_reindexed_like and
     get_ibkr_borrow_fees_reindexed_like and get_alpaca_etb_reindexed_like.
@@ -568,6 +583,12 @@ def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
 
     is_intraday : bool
         whether the stockloan data is intraday or daily
+
+    aggregate : bool
+        whether to query aggregate data
+
+    fields : list of str
+        limit to these fields
     """
     try:
         import pandas as pd
@@ -597,8 +618,11 @@ def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
     end_date = reindex_like.index.max().date().isoformat()
 
     f = six.StringIO()
+    query_kwargs = dict(sids=sids, start_date=start_date, end_date=end_date)
+    if aggregate:
+        query_kwargs["aggregate"] = True
     stockloan_func(
-        f, sids=sids, start_date=start_date, end_date=end_date)
+        f, **query_kwargs)
     stockloan_data = pd.read_csv(f)
     stockloan_data.loc[:, "Date"] = pd.to_datetime(stockloan_data.Date, utc=is_intraday)
 
@@ -662,6 +686,9 @@ def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
     all_fields = {}
     for fieldname in stockloan_data.index.get_level_values(0).unique():
 
+        if fields and fieldname not in fields:
+            continue
+
         field = stockloan_data.loc[fieldname]
 
         # Create a unioned index of requested times and stockloan data timestamps
@@ -693,10 +720,18 @@ def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
 
     return stockloan_data
 
-def get_ibkr_shortable_shares_reindexed_like(reindex_like, time=None):
+def get_ibkr_shortable_shares_reindexed_like(reindex_like, aggregate=False,
+                                             time=None, fields=None):
     """
     Return a DataFrame of Interactive Brokers shortable shares, reindexed to
     match the index (dates) and columns (sids) of `reindex_like`.
+
+    If `aggregate=False` (the default), query intraday shortable shares data
+    and return a DataFrame of the quantity of shortable shares as of
+    the time of day specified by `time`.
+
+    If `aggregate=True`, query shortable shares data aggregated by security and
+    date and return a multiindex DataFrame with levels (Field, Date).
 
     Parameters
     ----------
@@ -705,17 +740,28 @@ def get_ibkr_shortable_shares_reindexed_like(reindex_like, time=None):
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
 
+    aggregate : bool
+        if True, query data aggregated by security and date and return a multiindex
+        (Field, Date) DataFrame. If False (the default), query intraday data and
+        return a DataFrame of shortable share quantities (with a single-level Date
+        index) as of the time of day specified by `time`.
+
     time : str (HH:MM:SS[ TZ]), optional
-        return shortable shares as of this time of day. If omitted, shortable
-        shares will be returned as of the times of day in `reindex_like`'s
-        DatetimeIndex. (Note that for a DatetimeIndex containing dates only,
-        the time is 00:00:00, meaning shortable shares will be returned as of
-        midnight at the start of the day.) A time and timezone can be passed
-        as a space-separated string (e.g. "09:30:00 America/New_York"). If
-        timezone is omitted, the timezone of `reindex_like`'s DatetimeIndex
-        will be used; if `reindex_like`'s timezone is not set, the timezone
-        will be inferred from the component securities, if all securities
-        share the same timezone.
+        return shortable shares as of this time of day. Only applicable if
+        `aggregate=False`. If omitted, shortable shares will be returned as
+        of the times of day in `reindex_like`'s DatetimeIndex. (Note that for
+        a DatetimeIndex containing dates only, the time is 00:00:00, meaning
+        shortable shares will be returned as of midnight at the start of the
+        day.) A time and timezone can be passed as a space-separated string
+        (e.g. "09:30:00 America/New_York"). If timezone is omitted, the timezone
+        of `reindex_like`'s DatetimeIndex will be used; if `reindex_like`'s
+        timezone is not set, the timezone will be inferred from the component
+        securities, if all securities share the same timezone.
+
+    fields : list of str, optional
+        limit to these fields. Only applicable if `aggregate=True`. If omitted,
+        all aggregate fields are included. Available fields are MinQuantity,
+        MaxQuantity, MeanQuantity, and LastQuantity.
 
     Returns
     -------
@@ -740,22 +786,65 @@ def get_ibkr_shortable_shares_reindexed_like(reindex_like, time=None):
 
     >>> closes = prices.loc["Close"]
     >>> shortables = get_ibkr_shortable_shares_reindexed_like(closes, time="09:20:00 America/New_York")
+
+    Get aggregate shortable shares data for a DataFrame of US stocks:
+
+    >>> closes = prices.loc["Close"]
+    >>> shortables = get_ibkr_shortable_shares_reindexed_like(closes, aggregate=True)
+    >>> min_quantities = shortables.loc["MinQuantity"]
+    >>> max_quantities = shortables.loc["MaxQuantity"]
+    >>> mean_quantities = shortables.loc["MeanQuantity"]
+    >>> last_quantities = shortables.loc["LastQuantity"]
     """
+    if aggregate and time:
+        raise ParameterError("the time argument is only supported if aggregate=False")
+
+    if fields and not aggregate:
+        raise ParameterError("the fields parameter is only supported if aggregate=True")
+
+    if fields and not isinstance(fields, (list, tuple)):
+        fields = [fields]
+
+    if fields:
+        known_fields = ["MinQuantity", "MaxQuantity", "MeanQuantity", "LastQuantity"]
+        unknown_fields = set(fields) - set(known_fields)
+        if unknown_fields:
+            raise ParameterError(
+                f"invalid fields: {', '.join(unknown_fields)} "
+                f"(valid fields are {', '.join(known_fields)}")
     shortable_shares = _get_stockloan_data_reindexed_like(
         download_ibkr_shortable_shares,
-        reindex_like=reindex_like, time=time, is_intraday=True).loc["Quantity"]
+        reindex_like=reindex_like,
+        time=time,
+        aggregate=aggregate,
+        is_intraday=not aggregate,
+        fields=fields)
 
     # fillna(0) where date > 2018-04-15, the data start date (NaNs after that
     # date indicate no shortable shares, NaNs before that date indicate don't
     # know)
-    data_start_date = os.environ.get("STOCKLOAN_DATA_START_DATE", "2018-04-15")
-    after_start_date_selector = shortable_shares.index > data_start_date
-    shortable_shares.loc[after_start_date_selector, :] = shortable_shares.loc[
-        after_start_date_selector].fillna(0)
+    if aggregate:
+        fieldnames = shortable_shares.index.get_level_values("Field").unique()
+    else:
+        fieldnames = ["Quantity"]
 
+    all_fields = {}
+    data_start_date = os.environ.get("STOCKLOAN_DATA_START_DATE", "2018-04-15")
+    for fieldname in fieldnames:
+        field = shortable_shares.loc[fieldname]
+        after_start_date_selector = field.index > data_start_date
+        field.loc[after_start_date_selector, :] = field.loc[
+        after_start_date_selector].fillna(0)
+        all_fields[fieldname] = field
+
+    if not aggregate:
+        return all_fields["Quantity"]
+
+    import pandas as pd
+    shortable_shares = pd.concat(all_fields, names=["Field", "Date"])
     return shortable_shares
 
-def get_ibkr_borrow_fees_reindexed_like(reindex_like, time=None):
+def get_ibkr_borrow_fees_reindexed_like(reindex_like):
     """
     Return a DataFrame of Interactive Brokers borrow fees, reindexed to match
     the index (dates) and columns (sids) of `reindex_like`.
@@ -766,18 +855,6 @@ def get_ibkr_borrow_fees_reindexed_like(reindex_like, time=None):
         a DataFrame (usually of prices) with dates for the index and sids
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
-
-    time : str (HH:MM:SS[ TZ]), optional
-        return borrow fees as of this time of day. If omitted, borrow
-        fees will be returned as of the times of day in `reindex_like`'s
-        DatetimeIndex. (Note that for a DatetimeIndex containing dates only,
-        the time is 00:00:00, meaning borrow fees will be returned as of
-        midnight at the start of the day.) A time and timezone can be passed
-        as a space-separated string (e.g. "09:30:00 America/New_York"). If
-        timezone is omitted, the timezone of `reindex_like`'s DatetimeIndex
-        will be used; if `reindex_like`'s timezone is not set, the timezone
-        will be inferred from the component securities, if all securities
-        share the same timezone.
 
     Returns
     -------
@@ -790,22 +867,10 @@ def get_ibkr_borrow_fees_reindexed_like(reindex_like, time=None):
 
     >>> closes = prices.loc["Close"]
     >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes)
-
-    Get borrow fees as of 4:30 PM for a DataFrame of US stocks (timezone inferred
-    from component stocks):
-
-    >>> closes = prices.loc["Close"]
-    >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes, time="16:30:00")
-
-    Get borrow fees as of 4:30 PM New York time for a multi-timezone DataFrame
-    of stocks:
-
-    >>> closes = prices.loc["Close"]
-    >>> borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes, time="16:30:00 America/New_York")
     """
     return _get_stockloan_data_reindexed_like(
         download_ibkr_borrow_fees,
-        reindex_like=reindex_like, time=time, is_intraday=True).loc["FeeRate"]
+        reindex_like=reindex_like, is_intraday=False).loc["FeeRate"]
 
 def get_ibkr_margin_requirements_reindexed_like(reindex_like, time=None):
     """
