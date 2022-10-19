@@ -563,7 +563,7 @@ def _cli_download_ibkr_margin_requirements(*args, **kwargs):
 
 def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
                                        time=None, is_intraday=True,
-                                       aggregate=False, fields=None):
+                                       aggregate=False, fields=None, shift=0):
     """
     Common base function for get_ibkr_shortable_shares_reindexed_like and
     get_ibkr_borrow_fees_reindexed_like and get_alpaca_etb_reindexed_like.
@@ -589,6 +589,9 @@ def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
 
     fields : list of str
         limit to these fields
+
+    shift : int, optional
+        shift values this many periods. By default, values are not shifted.
     """
     try:
         import pandas as pd
@@ -704,8 +707,22 @@ def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
 
         field = field.fillna(method="ffill")
 
+        if shift and not is_intraday:
+            # shift, now that we've forward-filled; do this before reindexing
+            # so the first day isn't nan
+            field = field.shift(shift)
+
         # Keep only the requested times, now that we've ffilled
         field = field.reindex(index=index_at_time)
+
+        if shift and is_intraday:
+            # shift, now that we've forward-filled and reindexed from
+            # intraday to daily (leading values will be nan since we're
+            # shifting after reindexing - this could be improved by
+            # calculating index_at_time for the whole unioned index,
+            # reindexing to that, then shifting, then reindexing to the
+            # final index)
+            field = field.shift(shift)
 
         # Replace index_at_time with the original reindex_like index (this needs
         # to be done because index_at_time is tz-aware and reindex_like may not
@@ -721,7 +738,7 @@ def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
     return stockloan_data
 
 def get_ibkr_shortable_shares_reindexed_like(reindex_like, aggregate=False,
-                                             time=None, fields=None):
+                                             time=None, fields=None, shift=0):
     """
     Return a DataFrame of Interactive Brokers shortable shares, reindexed to
     match the index (dates) and columns (sids) of `reindex_like`.
@@ -762,6 +779,11 @@ def get_ibkr_shortable_shares_reindexed_like(reindex_like, aggregate=False,
         limit to these fields. Only applicable if `aggregate=True`. If omitted,
         all aggregate fields are included. Available fields are MinQuantity,
         MaxQuantity, MeanQuantity, and LastQuantity.
+
+    shift : int, optional
+        shift shortable shares this many periods. For example, `shift=1` will
+        return the previous day's shortable shares. By default, values are not
+        shifted, meaning the values reflect the current day's shortable shares.
 
     Returns
     -------
@@ -818,7 +840,8 @@ def get_ibkr_shortable_shares_reindexed_like(reindex_like, aggregate=False,
         time=time,
         aggregate=aggregate,
         is_intraday=not aggregate,
-        fields=fields)
+        fields=fields,
+        shift=shift)
 
     # fillna(0) where date > 2018-04-15, the data start date (NaNs after that
     # date indicate no shortable shares, NaNs before that date indicate don't
@@ -844,7 +867,7 @@ def get_ibkr_shortable_shares_reindexed_like(reindex_like, aggregate=False,
     shortable_shares = pd.concat(all_fields, names=["Field", "Date"])
     return shortable_shares
 
-def get_ibkr_borrow_fees_reindexed_like(reindex_like):
+def get_ibkr_borrow_fees_reindexed_like(reindex_like, shift=0):
     """
     Return a DataFrame of Interactive Brokers borrow fees, reindexed to match
     the index (dates) and columns (sids) of `reindex_like`.
@@ -855,6 +878,11 @@ def get_ibkr_borrow_fees_reindexed_like(reindex_like):
         a DataFrame (usually of prices) with dates for the index and sids
         for the columns, to which the shape of the resulting DataFrame will
         be conformed
+
+    shift : int, optional
+        shift borrow fees this many periods. For example, `shift=1` will
+        return the previous day's borrow fees. By default, values are not
+        shifted, meaning the values reflect the current day's borrow fees.
 
     Returns
     -------
@@ -870,9 +898,9 @@ def get_ibkr_borrow_fees_reindexed_like(reindex_like):
     """
     return _get_stockloan_data_reindexed_like(
         download_ibkr_borrow_fees,
-        reindex_like=reindex_like, is_intraday=False).loc["FeeRate"]
+        reindex_like=reindex_like, is_intraday=False, shift=shift).loc["FeeRate"]
 
-def get_ibkr_margin_requirements_reindexed_like(reindex_like, time=None):
+def get_ibkr_margin_requirements_reindexed_like(reindex_like, time=None, shift=0):
     """
     Return a multiindex (Field, Date) DataFrame of Interactive Brokers margin
     requirements, reindexed to match the index (dates) and columns (sids) of
@@ -901,6 +929,11 @@ def get_ibkr_margin_requirements_reindexed_like(reindex_like, time=None):
         will be used; if `reindex_like`'s timezone is not set, the timezone
         will be inferred from the component securities, if all securities
         share the same timezone.
+
+    shift : int, optional
+        shift margin requirements this many periods. For example, `shift=1` will
+        return the previous day's margin requirements. By default, values are not
+        shifted, meaning the values reflect the current day's margin requirements.
 
     Returns
     -------
@@ -939,7 +972,8 @@ def get_ibkr_margin_requirements_reindexed_like(reindex_like, time=None):
     try:
         margin_requirements = _get_stockloan_data_reindexed_like(
             download_ibkr_margin_requirements,
-            reindex_like=reindex_like, time=time, is_intraday=True)
+            reindex_like=reindex_like, time=time, is_intraday=True,
+            shift=shift)
     except NoFundamentalData:
         import numpy as np
         multiidx = pd.MultiIndex.from_product(
