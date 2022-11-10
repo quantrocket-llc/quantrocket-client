@@ -158,7 +158,8 @@ def start_gateways(gateways=None, wait=False):
     if gateways:
         params["gateways"] = gateways
 
-    response = houston.post("/ibgrouter/gateways", params=params, timeout=120)
+    # use a long timeout in case the user takes a long time to see the 2FA notifications
+    response = houston.post("/ibgrouter/gateways", params=params, timeout=60*60*24)
     houston.raise_for_status_with_json(response)
     return response.json()
 
