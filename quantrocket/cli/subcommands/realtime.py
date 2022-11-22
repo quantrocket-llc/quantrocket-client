@@ -37,7 +37,7 @@ Create a database for collecting trades and quotes for a universe of futures:
 
 .. code-block:: bash
 
-    quantrocket realtime create-ibkr-tick-db globex-fut-taq -u globex-fut --fields LastPrice Volume BidPrice AskPrice BidSize AskSize
+    quantrocket realtime create-ibkr-tick-db cme-fut-taq -u cme-fut --fields LastPrice Volume BidPrice AskPrice BidSize AskSize
     """
     parser = _subparsers.add_parser(
         "create-ibkr-tick-db",
@@ -174,7 +174,7 @@ quotes, resulting in fields called BidPriceClose, AskPriceClose, BidSizeMean, an
 
 .. code-block:: bash
 
-    quantrocket realtime create-agg-db globex-fut-taq-1sec --tick-db globex-fut-taq -z 1s -f BidPrice:Close AskPrice:Close BidSize:Mean AskSize:Mean
+    quantrocket realtime create-agg-db cme-fut-taq-1sec --tick-db cme-fut-taq -z 1s -f BidPrice:Close AskPrice:Close BidSize:Mean AskSize:Mean
     """
     parser = _subparsers.add_parser(
         "create-agg-db",
@@ -213,17 +213,17 @@ Return the configuration for a tick database or aggregate database.
 
 Examples:
 
-Return the configuration for a tick database called "globex-fut-taq":
+Return the configuration for a tick database called "cme-fut-taq":
 
 .. code-block:: bash
 
-    quantrocket realtime config globex-fut-taq
+    quantrocket realtime config cme-fut-taq
 
-Return the configuration for an aggregate database called "globex-fut-taq-1s":
+Return the configuration for an aggregate database called "cme-fut-taq-1s":
 
 .. code-block:: bash
 
-    quantrocket realtime config globex-fut-taq-1s
+    quantrocket realtime config cme-fut-taq-1s
     """
     parser = _subparsers.add_parser(
         "config",
@@ -430,11 +430,11 @@ Cancel market data collection.
 
 Examples:
 
-Cancel market data collection for a tick database called 'globex-fut-taq':
+Cancel market data collection for a tick database called 'cme-fut-taq':
 
 .. code-block:: bash
 
-    quantrocket realtime cancel globex-fut-taq
+    quantrocket realtime cancel cme-fut-taq
 
 Cancel all market data collection:
 
@@ -478,7 +478,7 @@ Download a CSV of futures market data since 08:00 AM Chicago time:
 
 .. code-block:: bash
 
-    quantrocket realtime get globex-fut-taq --start-date '08:00:00 America/Chicago' -o globex_taq.csv
+    quantrocket realtime get cme-fut-taq --start-date '08:00:00 America/Chicago' -o cme_taq.csv
     """
     parser = _subparsers.add_parser(
         "get",

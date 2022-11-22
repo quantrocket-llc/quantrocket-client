@@ -362,7 +362,7 @@ class GetSecuritiesTestCase(unittest.TestCase):
                 'ibkr_MinTick': 0.25,
                 'ibkr_Multiplier': 50,
                 'ibkr_PriceMagnifier': 1,
-                'ibkr_PrimaryExchange': 'GLOBEX',
+                'ibkr_PrimaryExchange': 'CME',
                 'ibkr_RealExpirationDate': None,
                 'ibkr_Right': None,
                 'ibkr_SecType': 'FUT',
@@ -374,7 +374,7 @@ class GetSecuritiesTestCase(unittest.TestCase):
                 'ibkr_UnderConId': 11004968,
                 'ibkr_UnderSecType': 'IND',
                 'ibkr_UnderSymbol': 'ES',
-                'ibkr_ValidExchanges': 'GLOBEX'}
+                'ibkr_ValidExchanges': 'CME'}
             ]
             securities = pd.DataFrame(stks)
             securities.to_csv(f, index=False)
@@ -745,7 +745,7 @@ class GetSecuritiesTestCase(unittest.TestCase):
             'ibkr_MinTick': 0.25,
             'ibkr_Multiplier': 50.0,
             'ibkr_PriceMagnifier': 1.0,
-            'ibkr_PrimaryExchange': 'GLOBEX',
+            'ibkr_PrimaryExchange': 'CME',
             'ibkr_RealExpirationDate': pd.NaT,
             'ibkr_Right': 'nan',
             'ibkr_SecType': 'FUT',
@@ -757,7 +757,7 @@ class GetSecuritiesTestCase(unittest.TestCase):
             'ibkr_UnderConId': 11004968.0,
             'ibkr_UnderSecType': 'IND',
             'ibkr_UnderSymbol': 'ES',
-            'ibkr_ValidExchanges': 'GLOBEX',
+            'ibkr_ValidExchanges': 'CME',
             'sharadar_Category': 'nan',
             'sharadar_CompanySite': 'nan',
             'sharadar_CountryListed': 'nan',

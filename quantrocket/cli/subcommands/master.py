@@ -250,7 +250,7 @@ Collect option chains for NQ futures:
 
 .. code-block:: bash
 
-    quantrocket master get -e GLOBEX -s NQ -t FUT | quantrocket master collect-ibkr-options -f -
+    quantrocket master get -e CME -s NQ -t FUT | quantrocket master collect-ibkr-options -f -
 
 Collect option chains for a large universe of stocks called "nyse-stk" (see note above):
 
@@ -824,11 +824,11 @@ Check whether the Tokyo Stock Exchange was open or closed 5 hours ago:
 
     quantrocket master calendar TSEJ --ago 5h
 
-Check whether GLOBEX will be open or closed in 30 minutes:
+Check whether CME will be open or closed in 30 minutes:
 
 .. code-block:: bash
 
-    quantrocket master calendar GLOBEX --in 30min
+    quantrocket master calendar CME --in 30min
     """
     parser = _subparsers.add_parser(
         "calendar",

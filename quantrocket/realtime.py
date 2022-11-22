@@ -78,7 +78,7 @@ def create_ibkr_tick_db(code, universes=None, sids=None, fields=None,
 
     Create a database for collecting trades and quotes for a universe of futures:
 
-    >>> create_ibkr_tick_db("globex-fut-taq", universes="globex-fut",
+    >>> create_ibkr_tick_db("cme-fut-taq", universes="cme-fut",
                             fields=["LastPrice", "Volume", "BidPrice", "AskPrice", "BidSize", "AskSize"])
     """
     params = {}
@@ -251,7 +251,7 @@ def create_agg_db(code, tick_db_code, bar_size, fields=None):
     the mean bid size and ask size, from a tick database of futures trades and
     quotes, resulting in fields called BidPriceClose, AskPriceClose, BidSizeMean, and AskSizeMean:
 
-    >>> create_agg_db("globex-fut-taq-1sec", tick_db_code="globex-fut-taq",
+    >>> create_agg_db("cme-fut-taq-1sec", tick_db_code="cme-fut-taq",
                       bar_size="1s",
                       fields={"BidPrice":["Close"],
                               "AskPrice": ["Close"],
@@ -553,9 +553,9 @@ def cancel_market_data(codes=None, sids=None, universes=None, cancel_all=False):
 
     Examples
     --------
-    Cancel market data collection for a tick database called 'globex-fut-taq':
+    Cancel market data collection for a tick database called 'cme-fut-taq':
 
-    >>> cancel_market_data("globex-fut-taq")
+    >>> cancel_market_data("cme-fut-taq")
 
     Cancel all market data collection:
 
@@ -633,10 +633,10 @@ def download_market_data_file(code, filepath_or_buffer=None, output="csv",
     --------
     Download a CSV of futures market data since 08:00 AM Chicago time:
 
-    >>> download_market_data_file("globex-fut-taq",
+    >>> download_market_data_file("cme-fut-taq",
                                  start_date="08:00:00 America/Chicago",
-                                 filepath_or_buffer="globex_taq.csv")
-    >>> market_data = pd.read_csv("globex_taq.csv", parse_dates=["Date"])
+                                 filepath_or_buffer="cme_taq.csv")
+    >>> market_data = pd.read_csv("cme_taq.csv", parse_dates=["Date"])
 
     See Also
     --------

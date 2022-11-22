@@ -372,7 +372,7 @@ queue to jump in front of other queued IBKR collections:
 
 .. code-block:: bash
 
-    quantrocket history collect globex-10m --priority
+    quantrocket history collect cme-10m --priority
     """
     parser = _subparsers.add_parser(
         "collect",
