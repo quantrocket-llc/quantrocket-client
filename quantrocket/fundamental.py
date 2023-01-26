@@ -1003,86 +1003,6 @@ def get_ibkr_margin_requirements_reindexed_like(reindex_like, time=None, shift=0
 
     return margin_requirements
 
-def collect_reuters_financials(universes=None, sids=None, force=True):
-    """
-    Collect Reuters financial statements from Interactive Brokers and save
-    to database.
-
-    This data provides cash flow, balance sheet, and income metrics.
-
-    Parameters
-    ----------
-    universes : list of str, optional
-        limit to these universes (must provide universes, sids, or both)
-
-    sids : list of str, optional
-        limit to these sids (must provide universes, sids, or both)
-
-    force : bool
-        collect financials for all securities even if they were collected recently
-        (default is to skip securities that were updated in the last 12 hours)
-
-    Returns
-    -------
-    dict
-        status message
-
-    """
-    params = {}
-    if universes:
-        params["universes"] = universes
-    if sids:
-        params["sids"] = sids
-    if force:
-        params["force"] = force
-    response = houston.post("/fundamental/reuters/financials", params=params)
-
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_reuters_financials(*args, **kwargs):
-    return json_to_cli(collect_reuters_financials, *args, **kwargs)
-
-def list_reuters_codes(codes=None, report_types=None, statement_types=None):
-    """
-    List available Chart of Account (COA) codes from the Reuters financials database
-    and/or indicator codes from the Reuters estimates/actuals database
-
-    Note: you must collect Reuters financials into the database before you can
-    list COA codes.
-
-
-    Parameters
-    ----------
-    codes : list of str, optional
-        limit to these Chart of Account (COA) or indicator codes
-
-    report_types : list of str, optional
-        limit to these report types. Possible choices: financials, estimates
-
-    statement_types : list of str, optional
-        limit to these statement types. Only applies to financials, not estimates. Possible choices: INC, BAL, CAS
-
-    Returns
-    -------
-    dict
-        codes and descriptions
-    """
-    params = {}
-    if codes:
-        params["codes"] = codes
-    if report_types:
-        params["report_types"] = report_types
-    if statement_types:
-        params["statement_types"] = statement_types
-    response = houston.get("/fundamental/reuters/codes", params=params)
-
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_list_reuters_codes(*args, **kwargs):
-    return json_to_cli(list_reuters_codes, *args, **kwargs)
-
 def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
                                 start_date=None, end_date=None,
                                 universes=None, sids=None,
@@ -1092,11 +1012,8 @@ def download_reuters_financials(codes, filepath_or_buffer=None, output="csv",
     Query financial statements from the Reuters financials database and
     download to file.
 
-    You can query one or more COA codes. Use the `list_reuters_codes` function to see
-    available codes.
-
-    Annual or interim reports are available. Annual is the default and provides
-    deeper history.
+    DEPRECATED. This data is no longer available from Interactive Brokers. Only
+    data that was previously saved to the local database can be queried.
 
     Parameters
     ----------
@@ -1220,6 +1137,9 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
     the latest reading at any given date. Financials are indexed to the
     SourceDate field, i.e. the date on which the financial statement was
     released. SourceDate is shifted forward 1 day to avoid lookahead bias.
+
+    DEPRECATED. This data is no longer available from Interactive Brokers. Only
+    data that was previously saved to the local database can be queried.
 
     Parameters
     ----------
@@ -3050,7 +2970,7 @@ def get_wsh_earnings_dates_reindexed_like(reindex_like, fields=["Time"],
     before the next session's open, first extend the index of the input DataFrame to include
     the next session:
 
-    >>> from ib_trading_calendars import get_calendar
+    >>> from trading_calendars import get_calendar
     >>> nyse_cal = get_calendar("NYSE")
     >>> latest_session = closes.index.max()
     >>> # wind latest session to end of day and use calendar to get next session

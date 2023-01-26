@@ -146,49 +146,6 @@ Examples:
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_sp500")
 
     examples = """
-Collect Reuters financial statements from Interactive Brokers and save to
-database.
-
-This data provides cash flow, balance sheet, and income metrics.
-
-Examples:
-
-Collect Reuters financial statements for a universe of Japanese banks:
-
-.. code-block:: bash
-
-    quantrocket fundamental collect-reuters-financials --universes 'japan-bank'
-
-Collect Reuters financial statements for a particular security:
-
-.. code-block:: bash
-
-    quantrocket fundamental collect-reuters-financials --sids FIBBG123456
-    """
-    parser = _subparsers.add_parser(
-        "collect-reuters-financials",
-        help="collect Reuters financial statements from Interactive Brokers and save to database",
-        epilog=examples,
-        formatter_class=HelpFormatter)
-    parser.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes (must provide universes, sids, or both)")
-    parser.add_argument(
-        "-i", "--sids",
-        nargs="*",
-        metavar="SID",
-        help="limit to these sids (must provide universes, sids, or both)")
-    parser.add_argument(
-        "-f", "--force",
-        action="store_true",
-        help="collect financials for all securities even if they were collected "
-        "recently (default is to skip securities that were updated in the last "
-        "12 hours)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_reuters_financials")
-
-    examples = """
 Collect Wall Street Horizon upcoming earnings announcement dates from Interactive
 Brokers and save to database.
 
@@ -712,68 +669,11 @@ Query S&P 500 index changes since 2010:
     parser.set_defaults(func="quantrocket.fundamental._cli_download_sharadar_sp500")
 
     examples = """
-List available Chart of Account (COA) codes from the Reuters financials database
-and/or indicator codes from the Reuters estimates/actuals database
-
-Note: you must collect Reuters financials into the database before you can
-list COA codes.
-
-Examples:
-
-List all codes:
-
-.. code-block:: bash
-
-    quantrocket fundamental reuters-codes
-
-List COA codes for balance sheets only:
-
-.. code-block:: bash
-
-    quantrocket fundamental reuters-codes --report-types financials --statement-types BAL
-
-List the description of a specific COA code:
-
-.. code-block:: bash
-
-    quantrocket fundamental reuters-codes --codes TIAT
-    """
-    parser = _subparsers.add_parser(
-        "reuters-codes",
-        help="list available Chart of Account (COA) codes from the Reuters financials "
-        "database and/or indicator codes from the Reuters estimates/actuals "
-        "database",
-        epilog=examples,
-        formatter_class=HelpFormatter)
-    parser.add_argument(
-        "-c", "--codes",
-        nargs="*",
-        metavar="CODE",
-        help="limit to these Chart of Account (COA) or indicator codes")
-    parser.add_argument(
-        "-r", "--report-types",
-        nargs="*",
-        metavar="REPORT_TYPE",
-        choices=["financials", "estimates"],
-        help="limit to these report types. Possible choices: %(choices)s")
-    parser.add_argument(
-        "-s", "--statement-types",
-        nargs="*",
-        metavar="STATEMENT_TYPE",
-        choices=["INC", "BAL", "CAS"],
-        help="limit to these statement types. Only applies to financials, not estimates. "
-        "Possible choices: %(choices)s")
-    parser.set_defaults(func="quantrocket.fundamental._cli_list_reuters_codes")
-
-    examples = """
 Query financial statements from the Reuters financials database and
 download to file.
 
-You can query one or more COA codes. Run `quantrocket fundamental reuters-codes` to see
-available codes.
-
-Annual or interim reports are available. Annual is the default and provides
-deeper history.
+DEPRECATED. This data is no longer available from Interactive Brokers. Only
+data that was previously saved to the local database can be queried.
 
 Examples:
 
@@ -799,7 +699,7 @@ minimal set of fields (several required fields will always be returned)
     """
     parser = _subparsers.add_parser(
         "reuters-financials",
-        help="query financial statements from the Reuters financials database and download to file",
+        help="[DEPRECATED] query financial statements from the Reuters financials database and download to file",
         epilog=examples,
         formatter_class=HelpFormatter)
     parser.add_argument(
