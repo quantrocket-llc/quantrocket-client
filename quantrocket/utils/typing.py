@@ -12,8 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union, NewType, Any # reimport
+from typing import Union, NewType, Any
 from typing.io import TextIO
+
+# help Sphinx autoapi find this
+Any = Any
+Union = Union
 
 FilepathOrBuffer = Union[str, TextIO]
 

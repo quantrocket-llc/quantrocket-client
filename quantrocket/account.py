@@ -14,7 +14,7 @@
 
 import sys
 import requests
-from quantrocket.utils.typing import FilepathOrBuffer, Optional
+from quantrocket.utils.typing import FilepathOrBuffer
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoAccountData
 from quantrocket.cli.utils.output import json_to_cli
