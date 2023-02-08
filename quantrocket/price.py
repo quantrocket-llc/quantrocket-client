@@ -18,6 +18,8 @@ import time
 import itertools
 import tempfile
 import requests
+from typing import Callable
+from quantrocket.utils.typing import Union, DataFrame as DataFrameType
 from quantrocket.master import download_master_file
 from quantrocket.exceptions import ParameterError, NoHistoricalData, NoRealtimeData
 from quantrocket.history import (
@@ -40,12 +42,21 @@ __all__ = [
 
 TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", tempfile.gettempdir())
 
-def get_prices(codes, start_date=None, end_date=None,
-               universes=None, sids=None,
-               exclude_universes=None, exclude_sids=None,
-               times=None, fields=None,
-               timezone=None, infer_timezone=None,
-               cont_fut=None, data_frequency=None):
+def get_prices(
+    codes: Union[str, list[str]],
+    start_date: str = None,
+    end_date: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None,
+    times: list[str] = None,
+    fields: list[str] = None,
+    timezone: str = None,
+    infer_timezone: bool = None,
+    cont_fut: str = None,
+    data_frequency: str = None
+    ) -> DataFrameType:
     """
     Query one or more history databases, real-time aggregate databases,
     and/or Zipline bundles and load prices into a DataFrame.
@@ -531,12 +542,20 @@ def get_prices(codes, start_date=None, end_date=None,
 
     return prices
 
-def get_prices_reindexed_like(reindex_like, codes, fields=None,
-                              shift=1, ffill=True, lookback_window=10,
-                              agg="last",
-                              timezone=None, infer_timezone=None,
-                              times=None, cont_fut=None,
-                              data_frequency=None):
+def get_prices_reindexed_like(
+    reindex_like: DataFrameType,
+    codes: Union[str, list[str]],
+    fields: list[str] = None,
+    shift: int = 1,
+    ffill: bool = True,
+    lookback_window: int = 10,
+    agg: Union[str, Callable] = "last",
+    timezone: str = None,
+    infer_timezone: bool = None,
+    times: list[str] = None,
+    cont_fut: str = None,
+    data_frequency: str = None
+    ) -> DataFrameType:
     """
     Return a multiindex (Field, Date) DataFrame of prices for one or more history
     databases, real-time aggregate databases, or Zipline bundles, reindexed to match

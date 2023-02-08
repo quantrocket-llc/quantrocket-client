@@ -17,6 +17,7 @@ import sys
 import os
 import datetime
 import requests
+from quantrocket.utils.typing import FilepathOrBuffer, DataFrame as DataFrameType
 from quantrocket.houston import houston
 from quantrocket.master import download_master_file
 from quantrocket.cli.utils.output import json_to_cli
@@ -59,7 +60,7 @@ __all__ = [
     "get_wsh_earnings_dates_reindexed_like",
 ]
 
-def collect_alpaca_etb():
+def collect_alpaca_etb() -> dict[str, str]:
     """
     Collect Alpaca easy-to-borrow data and save to database.
 
@@ -79,10 +80,16 @@ def collect_alpaca_etb():
 def _cli_collect_alpaca_etb(*args, **kwargs):
     return json_to_cli(collect_alpaca_etb, *args, **kwargs)
 
-def download_alpaca_etb(filepath_or_buffer=None, output="csv",
-                        start_date=None, end_date=None,
-                        universes=None, sids=None,
-                        exclude_universes=None, exclude_sids=None):
+def download_alpaca_etb(
+    filepath_or_buffer: FilepathOrBuffer,
+    output: str = "csv",
+    start_date: str = None,
+    end_date: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None
+    ) -> None:
     """
     Query Alpaca easy-to-borrow data from the local database and download to file.
 
@@ -161,7 +168,9 @@ def download_alpaca_etb(filepath_or_buffer=None, output="csv",
 def _cli_download_alpaca_etb(*args, **kwargs):
     return json_to_cli(download_alpaca_etb, *args, **kwargs)
 
-def get_alpaca_etb_reindexed_like(reindex_like):
+def get_alpaca_etb_reindexed_like(
+    reindex_like: DataFrameType
+    ) -> DataFrameType:
     """
     Return a DataFrame of Alpaca easy-to-borrow status, reindexed to match the index
     (dates) and columns (sids) of `reindex_like`.
@@ -192,7 +201,9 @@ def get_alpaca_etb_reindexed_like(reindex_like):
 
     return etb.fillna(0).astype(bool)
 
-def collect_ibkr_shortable_shares(countries=None):
+def collect_ibkr_shortable_shares(
+    countries: list[str] = None
+    ) -> dict[str, str]:
     """
     Collect Interactive Brokers shortable shares data and save to database.
 
@@ -223,7 +234,9 @@ def collect_ibkr_shortable_shares(countries=None):
 def _cli_collect_ibkr_shortable_shares(*args, **kwargs):
     return json_to_cli(collect_ibkr_shortable_shares, *args, **kwargs)
 
-def collect_ibkr_borrow_fees(countries=None):
+def collect_ibkr_borrow_fees(
+    countries: list[str] = None
+    ) -> dict[str, str]:
     """
     Collect Interactive Brokers borrow fees data and save to database.
 
@@ -253,7 +266,9 @@ def collect_ibkr_borrow_fees(countries=None):
 def _cli_collect_ibkr_borrow_fees(*args, **kwargs):
     return json_to_cli(collect_ibkr_borrow_fees, *args, **kwargs)
 
-def collect_ibkr_margin_requirements(country):
+def collect_ibkr_margin_requirements(
+    country: str
+    ) -> dict[str, str]:
     """
     Collect Interactive Brokers margin requirements data and save to database.
 
@@ -287,11 +302,17 @@ def collect_ibkr_margin_requirements(country):
 def _cli_collect_ibkr_margin_requirements(*args, **kwargs):
     return json_to_cli(collect_ibkr_margin_requirements, *args, **kwargs)
 
-def download_ibkr_shortable_shares(filepath_or_buffer=None, output="csv",
-                                   start_date=None, end_date=None,
-                                   universes=None, sids=None,
-                                   exclude_universes=None, exclude_sids=None,
-                                   aggregate=False):
+def download_ibkr_shortable_shares(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    output: str = "csv",
+    start_date: str = None,
+    end_date: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None,
+    aggregate: bool = False
+    ) -> None:
     """
     Query intraday or daily Interactive Brokers shortable shares data from the
     local database and download to file.
@@ -386,10 +407,16 @@ def download_ibkr_shortable_shares(filepath_or_buffer=None, output="csv",
 def _cli_download_ibkr_shortable_shares(*args, **kwargs):
     return json_to_cli(download_ibkr_shortable_shares, *args, **kwargs)
 
-def download_ibkr_borrow_fees(filepath_or_buffer=None, output="csv",
-                         start_date=None, end_date=None,
-                         universes=None, sids=None,
-                         exclude_universes=None, exclude_sids=None):
+def download_ibkr_borrow_fees(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    output: str = "csv",
+    start_date: str = None,
+    end_date: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None
+    ) -> None:
     """
     Query Interactive Brokers borrow fees from the local database and download to file.
 
@@ -468,10 +495,16 @@ def download_ibkr_borrow_fees(filepath_or_buffer=None, output="csv",
 def _cli_download_ibkr_borrow_fees(*args, **kwargs):
     return json_to_cli(download_ibkr_borrow_fees, *args, **kwargs)
 
-def download_ibkr_margin_requirements(filepath_or_buffer=None, output="csv",
-                                      start_date=None, end_date=None,
-                                      universes=None, sids=None,
-                                      exclude_universes=None, exclude_sids=None):
+def download_ibkr_margin_requirements(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    output: str = "csv",
+    start_date: str = None,
+    end_date: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None
+    ) -> None:
     """
     Query Interactive Brokers margin requirements from the local database and
     download to file.
@@ -737,8 +770,13 @@ def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
 
     return stockloan_data
 
-def get_ibkr_shortable_shares_reindexed_like(reindex_like, aggregate=False,
-                                             time=None, fields=None, shift=0):
+def get_ibkr_shortable_shares_reindexed_like(
+    reindex_like: DataFrameType,
+    aggregate: bool = False,
+    time: str = None,
+    fields: list[str] = None,
+    shift: int = 0
+    ) -> DataFrameType:
     """
     Return a DataFrame of Interactive Brokers shortable shares, reindexed to
     match the index (dates) and columns (sids) of `reindex_like`.
@@ -867,7 +905,10 @@ def get_ibkr_shortable_shares_reindexed_like(reindex_like, aggregate=False,
     shortable_shares = pd.concat(all_fields, names=["Field", "Date"])
     return shortable_shares
 
-def get_ibkr_borrow_fees_reindexed_like(reindex_like, shift=0):
+def get_ibkr_borrow_fees_reindexed_like(
+    reindex_like: DataFrameType,
+    shift: int = 0
+    ) -> DataFrameType:
     """
     Return a DataFrame of Interactive Brokers borrow fees, reindexed to match
     the index (dates) and columns (sids) of `reindex_like`.
@@ -900,7 +941,11 @@ def get_ibkr_borrow_fees_reindexed_like(reindex_like, shift=0):
         download_ibkr_borrow_fees,
         reindex_like=reindex_like, is_intraday=False, shift=shift).loc["FeeRate"]
 
-def get_ibkr_margin_requirements_reindexed_like(reindex_like, time=None, shift=0):
+def get_ibkr_margin_requirements_reindexed_like(
+    reindex_like: DataFrameType,
+    time: str = None,
+    shift: int = 0
+    ) -> DataFrameType:
     """
     Return a multiindex (Field, Date) DataFrame of Interactive Brokers margin
     requirements, reindexed to match the index (dates) and columns (sids) of
@@ -1667,7 +1712,9 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
 
     return estimates
 
-def collect_sharadar_fundamentals(country="US"):
+def collect_sharadar_fundamentals(
+    country: str = "US"
+    ) -> dict[str, str]:
     """
     Collect fundamental data from Sharadar and save to database.
 
@@ -1691,7 +1738,9 @@ def collect_sharadar_fundamentals(country="US"):
 def _cli_collect_sharadar_fundamentals(*args, **kwargs):
     return json_to_cli(collect_sharadar_fundamentals, *args, **kwargs)
 
-def collect_sharadar_insiders(country="US"):
+def collect_sharadar_insiders(
+    country: str = "US"
+    ) -> dict[str, str]:
     """
     Collect insider holdings data from Sharadar and save to database.
 
@@ -1716,7 +1765,10 @@ def collect_sharadar_insiders(country="US"):
 def _cli_collect_sharadar_insiders(*args, **kwargs):
     return json_to_cli(collect_sharadar_insiders, *args, **kwargs)
 
-def collect_sharadar_institutions(country="US", detail=False):
+def collect_sharadar_institutions(
+    country: str = "US",
+    detail: bool = False
+    ) -> dict[str, str]:
     """
     Collect institutional investor data from Sharadar and save to database.
 
@@ -1749,7 +1801,9 @@ def collect_sharadar_institutions(country="US", detail=False):
 def _cli_collect_sharadar_institutions(*args, **kwargs):
     return json_to_cli(collect_sharadar_institutions, *args, **kwargs)
 
-def collect_sharadar_sec8(country="US"):
+def collect_sharadar_sec8(
+    country: str = "US"
+    ) -> dict[str, str]:
     """
     Collect SEC Form 8-K events from Sharadar and save to database.
 
@@ -1773,7 +1827,9 @@ def collect_sharadar_sec8(country="US"):
 def _cli_collect_sharadar_sec8(*args, **kwargs):
     return json_to_cli(collect_sharadar_sec8, *args, **kwargs)
 
-def collect_sharadar_sp500(country="US"):
+def collect_sharadar_sp500(
+    country: str = "US"
+    ) -> dict[str, str]:
     """
     Collect historical S&P 500 index constituents from Sharadar and save to
     database.
@@ -1799,12 +1855,18 @@ def collect_sharadar_sp500(country="US"):
 def _cli_collect_sharadar_sp500(*args, **kwargs):
     return json_to_cli(collect_sharadar_sp500, *args, **kwargs)
 
-def download_sharadar_fundamentals(filepath_or_buffer=None,
-                                   start_date=None, end_date=None,
-                                   universes=None, sids=None,
-                                   exclude_universes=None, exclude_sids=None,
-                                   dimensions=None, fields=None,
-                                   output=None):
+def download_sharadar_fundamentals(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    start_date: str = None,
+    end_date: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None,
+    dimensions: list[str] = None,
+    fields: list[str] = None,
+    output: str = None
+    ) -> None:
     """
     Query Sharadar fundamentals from the local database and download
     to file.
@@ -1905,11 +1967,17 @@ def download_sharadar_fundamentals(filepath_or_buffer=None,
 def _cli_download_sharadar_fundamentals(*args, **kwargs):
     return json_to_cli(download_sharadar_fundamentals, *args, **kwargs)
 
-def download_sharadar_insiders(filepath_or_buffer=None,
-                                start_date=None, end_date=None,
-                                universes=None, sids=None,
-                                exclude_universes=None, exclude_sids=None,
-                                fields=None, output=None):
+def download_sharadar_insiders(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    start_date: str = None,
+    end_date: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None,
+    fields: list[str] = None,
+    output: str = None
+    ) -> None:
     """
     Query Sharadar insider holdings data from the local database and download
     to file.
@@ -1995,12 +2063,18 @@ def download_sharadar_insiders(filepath_or_buffer=None,
 def _cli_download_sharadar_insiders(*args, **kwargs):
     return json_to_cli(download_sharadar_insiders, *args, **kwargs)
 
-def download_sharadar_institutions(filepath_or_buffer=None,
-                                    start_date=None, end_date=None,
-                                    universes=None, sids=None,
-                                    exclude_universes=None, exclude_sids=None,
-                                    detail=False, fields=None,
-                                    output=None):
+def download_sharadar_institutions(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    start_date: str = None,
+    end_date: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None,
+    detail: list[str] = False,
+    fields: list[str] = None,
+    output: str = None
+    ) -> None:
     """
     Query Sharadar institutional investor data from the local database and
     download to file.
@@ -2095,12 +2169,18 @@ def download_sharadar_institutions(filepath_or_buffer=None,
 def _cli_download_sharadar_institutions(*args, **kwargs):
     return json_to_cli(download_sharadar_institutions, *args, **kwargs)
 
-def download_sharadar_sec8(filepath_or_buffer=None,
-                            start_date=None, end_date=None,
-                            universes=None, sids=None,
-                            exclude_universes=None, exclude_sids=None,
-                            event_codes=None,
-                            fields=None, output=None):
+def download_sharadar_sec8(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    start_date: str = None,
+    end_date: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None,
+    event_codes: list[int] = None,
+    fields: list[str] = None,
+    output: str = None
+    ) -> None:
     """
     Query Sharadar SEC Form 8-K events data from the local database and
     download to file.
@@ -2192,11 +2272,17 @@ def download_sharadar_sec8(filepath_or_buffer=None,
 def _cli_download_sharadar_sec8(*args, **kwargs):
     return json_to_cli(download_sharadar_sec8, *args, **kwargs)
 
-def download_sharadar_sp500(filepath_or_buffer=None,
-                             start_date=None, end_date=None,
-                             universes=None, sids=None,
-                             exclude_universes=None, exclude_sids=None,
-                             fields=None, output=None):
+def download_sharadar_sp500(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    start_date: str = None,
+    end_date: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None,
+    fields: list[str] = None,
+    output: str = None
+    ) -> None:
     """
     Query Sharadar S&P 500 index changes (additions and removals) from the
     local database and download to file.
@@ -2289,10 +2375,11 @@ def _cli_download_sharadar_sp500(*args, **kwargs):
     return json_to_cli(download_sharadar_sp500, *args, **kwargs)
 
 def get_sharadar_fundamentals_reindexed_like(
-    reindex_like,
-    fields=None,
-    dimension="ART",
-    period_offset=0):
+    reindex_like: DataFrameType,
+    fields: list[str] = None,
+    dimension: str = "ART",
+    period_offset: int = 0
+    ) -> DataFrameType:
     """
     Return a multiindex (Field, Date) DataFrame of point-in-time
     Sharadar fundamentals, reindexed to match the index (dates)
@@ -2313,7 +2400,7 @@ def get_sharadar_fundamentals_reindexed_like(
         including all fields. For faster performance, limiting fields to
         those needed is highly recommended, especially for large universes.
 
-    dimension : bool
+    dimension : str
         the dimension of the data. Defaults to As Reported Trailing Twelve
         Month (ART). Possible choices: ARQ, ARY, ART, MRQ,
         MRY, MRT. AR=As Reported, MR=Most Recent Reported, Q=Quarterly,
@@ -2484,7 +2571,11 @@ def get_sharadar_fundamentals_reindexed_like(
 
     return financials
 
-def get_sharadar_institutions_reindexed_like(reindex_like, fields=None, shift=45):
+def get_sharadar_institutions_reindexed_like(
+    reindex_like: DataFrameType,
+    fields: list[str] = None,
+    shift: int = 45
+    ) -> DataFrameType:
     """
     Return a multiindex (Field, Date) DataFrame of Sharadar institutional
     investor data, reindexed to match the index (dates) and columns (sids) of
@@ -2617,7 +2708,10 @@ def get_sharadar_institutions_reindexed_like(reindex_like, fields=None, shift=45
 
     return institutions
 
-def get_sharadar_sec8_reindexed_like(reindex_like, event_codes=None):
+def get_sharadar_sec8_reindexed_like(
+    reindex_like: DataFrameType,
+    event_codes: list[int] = None
+    ) -> DataFrameType:
     """
     Return a Boolean DataFrame indicating whether securities filed SEC Form
     8-K for specified event codes on given dates. The resulting DataFrame
@@ -2704,7 +2798,9 @@ def get_sharadar_sec8_reindexed_like(reindex_like, event_codes=None):
     have_events = events.notnull()
     return have_events
 
-def get_sharadar_sp500_reindexed_like(reindex_like):
+def get_sharadar_sp500_reindexed_like(
+    reindex_like: DataFrameType
+    ) -> DataFrameType:
     """
     Return a Boolean DataFrame indicating whether securities were in the S&P
     500 on the given dates. The resulting DataFrame will be reindexed to
@@ -2793,7 +2889,11 @@ def get_sharadar_sp500_reindexed_like(reindex_like):
 
     return are_in_sp500
 
-def collect_wsh_earnings_dates(universes=None, sids=None, force=False):
+def collect_wsh_earnings_dates(
+    universes: list[str] = None,
+    sids: list[str] = None,
+    force: bool = False
+    ) -> dict[str, str]:
     """
     Collect Wall Street Horizon upcoming earnings announcement dates from
     Interactive Brokers and save to database.
@@ -2832,11 +2932,18 @@ def collect_wsh_earnings_dates(universes=None, sids=None, force=False):
 def _cli_collect_wsh_earnings_dates(*args, **kwargs):
     return json_to_cli(collect_wsh_earnings_dates, *args, **kwargs)
 
-def download_wsh_earnings_dates(filepath_or_buffer=None, output="csv",
-                                start_date=None, end_date=None,
-                                universes=None, sids=None,
-                                exclude_universes=None, exclude_sids=None,
-                                statuses=None, fields=None):
+def download_wsh_earnings_dates(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    output: str = "csv",
+    start_date: str = None,
+    end_date: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None,
+    statuses: list[str] = None,
+    fields: list[str] = None
+    ) -> None:
     """
     Query earnings announcement dates from the Wall Street Horizon
     announcements database and download to file.
@@ -2928,8 +3035,11 @@ def download_wsh_earnings_dates(filepath_or_buffer=None, output="csv",
 def _cli_download_wsh_earnings_dates(*args, **kwargs):
     return json_to_cli(download_wsh_earnings_dates, *args, **kwargs)
 
-def get_wsh_earnings_dates_reindexed_like(reindex_like, fields=["Time"],
-                                          statuses=["Confirmed"]):
+def get_wsh_earnings_dates_reindexed_like(
+    reindex_like: DataFrameType,
+    fields: list[str] = ["Time"],
+    statuses: list[str] = ["Confirmed"]
+    ) -> DataFrameType:
     """
     Return a multiindex (Field, Date) DataFrame of earnings announcement dates,
     reindexed to match the index (dates) and columns (sids) of `reindex_like`.

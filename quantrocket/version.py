@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
 from quantrocket import __version__
+from quantrocket.utils.typing import Union
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 
@@ -21,7 +21,7 @@ __all__ = [
     "get_version",
 ]
 
-def get_version(detail=False):
+def get_version(detail: bool = False) -> Union[str, dict[str, str]]:
     """
     Show the QuantRocket version number.
 

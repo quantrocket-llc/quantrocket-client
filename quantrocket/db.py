@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import getpass
+from quantrocket.utils.typing import DataFrame as DataFrameType, Engine as EngineType
 from quantrocket.houston import houston
 from quantrocket.exceptions import DataInsertionError
 from quantrocket.cli.utils.output import json_to_cli
@@ -30,13 +31,18 @@ __all__ = [
     "insert_or_ignore",
 ]
 
-def list_databases(services=None, codes=None, detail=False, expand=False):
+def list_databases(
+    services: list[str] = None,
+    codes: list[str] = None,
+    detail: bool = False,
+    expand: bool = False
+    ) -> dict[str, list[dict[str, str]]]:
     """
     List databases.
 
     Parameters
     ----------
-    services : str, optional
+    services : list of str, optional
         limit to these services
 
     codes: list of str, optional
@@ -82,7 +88,7 @@ def list_databases(services=None, codes=None, detail=False, expand=False):
 def _cli_list_databases(*args, **kwargs):
     return json_to_cli(list_databases, *args, **kwargs)
 
-def get_s3_config():
+def get_s3_config() -> dict[str, str]:
     """
     Return the current S3 configuration, if any.
 
@@ -100,7 +106,12 @@ def get_s3_config():
         return {}
     return response.json()
 
-def set_s3_config(access_key_id=None, secret_access_key=None, bucket=None, region=None):
+def set_s3_config(
+    access_key_id: str = None,
+    secret_access_key: str = None,
+    bucket: str = None,
+    region: str = None
+    ) -> dict[str, str]:
     """
     Set AWS S3 configuration for pushing and pulling databases to and from
     S3.
@@ -154,7 +165,10 @@ def _cli_get_or_set_s3_config(access_key_id=None, secret_access_key=None,
     else:
         return json_to_cli(get_s3_config, *args, **kwargs)
 
-def s3_push_databases(services=None, codes=None):
+def s3_push_databases(
+    services: list[str] = None,
+    codes: list[str] = None
+    ) -> dict[str, str]:
     """
     Push database(s) to Amazon S3.
 
@@ -170,7 +184,7 @@ def s3_push_databases(services=None, codes=None):
 
     Returns
     -------
-    json
+    dict
         status message
     """
     params = {}
@@ -185,7 +199,11 @@ def s3_push_databases(services=None, codes=None):
 def _cli_s3_push_databases(*args, **kwargs):
     return json_to_cli(s3_push_databases, *args, **kwargs)
 
-def s3_pull_databases(services=None, codes=None, force=False):
+def s3_pull_databases(
+    services: list[str] = None,
+    codes: list[str] = None,
+    force: bool = False
+    ) -> dict[str, str]:
     """
     Pull database(s) from Amazon S3.
 
@@ -205,7 +223,7 @@ def s3_pull_databases(services=None, codes=None, force=False):
 
     Returns
     -------
-    json
+    dict
         status message
     """
     params = {}
@@ -222,7 +240,10 @@ def s3_pull_databases(services=None, codes=None, force=False):
 def _cli_s3_pull_databases(*args, **kwargs):
     return json_to_cli(s3_pull_databases, *args, **kwargs)
 
-def optimize_databases(services=None, codes=None):
+def optimize_databases(
+    services: list[str] = None,
+    codes: list[str] = None
+    ) -> dict[str, str]:
     """
     Optimize databases to improve performance.
 
@@ -239,7 +260,7 @@ def optimize_databases(services=None, codes=None):
 
     Returns
     -------
-    json
+    dict
         status message
     """
     params = {}
@@ -254,7 +275,9 @@ def optimize_databases(services=None, codes=None):
 def _cli_optimize_databases(*args, **kwargs):
     return json_to_cli(optimize_databases, *args, **kwargs)
 
-def connect_sqlite(db_path):
+def connect_sqlite(
+    db_path: str
+    ) -> EngineType:
     """
     Returns a connection to a SQLite database.
 
@@ -345,7 +368,11 @@ DROP TABLE {temptable};
 
     os.remove(temp_file_name)
 
-def insert_or_fail(df, table_name, conn):
+def insert_or_fail(
+    df: DataFrameType,
+    table_name: str,
+    conn: EngineType
+    ) -> None:
     """
     Insert a DataFrame into a SQLite database.
 
@@ -378,7 +405,11 @@ def insert_or_fail(df, table_name, conn):
     """
     _insert_into(df, table_name, conn, "FAIL")
 
-def insert_or_replace(df, table_name, conn):
+def insert_or_replace(
+    df: DataFrameType,
+    table_name: str,
+    conn: EngineType
+    ) -> None:
     """
     Insert a DataFrame into a SQLite database.
 
@@ -411,7 +442,11 @@ def insert_or_replace(df, table_name, conn):
     """
     _insert_into(df, table_name, conn, "REPLACE")
 
-def insert_or_ignore(df, table_name, conn):
+def insert_or_ignore(
+    df: DataFrameType,
+    table_name: str,
+    conn: EngineType
+    ) -> None:
     """
     Insert a DataFrame into a SQLite database.
 

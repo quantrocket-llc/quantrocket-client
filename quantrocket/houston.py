@@ -215,13 +215,13 @@ To set the environment variable on Linux, run:
 # performance's sake)
 houston = Houston()
 
-def ping():
+def ping() -> dict[str, str]:
     """
     Pings houston.
 
     Returns
     -------
-    json
+    dict
         reply from houston
     """
     response = houston.get("/ping")

@@ -27,14 +27,14 @@ __all__ = [
 
 import logging, logging.handlers
 import socket
-import time
-import re
 import six
 import sys
 import os
+from typing import Generator
 from six.moves import queue, urllib
 from .exceptions import ImproperlyConfigured
 from .houston import Houston, houston
+from quantrocket.utils.typing import FilepathOrBuffer
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 
@@ -68,7 +68,9 @@ class _ImpatientHttpHandler(logging.handlers.HTTPHandler):
 # duplicate messages getting logged).
 _flightlog_handlers = {}
 
-def FlightlogHandler(background=None):
+def FlightlogHandler(
+    background: bool = None
+    ) -> logging.handlers.Handler:
     """
     Returns a log handler that logs to flightlog.
 
@@ -170,7 +172,11 @@ def _cli_log_message(msg, logger_name=None, level="INFO"):
     exit_code = 0
     return None, exit_code
 
-def stream_logs(detail=False, hist=None, color=True):
+def stream_logs(
+    detail: bool = False,
+    hist: int = None,
+    color: bool = True
+    ) -> Generator[str, None, None]:
     """
     Stream application logs, `tail -f` style.
 
@@ -229,7 +235,11 @@ def _cli_print_stream(*args, **kwargs):
 def _cli_stream_logs(*args, **kwargs):
     return json_to_cli(_cli_print_stream, *args, **kwargs)
 
-def download_logfile(outfile, detail=False, match=None):
+def download_logfile(
+    outfile: FilepathOrBuffer,
+    detail: bool = False,
+    match: str = None
+    ) -> None:
     """
     Download the logfile.
 
@@ -269,8 +279,13 @@ def download_logfile(outfile, detail=False, match=None):
 def _cli_download_logfile(*args, **kwargs):
     return json_to_cli(download_logfile, *args, **kwargs)
 
-def wait_for_message(message, regex=False, detail=False,
-                    tail=0, timeout=None):
+def wait_for_message(
+    message: str,
+    regex: bool = False,
+    detail: bool = False,
+    tail: int = 0,
+    timeout: str = None
+    ) -> dict[str, str]:
     r"""
     Wait for a message to appear in the logs.
 
@@ -338,7 +353,7 @@ def wait_for_message(message, regex=False, detail=False,
 def _cli_wait_for_message(*args, **kwargs):
     return json_to_cli(wait_for_message, *args, **kwargs)
 
-def get_timezone():
+def get_timezone() -> dict[str, str]:
     """
     Return the flightlog timezone.
 
@@ -351,7 +366,7 @@ def get_timezone():
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def set_timezone(tz):
+def set_timezone(tz: str) -> dict[str, str]:
     """
     Set the flightlog timezone.
 
@@ -383,7 +398,7 @@ def _cli_get_or_set_timezone(tz=None, *args, **kwargs):
     else:
         return json_to_cli(get_timezone, *args, **kwargs)
 
-def get_papertrail_config():
+def get_papertrail_config() -> dict[str, str]:
     """
     Return the current Papertrail log configuration, if any.
 
@@ -401,7 +416,10 @@ def get_papertrail_config():
         return {}
     return response.json()
 
-def set_papertrail_config(host, port):
+def set_papertrail_config(
+    host: str,
+    port: int
+    ) -> dict[str, str]:
     """
     Set the Papertrail log configuration.
 

@@ -16,6 +16,7 @@ import sys
 import os.path
 import six
 from zipfile import ZipFile
+from quantrocket.utils.typing import FilepathOrBuffer, Any, DataFrame as DataFrameType
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
@@ -30,9 +31,19 @@ __all__ = [
     "trade",
 ]
 
-def backtest(strategies, start_date=None, end_date=None, segment=None, allocations=None,
-             nlv=None, params=None, details=None, output="csv", filepath_or_buffer=None,
-             no_cache=False):
+def backtest(
+    strategies: list[str],
+    start_date: str = None,
+    end_date: str = None,
+    segment: str = None,
+    allocations: dict[str, float] = None,
+    nlv: dict[str, float] = None,
+    params: dict[str, Any] = None,
+    details: bool = None,
+    output: str = "csv",
+    filepath_or_buffer: FilepathOrBuffer = None,
+    no_cache: bool = False
+    ) -> None:
     """
     Backtest one or more strategies.
 
@@ -79,7 +90,7 @@ def backtest(strategies, start_date=None, end_date=None, segment=None, allocatio
     output : str, required
         the output format (choices are csv or pdf)
 
-    filepath_or_buffer : str, optional
+    filepath_or_buffer : str or file-like object, optional
         the location to write the results file (omit to write to stdout)
 
     no_cache : bool
@@ -159,7 +170,9 @@ def _cli_backtest(*args, **kwargs):
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(backtest, *args, **kwargs)
 
-def read_moonshot_csv(filepath_or_buffer):
+def read_moonshot_csv(
+    filepath_or_buffer: FilepathOrBuffer
+    ) -> DataFrameType:
     """
     Load a Moonshot backtest CSV into a DataFrame.
 
@@ -184,10 +197,23 @@ def read_moonshot_csv(filepath_or_buffer):
     """
     return _read_moonshot_or_pnl_csv(filepath_or_buffer)
 
-def scan_parameters(strategies, start_date=None, end_date=None, segment=None,
-                    param1=None, vals1=None, param2=None, vals2=None,
-                    allocations=None, nlv=None, params=None, num_workers=None,
-                    output="csv", filepath_or_buffer=None, no_cache=False):
+def scan_parameters(
+    strategies: list[str],
+    start_date: str = None,
+    end_date: str = None,
+    segment: str = None,
+    param1: str = None,
+    vals1: list[Any] = None,
+    param2: str = None,
+    vals2: list[Any] = None,
+    allocations: dict[str, float] = None,
+    nlv: dict[str, float] = None,
+    params: dict[str, Any] = None,
+    num_workers: int = None,
+    output: str = "csv",
+    filepath_or_buffer: FilepathOrBuffer = None,
+    no_cache: bool = False
+    ) -> None:
     """
     Run a parameter scan for one or more strategies.
 
@@ -343,11 +369,24 @@ def _cli_scan_parameters(*args, **kwargs):
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(scan_parameters, *args, **kwargs)
 
-def ml_walkforward(strategy, start_date, end_date, train, min_train=None, rolling_train=None,
-                   model_filepath=None, force_nonincremental=None, segment=None,
-                   allocation=None, nlv=None, params=None,
-                   details=None, progress=False, filepath_or_buffer=None,
-                   no_cache=False):
+def ml_walkforward(
+    strategy: str,
+    start_date: str,
+    end_date: str,
+    train: str,
+    min_train: str = None,
+    rolling_train: str = None,
+    model_filepath: str = None,
+    force_nonincremental: bool = None,
+    segment: str = None,
+    allocation: float = None,
+    nlv: dict[str, float] = None,
+    params: dict[str, Any] = None,
+    details: bool = None,
+    progress: bool = False,
+    filepath_or_buffer: FilepathOrBuffer = None,
+    no_cache: bool = False
+    ) -> None:
     """
     Run a walk-forward optimization of a machine learning strategy.
 
@@ -580,7 +619,13 @@ def _cli_ml_walkforward(*args, **kwargs):
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(ml_walkforward, *args, **kwargs)
 
-def trade(strategies, accounts=None, review_date=None, output="csv", filepath_or_buffer=None):
+def trade(
+    strategies: list[str],
+    accounts: list[str] = None,
+    review_date: str = None,
+    output: str = "csv",
+    filepath_or_buffer: FilepathOrBuffer = None
+    ) -> None:
     """
     Run one or more strategies and generate orders.
 

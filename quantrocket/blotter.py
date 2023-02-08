@@ -16,6 +16,7 @@ import sys
 import six
 import json
 from quantrocket.houston import houston
+from quantrocket.utils.typing import FilepathOrBuffer, Union, DataFrame as DataFrameType
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
@@ -36,7 +37,10 @@ __all__ = [
     "read_pnl_csv",
 ]
 
-def place_orders(orders=None, infilepath_or_buffer=None):
+def place_orders(
+    orders: list[dict[str, Union[str, float]]] = None,
+    infilepath_or_buffer: FilepathOrBuffer = None
+    ) -> list[str]:
     """
     Place one or more orders.
 
@@ -108,8 +112,13 @@ def _cli_place_orders(*args, **kwargs):
         kwargs["orders"] = orders
     return json_to_cli(place_orders, *args, **kwargs)
 
-def cancel_orders(order_ids=None, sids=None, order_refs=None, accounts=None,
-                  cancel_all=None):
+def cancel_orders(
+    order_ids: list[str] = None,
+    sids: list[str] = None,
+    order_refs: list[str] = None,
+    accounts: list[str] = None,
+    cancel_all: bool = None
+    ) -> dict[str, str]:
     """
     Cancel one or more orders by order ID, sid, or order ref.
 
@@ -172,10 +181,18 @@ def cancel_orders(order_ids=None, sids=None, order_refs=None, accounts=None,
 def _cli_cancel_orders(*args, **kwargs):
     return json_to_cli(cancel_orders, *args, **kwargs)
 
-def download_order_statuses(filepath_or_buffer=None, output="csv",
-                            order_ids=None, sids=None, order_refs=None,
-                            accounts=None, open_orders=None,
-                            start_date=None, end_date=None, fields=None):
+def download_order_statuses(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    output: str = "csv",
+    order_ids: list[str] = None,
+    sids: list[str] = None,
+    order_refs: list[str] = None,
+    accounts: list[str] = None,
+    open_orders: bool = None,
+    start_date: str = None,
+    end_date: str = None,
+    fields: list[str] = None
+    ) -> None:
     """
     Download order statuses.
 
@@ -274,9 +291,15 @@ def download_order_statuses(filepath_or_buffer=None, output="csv",
 def _cli_download_order_statuses(*args, **kwargs):
     return json_to_cli(download_order_statuses, *args, **kwargs)
 
-def download_positions(filepath_or_buffer=None, output="csv",
-                       order_refs=None, accounts=None, sids=None,
-                       view="blotter", diff=False):
+def download_positions(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    output: str = "csv",
+    order_refs: list[str] = None,
+    accounts: list[str] = None,
+    sids: list[str] = None,
+    view: str = "blotter",
+    diff: bool = False
+    ) -> None:
     """
     Query current positions and write results to file.
 
@@ -356,8 +379,13 @@ def download_positions(filepath_or_buffer=None, output="csv",
 def _cli_download_positions(*args, **kwargs):
     return json_to_cli(download_positions, *args, **kwargs)
 
-def list_positions(order_refs=None, accounts=None, sids=None,
-                   view="blotter", diff=False):
+def list_positions(
+    order_refs: list[str] = None,
+    accounts: list[str] = None,
+    sids: list[str] = None,
+    view: str = "blotter",
+    diff: bool = False
+    ) -> list[dict[str, Union[str, float]]]:
     """
     Query current positions and return them as a Python list.
 
@@ -412,9 +440,14 @@ def list_positions(order_refs=None, accounts=None, sids=None,
     else:
         return []
 
-def close_positions(filepath_or_buffer=None, output="csv",
-                    order_refs=None, accounts=None, sids=None,
-                    params=None):
+def close_positions(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    output: str = "csv",
+    order_refs: list[str] = None,
+    accounts: list[str] = None,
+    sids: list[str] = None,
+    params: dict[str, Union[str, float]] = None
+    ) -> None:
     """
     Generate orders to close positions.
 
@@ -506,9 +539,14 @@ def _cli_close_positions(*args, **kwargs):
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(close_positions, *args, **kwargs)
 
-def download_executions(filepath_or_buffer=None,
-                        order_refs=None, accounts=None, sids=None,
-                        start_date=None, end_date=None):
+def download_executions(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    order_refs: list[str] = None,
+    accounts: list[str] = None,
+    sids: list[str] = None,
+    start_date: str = None,
+    end_date: str = None
+    ) -> None:
     """
     Query executions from the executions database.
 
@@ -559,7 +597,10 @@ def download_executions(filepath_or_buffer=None,
 def _cli_download_executions(*args, **kwargs):
     return json_to_cli(download_executions, *args, **kwargs)
 
-def record_executions(executions=None, infilepath_or_buffer=None):
+def record_executions(
+    executions: list[dict[str, Union[str, float]]] = None,
+    infilepath_or_buffer: FilepathOrBuffer = None
+    ) -> list[str]:
     """
     Record executions that happened outside of QuantRocket's knowledge.
 
@@ -652,7 +693,11 @@ def _cli_record_executions(*args, **kwargs):
         kwargs["executions"] = executions
     return json_to_cli(record_executions, *args, **kwargs)
 
-def apply_split(sid, old_shares, new_shares):
+def apply_split(
+    sid: str,
+    old_shares: int,
+    new_shares: int
+    ) -> list[dict[str, Union[str, int]]]:
     """
     Apply a stock split to an open position.
 
@@ -704,10 +749,17 @@ def apply_split(sid, old_shares, new_shares):
 def _cli_apply_split(*args, **kwargs):
     return json_to_cli(apply_split, *args, **kwargs)
 
-def download_pnl(filepath_or_buffer=None,
-                 order_refs=None, accounts=None, sids=None,
-                 start_date=None, end_date=None, timezone=None,
-                 details=False, output="csv"):
+def download_pnl(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    order_refs: list[str] = None,
+    accounts: list[str] = None,
+    sids: list[str] = None,
+    start_date: str = None,
+    end_date: str = None,
+    timezone: str = None,
+    details: bool = False,
+    output: str = "csv"
+    ) -> None:
     """
     Query trading performance and return a CSV of results or PDF tearsheet.
 
@@ -781,7 +833,9 @@ def download_pnl(filepath_or_buffer=None,
 def _cli_download_pnl(*args, **kwargs):
     return json_to_cli(download_pnl, *args, **kwargs)
 
-def read_pnl_csv(filepath_or_buffer):
+def read_pnl_csv(
+    filepath_or_buffer: FilepathOrBuffer
+    ) -> DataFrameType:
     """
     Load a PNL CSV into a DataFrame.
 

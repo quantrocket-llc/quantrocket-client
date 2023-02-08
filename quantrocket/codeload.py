@@ -19,7 +19,13 @@ __all__ = [
     "clone",
 ]
 
-def clone(repo, branch=None, replace=None, skip_existing=None, target_dir=None):
+def clone(
+    repo: str,
+    branch: str = None,
+    replace: bool = None,
+    skip_existing: bool = None,
+    target_dir: str = None
+    ) -> dict[str, str]:
     """
     Clone files from a Git repository.
 

@@ -14,6 +14,7 @@
 
 import sys
 from quantrocket.houston import houston
+from quantrocket.utils.typing import FilepathOrBuffer, Any, Union
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
@@ -22,9 +23,13 @@ __all__ = [
     "execute_command",
 ]
 
-def execute_command(cmd, return_file=None, filepath_or_buffer=None,
-                    params=None,
-                    service="satellite"):
+def execute_command(
+    cmd: str,
+    return_file: str = None,
+    filepath_or_buffer: FilepathOrBuffer = None,
+    params: dict[str, Any] = None,
+    service: str = "satellite"
+    ) -> Union[dict[str, str], None]:
     """
     Execute a Python function or abitrary shell command on a satellite service.
 

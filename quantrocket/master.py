@@ -16,6 +16,7 @@ import sys
 import six
 import json
 import requests
+from quantrocket.utils.typing import FilepathOrBuffer, Union, DataFrame as DataFrameType
 from quantrocket.houston import houston
 from quantrocket.cli.utils.output import json_to_cli
 from quantrocket.cli.utils.stream import to_bytes
@@ -48,7 +49,10 @@ __all__ = [
     "round_to_tick_sizes",
 ]
 
-def list_ibkr_exchanges(regions=None, sec_types=None):
+def list_ibkr_exchanges(
+    regions: list[str] = None,
+    sec_types: list[str] = None
+    ) -> dict[str, str]:
     """
     List exchanges by security type and country as found on the IBKR website.
 
@@ -77,7 +81,7 @@ def list_ibkr_exchanges(regions=None, sec_types=None):
 def _cli_list_ibkr_exchanges(*args, **kwargs):
     return json_to_cli(list_ibkr_exchanges, *args, **kwargs)
 
-def collect_alpaca_listings():
+def collect_alpaca_listings() -> dict[str, str]:
     """
     Collect securities listings from Alpaca and store in securities master
     database.
@@ -94,7 +98,7 @@ def collect_alpaca_listings():
 def _cli_collect_alpaca_listings(*args, **kwargs):
     return json_to_cli(collect_alpaca_listings, *args, **kwargs)
 
-def collect_edi_listings(exchanges=None):
+def collect_edi_listings(exchanges: list[str] = None) -> dict[str, str]:
     """
     Collect securities listings from EDI and store in securities master
     database.
@@ -134,7 +138,7 @@ def collect_edi_listings(exchanges=None):
 def _cli_collect_edi_listings(*args, **kwargs):
     return json_to_cli(collect_edi_listings, *args, **kwargs)
 
-def collect_figi_listings():
+def collect_figi_listings() -> dict[str, str]:
     """
     Collect securities listings from Bloomberg OpenFIGI and store
     in securities master database.
@@ -168,8 +172,14 @@ def collect_figi_listings():
 def _cli_collect_figi_listings(*args, **kwargs):
     return json_to_cli(collect_figi_listings, *args, **kwargs)
 
-def collect_ibkr_listings(exchanges=None, sec_types=None, currencies=None,
-                          symbols=None, universes=None, sids=None):
+def collect_ibkr_listings(
+    exchanges: list[str] = None,
+    sec_types: list[str] = None,
+    currencies: list[str] = None,
+    symbols: list[str] = None,
+    universes: list[str] = None,
+    sids: list[str] = None
+    ) -> dict[str, str]:
     """
     Collect securities listings from Interactive Brokers and store in
     securities master database.
@@ -249,7 +259,7 @@ def collect_ibkr_listings(exchanges=None, sec_types=None, currencies=None,
 def _cli_collect_ibkr_listings(*args, **kwargs):
     return json_to_cli(collect_ibkr_listings, *args, **kwargs)
 
-def collect_sharadar_listings(countries="US"):
+def collect_sharadar_listings(countries: list[str] = "US") -> dict[str, str]:
     """
     Collect securities listings from Sharadar and store in securities master
     database.
@@ -275,7 +285,7 @@ def collect_sharadar_listings(countries="US"):
 def _cli_collect_sharadar_listings(*args, **kwargs):
     return json_to_cli(collect_sharadar_listings, *args, **kwargs)
 
-def collect_usstock_listings():
+def collect_usstock_listings() -> dict[str, str]:
     """
     Collect US stock listings from QuantRocket and store in securities
     master database.
@@ -292,7 +302,11 @@ def collect_usstock_listings():
 def _cli_collect_usstock_listings(*args, **kwargs):
     return json_to_cli(collect_usstock_listings, *args, **kwargs)
 
-def collect_ibkr_option_chains(universes=None, sids=None, infilepath_or_buffer=None):
+def collect_ibkr_option_chains(
+    universes: list[str] = None,
+    sids: list[str] = None,
+    infilepath_or_buffer: FilepathOrBuffer = None
+    ) -> dict[str, str]:
     """
     Collect IBKR option chains for underlying securities.
 
@@ -344,9 +358,15 @@ def collect_ibkr_option_chains(universes=None, sids=None, infilepath_or_buffer=N
 def _cli_collect_ibkr_option_chains(*args, **kwargs):
     return json_to_cli(collect_ibkr_option_chains, *args, **kwargs)
 
-def diff_ibkr_securities(universes=None, sids=None, infilepath_or_buffer=None,
-                         fields=None, delist_missing=False, delist_exchanges=None,
-                         wait=False):
+def diff_ibkr_securities(
+    universes: list[str] = None,
+    sids: list[str] = None,
+    infilepath_or_buffer: FilepathOrBuffer = None,
+    fields: list[str] = None,
+    delist_missing: bool = False,
+    delist_exchanges: list[str] = None,
+    wait: bool = False
+    ) -> dict[str, str]:
     """
     Flag security details that have changed in IBKR's system since the time they
     were last collected into the securities master database.
@@ -420,11 +440,23 @@ def diff_ibkr_securities(universes=None, sids=None, infilepath_or_buffer=None,
 def _cli_diff_ibkr_securities(*args, **kwargs):
     return json_to_cli(diff_ibkr_securities, *args, **kwargs)
 
-def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, sec_types=None,
-                         currencies=None, universes=None, symbols=None, sids=None,
-                         exclude_universes=None, exclude_sids=None,
-                         exclude_delisted=False, exclude_expired=False,
-                         frontmonth=False, vendors=None, fields=None):
+def download_master_file(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    output: str = "csv",
+    exchanges: list[str] = None,
+    sec_types: list[str] = None,
+    currencies: list[str] = None,
+    universes: list[str] = None,
+    symbols: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None,
+    exclude_delisted: bool = False,
+    exclude_expired: bool = False,
+    frontmonth: bool = False,
+    vendors: list[str] = None,
+    fields: list[str] = None
+    ) -> None:
     """
     Query security details from the securities master database and download to file.
 
@@ -582,11 +614,21 @@ def download_master_file(filepath_or_buffer=None, output="csv", exchanges=None, 
 def _cli_download_master_file(*args, **kwargs):
     return json_to_cli(download_master_file, *args, **kwargs)
 
-def get_securities(symbols=None, exchanges=None, sec_types=None,
-                   currencies=None, universes=None, sids=None,
-                   exclude_universes=None, exclude_sids=None,
-                   exclude_delisted=False, exclude_expired=False,
-                   frontmonth=False, vendors=None, fields=None):
+def get_securities(
+    symbols: list[str] = None,
+    exchanges: list[str] = None,
+    sec_types: list[str] = None,
+    currencies: list[str] = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None,
+    exclude_delisted: bool = False,
+    exclude_expired: bool = False,
+    frontmonth: bool = False,
+    vendors: list[str] = None,
+    fields: list[str] = None
+    ) -> DataFrameType:
     """
     Return a DataFrame of security details from the securities master database.
 
@@ -715,7 +757,10 @@ def get_securities(symbols=None, exchanges=None, sec_types=None,
 
     return securities
 
-def get_securities_reindexed_like(reindex_like, fields=None):
+def get_securities_reindexed_like(
+    reindex_like: DataFrameType,
+    fields: list[str] = None
+    ) -> DataFrameType:
     """
     Return a multiindex DataFrame of securities master data, reindexed to
     match the index and columns (sids) of `reindex_like`.
@@ -778,7 +823,10 @@ def get_securities_reindexed_like(reindex_like, fields=None):
     securities = securities.reindex(columns=reindex_like.columns)
     return securities
 
-def get_contract_nums_reindexed_like(reindex_like, limit=5):
+def get_contract_nums_reindexed_like(
+    reindex_like: DataFrameType,
+    limit: int = 5
+    ) -> DataFrameType:
     """
     From a DataFrame of futures (with dates as the index and sids as columns),
     return a DataFrame of integers representing each sid's sequence in the
@@ -890,8 +938,15 @@ def get_contract_nums_reindexed_like(reindex_like, limit=5):
 
     return contract_nums
 
-def create_universe(code, infilepath_or_buffer=None, sids=None, from_universes=None,
-                    exclude_delisted=False, append=False, replace=False):
+def create_universe(
+    code: str,
+    infilepath_or_buffer: FilepathOrBuffer = None,
+    sids: list[str] = None,
+    from_universes: list[str] = None,
+    exclude_delisted: bool = False,
+    append: bool = False,
+    replace: bool = False
+    ) -> dict[str, str]:
     """
     Create a universe of securities.
 
@@ -975,7 +1030,7 @@ def create_universe(code, infilepath_or_buffer=None, sids=None, from_universes=N
 def _cli_create_universe(*args, **kwargs):
     return json_to_cli(create_universe, *args, **kwargs)
 
-def delete_universe(code):
+def delete_universe(code: str) -> dict[str, str]:
     """
     Delete a universe.
 
@@ -1002,7 +1057,7 @@ def delete_universe(code):
 def _cli_delete_universe(*args, **kwargs):
     return json_to_cli(delete_universe, *args, **kwargs)
 
-def list_universes():
+def list_universes() -> dict[str, int]:
     """
     List universes and their size.
 
@@ -1018,7 +1073,13 @@ def list_universes():
 def _cli_list_universes(*args, **kwargs):
     return json_to_cli(list_universes, *args, **kwargs)
 
-def delist_ibkr_security(sid=None, symbol=None, exchange=None, currency=None, sec_type=None):
+def delist_ibkr_security(
+    sid: str = None,
+    symbol: str = None,
+    exchange: str = None,
+    currency: str = None,
+    sec_type: str = None
+    ) -> dict[str, str]:
     """
     Mark an IBKR security as delisted.
 
@@ -1072,7 +1133,9 @@ def delist_ibkr_security(sid=None, symbol=None, exchange=None, currency=None, se
 def _cli_delist_ibkr_security(*args, **kwargs):
     return json_to_cli(delist_ibkr_security, *args, **kwargs)
 
-def create_ibkr_combo(combo_legs):
+def create_ibkr_combo(
+    combo_legs: list[list[Union[str, int]]]
+    ) -> dict[str, Union[str, bool]]:
     """
     Create an IBKR combo (aka spread), which is a composite instrument consisting
     of two or more individual instruments (legs) that are traded as a single
@@ -1129,7 +1192,7 @@ def _cli_create_ibkr_combo(combo_filepath):
         combo_legs = json.load(f)
     return json_to_cli(create_ibkr_combo, combo_legs)
 
-def load_rollrules_config(filename):
+def load_rollrules_config(filename: str) -> dict[str, str]:
     """
     Upload a new rollover rules config.
 
@@ -1148,7 +1211,7 @@ def load_rollrules_config(filename):
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def get_rollrules_config():
+def get_rollrules_config() -> dict[str, str]:
     """
     Returns the current rollover rules config.
 
@@ -1170,7 +1233,7 @@ def _cli_load_or_show_rollrules(filename=None):
     else:
         return json_to_cli(get_rollrules_config)
 
-def collect_ibkr_calendar(exchanges=None):
+def collect_ibkr_calendar(exchanges: list[str] = None) -> dict[str, str]:
     """
     Collect upcoming trading hours from IBKR for exchanges and save to
     securities master database.
@@ -1196,7 +1259,13 @@ def collect_ibkr_calendar(exchanges=None):
 def _cli_collect_ibkr_calendar(*args, **kwargs):
     return json_to_cli(collect_ibkr_calendar, *args, **kwargs)
 
-def list_calendar_statuses(exchanges, sec_type=None, in_=None, ago=None, outside_rth=False):
+def list_calendar_statuses(
+    exchanges: list[str],
+    sec_type: str = None,
+    in_: str = None,
+    ago: str = None,
+    outside_rth: bool = False
+    ) -> dict[str, str]:
     """
     Check whether exchanges are open or closed.
 
@@ -1341,9 +1410,13 @@ def _cli_isclosed(exchanges, sec_type=None, in_=None, ago=None, since=None, unti
 
     return '', int(not is_closed)
 
-def round_to_tick_sizes(infilepath_or_buffer, round_fields,
-                        how=None, append_ticksize=False,
-                        outfilepath_or_buffer=None):
+def round_to_tick_sizes(
+    infilepath_or_buffer: FilepathOrBuffer,
+    round_fields: list[str],
+    how: str = None,
+    append_ticksize: bool = False,
+    outfilepath_or_buffer: FilepathOrBuffer = None
+    ) -> None:
     """
     Round prices in a CSV file to valid tick sizes.
 

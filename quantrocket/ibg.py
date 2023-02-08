@@ -27,7 +27,7 @@ __all__ = [
     "get_ibg_config",
 ]
 
-def get_credentials(gateway):
+def get_credentials(gateway: str) -> dict[str, str]:
     """
     Returns username and trading mode (paper/live) for IB Gateway.
 
@@ -52,7 +52,12 @@ def get_credentials(gateway):
         return {}
     return response.json()
 
-def set_credentials(gateway, username=None, password=None, trading_mode=None):
+def set_credentials(
+    gateway: str,
+    username: str = None,
+    password: str = None,
+    trading_mode: str = None
+    ) -> dict[str, str]:
     """
     Set username/password and trading mode (paper/live) for IB Gateway.
 
@@ -107,7 +112,10 @@ def _cli_get_or_set_credentials(*args, **kwargs):
     else:
         return json_to_cli(get_credentials, gateway=kwargs.get("gateway", None))
 
-def list_gateway_statuses(status=None, gateways=None):
+def list_gateway_statuses(
+    status: str = None,
+    gateways: list[str] = None
+    ) -> dict[str, str]:
     """
     Query statuses of IB Gateways.
 
@@ -136,7 +144,10 @@ def list_gateway_statuses(status=None, gateways=None):
 def _cli_list_gateway_statuses(*args, **kwargs):
     return json_to_cli(list_gateway_statuses, *args, **kwargs)
 
-def start_gateways(gateways=None, wait=False):
+def start_gateways(
+    gateways: list[str] = None,
+    wait: bool = False
+    ) -> dict[str, str]:
     """
     Start one or more IB Gateways.
 
@@ -166,7 +177,10 @@ def start_gateways(gateways=None, wait=False):
 def _cli_start_gateways(*args, **kwargs):
     return json_to_cli(start_gateways, *args, **kwargs)
 
-def stop_gateways(gateways=None, wait=False):
+def stop_gateways(
+    gateways: list[str] = None,
+    wait: bool = False
+    ) -> dict[str, str]:
     """
     Stop one or more IB Gateways.
 
@@ -195,7 +209,7 @@ def stop_gateways(gateways=None, wait=False):
 def _cli_stop_gateways(*args, **kwargs):
     return json_to_cli(stop_gateways, *args, **kwargs)
 
-def load_ibg_config(filename):
+def load_ibg_config(filename: str) -> dict[str, str]:
     """
     Upload a new IB Gateway permissions config.
 
@@ -217,7 +231,7 @@ def load_ibg_config(filename):
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def get_ibg_config():
+def get_ibg_config() -> dict[str, str]:
     """
     Returns the current IB Gateway permissions config.
 

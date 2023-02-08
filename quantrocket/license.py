@@ -27,7 +27,7 @@ __all__ = [
     "set_quandl_key",
 ]
 
-def get_license_profile(force_refresh=False):
+def get_license_profile(force_refresh: bool = False) -> dict[str, str]:
     """
     Return the current license profile.
 
@@ -53,7 +53,7 @@ def get_license_profile(force_refresh=False):
 def _cli_get_license_profile(*args, **kwargs):
     return json_to_cli(get_license_profile, *args, **kwargs)
 
-def set_license(key):
+def set_license(key: str) -> dict[str, str]:
     """
     Set QuantRocket license key.
 
@@ -74,7 +74,7 @@ def set_license(key):
 def _cli_set_license(*args, **kwargs):
     return json_to_cli(set_license, *args, **kwargs)
 
-def get_alpaca_key():
+def get_alpaca_key() -> dict[str, str]:
     """
     Returns the current API key(s) for Alpaca.
 
@@ -90,7 +90,12 @@ def get_alpaca_key():
         return {}
     return response.json()
 
-def set_alpaca_key(api_key, trading_mode, secret_key=None, realtime_data="iex"):
+def set_alpaca_key(
+    api_key: str,
+    trading_mode: str,
+    secret_key: str = None,
+    realtime_data: str = "iex"
+    ) -> dict[str, str]:
     """
     Set Alpaca API key.
 
@@ -136,7 +141,7 @@ def _cli_get_or_set_alpaca_key(*args, **kwargs):
     else:
         return json_to_cli(get_alpaca_key)
 
-def get_polygon_key():
+def get_polygon_key() -> dict[str, str]:
     """
     Returns the current API key for Polygon.
 
@@ -152,7 +157,7 @@ def get_polygon_key():
         return {}
     return response.json()
 
-def set_polygon_key(api_key):
+def set_polygon_key(api_key: str) -> dict[str, str]:
     """
     Set Polygon API key.
 
@@ -182,7 +187,7 @@ def _cli_get_or_set_polygon_key(*args, **kwargs):
     else:
         return json_to_cli(get_polygon_key)
 
-def get_quandl_key():
+def get_quandl_key() -> dict[str, str]:
     """
     Returns the current API key for Quandl.
 
@@ -198,7 +203,7 @@ def get_quandl_key():
         return {}
     return response.json()
 
-def set_quandl_key(api_key):
+def set_quandl_key(api_key: str) -> dict[str, str]:
     """
     Set Quandl API key.
 

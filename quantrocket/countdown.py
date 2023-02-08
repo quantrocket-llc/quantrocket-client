@@ -29,7 +29,9 @@ __all__ = [
     "set_timezone",
 ]
 
-def get_crontab(service=None):
+def get_crontab(
+    service: str = None
+    ) -> str:
     """
     Return the current crontab.
 
@@ -48,7 +50,10 @@ def get_crontab(service=None):
     houston.raise_for_status_with_json(response)
     return response.text
 
-def load_crontab(filename, service=None):
+def load_crontab(
+    filename: str,
+    service: str = None
+    ) -> dict[str, str]:
     """
     Upload a new crontab.
 
@@ -71,7 +76,9 @@ def load_crontab(filename, service=None):
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def get_timezone(service=None):
+def get_timezone(
+    service: str = None
+    ) -> dict[str, str]:
     """
     Return the service timezone.
 
@@ -90,7 +97,10 @@ def get_timezone(service=None):
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def set_timezone(tz, service=None):
+def set_timezone(
+    tz: str,
+    service: str = None
+    ) -> dict[str, str]:
     """
     Set the countdown service timezone.
 

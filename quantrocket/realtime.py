@@ -16,6 +16,7 @@ import sys
 import requests
 import urllib.parse
 import subprocess
+from quantrocket.utils.typing import FilepathOrBuffer
 from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoRealtimeData, ParameterError
@@ -37,8 +38,13 @@ __all__ = [
     "download_market_data_file",
 ]
 
-def create_ibkr_tick_db(code, universes=None, sids=None, fields=None,
-                        primary_exchange=False):
+def create_ibkr_tick_db(
+    code: str,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    fields: list[str] = None,
+    primary_exchange: bool = False
+    ) -> dict[str, str]:
     """
     Create a new database for collecting real-time tick data from Interactive
     Brokers.
@@ -101,7 +107,12 @@ def create_ibkr_tick_db(code, universes=None, sids=None, fields=None,
 def _cli_create_ibkr_tick_db(*args, **kwargs):
     return json_to_cli(create_ibkr_tick_db, *args, **kwargs)
 
-def create_polygon_tick_db(code, universes=None, sids=None, fields=None):
+def create_polygon_tick_db(
+    code: str,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    fields: list[str] = None
+    ) -> dict[str, str]:
     """
     Create a new database for collecting real-time tick data from Polygon.
 
@@ -153,7 +164,12 @@ def create_polygon_tick_db(code, universes=None, sids=None, fields=None):
 def _cli_create_polygon_tick_db(*args, **kwargs):
     return json_to_cli(create_polygon_tick_db, *args, **kwargs)
 
-def create_alpaca_tick_db(code, universes=None, sids=None, fields=None):
+def create_alpaca_tick_db(
+    code: str,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    fields: list[str] = None
+    ) -> dict[str, str]:
     """
     Create a new database for collecting real-time tick data from Alpaca.
 
@@ -205,7 +221,12 @@ def create_alpaca_tick_db(code, universes=None, sids=None, fields=None):
 def _cli_create_alpaca_tick_db(*args, **kwargs):
     return json_to_cli(create_alpaca_tick_db, *args, **kwargs)
 
-def create_agg_db(code, tick_db_code, bar_size, fields=None):
+def create_agg_db(
+    code: str,
+    tick_db_code: str,
+    bar_size: str,
+    fields: dict[str, list[str]] = None
+    ) -> dict[str, str]:
     """
     Create an aggregate database from a tick database.
 
@@ -284,7 +305,7 @@ def _cli_create_agg_db(*args, **kwargs):
         kwargs["fields"] = dict_strs_to_dict(*fields)
     return json_to_cli(create_agg_db, *args, **kwargs)
 
-def get_db_config(code):
+def get_db_config(code: str) -> dict[str, str]:
     """
     Return the configuration for a tick database or aggregate database.
 
@@ -306,7 +327,11 @@ def get_db_config(code):
 def _cli_get_db_config(*args, **kwargs):
     return json_to_cli(get_db_config, *args, **kwargs)
 
-def drop_db(code, confirm_by_typing_db_code_again=None, cascade=False):
+def drop_db(
+    code: str,
+    confirm_by_typing_db_code_again: str = None,
+    cascade: bool = False
+    ) -> dict[str, str]:
     """
     Delete a tick database or aggregate database.
 
@@ -348,7 +373,10 @@ def drop_db(code, confirm_by_typing_db_code_again=None, cascade=False):
 def _cli_drop_db(*args, **kwargs):
     return json_to_cli(drop_db, *args, **kwargs)
 
-def drop_ticks(code, older_than=None):
+def drop_ticks(
+    code: str,
+    older_than: str = None
+    ) -> dict[str, str]:
     """
     Delete ticks from a tick database. Does not delete any aggregate
     database records.
@@ -396,7 +424,7 @@ def drop_ticks(code, older_than=None):
 def _cli_drop_ticks(*args, **kwargs):
     return json_to_cli(drop_ticks, *args, **kwargs)
 
-def list_databases():
+def list_databases() -> dict[str, list[str]]:
     """
     List tick databases and associated aggregate databases.
 
@@ -413,8 +441,15 @@ def list_databases():
 def _cli_list_databases(*args, **kwargs):
     return json_to_cli(list_databases, *args, **kwargs)
 
-def collect_market_data(codes, sids=None, universes=None, fields=None, until=None,
-                        snapshot=False, wait=False):
+def collect_market_data(
+    codes: list[str],
+    sids: list[str] = None,
+    universes: list[str] = None,
+    fields: list[str] = None,
+    until: str = None,
+    snapshot: bool = False,
+    wait: bool = False
+    ) -> dict[str, str]:
     """
     Collect real-time market data and save it to a tick database.
 
@@ -500,7 +535,7 @@ def collect_market_data(codes, sids=None, universes=None, fields=None, until=Non
 def _cli_collect_market_data(*args, **kwargs):
     return json_to_cli(collect_market_data, *args, **kwargs)
 
-def get_active_collections(detail=False):
+def get_active_collections(detail: bool = False) -> dict[str, dict[str, int]]:
     """
     Return the number of tickers currently being collected, by vendor and
     database.
@@ -528,7 +563,12 @@ def get_active_collections(detail=False):
 def _cli_get_active_collections(*args, **kwargs):
     return json_to_cli(get_active_collections, *args, **kwargs)
 
-def cancel_market_data(codes=None, sids=None, universes=None, cancel_all=False):
+def cancel_market_data(
+    codes: list[str] = None,
+    sids: list[str] = None,
+    universes: list[str] = None,
+    cancel_all: bool = False
+    ) -> dict[str, dict[str, int]]:
     """
     Cancel market data collection.
 
@@ -578,11 +618,18 @@ def cancel_market_data(codes=None, sids=None, universes=None, cancel_all=False):
 def _cli_cancel_market_data(*args, **kwargs):
     return json_to_cli(cancel_market_data, *args, **kwargs)
 
-def download_market_data_file(code, filepath_or_buffer=None, output="csv",
-                              start_date=None, end_date=None,
-                              universes=None, sids=None,
-                              exclude_universes=None, exclude_sids=None,
-                              fields=None):
+def download_market_data_file(
+    code: str,
+    filepath_or_buffer: FilepathOrBuffer = None,
+    output: str = "csv",
+    start_date: str = None,
+    end_date: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None,
+    fields: list[str] = None
+    ) -> None:
     """
     Query market data from a tick database or aggregate database and download to file.
 

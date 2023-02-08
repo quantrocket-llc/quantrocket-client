@@ -15,6 +15,7 @@
 import sys
 import six
 import requests
+from quantrocket.utils.typing import FilepathOrBuffer, Union, Any
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoHistoricalData
 from quantrocket.cli.utils.output import json_to_cli
@@ -42,7 +43,13 @@ __all__ = [
     "ZiplineBacktestResult",
 ]
 
-def create_usstock_bundle(code, sids=None, universes=None, free=False, data_frequency=None):
+def create_usstock_bundle(
+    code: str,
+    sids: list[str] = None,
+    universes: list[str] = None,
+    free: bool = False,
+    data_frequency: str = None
+    ) -> dict[str, str]:
     """
     Create a Zipline bundle for US stocks.
 
@@ -110,7 +117,11 @@ def create_usstock_bundle(code, sids=None, universes=None, free=False, data_freq
 def _cli_create_usstock_bundle(*args, **kwargs):
     return json_to_cli(create_usstock_bundle, *args, **kwargs)
 
-def create_sharadar_bundle(code, sec_types=None, free=False):
+def create_sharadar_bundle(
+    code: str,
+    sec_types: list[str] = None,
+    free: bool = False
+    ) -> dict[str, str]:
     """
     Create a Zipline bundle of daily data for Sharadar stocks and/or ETFs.
 
@@ -163,11 +174,18 @@ def create_sharadar_bundle(code, sec_types=None, free=False):
 def _cli_create_sharadar_bundle(*args, **kwargs):
     return json_to_cli(create_sharadar_bundle, *args, **kwargs)
 
-def create_bundle_from_db(code, from_db, calendar,
-                         start_date=None, end_date=None,
-                         universes=None, sids=None,
-                        exclude_universes=None, exclude_sids=None,
-                        fields=None):
+def create_bundle_from_db(
+    code: str,
+    from_db: Union[str, list[str]],
+    calendar: str,
+    start_date: str = None,
+    end_date: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None,
+    fields: dict[str, str] = None
+    ) -> dict[str, str]:
     """
     Create a Zipline bundle from a history database or real-time aggregate
     database.
@@ -276,7 +294,11 @@ def _cli_create_bundle_from_db(*args, **kwargs):
         kwargs["fields"] = dict_strs_to_dict(*fields)
     return json_to_cli(create_bundle_from_db, *args, **kwargs)
 
-def ingest_bundle(code, sids=None, universes=None):
+def ingest_bundle(
+    code: str,
+    sids: list[str] = None,
+    universes: list[str] = None
+    ) -> dict[str, str]:
     """
     Ingest data into a previously defined bundle.
 
@@ -316,7 +338,7 @@ def ingest_bundle(code, sids=None, universes=None):
 def _cli_ingest_bundle(*args, **kwargs):
     return json_to_cli(ingest_bundle, *args, **kwargs)
 
-def list_bundles():
+def list_bundles() -> dict[str, bool]:
     """
     List available data bundles and whether data has been
     ingested into them.
@@ -335,7 +357,7 @@ def list_bundles():
 def _cli_list_bundles(*args, **kwargs):
     return json_to_cli(list_bundles, *args, **kwargs)
 
-def get_bundle_config(code):
+def get_bundle_config(code: str) -> dict[str, str]:
     """
     Return the configuration of a bundle.
 
@@ -357,7 +379,10 @@ def get_bundle_config(code):
 def _cli_get_bundle_config(*args, **kwargs):
     return json_to_cli(get_bundle_config, *args, **kwargs)
 
-def drop_bundle(code, confirm_by_typing_bundle_code_again=None):
+def drop_bundle(
+    code: str,
+    confirm_by_typing_bundle_code_again: str = None
+    ) -> dict[str, str]:
     """
     Delete a bundle.
 
@@ -393,7 +418,7 @@ def drop_bundle(code, confirm_by_typing_bundle_code_again=None):
 def _cli_drop_bundle(*args, **kwargs):
     return json_to_cli(drop_bundle, *args, **kwargs)
 
-def get_default_bundle():
+def get_default_bundle() -> dict[str, str]:
     """
     Return the current default bundle, if any.
 
@@ -409,7 +434,7 @@ def get_default_bundle():
         return {}
     return response.json()
 
-def set_default_bundle(bundle):
+def set_default_bundle(bundle: str) -> dict[str, str]:
     """
     Set the default bundle to use for backtesting and trading.
 
@@ -440,12 +465,19 @@ def _cli_get_or_set_default_bundle(bundle=None, *args, **kwargs):
     else:
         return json_to_cli(get_default_bundle, *args, **kwargs)
 
-def download_bundle_file(code, filepath_or_buffer=None,
-                         start_date=None, end_date=None,
-                         data_frequency=None,
-                         universes=None, sids=None,
-                         exclude_universes=None, exclude_sids=None,
-                         times=None, fields=None):
+def download_bundle_file(
+    code: str,
+    filepath_or_buffer: FilepathOrBuffer = None,
+    start_date: str = None,
+    end_date: str = None,
+    data_frequency: str = None,
+    universes: list[str] = None,
+    sids: list[str] = None,
+    exclude_universes: list[str] = None,
+    exclude_sids: list[str] = None,
+    times: list[str] = None,
+    fields: list[str] = None
+    ) -> None:
     """
     Query minute or daily data from a Zipline bundle and download to a CSV file.
 
@@ -551,9 +583,17 @@ def download_minute_file(*args, **kwargs):
     kwargs["data_frequency"] = "minute"
     return download_bundle_file(*args, **kwargs)
 
-def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
-             start_date=None, end_date=None, progress=None, params=None,
-             filepath_or_buffer=None):
+def backtest(
+    strategy: str,
+    data_frequency: str = None,
+    capital_base: float = None,
+    bundle: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    progress: str = None,
+    params: dict[str, Any] = None,
+    filepath_or_buffer: FilepathOrBuffer = None
+    ) -> None:
     """
     Backtest a Zipline strategy and write the test results to a CSV file.
 
@@ -593,7 +633,7 @@ def backtest(strategy, data_frequency=None, capital_base=None, bundle=None,
         in the algo file) to modify on the fly before backtesting (pass as
         {param:value}).
 
-    filepath_or_buffer : str, optional
+    filepath_or_buffer : str or file-like object, optional
         the location to write the output file (omit to write to stdout)
 
     Returns
@@ -644,11 +684,22 @@ def _cli_backtest(*args, **kwargs):
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(backtest, *args, **kwargs)
 
-def scan_parameters(strategy,  data_frequency=None, capital_base=None, bundle=None,
-                    start_date=None, end_date=None,
-                    param1=None, vals1=None, param2=None, vals2=None,
-                    progress=None, params=None, num_workers=None,
-                    filepath_or_buffer=None):
+def scan_parameters(
+    strategy: str,
+    data_frequency: str = None,
+    capital_base: float = None,
+    bundle: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    param1: str = None,
+    vals1: list[Any] = None,
+    param2: str = None,
+    vals2: list[Any] = None,
+    progress: str = None,
+    params: dict[str, Any] = None,
+    num_workers: int = None,
+    filepath_or_buffer: FilepathOrBuffer = None
+    ) -> None:
     """
     Run a parameter scan for a Zipline strategy.
 
@@ -790,7 +841,10 @@ def _cli_scan_parameters(*args, **kwargs):
         kwargs["params"] = dict_strs_to_dict(*params)
     return json_to_cli(scan_parameters, *args, **kwargs)
 
-def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None):
+def create_tearsheet(
+    infilepath_or_buffer: FilepathOrBuffer,
+    outfilepath_or_buffer: FilepathOrBuffer = None
+    ) -> None:
     """
     Create a pyfolio PDF tear sheet from a Zipline backtest result.
 
@@ -831,7 +885,13 @@ def create_tearsheet(infilepath_or_buffer, outfilepath_or_buffer=None):
 def _cli_create_tearsheet(*args, **kwargs):
     return json_to_cli(create_tearsheet, *args, **kwargs)
 
-def trade(strategy, bundle=None, account=None, data_frequency=None, dry_run=False):
+def trade(
+    strategy: str,
+    bundle: str = None,
+    account: str = None,
+    data_frequency: str = None,
+    dry_run: bool = False
+    ) -> dict[str, str]:
     """
     Trade a Zipline strategy.
 
@@ -862,7 +922,8 @@ def trade(strategy, bundle=None, account=None, data_frequency=None, dry_run=Fals
 
     Returns
     -------
-    None
+    dict
+        status message
 
     Examples
     --------
@@ -888,7 +949,7 @@ def trade(strategy, bundle=None, account=None, data_frequency=None, dry_run=Fals
 def _cli_trade(*args, **kwargs):
     return json_to_cli(trade, *args, **kwargs)
 
-def list_active_strategies():
+def list_active_strategies() -> dict[str, list[str]]:
     """
     List actively trading Zipline strategies.
 
@@ -905,7 +966,11 @@ def list_active_strategies():
 def _cli_list_active_strategies(*args, **kwargs):
     return json_to_cli(list_active_strategies, *args, **kwargs)
 
-def cancel_strategies(strategies=None, accounts=None, cancel_all=False):
+def cancel_strategies(
+    strategies: list[str] = None,
+    accounts: list[str] = None,
+    cancel_all: bool = False
+    ) -> dict[str, list[str]]:
     """
     Cancel actively trading strategies.
 
@@ -995,7 +1060,7 @@ class ZiplineBacktestResult(object):
         self.perf = None
 
     @classmethod
-    def from_csv(cls, filepath_or_buffer):
+    def from_csv(cls, filepath_or_buffer: FilepathOrBuffer) -> 'ZiplineBacktestResult':
 
         # Import pandas lazily since it can take a moment to import
         try:
@@ -1060,3 +1125,5 @@ class ZiplineBacktestResult(object):
         zipline_result.perf = perf.apply(pd.to_numeric, errors='ignore')
 
         return zipline_result
+
+ZiplineBacktestResult.from_csv.__func__.__doc__ = ZiplineBacktestResult.__doc__

@@ -14,6 +14,7 @@
 
 import sys
 import requests
+from quantrocket.utils.typing import FilepathOrBuffer, Optional
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoAccountData
 from quantrocket.cli.utils.output import json_to_cli
@@ -26,10 +27,17 @@ __all__ = [
     "download_exchange_rates",
 ]
 
-def download_account_balances(filepath_or_buffer=None, output="csv",
-                              start_date=None, end_date=None,
-                              latest=False, accounts=None, below=None,
-                              fields=None, force_refresh=False):
+def download_account_balances(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    output: str = "csv",
+    start_date: str = None,
+    end_date: str = None,
+    latest: bool = False,
+    accounts: list[str] = None,
+    below: dict[str, float] = None,
+    fields: list[str] = None,
+    force_refresh: bool = False
+    ) -> None:
     """
     Query account balances.
 
@@ -123,10 +131,18 @@ def _cli_download_account_balances(*args, **kwargs):
         kwargs["below"] = dict_strs_to_dict(*below)
     return json_to_cli(download_account_balances, *args, **kwargs)
 
-def download_account_portfolio(filepath_or_buffer=None, output="csv",
-                               brokers=None, accounts=None, sec_types=None,
-                               exchanges=None, sids=None, symbols=None,
-                               include_zero=False, fields=None):
+def download_account_portfolio(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    output: str = "csv",
+    brokers: list[str] = None,
+    accounts: list[str] = None,
+    sec_types: list[str] = None,
+    exchanges: list[str] = None,
+    sids: list[str] = None,
+    symbols: list[str] = None,
+    include_zero: bool = False,
+    fields: list[str] = None
+    ) -> None:
     """
     Download current portfolio.
 
@@ -215,9 +231,15 @@ def download_account_portfolio(filepath_or_buffer=None, output="csv",
 def _cli_download_account_portfolio(*args, **kwargs):
     return json_to_cli(download_account_portfolio, *args, **kwargs)
 
-def download_exchange_rates(filepath_or_buffer=None, output="csv",
-                            start_date=None, end_date=None, latest=False,
-                            base_currencies=None, quote_currencies=None):
+def download_exchange_rates(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    output: str = "csv",
+    start_date: str = None,
+    end_date: str = None,
+    latest: bool = False,
+    base_currencies: list[str] = None,
+    quote_currencies: list[str] = None
+    ) -> None:
     """
     Query exchange rates for the base currency.
 
