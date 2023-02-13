@@ -70,7 +70,7 @@ _flightlog_handlers = {}
 
 def FlightlogHandler(
     background: bool = None
-    ) -> logging.handlers.Handler:
+    ) -> 'FlightlogHandler':
     """
     Returns a log handler that logs to flightlog.
 
