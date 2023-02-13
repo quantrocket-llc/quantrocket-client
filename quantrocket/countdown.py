@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from quantrocket.houston import houston
-from quantrocket.cli.utils.output import json_to_cli
+from quantrocket._cli.utils.output import json_to_cli
 
 def _load_or_show_crontab(filename=None, *args, **kwargs):
     if filename:

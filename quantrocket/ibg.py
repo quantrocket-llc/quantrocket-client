@@ -15,7 +15,7 @@
 import os
 import getpass
 from quantrocket.houston import houston
-from quantrocket.cli.utils.output import json_to_cli
+from quantrocket._cli.utils.output import json_to_cli
 
 __all__ = [
     "get_credentials",

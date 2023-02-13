@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from quantrocket.cli.utils.parse import dict_str, HelpFormatter
+from quantrocket._cli.utils.parse import dict_str, HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("blotter", description="QuantRocket blotter CLI", help="Place orders and track executions")

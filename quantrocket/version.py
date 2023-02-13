@@ -13,9 +13,9 @@
 # limitations under the License.
 
 from quantrocket import __version__
-from quantrocket.utils.typing import Union
+from quantrocket.utils._typing import Union
 from quantrocket.houston import houston
-from quantrocket.cli.utils.output import json_to_cli
+from quantrocket._cli.utils.output import json_to_cli
 
 __all__ = [
     "get_version",

@@ -25,6 +25,7 @@ setup(name='quantrocket-client',
     author_email='support@quantrocket.com',
     license='Apache-2.0',
     packages=find_packages(),
+    package_data={"quantrocket": ["py.typed"]},
     install_requires=[
         "requests",
         "six",
@@ -32,7 +33,7 @@ setup(name='quantrocket-client',
         "pyyaml",
     ],
     entry_points = {
-        'console_scripts': ['quantrocket=quantrocket.cli.commands:main'],
+        'console_scripts': ['quantrocket=quantrocket._cli.commands:main'],
     },
     zip_safe=False
 )

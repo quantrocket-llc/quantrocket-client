@@ -13,10 +13,13 @@
 # limitations under the License.
 
 import getpass
-from quantrocket.utils.typing import DataFrame as DataFrameType, Engine as EngineType
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import pandas as pd
+    import sqlalchemy
 from quantrocket.houston import houston
 from quantrocket.exceptions import DataInsertionError
-from quantrocket.cli.utils.output import json_to_cli
+from quantrocket._cli.utils.output import json_to_cli
 
 __all__ = [
     "list_databases",
@@ -277,7 +280,7 @@ def _cli_optimize_databases(*args, **kwargs):
 
 def connect_sqlite(
     db_path: str
-    ) -> EngineType:
+    ) -> 'sqlalchemy.engine.Engine':
     """
     Returns a connection to a SQLite database.
 
@@ -369,9 +372,9 @@ DROP TABLE {temptable};
     os.remove(temp_file_name)
 
 def insert_or_fail(
-    df: DataFrameType,
+    df: 'pd.DataFrame',
     table_name: str,
-    conn: EngineType
+    conn: 'sqlalchemy.engine.Engine'
     ) -> None:
     """
     Insert a DataFrame into a SQLite database.
@@ -406,9 +409,9 @@ def insert_or_fail(
     _insert_into(df, table_name, conn, "FAIL")
 
 def insert_or_replace(
-    df: DataFrameType,
+    df: 'pd.DataFrame',
     table_name: str,
-    conn: EngineType
+    conn: 'sqlalchemy.engine.Engine'
     ) -> None:
     """
     Insert a DataFrame into a SQLite database.
@@ -443,9 +446,9 @@ def insert_or_replace(
     _insert_into(df, table_name, conn, "REPLACE")
 
 def insert_or_ignore(
-    df: DataFrameType,
+    df: 'pd.DataFrame',
     table_name: str,
-    conn: EngineType
+    conn: 'sqlalchemy.engine.Engine'
     ) -> None:
     """
     Insert a DataFrame into a SQLite database.

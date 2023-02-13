@@ -15,13 +15,16 @@
 import sys
 import six
 import json
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import pandas as pd
 from quantrocket.houston import houston
-from quantrocket.utils.typing import FilepathOrBuffer, Union, DataFrame as DataFrameType
-from quantrocket.cli.utils.output import json_to_cli
-from quantrocket.cli.utils.stream import to_bytes
-from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
-from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
-from quantrocket.utils.parse import _read_moonshot_or_pnl_csv
+from quantrocket.utils._typing import FilepathOrBuffer, Union
+from quantrocket._cli.utils.output import json_to_cli
+from quantrocket._cli.utils.stream import to_bytes
+from quantrocket._cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
+from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket.utils._parse import _read_moonshot_or_pnl_csv
 
 __all__ = [
     "place_orders",
@@ -835,7 +838,7 @@ def _cli_download_pnl(*args, **kwargs):
 
 def read_pnl_csv(
     filepath_or_buffer: FilepathOrBuffer
-    ) -> DataFrameType:
+    ) -> 'pd.DataFrame':
     """
     Load a PNL CSV into a DataFrame.
 

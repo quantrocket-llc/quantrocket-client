@@ -34,9 +34,9 @@ from typing import Generator
 from six.moves import queue, urllib
 from .exceptions import ImproperlyConfigured
 from .houston import Houston, houston
-from quantrocket.utils.typing import FilepathOrBuffer
-from quantrocket.cli.utils.output import json_to_cli
-from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket.utils._typing import FilepathOrBuffer
+from quantrocket._cli.utils.output import json_to_cli
+from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
 
 FLIGHTLOG_PATH = "/flightlog/handler"
 

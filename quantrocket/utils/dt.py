@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-def segmented_date_range(start_date, end_date, segment="A"):
+def segmented_date_range(
+    start_date: str,
+    end_date: str,
+    segment: str = "A"
+    ) -> list[tuple[str, str]]:
     """
     Split a date range into smaller segments.
 

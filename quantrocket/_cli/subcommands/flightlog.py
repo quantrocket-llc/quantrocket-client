@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from quantrocket.cli.utils.parse import HelpFormatter
+from quantrocket._cli.utils.parse import HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("flightlog", description="QuantRocket logging service CLI", help="Monitor and download logs")
@@ -191,7 +191,7 @@ Log the output from another command:
     parser.add_argument(
         "-n", "--name",
         dest="logger_name",
-        default="quantrocket.cli",
+        default="quantrocket._cli",
         help="the logger name")
     parser.set_defaults(func="quantrocket.flightlog._cli_log_message")
 

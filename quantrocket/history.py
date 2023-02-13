@@ -15,12 +15,12 @@
 import os
 import sys
 import requests
-from quantrocket.utils.typing import FilepathOrBuffer, DataFrame as DataFrameType
+from quantrocket.utils._typing import FilepathOrBuffer
 from quantrocket.houston import houston
-from quantrocket.cli.utils.output import json_to_cli
-from quantrocket.cli.utils.stream import to_bytes
-from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
-from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
+from quantrocket._cli.utils.output import json_to_cli
+from quantrocket._cli.utils.stream import to_bytes
+from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket._cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 from quantrocket.exceptions import NoHistoricalData
 
 __all__ = [

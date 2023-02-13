@@ -16,12 +16,12 @@ import sys
 import requests
 import urllib.parse
 import subprocess
-from quantrocket.utils.typing import FilepathOrBuffer
-from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket.utils._typing import FilepathOrBuffer
+from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoRealtimeData, ParameterError
-from quantrocket.cli.utils.output import json_to_cli
-from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
+from quantrocket._cli.utils.output import json_to_cli
+from quantrocket._cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 
 __all__ = [
     "create_ibkr_tick_db",

@@ -16,11 +16,14 @@ import sys
 import six
 import json
 import requests
-from quantrocket.utils.typing import FilepathOrBuffer, Union, DataFrame as DataFrameType
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import pandas as pd
+from quantrocket.utils._typing import FilepathOrBuffer, Union
 from quantrocket.houston import houston
-from quantrocket.cli.utils.output import json_to_cli
-from quantrocket.cli.utils.stream import to_bytes
-from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket._cli.utils.output import json_to_cli
+from quantrocket._cli.utils.stream import to_bytes
+from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.exceptions import ParameterError, NoMasterData
 
 __all__ = [
@@ -628,7 +631,7 @@ def get_securities(
     frontmonth: bool = False,
     vendors: list[str] = None,
     fields: list[str] = None
-    ) -> DataFrameType:
+    ) -> 'pd.DataFrame':
     """
     Return a DataFrame of security details from the securities master database.
 
@@ -758,9 +761,9 @@ def get_securities(
     return securities
 
 def get_securities_reindexed_like(
-    reindex_like: DataFrameType,
+    reindex_like: 'pd.DataFrame',
     fields: list[str] = None
-    ) -> DataFrameType:
+    ) -> 'pd.DataFrame':
     """
     Return a multiindex DataFrame of securities master data, reindexed to
     match the index and columns (sids) of `reindex_like`.
@@ -824,9 +827,9 @@ def get_securities_reindexed_like(
     return securities
 
 def get_contract_nums_reindexed_like(
-    reindex_like: DataFrameType,
+    reindex_like: 'pd.DataFrame',
     limit: int = 5
-    ) -> DataFrameType:
+    ) -> 'pd.DataFrame':
     """
     From a DataFrame of futures (with dates as the index and sids as columns),
     return a DataFrame of integers representing each sid's sequence in the

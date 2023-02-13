@@ -17,11 +17,14 @@ import sys
 import os
 import datetime
 import requests
-from quantrocket.utils.typing import FilepathOrBuffer, DataFrame as DataFrameType
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import pandas as pd
+from quantrocket.utils._typing import FilepathOrBuffer
 from quantrocket.houston import houston
 from quantrocket.master import download_master_file
-from quantrocket.cli.utils.output import json_to_cli
-from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket._cli.utils.output import json_to_cli
+from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.exceptions import ParameterError, MissingData, NoFundamentalData
 
 __all__ = [
@@ -169,8 +172,8 @@ def _cli_download_alpaca_etb(*args, **kwargs):
     return json_to_cli(download_alpaca_etb, *args, **kwargs)
 
 def get_alpaca_etb_reindexed_like(
-    reindex_like: DataFrameType
-    ) -> DataFrameType:
+    reindex_like: 'pd.DataFrame'
+    ) -> 'pd.DataFrame':
     """
     Return a DataFrame of Alpaca easy-to-borrow status, reindexed to match the index
     (dates) and columns (sids) of `reindex_like`.
@@ -771,12 +774,12 @@ def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
     return stockloan_data
 
 def get_ibkr_shortable_shares_reindexed_like(
-    reindex_like: DataFrameType,
+    reindex_like: 'pd.DataFrame',
     aggregate: bool = False,
     time: str = None,
     fields: list[str] = None,
     shift: int = 0
-    ) -> DataFrameType:
+    ) -> 'pd.DataFrame':
     """
     Return a DataFrame of Interactive Brokers shortable shares, reindexed to
     match the index (dates) and columns (sids) of `reindex_like`.
@@ -906,9 +909,9 @@ def get_ibkr_shortable_shares_reindexed_like(
     return shortable_shares
 
 def get_ibkr_borrow_fees_reindexed_like(
-    reindex_like: DataFrameType,
+    reindex_like: 'pd.DataFrame',
     shift: int = 0
-    ) -> DataFrameType:
+    ) -> 'pd.DataFrame':
     """
     Return a DataFrame of Interactive Brokers borrow fees, reindexed to match
     the index (dates) and columns (sids) of `reindex_like`.
@@ -942,10 +945,10 @@ def get_ibkr_borrow_fees_reindexed_like(
         reindex_like=reindex_like, is_intraday=False, shift=shift).loc["FeeRate"]
 
 def get_ibkr_margin_requirements_reindexed_like(
-    reindex_like: DataFrameType,
+    reindex_like: 'pd.DataFrame',
     time: str = None,
     shift: int = 0
-    ) -> DataFrameType:
+    ) -> 'pd.DataFrame':
     """
     Return a multiindex (Field, Date) DataFrame of Interactive Brokers margin
     requirements, reindexed to match the index (dates) and columns (sids) of
@@ -2375,11 +2378,11 @@ def _cli_download_sharadar_sp500(*args, **kwargs):
     return json_to_cli(download_sharadar_sp500, *args, **kwargs)
 
 def get_sharadar_fundamentals_reindexed_like(
-    reindex_like: DataFrameType,
+    reindex_like: 'pd.DataFrame',
     fields: list[str] = None,
     dimension: str = "ART",
     period_offset: int = 0
-    ) -> DataFrameType:
+    ) -> 'pd.DataFrame':
     """
     Return a multiindex (Field, Date) DataFrame of point-in-time
     Sharadar fundamentals, reindexed to match the index (dates)
@@ -2572,10 +2575,10 @@ def get_sharadar_fundamentals_reindexed_like(
     return financials
 
 def get_sharadar_institutions_reindexed_like(
-    reindex_like: DataFrameType,
+    reindex_like: 'pd.DataFrame',
     fields: list[str] = None,
     shift: int = 45
-    ) -> DataFrameType:
+    ) -> 'pd.DataFrame':
     """
     Return a multiindex (Field, Date) DataFrame of Sharadar institutional
     investor data, reindexed to match the index (dates) and columns (sids) of
@@ -2709,9 +2712,9 @@ def get_sharadar_institutions_reindexed_like(
     return institutions
 
 def get_sharadar_sec8_reindexed_like(
-    reindex_like: DataFrameType,
+    reindex_like: 'pd.DataFrame',
     event_codes: list[int] = None
-    ) -> DataFrameType:
+    ) -> 'pd.DataFrame':
     """
     Return a Boolean DataFrame indicating whether securities filed SEC Form
     8-K for specified event codes on given dates. The resulting DataFrame
@@ -2799,8 +2802,8 @@ def get_sharadar_sec8_reindexed_like(
     return have_events
 
 def get_sharadar_sp500_reindexed_like(
-    reindex_like: DataFrameType
-    ) -> DataFrameType:
+    reindex_like: 'pd.DataFrame'
+    ) -> 'pd.DataFrame':
     """
     Return a Boolean DataFrame indicating whether securities were in the S&P
     500 on the given dates. The resulting DataFrame will be reindexed to
@@ -3036,10 +3039,10 @@ def _cli_download_wsh_earnings_dates(*args, **kwargs):
     return json_to_cli(download_wsh_earnings_dates, *args, **kwargs)
 
 def get_wsh_earnings_dates_reindexed_like(
-    reindex_like: DataFrameType,
+    reindex_like: 'pd.DataFrame',
     fields: list[str] = ["Time"],
     statuses: list[str] = ["Confirmed"]
-    ) -> DataFrameType:
+    ) -> 'pd.DataFrame':
     """
     Return a multiindex (Field, Date) DataFrame of earnings announcement dates,
     reindexed to match the index (dates) and columns (sids) of `reindex_like`.

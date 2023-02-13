@@ -18,7 +18,7 @@ import requests
 import re
 import uuid
 from .exceptions import ImproperlyConfigured, CannotConnectToHouston
-from quantrocket.cli.utils.output import json_to_cli
+from quantrocket._cli.utils.output import json_to_cli
 
 __all__ = [
     "Houston",

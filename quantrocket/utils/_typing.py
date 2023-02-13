@@ -12,17 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union, NewType, Any
-from typing.io import TextIO
+from typing import Union, Any, TextIO
 
 # help Sphinx autoapi find this
 Any = Any
 Union = Union
 
 FilepathOrBuffer = Union[str, TextIO]
-
-class _Stub:
-    pass
-
-DataFrame = NewType("DataFrame", _Stub)
-Engine = NewType("Engine", _Stub)

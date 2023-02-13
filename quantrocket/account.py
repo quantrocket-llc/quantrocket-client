@@ -14,12 +14,12 @@
 
 import sys
 import requests
-from quantrocket.utils.typing import FilepathOrBuffer
+from quantrocket.utils._typing import FilepathOrBuffer
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoAccountData
-from quantrocket.cli.utils.output import json_to_cli
-from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
-from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
+from quantrocket._cli.utils.output import json_to_cli
+from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket._cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 
 __all__ = [
     "download_account_balances",

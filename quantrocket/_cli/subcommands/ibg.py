@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from quantrocket.cli.utils.parse import HelpFormatter
+from quantrocket._cli.utils.parse import HelpFormatter
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("ibg", description="QuantRocket IB Gateway service CLI", help="Start and stop IB Gateway")

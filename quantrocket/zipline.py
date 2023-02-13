@@ -15,13 +15,20 @@
 import sys
 import six
 import requests
-from quantrocket.utils.typing import FilepathOrBuffer, Union, Any
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import pandas as pd
+from quantrocket.utils._typing import (
+    FilepathOrBuffer,
+    Union,
+    Any
+)
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoHistoricalData
-from quantrocket.cli.utils.output import json_to_cli
-from quantrocket.cli.utils.files import write_response_to_filepath_or_buffer
-from quantrocket.cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
-from quantrocket.utils.warn import deprecated_replaced_by
+from quantrocket._cli.utils.output import json_to_cli
+from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
+from quantrocket._cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
+from quantrocket.utils._warn import deprecated_replaced_by
 
 __all__ = [
     "create_usstock_bundle",
@@ -1053,11 +1060,11 @@ class ZiplineBacktestResult(object):
     """
 
     def __init__(self):
-        self.returns = None
-        self.positions = None
-        self.transactions = None
-        self.benchmark_returns = None
-        self.perf = None
+        self.returns: 'pd.Series' = None
+        self.positions: 'pd.DataFrame' = None
+        self.transactions: 'pd.DataFrame' = None
+        self.benchmark_returns: 'pd.Series' = None
+        self.perf: 'pd.DataFrame' = None
 
     @classmethod
     def from_csv(cls, filepath_or_buffer: FilepathOrBuffer) -> 'ZiplineBacktestResult':

@@ -40,7 +40,7 @@ def add_subcommands(subparsers):
     Adds subparsers for each of the service modules in the subcommands package.
     """
     for _, service, _ in pkgutil.iter_modules(subcommands.__path__):
-        func = import_func("quantrocket.cli.subcommands.{0}.add_subparser".format(service))
+        func = import_func("quantrocket._cli.subcommands.{0}.add_subparser".format(service))
         func(subparsers)
 
 def handle_error(msg):

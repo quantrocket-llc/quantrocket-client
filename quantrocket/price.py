@@ -18,8 +18,10 @@ import time
 import itertools
 import tempfile
 import requests
-from typing import Callable
-from quantrocket.utils.typing import Union, DataFrame as DataFrameType
+from typing import Callable, TYPE_CHECKING
+if TYPE_CHECKING:
+    import pandas as pd
+from quantrocket.utils._typing import Union
 from quantrocket.master import download_master_file
 from quantrocket.exceptions import ParameterError, NoHistoricalData, NoRealtimeData
 from quantrocket.history import (
@@ -56,7 +58,7 @@ def get_prices(
     infer_timezone: bool = None,
     cont_fut: str = None,
     data_frequency: str = None
-    ) -> DataFrameType:
+    ) -> 'pd.DataFrame':
     """
     Query one or more history databases, real-time aggregate databases,
     and/or Zipline bundles and load prices into a DataFrame.
@@ -543,19 +545,19 @@ def get_prices(
     return prices
 
 def get_prices_reindexed_like(
-    reindex_like: DataFrameType,
+    reindex_like: 'pd.DataFrame',
     codes: Union[str, list[str]],
     fields: list[str] = None,
     shift: int = 1,
     ffill: bool = True,
     lookback_window: int = 10,
-    agg: Union[str, Callable] = "last",
+    agg: Union[str, Callable[['pd.DataFrame'], 'pd.DataFrame']] = "last",
     timezone: str = None,
     infer_timezone: bool = None,
     times: list[str] = None,
     cont_fut: str = None,
     data_frequency: str = None
-    ) -> DataFrameType:
+    ) -> 'pd.DataFrame':
     """
     Return a multiindex (Field, Date) DataFrame of prices for one or more history
     databases, real-time aggregate databases, or Zipline bundles, reindexed to match
