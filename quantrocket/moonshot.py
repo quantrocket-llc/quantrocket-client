@@ -11,7 +11,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for backtesting and trading with Moonshot.
 
+Functions
+---------
+backtest
+    Backtest one or more strategies.
+
+read_moonshot_csv
+    Load a Moonshot backtest CSV file into a DataFrame.
+
+scan_parameters
+    Run a parameter scan for one or more strategies.
+
+ml_walkforward
+    Run a walk-forward optimization of a machine learning strategy.
+
+trade
+    Run one or more strategies and generate orders.
+"""
 import sys
 import os.path
 import six

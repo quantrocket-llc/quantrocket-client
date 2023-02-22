@@ -11,7 +11,45 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for placing and managing orders and tracking positions and
+executions.
 
+Functions
+---------
+place_orders
+    Place one or more orders.
+
+cancel_orders
+    Cancel one or more orders by order ID, sid, or order ref.
+
+download_order_statuses
+    Download order statuses.
+
+download_positions
+    Query current positions and write results to file.
+
+list_positions
+    Query current positions and return them as a Python list.
+
+close_positions
+    Generate orders to close positions.
+
+download_executions
+    Query executions from the executions database.
+
+record_executions
+    Record executions that happened outside of QuantRocket's knowledge.
+
+apply_split
+    Apply a stock split to an open position.
+
+download_pnl
+    Query trading performance and return a CSV of results or PDF tearsheet.
+
+read_pnl_csv
+    Load a PNL CSV into a DataFrame.
+"""
 import sys
 import six
 import json

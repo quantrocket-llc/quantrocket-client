@@ -11,7 +11,86 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for working with the securities master database.
 
+Functions
+---------
+list_ibkr_exchanges
+    List exchanges by security type and country as found on the IBKR website.
+
+collect_alpaca_listings
+    Collect securities listings from Alpaca and store in securities master
+    database.
+
+collect_edi_listings
+    Collect securities listings from EDI and store in securities master
+    database.
+
+collect_figi_listings
+    Collect securities listings from Bloomberg OpenFIGI and store
+    in securities master database.
+
+collect_ibkr_listings
+    Collect securities listings from Interactive Brokers and store in
+    securities master database.
+
+collect_sharadar_listings
+    Collect securities listings from Sharadar and store in securities master
+    database.
+
+collect_usstock_listings
+    Collect US stock listings from QuantRocket and store in securities
+    master database.
+
+collect_ibkr_option_chains
+    Collect IBKR option chains for underlying securities.
+
+diff_ibkr_securities
+    Flag security details that have changed in IBKR's system since the time they
+    were last collected into the securities master database.
+
+download_master_file
+    Query security details from the securities master database and download to file.
+
+get_securities
+    Return a DataFrame of security details from the securities master database.
+
+get_securities_reindexed_like
+    Return a multiindex DataFrame of securities master data, reindexed to
+    match the index and columns (sids) of `reindex_like`.
+
+get_contract_nums_reindexed_like
+    From a DataFrame of futures (with dates as the index and sids as columns),
+    return a DataFrame of integers representing each sid's sequence in the
+    futures chain as of each date, where 1 is the front contract, 2 is the second
+    nearest contract, etc.
+
+create_universe
+    Create a universe of securities.
+
+delete_universe
+    Delete a universe.
+
+list_universes
+    List universes and their size.
+
+delist_ibkr_security
+    Mark an IBKR security as delisted.
+
+create_ibkr_combo
+    Create an IBKR combo (aka spread).
+
+collect_ibkr_calendar
+    Collect upcoming trading hours from IBKR for exchanges and save to
+    securities master database.
+
+list_calendar_statuses
+    Check whether exchanges are open or closed.
+
+round_to_tick_sizes
+    Round prices in a CSV file to valid tick sizes.
+"""
 import sys
 import six
 import json
@@ -45,8 +124,6 @@ __all__ = [
     "list_universes",
     "delist_ibkr_security",
     "create_ibkr_combo",
-    "load_rollrules_config",
-    "get_rollrules_config",
     "collect_ibkr_calendar",
     "list_calendar_statuses",
     "round_to_tick_sizes",
@@ -1216,7 +1293,7 @@ def load_rollrules_config(filename: str) -> dict[str, str]:
 
 def get_rollrules_config() -> dict[str, str]:
     """
-    Returns the current rollover rules config.
+    Return the current rollover rules config.
 
     Returns
     -------

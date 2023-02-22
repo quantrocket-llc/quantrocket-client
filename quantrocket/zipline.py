@@ -11,7 +11,66 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for backtesting and trading with Zipline, and managing Zipline
+bundles.
 
+Functions
+---------
+create_usstock_bundle
+    Create a Zipline bundle for US stocks.
+
+create_sharadar_bundle
+    Create a Zipline bundle of daily data for Sharadar stocks and/or ETFs.
+
+create_bundle_from_db
+    Create a Zipline bundle from a history database or real-time aggregate
+    database.
+
+ingest_bundle
+    Ingest data into a previously defined bundle.
+
+list_bundles
+    List available data bundles and whether data has been
+    ingested into them.
+
+get_bundle_config
+    Return the configuration of a bundle.
+
+drop_bundle
+    Delete a bundle.
+
+get_default_bundle
+    Return the current default bundle, if any.
+
+set_default_bundle
+    Set the default bundle to use for backtesting and trading.
+
+download_bundle_file
+    Query minute or daily data from a Zipline bundle and download to a CSV file.
+
+backtest
+    Backtest a Zipline strategy and write the test results to a CSV file.
+
+scan_parameters
+    Run a parameter scan for a Zipline strategy.
+
+trade
+    Trade a Zipline strategy.
+
+list_active_strategies
+    List actively trading Zipline strategies.
+
+cancel_strategies
+    Cancel actively trading strategies.
+
+Classes
+-------
+ZiplineBacktestResult
+    Convenience class for parsing a CSV result file from a Zipline backtest
+    into a variety of useful DataFrames, which can be passed to pyfolio or
+    inspected by the user.
+"""
 import sys
 import six
 import requests
@@ -43,7 +102,6 @@ __all__ = [
     "download_bundle_file",
     "backtest",
     "scan_parameters",
-    "create_tearsheet",
     "trade",
     "list_active_strategies",
     "cancel_strategies",

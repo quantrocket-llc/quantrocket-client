@@ -11,7 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for running custom scripts.
 
+Functions
+---------
+execute_command
+    Execute a Python function or arbitrary shell command on a satellite service.
+"""
 import sys
 from quantrocket.houston import houston
 from quantrocket.utils._typing import FilepathOrBuffer, Any, Union
@@ -31,7 +38,7 @@ def execute_command(
     service: str = "satellite"
     ) -> Union[dict[str, str], None]:
     """
-    Execute a Python function or abitrary shell command on a satellite service.
+    Execute a Python function or arbitrary shell command on a satellite service.
 
     Parameters
     ----------

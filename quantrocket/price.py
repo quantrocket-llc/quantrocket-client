@@ -11,7 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for querying price data from QuantRocket databases.
 
+Functions
+---------
+get_prices
+    Query one or more history databases, real-time aggregate databases,
+    and/or Zipline bundles and load prices into a DataFrame.
+
+get_prices_reindexed_like
+    Return a multiindex (Field, Date) DataFrame of prices for one or more history
+    databases, real-time aggregate databases, or Zipline bundles, reindexed to match
+    the index (dates) and columns (sids) of the input DataFrame.
+"""
 import six
 import os
 import time

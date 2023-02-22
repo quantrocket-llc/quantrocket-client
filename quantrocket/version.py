@@ -11,7 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for checking the QuantRocket version number.
 
+Functions
+---------
+get_version
+    Show the QuantRocket version number.
+"""
 from quantrocket import __version__
 from quantrocket.utils._typing import Union
 from quantrocket.houston import houston

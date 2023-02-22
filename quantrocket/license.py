@@ -11,7 +11,36 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for setting and viewing software licenses and third-party API
+keys.
 
+Functions
+---------
+get_license_profile
+    Return the current license profile.
+
+set_license
+    Set QuantRocket license key.
+
+get_alpaca_key
+    Returns the current API key(s) for Alpaca.
+
+set_alpaca_key
+    Set Alpaca API key.
+
+get_polygon_key
+    Returns the current API key for Polygon.
+
+set_polygon_key
+    Set Polygon API key.
+
+get_quandl_key
+    Returns the current API key for Quandl.
+
+set_quandl_key
+    Set Quandl API key.
+"""
 import getpass
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli

@@ -11,7 +11,50 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for collecting and querying real-time data.
 
+Functions
+---------
+create_ibkr_tick_db
+    Create a new database for collecting real-time tick data from Interactive
+    Brokers.
+
+create_polygon_tick_db
+    Create a new database for collecting real-time tick data from Polygon.
+
+create_alpaca_tick_db
+    Create a new database for collecting real-time tick data from Alpaca.
+
+create_agg_db
+    Create an aggregate database from a tick database.
+
+get_db_config
+    Return the configuration for a tick database or aggregate database.
+
+drop_db
+    Delete a tick database or aggregate database.
+
+drop_ticks
+    Delete ticks from a tick database. Does not delete any aggregate
+    database records.
+
+list_databases
+    List tick databases and associated aggregate databases.
+
+collect_market_data
+    Collect real-time market data and save it to a tick database.
+
+get_active_collections
+    Return the number of tickers currently being collected, by vendor and
+    database.
+
+cancel_market_data
+    Cancel market data collection.
+
+download_market_data_file
+    Query market data from a tick database or aggregate database and download to file.
+"""
 import sys
 import requests
 import urllib.parse

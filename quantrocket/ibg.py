@@ -11,8 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for working with IB Gateway.
 
-import os
+Functions
+---------
+get_credentials
+    Return username and trading mode (paper/live) for IB Gateway.
+
+set_credentials
+    Set username/password and trading mode (paper/live) for IB Gateway.
+
+list_gateway_statuses
+    Query statuses of IB Gateways.
+
+start_gateways
+    Start one or more IB Gateways.
+
+stop_gateways
+    Stop one or more IB Gateways.
+"""
+
 import getpass
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
@@ -23,13 +42,11 @@ __all__ = [
     "list_gateway_statuses",
     "start_gateways",
     "stop_gateways",
-    "load_ibg_config",
-    "get_ibg_config",
 ]
 
 def get_credentials(gateway: str) -> dict[str, str]:
     """
-    Returns username and trading mode (paper/live) for IB Gateway.
+    Return username and trading mode (paper/live) for IB Gateway.
 
     Parameters
     ----------
@@ -233,7 +250,7 @@ def load_ibg_config(filename: str) -> dict[str, str]:
 
 def get_ibg_config() -> dict[str, str]:
     """
-    Returns the current IB Gateway permissions config.
+    Return the current IB Gateway permissions config.
 
     Returns
     -------

@@ -11,7 +11,42 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for managing QuantRocket databases.
 
+Functions
+---------
+list_databases
+    List databases.
+
+get_s3_config
+    Return the current S3 configuration, if any.
+
+set_s3_config
+    Set AWS S3 configuration for pushing and pulling databases to and from
+    S3.
+
+s3_push_databases
+    Push database(s) to Amazon S3.
+
+s3_pull_databases
+    Pull database(s) from Amazon S3.
+
+optimize_databases
+    Optimize databases to improve performance.
+
+connect_sqlite
+    Return a connection to a SQLite database.
+
+insert_or_fail
+    Insert a DataFrame into a SQLite database, failing on duplicates.
+
+insert_or_replace
+    Insert a DataFrame into a SQLite database, replacing duplicates.
+
+insert_or_ignore
+    Insert a DataFrame into a SQLite database, ignoring duplicates.
+"""
 import getpass
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -282,7 +317,7 @@ def connect_sqlite(
     db_path: str
     ) -> 'sqlalchemy.engine.Engine':
     """
-    Returns a connection to a SQLite database.
+    Return a connection to a SQLite database.
 
     Parameters
     ----------

@@ -13,6 +13,35 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for working with QuantRocket logs.
+
+Functions
+---------
+FlightlogHandler
+    Return a log handler that logs to flightlog.
+
+stream_logs
+    Stream application logs, `tail -f` style.
+
+download_logfile
+    Download the logfile.
+
+wait_for_message
+    Wait for a message to appear in the logs.
+
+get_timezone
+    Return the flightlog timezone.
+
+set_timezone
+    Set the flightlog timezone.
+
+get_papertrail_config
+    Return the current Papertrail log configuration, if any.
+
+set_papertrail_config
+    Set the Papertrail log configuration.
+"""
 
 __all__ = [
     "FlightlogHandler",
@@ -72,7 +101,7 @@ def FlightlogHandler(
     background: bool = None
     ) -> 'FlightlogHandler':
     """
-    Returns a log handler that logs to flightlog.
+    Return a log handler that logs to flightlog.
 
     Parameters
     ----------

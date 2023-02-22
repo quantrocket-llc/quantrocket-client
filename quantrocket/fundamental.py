@@ -11,7 +11,122 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for collecting and querying fundamental data.
 
+Functions
+---------
+collect_alpaca_etb
+    Collect Alpaca easy-to-borrow data and save to database.
+
+download_alpaca_etb
+    Query Alpaca easy-to-borrow data from the local database and download to file.
+
+get_alpaca_etb_reindexed_like
+    Return a DataFrame of Alpaca easy-to-borrow status, reindexed to match the index
+    (dates) and columns (sids) of the input DataFrame.
+
+collect_ibkr_shortable_shares
+    Collect Interactive Brokers shortable shares data and save to database.
+
+collect_ibkr_borrow_fees
+    Collect Interactive Brokers borrow fees data and save to database.
+
+collect_ibkr_margin_requirements
+    Collect Interactive Brokers margin requirements data and save to database.
+
+download_ibkr_shortable_shares
+    Query intraday or daily Interactive Brokers shortable shares data from the
+    local database and download to file.
+
+download_ibkr_borrow_fees
+    Query Interactive Brokers borrow fees from the local database and download to file.
+
+download_ibkr_margin_requirements
+    Query Interactive Brokers margin requirements from the local database and
+    download to file.
+
+get_ibkr_shortable_shares_reindexed_like
+    Return a DataFrame of Interactive Brokers shortable shares, reindexed to
+    match the index (dates) and columns (sids) of the input DataFrame.
+
+get_ibkr_borrow_fees_reindexed_like
+    Return a DataFrame of Interactive Brokers borrow fees, reindexed to match
+    the index (dates) and columns (sids) of the input DataFrame.
+
+get_ibkr_margin_requirements_reindexed_like
+    Return a multiindex (Field, Date) DataFrame of Interactive Brokers margin
+    requirements, reindexed to match the index (dates) and columns (sids) of
+    the input DataFrame.
+
+collect_sharadar_fundamentals
+    Collect fundamental data from Sharadar and save to database.
+
+collect_sharadar_insiders
+    Collect insider holdings data from Sharadar and save to database.
+
+collect_sharadar_institutions
+    Collect institutional investor data from Sharadar and save to database.
+
+collect_sharadar_sec8
+    Collect SEC Form 8-K events from Sharadar and save to database.
+
+collect_sharadar_sp500
+    Collect historical S&P 500 index constituents from Sharadar and save to
+    database.
+
+download_sharadar_fundamentals
+    Query Sharadar fundamentals from the local database and download
+    to file.
+
+download_sharadar_insiders
+    Query Sharadar insider holdings data from the local database and download
+    to file.
+
+download_sharadar_institutions
+    Query Sharadar institutional investor data from the local database and
+    download to file.
+
+download_sharadar_sec8
+    Query Sharadar SEC Form 8-K events data from the local database and
+    download to file.
+
+download_sharadar_sp500
+    Query Sharadar S&P 500 index changes (additions and removals) from the
+    local database and download to file.
+
+get_sharadar_fundamentals_reindexed_like
+    Return a multiindex (Field, Date) DataFrame of point-in-time
+    Sharadar fundamentals, reindexed to match the index (dates)
+    and columns (sids) of the input DataFrame.
+
+get_sharadar_institutions_reindexed_like
+    Return a multiindex (Field, Date) DataFrame of Sharadar institutional
+    investor data, reindexed to match the index (dates) and columns (sids) of
+    the input DataFrame.
+
+get_sharadar_sec8_reindexed_like
+    Return a Boolean DataFrame indicating whether securities filed SEC Form
+    8-K for specified event codes on given dates, reindexed to match the index
+    (dates) and columns (sids) of the input DataFrame.
+
+get_sharadar_sp500_reindexed_like
+    Return a Boolean DataFrame indicating whether securities were in the S&P
+    500 on the given dates, reindexed to match the index (dates) and columns
+    (sids) of the input DataFrame.
+
+collect_wsh_earnings_dates
+    Collect Wall Street Horizon upcoming earnings announcement dates from
+    Interactive Brokers and save to database.
+
+download_wsh_earnings_dates
+    Query earnings announcement dates from the Wall Street Horizon
+    announcements database and download to file.
+
+get_wsh_earnings_dates_reindexed_like
+    Return a multiindex (Field, Date) DataFrame of earnings announcement dates,
+    reindexed to match the index (dates) and columns (sids) of the input DataFrame.
+"""
 import six
 import sys
 import os
@@ -40,10 +155,6 @@ __all__ = [
     "get_ibkr_shortable_shares_reindexed_like",
     "get_ibkr_borrow_fees_reindexed_like",
     "get_ibkr_margin_requirements_reindexed_like",
-    "collect_reuters_financials",
-    "list_reuters_codes",
-    "download_reuters_financials",
-    "get_reuters_financials_reindexed_like",
     "collect_sharadar_fundamentals",
     "collect_sharadar_insiders",
     "collect_sharadar_institutions",

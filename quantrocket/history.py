@@ -11,7 +11,50 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for collecting and querying historical data.
 
+Functions
+---------
+create_edi_db
+    Create a new database for collecting historical data from EDI.
+
+create_ibkr_db
+    Create a new database for collecting historical data from Interactive Brokers.
+
+create_sharadar_db
+    Create a new database for collecting historical data from Sharadar.
+
+create_usstock_db
+    Create a new database for collecting historical US stock data from QuantRocket.
+
+create_custom_db
+    Create a new database into which custom data can be loaded.
+
+get_db_config
+    Return the configuration for a history database.
+
+drop_db
+    Delete a history database.
+
+list_databases
+    List history databases.
+
+collect_history
+    Collect historical market data from a vendor and save it to a history database.
+
+get_history_queue
+    Get the current queue of historical data collections.
+
+cancel_collections
+    Cancel running or pending historical data collections.
+
+wait_for_collections
+    Wait for historical data collection to finish.
+
+download_history_file
+    Query historical market data from a history database and download to file.
+"""
 import os
 import sys
 import requests

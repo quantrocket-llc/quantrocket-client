@@ -11,7 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for working loading code.
 
+Functions
+---------
+clone
+    Clone files from a Git repository.
+"""
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
 

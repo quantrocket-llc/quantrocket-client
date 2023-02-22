@@ -11,7 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for working with the countdown (crontab) service.
 
+Functions
+---------
+get_crontab
+    Return the current crontab
+
+load_crontab
+    Upload a new crontab
+
+get_timezone
+    Return the service timezone
+
+set_timezone
+    Set the countdown service timezone
+"""
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
 
@@ -80,7 +96,7 @@ def get_timezone(
     service: str = None
     ) -> dict[str, str]:
     """
-    Return the service timezone.
+    Return the countdown service timezone.
 
     Parameters
     ----------

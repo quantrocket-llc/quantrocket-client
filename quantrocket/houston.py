@@ -11,6 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Classes and functions related to Houston, QuantRocket's API Gateway.
+
+Classes
+-------
+Houston
+    Client interface to Houston, QuantRocket's API Gateway.
+
+Functions
+---------
+ping
+    Ping the Houston service.
+"""
 
 import os
 import six
@@ -213,7 +226,11 @@ To set the environment variable on Linux, run:
 
 # Instantiate houston so that all callers can share a TCP connection (for
 # performance's sake)
-houston = Houston()
+houston: Houston = Houston()
+"""
+Houston instance for making requests to the houston API gateway. Using a single
+instance of Houston for all requests will improve performance.
+"""
 
 def ping() -> dict[str, str]:
     """

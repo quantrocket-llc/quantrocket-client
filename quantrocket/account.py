@@ -11,7 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Functions for querying account data.
 
+Functions
+---------
+download_account_balances
+    Query account balances.
+
+download_account_portfolio
+    Download account portfolio.
+
+download_exchange_rates
+    Query exchange rates for the base currency.
+"""
 import sys
 import requests
 from quantrocket.utils._typing import FilepathOrBuffer
