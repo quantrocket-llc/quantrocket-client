@@ -48,7 +48,7 @@ insert_or_ignore
     Insert a DataFrame into a SQLite database, ignoring duplicates.
 """
 import getpass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
     import pandas as pd
     import sqlalchemy
@@ -70,8 +70,8 @@ __all__ = [
 ]
 
 def list_databases(
-    services: list[str] = None,
-    codes: list[str] = None,
+    services: Union[list[str], str] = None,
+    codes: Union[list[str], str] = None,
     detail: bool = False,
     expand: bool = False
     ) -> dict[str, list[dict[str, str]]]:
@@ -204,8 +204,8 @@ def _cli_get_or_set_s3_config(access_key_id=None, secret_access_key=None,
         return json_to_cli(get_s3_config, *args, **kwargs)
 
 def s3_push_databases(
-    services: list[str] = None,
-    codes: list[str] = None
+    services: Union[list[str], str] = None,
+    codes: Union[list[str], str] = None
     ) -> dict[str, str]:
     """
     Push database(s) to Amazon S3.
@@ -238,8 +238,8 @@ def _cli_s3_push_databases(*args, **kwargs):
     return json_to_cli(s3_push_databases, *args, **kwargs)
 
 def s3_pull_databases(
-    services: list[str] = None,
-    codes: list[str] = None,
+    services: Union[list[str], str] = None,
+    codes: Union[list[str], str] = None,
     force: bool = False
     ) -> dict[str, str]:
     """
@@ -279,8 +279,8 @@ def _cli_s3_pull_databases(*args, **kwargs):
     return json_to_cli(s3_pull_databases, *args, **kwargs)
 
 def optimize_databases(
-    services: list[str] = None,
-    codes: list[str] = None
+    services: Union[list[str], str] = None,
+    codes: Union[list[str], str] = None
     ) -> dict[str, str]:
     """
     Optimize databases to improve performance.

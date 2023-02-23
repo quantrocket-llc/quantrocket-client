@@ -21,6 +21,7 @@ execute_command
 """
 import sys
 from quantrocket.houston import houston
+from typing import overload
 from quantrocket.utils._typing import FilepathOrBuffer, Any, Union
 from quantrocket._cli.utils.output import json_to_cli
 from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
@@ -30,13 +31,24 @@ __all__ = [
     "execute_command",
 ]
 
+@overload
+def execute_command(
+    cmd: str,
+    return_file: str,
+    filepath_or_buffer: FilepathOrBuffer,
+    params: dict[str, Any] = None,
+    service: str = "satellite"
+    ) -> None:
+    pass
+
+@overload
 def execute_command(
     cmd: str,
     return_file: str = None,
     filepath_or_buffer: FilepathOrBuffer = None,
     params: dict[str, Any] = None,
     service: str = "satellite"
-    ) -> Union[dict[str, str], None]:
+    ) -> dict[str, str]:
     """
     Execute a Python function or arbitrary shell command on a satellite service.
 

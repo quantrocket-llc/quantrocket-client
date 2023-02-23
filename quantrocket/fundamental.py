@@ -132,10 +132,10 @@ import sys
 import os
 import datetime
 import requests
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
     import pandas as pd
-from quantrocket.utils._typing import FilepathOrBuffer
+from quantrocket.utils._typing import FilepathOrBuffer, Literal
 from quantrocket.houston import houston
 from quantrocket.master import download_master_file
 from quantrocket._cli.utils.output import json_to_cli
@@ -196,13 +196,13 @@ def _cli_collect_alpaca_etb(*args, **kwargs):
 
 def download_alpaca_etb(
     filepath_or_buffer: FilepathOrBuffer,
-    output: str = "csv",
+    output: Literal["csv", "json"] = "csv",
     start_date: str = None,
     end_date: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None
     ) -> None:
     """
     Query Alpaca easy-to-borrow data from the local database and download to file.
@@ -316,7 +316,7 @@ def get_alpaca_etb_reindexed_like(
     return etb.fillna(0).astype(bool)
 
 def collect_ibkr_shortable_shares(
-    countries: list[str] = None
+    countries: Union[list[str], str] = None
     ) -> dict[str, str]:
     """
     Collect Interactive Brokers shortable shares data and save to database.
@@ -349,7 +349,7 @@ def _cli_collect_ibkr_shortable_shares(*args, **kwargs):
     return json_to_cli(collect_ibkr_shortable_shares, *args, **kwargs)
 
 def collect_ibkr_borrow_fees(
-    countries: list[str] = None
+    countries: Union[list[str], str] = None
     ) -> dict[str, str]:
     """
     Collect Interactive Brokers borrow fees data and save to database.
@@ -418,13 +418,13 @@ def _cli_collect_ibkr_margin_requirements(*args, **kwargs):
 
 def download_ibkr_shortable_shares(
     filepath_or_buffer: FilepathOrBuffer = None,
-    output: str = "csv",
+    output: Literal["csv", "json"] = "csv",
     start_date: str = None,
     end_date: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None,
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
     aggregate: bool = False
     ) -> None:
     """
@@ -523,13 +523,13 @@ def _cli_download_ibkr_shortable_shares(*args, **kwargs):
 
 def download_ibkr_borrow_fees(
     filepath_or_buffer: FilepathOrBuffer = None,
-    output: str = "csv",
+    output: Literal["csv", "json"] = "csv",
     start_date: str = None,
     end_date: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None
     ) -> None:
     """
     Query Interactive Brokers borrow fees from the local database and download to file.
@@ -611,13 +611,13 @@ def _cli_download_ibkr_borrow_fees(*args, **kwargs):
 
 def download_ibkr_margin_requirements(
     filepath_or_buffer: FilepathOrBuffer = None,
-    output: str = "csv",
+    output: Literal["csv", "json"] = "csv",
     start_date: str = None,
     end_date: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None
     ) -> None:
     """
     Query Interactive Brokers margin requirements from the local database and
@@ -888,7 +888,7 @@ def get_ibkr_shortable_shares_reindexed_like(
     reindex_like: 'pd.DataFrame',
     aggregate: bool = False,
     time: str = None,
-    fields: list[str] = None,
+    fields: Union[list[str], str] = None,
     shift: int = 0
     ) -> 'pd.DataFrame':
     """
@@ -1827,7 +1827,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     return estimates
 
 def collect_sharadar_fundamentals(
-    country: str = "US"
+    country: Literal["US", "FREE"] = "US"
     ) -> dict[str, str]:
     """
     Collect fundamental data from Sharadar and save to database.
@@ -1853,7 +1853,7 @@ def _cli_collect_sharadar_fundamentals(*args, **kwargs):
     return json_to_cli(collect_sharadar_fundamentals, *args, **kwargs)
 
 def collect_sharadar_insiders(
-    country: str = "US"
+    country: Literal["US", "FREE"] = "US"
     ) -> dict[str, str]:
     """
     Collect insider holdings data from Sharadar and save to database.
@@ -1880,7 +1880,7 @@ def _cli_collect_sharadar_insiders(*args, **kwargs):
     return json_to_cli(collect_sharadar_insiders, *args, **kwargs)
 
 def collect_sharadar_institutions(
-    country: str = "US",
+    country: Literal["US", "FREE"] = "US",
     detail: bool = False
     ) -> dict[str, str]:
     """
@@ -1916,7 +1916,7 @@ def _cli_collect_sharadar_institutions(*args, **kwargs):
     return json_to_cli(collect_sharadar_institutions, *args, **kwargs)
 
 def collect_sharadar_sec8(
-    country: str = "US"
+    country: Literal["US", "FREE"] = "US"
     ) -> dict[str, str]:
     """
     Collect SEC Form 8-K events from Sharadar and save to database.
@@ -1942,7 +1942,7 @@ def _cli_collect_sharadar_sec8(*args, **kwargs):
     return json_to_cli(collect_sharadar_sec8, *args, **kwargs)
 
 def collect_sharadar_sp500(
-    country: str = "US"
+    country: Literal["US", "FREE"] = "US"
     ) -> dict[str, str]:
     """
     Collect historical S&P 500 index constituents from Sharadar and save to
@@ -1973,13 +1973,16 @@ def download_sharadar_fundamentals(
     filepath_or_buffer: FilepathOrBuffer = None,
     start_date: str = None,
     end_date: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None,
-    dimensions: list[str] = None,
-    fields: list[str] = None,
-    output: str = None
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
+    dimensions: Union[list[Literal[
+        "ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"]],
+        Literal[
+            "ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"]] = None,
+    fields: Union[list[str], str] = None,
+    output: Literal["csv", "json"] = "csv"
     ) -> None:
     """
     Query Sharadar fundamentals from the local database and download
@@ -2085,12 +2088,12 @@ def download_sharadar_insiders(
     filepath_or_buffer: FilepathOrBuffer = None,
     start_date: str = None,
     end_date: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None,
-    fields: list[str] = None,
-    output: str = None
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
+    fields: Union[list[str], str] = None,
+    output: Literal["csv", "json"] = "csv"
     ) -> None:
     """
     Query Sharadar insider holdings data from the local database and download
@@ -2181,13 +2184,13 @@ def download_sharadar_institutions(
     filepath_or_buffer: FilepathOrBuffer = None,
     start_date: str = None,
     end_date: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None,
-    detail: list[str] = False,
-    fields: list[str] = None,
-    output: str = None
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
+    detail: Union[list[str], str] = False,
+    fields: Union[list[str], str] = None,
+    output: Literal["csv", "json"] = "csv"
     ) -> None:
     """
     Query Sharadar institutional investor data from the local database and
@@ -2287,13 +2290,13 @@ def download_sharadar_sec8(
     filepath_or_buffer: FilepathOrBuffer = None,
     start_date: str = None,
     end_date: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None,
-    event_codes: list[int] = None,
-    fields: list[str] = None,
-    output: str = None
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
+    event_codes: Union[list[int], int] = None,
+    fields: Union[list[str], str] = None,
+    output: Literal["csv", "json"] = "csv"
     ) -> None:
     """
     Query Sharadar SEC Form 8-K events data from the local database and
@@ -2390,12 +2393,12 @@ def download_sharadar_sp500(
     filepath_or_buffer: FilepathOrBuffer = None,
     start_date: str = None,
     end_date: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None,
-    fields: list[str] = None,
-    output: str = None
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
+    fields: Union[list[str], str] = None,
+    output: Literal["csv", "json"] = "csv"
     ) -> None:
     """
     Query Sharadar S&P 500 index changes (additions and removals) from the
@@ -2490,8 +2493,9 @@ def _cli_download_sharadar_sp500(*args, **kwargs):
 
 def get_sharadar_fundamentals_reindexed_like(
     reindex_like: 'pd.DataFrame',
-    fields: list[str] = None,
-    dimension: str = "ART",
+    fields: Union[list[str], str] = None,
+    dimension: Literal[
+        "ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"] = "ART",
     period_offset: int = 0
     ) -> 'pd.DataFrame':
     """
@@ -2687,7 +2691,7 @@ def get_sharadar_fundamentals_reindexed_like(
 
 def get_sharadar_institutions_reindexed_like(
     reindex_like: 'pd.DataFrame',
-    fields: list[str] = None,
+    fields: Union[list[str], str] = None,
     shift: int = 45
     ) -> 'pd.DataFrame':
     """
@@ -2824,7 +2828,7 @@ def get_sharadar_institutions_reindexed_like(
 
 def get_sharadar_sec8_reindexed_like(
     reindex_like: 'pd.DataFrame',
-    event_codes: list[int] = None
+    event_codes: Union[list[int], int] = None
     ) -> 'pd.DataFrame':
     """
     Return a Boolean DataFrame indicating whether securities filed SEC Form
@@ -3004,8 +3008,8 @@ def get_sharadar_sp500_reindexed_like(
     return are_in_sp500
 
 def collect_wsh_earnings_dates(
-    universes: list[str] = None,
-    sids: list[str] = None,
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
     force: bool = False
     ) -> dict[str, str]:
     """
@@ -3048,15 +3052,15 @@ def _cli_collect_wsh_earnings_dates(*args, **kwargs):
 
 def download_wsh_earnings_dates(
     filepath_or_buffer: FilepathOrBuffer = None,
-    output: str = "csv",
+    output: Literal["csv", "json"] = "csv",
     start_date: str = None,
     end_date: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None,
-    statuses: list[str] = None,
-    fields: list[str] = None
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
+    statuses: Union[list[str], str] = None,
+    fields: Union[list[str], str] = None
     ) -> None:
     """
     Query earnings announcement dates from the Wall Street Horizon
@@ -3151,8 +3155,8 @@ def _cli_download_wsh_earnings_dates(*args, **kwargs):
 
 def get_wsh_earnings_dates_reindexed_like(
     reindex_like: 'pd.DataFrame',
-    fields: list[str] = ["Time"],
-    statuses: list[str] = ["Confirmed"]
+    fields: Union[list[str], str] = ["Time"],
+    statuses: Union[list[str], str] = ["Confirmed"]
     ) -> 'pd.DataFrame':
     """
     Return a multiindex (Field, Date) DataFrame of earnings announcement dates,

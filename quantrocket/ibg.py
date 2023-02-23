@@ -35,6 +35,7 @@ stop_gateways
 import getpass
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
+from quantrocket.utils._typing import Union, Literal
 
 __all__ = [
     "get_credentials",
@@ -73,7 +74,7 @@ def set_credentials(
     gateway: str,
     username: str = None,
     password: str = None,
-    trading_mode: str = None
+    trading_mode: Literal["paper", "live"] = None
     ) -> dict[str, str]:
     """
     Set username/password and trading mode (paper/live) for IB Gateway.
@@ -130,8 +131,8 @@ def _cli_get_or_set_credentials(*args, **kwargs):
         return json_to_cli(get_credentials, gateway=kwargs.get("gateway", None))
 
 def list_gateway_statuses(
-    status: str = None,
-    gateways: list[str] = None
+    status: Literal["running", "stopped", "error"] = None,
+    gateways: Union[list[str], str] = None
     ) -> dict[str, str]:
     """
     Query statuses of IB Gateways.
@@ -162,7 +163,7 @@ def _cli_list_gateway_statuses(*args, **kwargs):
     return json_to_cli(list_gateway_statuses, *args, **kwargs)
 
 def start_gateways(
-    gateways: list[str] = None,
+    gateways: Union[list[str], str] = None,
     wait: bool = False
     ) -> dict[str, str]:
     """
@@ -195,7 +196,7 @@ def _cli_start_gateways(*args, **kwargs):
     return json_to_cli(start_gateways, *args, **kwargs)
 
 def stop_gateways(
-    gateways: list[str] = None,
+    gateways: Union[list[str], str] = None,
     wait: bool = False
     ) -> dict[str, str]:
     """

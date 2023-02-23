@@ -58,7 +58,7 @@ download_history_file
 import os
 import sys
 import requests
-from quantrocket.utils._typing import FilepathOrBuffer
+from quantrocket.utils._typing import FilepathOrBuffer, Union, Literal
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
 from quantrocket._cli.utils.stream import to_bytes
@@ -86,7 +86,7 @@ TMP_DIR = os.environ.get("QUANTROCKET_TMP_DIR", "/tmp")
 
 def create_edi_db(
     code: str,
-    exchanges: list[str]
+    exchanges: Union[list[str], str]
     ) -> dict[str, str]:
     """
     Create a new database for collecting historical data from EDI.
@@ -119,17 +119,39 @@ def _cli_create_edi_db(*args, **kwargs):
 
 def create_ibkr_db(
     code: str,
-    universes: list[str] = None,
-    sids: list[str] = None,
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
     start_date: str = None,
     end_date: str = None,
-    bar_size: str = None,
-    bar_type: str = None,
+    bar_size: Literal[
+        "1 secs", "5 secs",	"10 secs", "15 secs", "30 secs",
+        "1 min", "2 mins", "3 mins", "5 mins", "10 mins", "15 mins", "20 mins", "30 mins",
+        "1 hour", "2 hours", "3 hours", "4 hours", "8 hours",
+        "1 day",
+        "1 week",
+        "1 month"] = None,
+    bar_type: Literal[
+        "TRADES",
+        "ADJUSTED_LAST",
+        "MIDPOINT",
+        "BID",
+        "ASK",
+        "BID_ASK",
+        "HISTORICAL_VOLATILITY",
+        "OPTION_IMPLIED_VOLATILITY"
+    ] = None,
     outside_rth: bool = False,
     primary_exchange: bool = False,
-    times: list[str] = None,
-    between_times: list[str] = None,
-    shard:str = None
+    times: Union[list[str], str] = None,
+    between_times: Union[list[str], str] = None,
+    shard: Literal[
+        "year",
+        "month",
+        "day",
+        "time",
+        "sid",
+        "sid,time",
+        "off"] = None
     ) -> dict[str, str]:
     """
     Create a new database for collecting historical data from Interactive Brokers.
@@ -242,8 +264,8 @@ def _cli_create_ibkr_db(*args, **kwargs):
 
 def create_sharadar_db(
     code: str,
-    sec_type: str,
-    country: str = "US"
+    sec_type: Literal["STK", "ETF"],
+    country: Literal["US", "FREE"] = "US"
     ) -> dict[str, str]:
     """
     Create a new database for collecting historical data from Sharadar.
@@ -281,7 +303,7 @@ def _cli_create_sharadar_db(*args, **kwargs):
 
 def create_usstock_db(
     code: str,
-    bar_size: str = None,
+    bar_size: Literal["1 day"] = None,
     free: bool = False,
     universe: str = None
     ) -> dict[str, str]:
@@ -346,7 +368,12 @@ def _cli_create_usstock_db(*args, **kwargs):
 def create_custom_db(
     code: str,
     bar_size: str = None,
-    columns: dict[str, str] = None
+    columns: dict[str, Literal[
+        "int",
+        "float",
+        "str",
+        "date",
+        "datetime"]] = None
     ) -> dict[str, str]:
     """
     Create a new database into which custom data can be loaded.
@@ -491,9 +518,9 @@ def _cli_list_databases(*args, **kwargs):
     return json_to_cli(list_databases, *args, **kwargs)
 
 def collect_history(
-    codes: list[str],
-    sids: list[str] = None,
-    universes: list[str] = None,
+    codes: Union[list[str], str],
+    sids: Union[list[str], str] = None,
+    universes: Union[list[str], str] = None,
     start_date: str = None,
     end_date: str = None,
     priority: bool = False
@@ -576,7 +603,7 @@ def get_history_queue() -> dict[str, str]:
 def _cli_get_history_queue(*args, **kwargs):
     return json_to_cli(get_history_queue, *args, **kwargs)
 
-def cancel_collections(codes: list[str]) -> dict[str, str]:
+def cancel_collections(codes: Union[list[str], str]) -> dict[str, str]:
     """
     Cancel running or pending historical data collections.
 
@@ -602,7 +629,7 @@ def _cli_cancel_collections(*args, **kwargs):
     return json_to_cli(cancel_collections, *args, **kwargs)
 
 def wait_for_collections(
-    codes: list[str],
+    codes: Union[list[str], str],
     timeout: str = None
     ) -> dict[str, str]:
     """
@@ -637,16 +664,16 @@ def _cli_wait_for_collections(*args, **kwargs):
 def download_history_file(
     code: str,
     filepath_or_buffer: FilepathOrBuffer = None,
-    output: str = "csv",
+    output: Literal["csv", "json"] = "csv",
     start_date: str = None,
     end_date: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None,
-    times: list[str] = None,
-    cont_fut: str = None,
-    fields: list[str] = None
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
+    times: Union[list[str], str] = None,
+    cont_fut: Literal["concat"] = None,
+    fields: Union[list[str], str] = None
     ) -> None:
     """
     Query historical market data from a history database and download to file.

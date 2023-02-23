@@ -80,7 +80,8 @@ if TYPE_CHECKING:
 from quantrocket.utils._typing import (
     FilepathOrBuffer,
     Union,
-    Any
+    Any,
+    Literal
 )
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoHistoricalData
@@ -110,10 +111,10 @@ __all__ = [
 
 def create_usstock_bundle(
     code: str,
-    sids: list[str] = None,
-    universes: list[str] = None,
+    sids: Union[list[str], str] = None,
+    universes: Union[list[str], str] = None,
     free: bool = False,
-    data_frequency: str = None
+    data_frequency: Literal["daily", "minute", "d", "m"] = None
     ) -> dict[str, str]:
     """
     Create a Zipline bundle for US stocks.
@@ -184,7 +185,9 @@ def _cli_create_usstock_bundle(*args, **kwargs):
 
 def create_sharadar_bundle(
     code: str,
-    sec_types: list[str] = None,
+    sec_types: Union[list[
+        Literal["STK", "ETF"]],
+        Literal["STK", "ETF"]] = None,
     free: bool = False
     ) -> dict[str, str]:
     """
@@ -245,10 +248,10 @@ def create_bundle_from_db(
     calendar: str,
     start_date: str = None,
     end_date: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None,
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
     fields: dict[str, str] = None
     ) -> dict[str, str]:
     """
@@ -361,8 +364,8 @@ def _cli_create_bundle_from_db(*args, **kwargs):
 
 def ingest_bundle(
     code: str,
-    sids: list[str] = None,
-    universes: list[str] = None
+    sids: Union[list[str], str] = None,
+    universes: Union[list[str], str] = None
     ) -> dict[str, str]:
     """
     Ingest data into a previously defined bundle.
@@ -535,13 +538,13 @@ def download_bundle_file(
     filepath_or_buffer: FilepathOrBuffer = None,
     start_date: str = None,
     end_date: str = None,
-    data_frequency: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None,
-    times: list[str] = None,
-    fields: list[str] = None
+    data_frequency: Literal["daily", "minute", "d", "m"] = None,
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
+    times: Union[list[str], str] = None,
+    fields: Union[list[str], str] = None
     ) -> None:
     """
     Query minute or daily data from a Zipline bundle and download to a CSV file.
@@ -650,7 +653,7 @@ def download_minute_file(*args, **kwargs):
 
 def backtest(
     strategy: str,
-    data_frequency: str = None,
+    data_frequency: Literal["daily", "minute", "d", "m"] = None,
     capital_base: float = None,
     bundle: str = None,
     start_date: str = None,
@@ -751,7 +754,7 @@ def _cli_backtest(*args, **kwargs):
 
 def scan_parameters(
     strategy: str,
-    data_frequency: str = None,
+    data_frequency: Literal["daily", "minute", "d", "m"] = None,
     capital_base: float = None,
     bundle: str = None,
     start_date: str = None,
@@ -954,7 +957,7 @@ def trade(
     strategy: str,
     bundle: str = None,
     account: str = None,
-    data_frequency: str = None,
+    data_frequency: Literal["daily", "minute", "d", "m"] = None,
     dry_run: bool = False
     ) -> dict[str, str]:
     """
@@ -1032,8 +1035,8 @@ def _cli_list_active_strategies(*args, **kwargs):
     return json_to_cli(list_active_strategies, *args, **kwargs)
 
 def cancel_strategies(
-    strategies: list[str] = None,
-    accounts: list[str] = None,
+    strategies: Union[list[str], str] = None,
+    accounts: Union[list[str], str] = None,
     cancel_all: bool = False
     ) -> dict[str, list[str]]:
     """
@@ -1118,10 +1121,10 @@ class ZiplineBacktestResult(object):
     """
 
     def __init__(self):
-        self.returns: 'pd.Series' = None
+        self.returns: 'pd.Series[float]' = None
         self.positions: 'pd.DataFrame' = None
         self.transactions: 'pd.DataFrame' = None
-        self.benchmark_returns: 'pd.Series' = None
+        self.benchmark_returns: 'pd.Series[float]' = None
         self.perf: 'pd.DataFrame' = None
 
     @classmethod

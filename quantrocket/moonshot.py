@@ -38,7 +38,7 @@ from zipfile import ZipFile
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import pandas as pd
-from quantrocket.utils._typing import FilepathOrBuffer, Any
+from quantrocket.utils._typing import FilepathOrBuffer, Any, Union, Literal
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
 from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
@@ -54,7 +54,7 @@ __all__ = [
 ]
 
 def backtest(
-    strategies: list[str],
+    strategies: Union[list[str], str],
     start_date: str = None,
     end_date: str = None,
     segment: str = None,
@@ -62,7 +62,7 @@ def backtest(
     nlv: dict[str, float] = None,
     params: dict[str, Any] = None,
     details: bool = None,
-    output: str = "csv",
+    output: Literal["csv", "pdf"] = "csv",
     filepath_or_buffer: FilepathOrBuffer = None,
     no_cache: bool = False
     ) -> None:
@@ -220,7 +220,7 @@ def read_moonshot_csv(
     return _read_moonshot_or_pnl_csv(filepath_or_buffer)
 
 def scan_parameters(
-    strategies: list[str],
+    strategies: Union[list[str], str],
     start_date: str = None,
     end_date: str = None,
     segment: str = None,
@@ -232,7 +232,7 @@ def scan_parameters(
     nlv: dict[str, float] = None,
     params: dict[str, Any] = None,
     num_workers: int = None,
-    output: str = "csv",
+    output: Literal["csv", "pdf"] = "csv",
     filepath_or_buffer: FilepathOrBuffer = None,
     no_cache: bool = False
     ) -> None:
@@ -642,10 +642,10 @@ def _cli_ml_walkforward(*args, **kwargs):
     return json_to_cli(ml_walkforward, *args, **kwargs)
 
 def trade(
-    strategies: list[str],
-    accounts: list[str] = None,
+    strategies: Union[list[str], str],
+    accounts: Union[list[str], str] = None,
     review_date: str = None,
-    output: str = "csv",
+    output: Literal["csv", "json"] = "csv",
     filepath_or_buffer: FilepathOrBuffer = None
     ) -> None:
     """

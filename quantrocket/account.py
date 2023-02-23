@@ -27,7 +27,7 @@ download_exchange_rates
 """
 import sys
 import requests
-from quantrocket.utils._typing import FilepathOrBuffer
+from quantrocket.utils._typing import FilepathOrBuffer, Union, Literal
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoAccountData
 from quantrocket._cli.utils.output import json_to_cli
@@ -42,13 +42,13 @@ __all__ = [
 
 def download_account_balances(
     filepath_or_buffer: FilepathOrBuffer = None,
-    output: str = "csv",
+    output: Literal["csv", "json"] = "csv",
     start_date: str = None,
     end_date: str = None,
     latest: bool = False,
-    accounts: list[str] = None,
+    accounts: Union[list[str], str] = None,
     below: dict[str, float] = None,
-    fields: list[str] = None,
+    fields: Union[list[str], str] = None,
     force_refresh: bool = False
     ) -> None:
     """
@@ -146,15 +146,15 @@ def _cli_download_account_balances(*args, **kwargs):
 
 def download_account_portfolio(
     filepath_or_buffer: FilepathOrBuffer = None,
-    output: str = "csv",
-    brokers: list[str] = None,
-    accounts: list[str] = None,
-    sec_types: list[str] = None,
-    exchanges: list[str] = None,
-    sids: list[str] = None,
-    symbols: list[str] = None,
+    output: Literal["csv", "json"] = "csv",
+    brokers: Union[list[Literal["alpaca", "ibkr"]], Literal["alpaca", "ibkr"]] = None,
+    accounts: Union[list[str], str] = None,
+    sec_types: Union[list[str], str] = None,
+    exchanges: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    symbols: Union[list[str], str] = None,
     include_zero: bool = False,
-    fields: list[str] = None
+    fields: Union[list[str], str] = None
     ) -> None:
     """
     Download current portfolio.
@@ -246,12 +246,12 @@ def _cli_download_account_portfolio(*args, **kwargs):
 
 def download_exchange_rates(
     filepath_or_buffer: FilepathOrBuffer = None,
-    output: str = "csv",
+    output: Literal["csv", "json"] = "csv",
     start_date: str = None,
     end_date: str = None,
     latest: bool = False,
-    base_currencies: list[str] = None,
-    quote_currencies: list[str] = None
+    base_currencies: Union[list[str], str] = None,
+    quote_currencies: Union[list[str], str] = None
     ) -> None:
     """
     Query exchange rates for the base currency.

@@ -34,7 +34,7 @@ import requests
 from typing import Callable, TYPE_CHECKING
 if TYPE_CHECKING:
     import pandas as pd
-from quantrocket.utils._typing import Union
+from quantrocket.utils._typing import Union, Literal
 from quantrocket.master import download_master_file
 from quantrocket.exceptions import ParameterError, NoHistoricalData, NoRealtimeData
 from quantrocket.history import (
@@ -61,16 +61,16 @@ def get_prices(
     codes: Union[str, list[str]],
     start_date: str = None,
     end_date: str = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None,
-    times: list[str] = None,
-    fields: list[str] = None,
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
+    times: Union[list[str], str] = None,
+    fields: Union[list[str], str] = None,
     timezone: str = None,
     infer_timezone: bool = None,
-    cont_fut: str = None,
-    data_frequency: str = None
+    cont_fut: Literal["concat"] = None,
+    data_frequency: Literal["daily", "minute", "d", "m"] = None
     ) -> 'pd.DataFrame':
     """
     Query one or more history databases, real-time aggregate databases,
@@ -560,16 +560,16 @@ def get_prices(
 def get_prices_reindexed_like(
     reindex_like: 'pd.DataFrame',
     codes: Union[str, list[str]],
-    fields: list[str] = None,
+    fields: Union[list[str], str] = None,
     shift: int = 1,
     ffill: bool = True,
     lookback_window: int = 10,
     agg: Union[str, Callable[['pd.DataFrame'], 'pd.DataFrame']] = "last",
     timezone: str = None,
     infer_timezone: bool = None,
-    times: list[str] = None,
-    cont_fut: str = None,
-    data_frequency: str = None
+    times: Union[list[str], str] = None,
+    cont_fut: Literal["concat"] = None,
+    data_frequency: Literal["daily", "minute", "d", "m"] = None
     ) -> 'pd.DataFrame':
     """
     Return a multiindex (Field, Date) DataFrame of prices for one or more history

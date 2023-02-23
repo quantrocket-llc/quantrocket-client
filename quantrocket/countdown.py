@@ -16,12 +16,6 @@ Functions for working with the countdown (crontab) service.
 
 Functions
 ---------
-get_crontab
-    Return the current crontab
-
-load_crontab
-    Upload a new crontab
-
 get_timezone
     Return the service timezone
 
@@ -39,8 +33,6 @@ def _load_or_show_crontab(filename=None, *args, **kwargs):
         return get_crontab(*args, **kwargs), exit_code
 
 __all__ = [
-    "get_crontab",
-    "load_crontab",
     "get_timezone",
     "set_timezone",
 ]

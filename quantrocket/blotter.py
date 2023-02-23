@@ -57,7 +57,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import pandas as pd
 from quantrocket.houston import houston
-from quantrocket.utils._typing import FilepathOrBuffer, Union
+from quantrocket.utils._typing import FilepathOrBuffer, Union, Literal
 from quantrocket._cli.utils.output import json_to_cli
 from quantrocket._cli.utils.stream import to_bytes
 from quantrocket._cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
@@ -154,10 +154,10 @@ def _cli_place_orders(*args, **kwargs):
     return json_to_cli(place_orders, *args, **kwargs)
 
 def cancel_orders(
-    order_ids: list[str] = None,
-    sids: list[str] = None,
-    order_refs: list[str] = None,
-    accounts: list[str] = None,
+    order_ids: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    order_refs: Union[list[str], str] = None,
+    accounts: Union[list[str], str] = None,
     cancel_all: bool = None
     ) -> dict[str, str]:
     """
@@ -224,15 +224,15 @@ def _cli_cancel_orders(*args, **kwargs):
 
 def download_order_statuses(
     filepath_or_buffer: FilepathOrBuffer = None,
-    output: str = "csv",
-    order_ids: list[str] = None,
-    sids: list[str] = None,
-    order_refs: list[str] = None,
-    accounts: list[str] = None,
+    output: Literal["csv", "json"] = "csv",
+    order_ids: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    order_refs: Union[list[str], str] = None,
+    accounts: Union[list[str], str] = None,
     open_orders: bool = None,
     start_date: str = None,
     end_date: str = None,
-    fields: list[str] = None
+    fields: Union[list[str], str] = None
     ) -> None:
     """
     Download order statuses.
@@ -334,10 +334,10 @@ def _cli_download_order_statuses(*args, **kwargs):
 
 def download_positions(
     filepath_or_buffer: FilepathOrBuffer = None,
-    output: str = "csv",
-    order_refs: list[str] = None,
-    accounts: list[str] = None,
-    sids: list[str] = None,
+    output: Literal["csv", "json"] = "csv",
+    order_refs: Union[list[str], str] = None,
+    accounts: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
     view: str = "blotter",
     diff: bool = False
     ) -> None:
@@ -421,9 +421,9 @@ def _cli_download_positions(*args, **kwargs):
     return json_to_cli(download_positions, *args, **kwargs)
 
 def list_positions(
-    order_refs: list[str] = None,
-    accounts: list[str] = None,
-    sids: list[str] = None,
+    order_refs: Union[list[str], str] = None,
+    accounts: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
     view: str = "blotter",
     diff: bool = False
     ) -> list[dict[str, Union[str, float]]]:
@@ -483,10 +483,10 @@ def list_positions(
 
 def close_positions(
     filepath_or_buffer: FilepathOrBuffer = None,
-    output: str = "csv",
-    order_refs: list[str] = None,
-    accounts: list[str] = None,
-    sids: list[str] = None,
+    output: Literal["csv", "json"] = "csv",
+    order_refs: Union[list[str], str] = None,
+    accounts: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
     params: dict[str, Union[str, float]] = None
     ) -> None:
     """
@@ -582,9 +582,9 @@ def _cli_close_positions(*args, **kwargs):
 
 def download_executions(
     filepath_or_buffer: FilepathOrBuffer = None,
-    order_refs: list[str] = None,
-    accounts: list[str] = None,
-    sids: list[str] = None,
+    order_refs: Union[list[str], str] = None,
+    accounts: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
     start_date: str = None,
     end_date: str = None
     ) -> None:
@@ -792,14 +792,14 @@ def _cli_apply_split(*args, **kwargs):
 
 def download_pnl(
     filepath_or_buffer: FilepathOrBuffer = None,
-    order_refs: list[str] = None,
-    accounts: list[str] = None,
-    sids: list[str] = None,
+    order_refs: Union[list[str], str] = None,
+    accounts: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
     start_date: str = None,
     end_date: str = None,
     timezone: str = None,
     details: bool = False,
-    output: str = "csv"
+    output: Literal["csv", "pdf"] = "csv"
     ) -> None:
     """
     Query trading performance and return a CSV of results or PDF tearsheet.

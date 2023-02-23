@@ -98,7 +98,7 @@ import requests
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import pandas as pd
-from quantrocket.utils._typing import FilepathOrBuffer, Union
+from quantrocket.utils._typing import FilepathOrBuffer, Union, Literal
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
 from quantrocket._cli.utils.stream import to_bytes
@@ -130,8 +130,12 @@ __all__ = [
 ]
 
 def list_ibkr_exchanges(
-    regions: list[str] = None,
-    sec_types: list[str] = None
+    regions: Union[list[
+        Literal["north_america", "europe", "asia", "global"]],
+        Literal["north_america", "europe", "asia", "global"]] = None,
+    sec_types: Union[list[
+        Literal["STK", "ETF", "FUT", "CASH", "IND"]],
+        Literal["STK", "ETF", "FUT", "CASH", "IND"]] = None
     ) -> dict[str, str]:
     """
     List exchanges by security type and country as found on the IBKR website.
@@ -178,7 +182,7 @@ def collect_alpaca_listings() -> dict[str, str]:
 def _cli_collect_alpaca_listings(*args, **kwargs):
     return json_to_cli(collect_alpaca_listings, *args, **kwargs)
 
-def collect_edi_listings(exchanges: list[str] = None) -> dict[str, str]:
+def collect_edi_listings(exchanges: Union[list[str], str] = None) -> dict[str, str]:
     """
     Collect securities listings from EDI and store in securities master
     database.
@@ -253,12 +257,14 @@ def _cli_collect_figi_listings(*args, **kwargs):
     return json_to_cli(collect_figi_listings, *args, **kwargs)
 
 def collect_ibkr_listings(
-    exchanges: list[str] = None,
-    sec_types: list[str] = None,
-    currencies: list[str] = None,
-    symbols: list[str] = None,
-    universes: list[str] = None,
-    sids: list[str] = None
+    exchanges: Union[list[str], str] = None,
+    sec_types: Union[list[
+        Literal["STK", "ETF", "FUT", "CASH", "IND"]],
+        Literal["STK", "ETF", "FUT", "CASH", "IND"]] = None,
+    currencies: Union[list[str], str] = None,
+    symbols: Union[list[str], str] = None,
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None
     ) -> dict[str, str]:
     """
     Collect securities listings from Interactive Brokers and store in
@@ -339,15 +345,15 @@ def collect_ibkr_listings(
 def _cli_collect_ibkr_listings(*args, **kwargs):
     return json_to_cli(collect_ibkr_listings, *args, **kwargs)
 
-def collect_sharadar_listings(countries: list[str] = "US") -> dict[str, str]:
+def collect_sharadar_listings(countries: Literal["US", "FREE"] = "US") -> dict[str, str]:
     """
     Collect securities listings from Sharadar and store in securities master
     database.
 
     Parameters
     ----------
-    countries : list of str, required
-        countries to collect listings for. Possible choices: US, FREE
+    countries : str, required
+        country to collect listings for. Possible choices: US, FREE
 
     Returns
     -------
@@ -383,8 +389,8 @@ def _cli_collect_usstock_listings(*args, **kwargs):
     return json_to_cli(collect_usstock_listings, *args, **kwargs)
 
 def collect_ibkr_option_chains(
-    universes: list[str] = None,
-    sids: list[str] = None,
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
     infilepath_or_buffer: FilepathOrBuffer = None
     ) -> dict[str, str]:
     """
@@ -439,12 +445,12 @@ def _cli_collect_ibkr_option_chains(*args, **kwargs):
     return json_to_cli(collect_ibkr_option_chains, *args, **kwargs)
 
 def diff_ibkr_securities(
-    universes: list[str] = None,
-    sids: list[str] = None,
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
     infilepath_or_buffer: FilepathOrBuffer = None,
-    fields: list[str] = None,
+    fields: Union[list[str], str] = None,
     delist_missing: bool = False,
-    delist_exchanges: list[str] = None,
+    delist_exchanges: Union[list[str], str] = None,
     wait: bool = False
     ) -> dict[str, str]:
     """
@@ -522,20 +528,24 @@ def _cli_diff_ibkr_securities(*args, **kwargs):
 
 def download_master_file(
     filepath_or_buffer: FilepathOrBuffer = None,
-    output: str = "csv",
-    exchanges: list[str] = None,
-    sec_types: list[str] = None,
-    currencies: list[str] = None,
-    universes: list[str] = None,
-    symbols: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None,
+    output: Literal["csv", "json"] = "csv",
+    exchanges: Union[list[str], str] = None,
+    sec_types: Union[list[
+        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG"]],
+        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG"]] = None,
+    currencies: Union[list[str], str] = None,
+    universes: Union[list[str], str] = None,
+    symbols: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
     exclude_delisted: bool = False,
     exclude_expired: bool = False,
     frontmonth: bool = False,
-    vendors: list[str] = None,
-    fields: list[str] = None
+    vendors: Union[list[
+        Literal["alpaca", "edi", "ibkr", "sharadar", "usstock"]],
+        Literal["alpaca", "edi", "ibkr", "sharadar", "usstock"]] = None,
+    fields: Union[list[str], str] = None
     ) -> None:
     """
     Query security details from the securities master database and download to file.
@@ -695,19 +705,23 @@ def _cli_download_master_file(*args, **kwargs):
     return json_to_cli(download_master_file, *args, **kwargs)
 
 def get_securities(
-    symbols: list[str] = None,
-    exchanges: list[str] = None,
-    sec_types: list[str] = None,
-    currencies: list[str] = None,
-    universes: list[str] = None,
-    sids: list[str] = None,
-    exclude_universes: list[str] = None,
-    exclude_sids: list[str] = None,
+    symbols: Union[list[str], str] = None,
+    exchanges: Union[list[str], str] = None,
+    sec_types: Union[list[
+        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG"]],
+        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG"]] = None,
+    currencies: Union[list[str], str] = None,
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
     exclude_delisted: bool = False,
     exclude_expired: bool = False,
     frontmonth: bool = False,
-    vendors: list[str] = None,
-    fields: list[str] = None
+    vendors: Union[list[
+        Literal["alpaca", "edi", "ibkr", "sharadar", "usstock"]],
+        Literal["alpaca", "edi", "ibkr", "sharadar", "usstock"]] = None,
+    fields: Union[list[str], str] = None
     ) -> 'pd.DataFrame':
     """
     Return a DataFrame of security details from the securities master database.
@@ -839,7 +853,7 @@ def get_securities(
 
 def get_securities_reindexed_like(
     reindex_like: 'pd.DataFrame',
-    fields: list[str] = None
+    fields: Union[list[str], str] = None
     ) -> 'pd.DataFrame':
     """
     Return a multiindex DataFrame of securities master data, reindexed to
@@ -1021,8 +1035,8 @@ def get_contract_nums_reindexed_like(
 def create_universe(
     code: str,
     infilepath_or_buffer: FilepathOrBuffer = None,
-    sids: list[str] = None,
-    from_universes: list[str] = None,
+    sids: Union[list[str], str] = None,
+    from_universes: Union[list[str], str] = None,
     exclude_delisted: bool = False,
     append: bool = False,
     replace: bool = False
@@ -1158,7 +1172,7 @@ def delist_ibkr_security(
     symbol: str = None,
     exchange: str = None,
     currency: str = None,
-    sec_type: str = None
+    sec_type: Literal["STK", "ETF", "FUT", "CASH", "IND"] = None
     ) -> dict[str, str]:
     """
     Mark an IBKR security as delisted.
@@ -1313,7 +1327,7 @@ def _cli_load_or_show_rollrules(filename=None):
     else:
         return json_to_cli(get_rollrules_config)
 
-def collect_ibkr_calendar(exchanges: list[str] = None) -> dict[str, str]:
+def collect_ibkr_calendar(exchanges: Union[list[str], str] = None) -> dict[str, str]:
     """
     Collect upcoming trading hours from IBKR for exchanges and save to
     securities master database.
@@ -1340,8 +1354,8 @@ def _cli_collect_ibkr_calendar(*args, **kwargs):
     return json_to_cli(collect_ibkr_calendar, *args, **kwargs)
 
 def list_calendar_statuses(
-    exchanges: list[str],
-    sec_type: str = None,
+    exchanges: Union[list[str], str],
+    sec_type: Literal["STK", "FUT", "CASH", "OPT"] = None,
     in_: str = None,
     ago: str = None,
     outside_rth: bool = False
@@ -1492,8 +1506,8 @@ def _cli_isclosed(exchanges, sec_type=None, in_=None, ago=None, since=None, unti
 
 def round_to_tick_sizes(
     infilepath_or_buffer: FilepathOrBuffer,
-    round_fields: list[str],
-    how: str = None,
+    round_fields: Union[list[str], str],
+    how: Literal['up', 'down', 'nearest'] = None,
     append_ticksize: bool = False,
     outfilepath_or_buffer: FilepathOrBuffer = None
     ) -> None:

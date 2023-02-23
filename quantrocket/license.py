@@ -44,6 +44,7 @@ set_quandl_key
 import getpass
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
+from quantrocket.utils._typing import Literal
 
 __all__ = [
     "get_license_profile",
@@ -121,9 +122,9 @@ def get_alpaca_key() -> dict[str, str]:
 
 def set_alpaca_key(
     api_key: str,
-    trading_mode: str,
+    trading_mode: Literal["paper", "live"],
     secret_key: str = None,
-    realtime_data: str = "iex"
+    realtime_data: Literal["iex", "sip"] = "iex"
     ) -> dict[str, str]:
     """
     Set Alpaca API key.
