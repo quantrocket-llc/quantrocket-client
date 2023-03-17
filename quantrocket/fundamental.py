@@ -114,18 +114,6 @@ get_sharadar_sp500_reindexed_like
     Return a Boolean DataFrame indicating whether securities were in the S&P
     500 on the given dates, reindexed to match the index (dates) and columns
     (sids) of the input DataFrame.
-
-collect_wsh_earnings_dates
-    Collect Wall Street Horizon upcoming earnings announcement dates from
-    Interactive Brokers and save to database.
-
-download_wsh_earnings_dates
-    Query earnings announcement dates from the Wall Street Horizon
-    announcements database and download to file.
-
-get_wsh_earnings_dates_reindexed_like
-    Return a multiindex (Field, Date) DataFrame of earnings announcement dates,
-    reindexed to match the index (dates) and columns (sids) of the input DataFrame.
 """
 import six
 import sys
@@ -169,9 +157,6 @@ __all__ = [
     "get_sharadar_institutions_reindexed_like",
     "get_sharadar_sec8_reindexed_like",
     "get_sharadar_sp500_reindexed_like",
-    "collect_wsh_earnings_dates",
-    "download_wsh_earnings_dates",
-    "get_wsh_earnings_dates_reindexed_like",
 ]
 
 def collect_alpaca_etb() -> dict[str, str]:
@@ -3016,6 +3001,9 @@ def collect_wsh_earnings_dates(
     Collect Wall Street Horizon upcoming earnings announcement dates from
     Interactive Brokers and save to database.
 
+    DEPRECATED. This data is no longer available from Interactive Brokers
+    except for legacy subscribers.
+
     Parameters
     ----------
     universes : list of str, optional
@@ -3065,6 +3053,9 @@ def download_wsh_earnings_dates(
     """
     Query earnings announcement dates from the Wall Street Horizon
     announcements database and download to file.
+
+    DEPRECATED. This data is no longer available from Interactive Brokers
+    except for legacy subscribers.
 
     Parameters
     ----------
@@ -3162,6 +3153,8 @@ def get_wsh_earnings_dates_reindexed_like(
     Return a multiindex (Field, Date) DataFrame of earnings announcement dates,
     reindexed to match the index (dates) and columns (sids) of `reindex_like`.
 
+    DEPRECATED. This data is no longer available from Interactive Brokers
+    except for legacy subscribers.
 
     Parameters
     ----------

@@ -146,48 +146,6 @@ Examples:
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_sp500")
 
     examples = """
-Collect Wall Street Horizon upcoming earnings announcement dates from Interactive
-Brokers and save to database.
-
-Examples:
-
-Collect upcoming earnings dates for a universe of US stocks:
-
-.. code-block:: bash
-
-    quantrocket fundamental collect-wsh --universes 'usa-stk'
-
-Collect upcoming earnings dates for a particular security:
-
-.. code-block:: bash
-
-    quantrocket fundamental collect-wsh --sids FIBBG123456
-    """
-    parser = _subparsers.add_parser(
-        "collect-wsh",
-        help=("collect Wall Street Horizon upcoming earnings announcement dates from "
-        "Interactive Brokers and save to database"),
-        epilog=examples,
-        formatter_class=HelpFormatter)
-    parser.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes (must provide universes, sids, or both)")
-    parser.add_argument(
-        "-i", "--sids",
-        nargs="*",
-        metavar="SID",
-        help="limit to these sids (must provide universes, sids, or both)")
-    parser.add_argument(
-        "-f", "--force",
-        action="store_true",
-        help="collect earnings dates for all securities even if they were collected "
-        "recently (default is to skip securities that were updated in the last "
-        "12 hours)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_wsh_earnings_dates")
-
-    examples = """
 Collect Interactive Brokers shortable shares data and save to database.
 
 Data is organized by country and updated every 15 minutes. Historical
@@ -669,259 +627,6 @@ Query S&P 500 index changes since 2010:
     parser.set_defaults(func="quantrocket.fundamental._cli_download_sharadar_sp500")
 
     examples = """
-Query financial statements from the Reuters financials database and
-download to file.
-
-DEPRECATED. This data is no longer available from Interactive Brokers. Only
-data that was previously saved to the local database can be queried.
-
-Examples:
-
-Query total revenue (COA code RTLR) for a universe of Australian stocks:
-
-.. code-block:: bash
-
-    quantrocket fundamental reuters-financials RTLR -u asx-stk -s 2014-01-01 -e 2017-01-01 -o rtlr.csv
-
-Query net income (COA code NINC) from interim reports for two securities
-(identified by sid) and exclude restatements:
-
-.. code-block:: bash
-
-    quantrocket fundamental reuters-financials NINC -i FIBBG123456 FIBBG234567 --interim --exclude-restatements -o ninc.csv
-
-Query common and preferred shares outstanding (COA codes QTCO and QTPO) and return a
-minimal set of fields (several required fields will always be returned)
-
-.. code-block:: bash
-
-    quantrocket fundamental reuters-financials QTCO QTPO -u nyse-stk --fields Amount -o nyse_float.csv
-    """
-    parser = _subparsers.add_parser(
-        "reuters-financials",
-        help="[DEPRECATED] query financial statements from the Reuters financials database and download to file",
-        epilog=examples,
-        formatter_class=HelpFormatter)
-    parser.add_argument(
-        "codes",
-        metavar="CODE",
-        nargs="+",
-        help="the Chart of Account (COA) code(s) to query")
-    filters = parser.add_argument_group("filtering options")
-    filters.add_argument(
-        "-s", "--start-date",
-        metavar="YYYY-MM-DD",
-        help="limit to statements on or after this fiscal period end date")
-    filters.add_argument(
-        "-e", "--end-date",
-        metavar="YYYY-MM-DD",
-        help="limit to statements on or before this fiscal period end date")
-    filters.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes")
-    filters.add_argument(
-        "-i", "--sids",
-        nargs="*",
-        metavar="SID",
-        help="limit to these sids")
-    filters.add_argument(
-        "--exclude-universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="exclude these universes")
-    filters.add_argument(
-        "--exclude-sids",
-        nargs="*",
-        metavar="SID",
-        help="exclude these sids")
-    filters.add_argument(
-        "-q", "--interim",
-        action="store_true",
-        help="return interim reports (default is to return annual reports, "
-        "which provide deeper history)")
-    filters.add_argument(
-        "-r", "--exclude-restatements",
-        action="store_true",
-        help="exclude restatements (default is to include them)")
-    outputs = parser.add_argument_group("output options")
-    outputs.add_argument(
-        "-o", "--outfile",
-        metavar="OUTFILE",
-        dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
-    output_format_group = outputs.add_mutually_exclusive_group()
-    output_format_group.add_argument(
-        "-j", "--json",
-        action="store_const",
-        const="json",
-        dest="output",
-        help="format output as JSON (default is CSV)")
-    outputs.add_argument(
-        "-f", "--fields",
-        metavar="FIELD",
-        nargs="*",
-        help="only return these fields (pass '?' or any invalid fieldname to see "
-        "available fields)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_financials")
-
-    examples = """
-Query estimates and actuals from the Reuters estimates database and
-download to file.
-
-DEPRECATED. This data is no longer available from Interactive Brokers. Only
-data that was previously saved to the local database can be queried.
-
-Examples:
-
-Query EPS estimates and actuals for a universe of Australian stocks:
-
-.. code-block:: bash
-
-    quantrocket fundamental reuters-estimates EPS -u asx-stk -s 2014-01-01 -e 2017-01-01 -o eps_estimates.csv
-    """
-    parser = _subparsers.add_parser(
-        "reuters-estimates",
-        help="[DEPRECATED] query estimates and actuals from the Reuters estimates database and download to file",
-        epilog=examples,
-        formatter_class=HelpFormatter)
-    parser.add_argument(
-        "codes",
-        metavar="CODE",
-        nargs="+",
-        help="the indicator code(s) to query")
-    filters = parser.add_argument_group("filtering options")
-    filters.add_argument(
-        "-s", "--start-date",
-        metavar="YYYY-MM-DD",
-        help="limit to estimates and actuals on or after this fiscal period end date")
-    filters.add_argument(
-        "-e", "--end-date",
-        metavar="YYYY-MM-DD",
-        help="limit to estimates and actuals on or before this fiscal period end date")
-    filters.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes")
-    filters.add_argument(
-        "-i", "--sids",
-        nargs="*",
-        metavar="SID",
-        help="limit to these sids")
-    filters.add_argument(
-        "--exclude-universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="exclude these universes")
-    filters.add_argument(
-        "--exclude-sids",
-        nargs="*",
-        metavar="SID",
-        help="exclude these sids")
-    filters.add_argument(
-        "-t", "--period-types",
-        nargs="*",
-        choices=["A", "Q", "S"],
-        metavar="PERIOD_TYPE",
-        help="limit to these fiscal period types. Possible choices: %(choices)s, where "
-        "A=Annual, Q=Quarterly, S=Semi-Annual")
-    outputs = parser.add_argument_group("output options")
-    outputs.add_argument(
-        "-o", "--outfile",
-        metavar="OUTFILE",
-        dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
-    output_format_group = outputs.add_mutually_exclusive_group()
-    output_format_group.add_argument(
-        "-j", "--json",
-        action="store_const",
-        const="json",
-        dest="output",
-        help="format output as JSON (default is CSV)")
-    outputs.add_argument(
-        "-f", "--fields",
-        metavar="FIELD",
-        nargs="*",
-        help="only return these fields (pass '?' or any invalid fieldname to see "
-        "available fields)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_estimates")
-
-    examples = """
-Query earnings announcement dates from the Wall Street Horizon
-announcements database and download to file.
-
-Examples:
-
-Query earnings dates for a universe of US stocks:
-
-.. code-block:: bash
-
-    quantrocket fundamental wsh -u usa-stk -s 2019-01-01 -e 2019-04-01 -o announcements.csv
-    """
-    parser = _subparsers.add_parser(
-        "wsh",
-        help="query earnings announcement dates from the Wall Street Horizon announcements database and download to file",
-        epilog=examples,
-        formatter_class=HelpFormatter)
-    filters = parser.add_argument_group("filtering options")
-    filters.add_argument(
-        "-s", "--start-date",
-        metavar="YYYY-MM-DD",
-        help="limit to announcements on or after this date")
-    filters.add_argument(
-        "-e", "--end-date",
-        metavar="YYYY-MM-DD",
-        help="limit to announcements on or before this date")
-    filters.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes")
-    filters.add_argument(
-        "-i", "--sids",
-        nargs="*",
-        metavar="SID",
-        help="limit to these sids")
-    filters.add_argument(
-        "--exclude-universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="exclude these universes")
-    filters.add_argument(
-        "--exclude-sids",
-        nargs="*",
-        metavar="SID",
-        help="exclude these sids")
-    filters.add_argument(
-        "-t", "--statuses",
-        nargs="*",
-        choices=["Confirmed", "Unconfirmed"],
-        metavar="STATUS",
-        help="limit to these confirmation statuses. Possible choices: %(choices)s")
-    outputs = parser.add_argument_group("output options")
-    outputs.add_argument(
-        "-o", "--outfile",
-        metavar="OUTFILE",
-        dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
-    output_format_group = outputs.add_mutually_exclusive_group()
-    output_format_group.add_argument(
-        "-j", "--json",
-        action="store_const",
-        const="json",
-        dest="output",
-        help="format output as JSON (default is CSV)")
-    outputs.add_argument(
-        "-f", "--fields",
-        metavar="FIELD",
-        nargs="*",
-        help="only return these fields (pass '?' or any invalid fieldname to see "
-        "available fields)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_download_wsh_earnings_dates")
-
-    examples = """
 Query intraday or daily Interactive Brokers shortable shares data from the
 local database and download to file.
 
@@ -1187,3 +892,304 @@ Query easy-to-borrow data for a universe of US stocks:
         dest="output",
         help="format output as JSON (default is CSV)")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_alpaca_etb")
+
+    examples = """
+Collect Wall Street Horizon upcoming earnings announcement dates from Interactive
+Brokers and save to database.
+
+DEPRECATED. This data is no longer available from Interactive Brokers
+except for legacy subscribers.
+
+Examples:
+
+Collect upcoming earnings dates for a universe of US stocks:
+
+.. code-block:: bash
+
+    quantrocket fundamental collect-wsh --universes 'usa-stk'
+
+Collect upcoming earnings dates for a particular security:
+
+.. code-block:: bash
+
+    quantrocket fundamental collect-wsh --sids FIBBG123456
+    """
+    parser = _subparsers.add_parser(
+        "collect-wsh",
+        help=("[DEPRECATED] collect Wall Street Horizon upcoming earnings announcement dates from "
+        "Interactive Brokers and save to database"),
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    parser.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes (must provide universes, sids, or both)")
+    parser.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids (must provide universes, sids, or both)")
+    parser.add_argument(
+        "-f", "--force",
+        action="store_true",
+        help="collect earnings dates for all securities even if they were collected "
+        "recently (default is to skip securities that were updated in the last "
+        "12 hours)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_wsh_earnings_dates")
+
+    examples = """
+Query financial statements from the Reuters financials database and
+download to file.
+
+DEPRECATED. This data is no longer available from Interactive Brokers. Only
+data that was previously saved to the local database can be queried.
+
+Examples:
+
+Query total revenue (COA code RTLR) for a universe of Australian stocks:
+
+.. code-block:: bash
+
+    quantrocket fundamental reuters-financials RTLR -u asx-stk -s 2014-01-01 -e 2017-01-01 -o rtlr.csv
+
+Query net income (COA code NINC) from interim reports for two securities
+(identified by sid) and exclude restatements:
+
+.. code-block:: bash
+
+    quantrocket fundamental reuters-financials NINC -i FIBBG123456 FIBBG234567 --interim --exclude-restatements -o ninc.csv
+
+Query common and preferred shares outstanding (COA codes QTCO and QTPO) and return a
+minimal set of fields (several required fields will always be returned)
+
+.. code-block:: bash
+
+    quantrocket fundamental reuters-financials QTCO QTPO -u nyse-stk --fields Amount -o nyse_float.csv
+    """
+    parser = _subparsers.add_parser(
+        "reuters-financials",
+        help="[DEPRECATED] query financial statements from the Reuters financials database and download to file",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    parser.add_argument(
+        "codes",
+        metavar="CODE",
+        nargs="+",
+        help="the Chart of Account (COA) code(s) to query")
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to statements on or after this fiscal period end date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to statements on or before this fiscal period end date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    filters.add_argument(
+        "-q", "--interim",
+        action="store_true",
+        help="return interim reports (default is to return annual reports, "
+        "which provide deeper history)")
+    filters.add_argument(
+        "-r", "--exclude-restatements",
+        action="store_true",
+        help="exclude restatements (default is to include them)")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_financials")
+
+    examples = """
+Query estimates and actuals from the Reuters estimates database and
+download to file.
+
+DEPRECATED. This data is no longer available from Interactive Brokers. Only
+data that was previously saved to the local database can be queried.
+
+Examples:
+
+Query EPS estimates and actuals for a universe of Australian stocks:
+
+.. code-block:: bash
+
+    quantrocket fundamental reuters-estimates EPS -u asx-stk -s 2014-01-01 -e 2017-01-01 -o eps_estimates.csv
+    """
+    parser = _subparsers.add_parser(
+        "reuters-estimates",
+        help="[DEPRECATED] query estimates and actuals from the Reuters estimates database and download to file",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    parser.add_argument(
+        "codes",
+        metavar="CODE",
+        nargs="+",
+        help="the indicator code(s) to query")
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to estimates and actuals on or after this fiscal period end date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to estimates and actuals on or before this fiscal period end date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    filters.add_argument(
+        "-t", "--period-types",
+        nargs="*",
+        choices=["A", "Q", "S"],
+        metavar="PERIOD_TYPE",
+        help="limit to these fiscal period types. Possible choices: %(choices)s, where "
+        "A=Annual, Q=Quarterly, S=Semi-Annual")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_reuters_estimates")
+
+    examples = """
+Query earnings announcement dates from the Wall Street Horizon
+announcements database and download to file.
+
+DEPRECATED. This data is no longer available from Interactive Brokers
+except for legacy subscribers.
+
+Examples:
+
+Query earnings dates for a universe of US stocks:
+
+.. code-block:: bash
+
+    quantrocket fundamental wsh -u usa-stk -s 2019-01-01 -e 2019-04-01 -o announcements.csv
+    """
+    parser = _subparsers.add_parser(
+        "wsh",
+        help="[DEPRECATED] query earnings announcement dates from the Wall Street Horizon announcements database and download to file",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to announcements on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to announcements on or before this date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    filters.add_argument(
+        "-t", "--statuses",
+        nargs="*",
+        choices=["Confirmed", "Unconfirmed"],
+        metavar="STATUS",
+        help="limit to these confirmation statuses. Possible choices: %(choices)s")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields)")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_wsh_earnings_dates")
