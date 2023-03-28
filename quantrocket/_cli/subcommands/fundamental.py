@@ -22,7 +22,14 @@ def add_subparser(subparsers):
     examples = """
 Collect fundamental data from Sharadar and save to database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Sharadar Fundamentals: https://qrok.it/dl/qr/sharadar-fundamentals
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -44,7 +51,14 @@ Examples:
     examples = """
 Collect insider holdings data from Sharadar and save to database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Sharadar Insiders: https://qrok.it/dl/qr/sharadar-insiders
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -66,7 +80,14 @@ Examples:
     examples = """
 Collect institutional investor data from Sharadar and save to database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Sharadar Institutions: https://qrok.it/dl/qr/sharadar-institutions
+
+Examples
+--------
 
 Collect institutional investor data aggregated by security:
 
@@ -103,7 +124,14 @@ Collect detailed institutional investor data (not aggregated by security):
     examples = """
 Collect SEC Form 8-K events from Sharadar and save to database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Sharadar SEC Form 8-K: https://qrok.it/dl/qr/sharadar-sec8
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -126,7 +154,14 @@ Examples:
 Collect historical S&P 500 index constituents from Sharadar and save to
 database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Sharadar S&P 500: https://qrok.it/dl/qr/sharadar-sp500
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -152,7 +187,14 @@ Data is organized by country and updated every 15 minutes. Historical
 data is available from April 15, 2018. Detailed intraday data as well as
 aggregated daily data will be saved to the database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* IBKR Short Sale Data: https://qrok.it/dl/qr/ibkr-short
+
+Examples
+--------
 
 Collect shortable shares data for US stocks:
 
@@ -185,7 +227,14 @@ Collect Interactive Brokers borrow fees data and save to database.
 Data is organized by country. Historical data is available from April
 2018.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* IBKR Short Sale Data: https://qrok.it/dl/qr/ibkr-short
+
+Examples
+--------
 
 Collect borrow fees for US stocks:
 
@@ -223,7 +272,14 @@ country of the security rather than the country of the account.
 
 Historical data is available from April 2018.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* IBKR Margin Requirements: https://qrok.it/dl/qr/ibkr-margin
+
+Examples
+--------
 
 Collect margin requirements for a US-based account:
 
@@ -249,7 +305,14 @@ Collect Alpaca easy-to-borrow data and save to database.
 
 Data is updated daily. Historical data is available from March 2019.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Alpaca ETB: https://qrok.it/dl/qr/alpaca-etb
+
+Examples
+--------
 
 Collect easy-to-borrow data:
 
@@ -267,7 +330,14 @@ Collect easy-to-borrow data:
     examples = """
 Query Sharadar Fundamentals from the local database and download to file.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Sharadar Fundamentals: https://qrok.it/dl/qr/sharadar-fundamentals
+
+Examples
+--------
 
 Query as-reported trailing twelve month (ART) fundamentals for all indicators for
 a particular sid:
@@ -348,7 +418,14 @@ Query as-reported quarterly (ARQ) fundamentals for select indicators for a unive
 Query Sharadar insider holdings data from the local database and download
 to file.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Sharadar Insiders: https://qrok.it/dl/qr/sharadar-insiders
+
+Examples
+--------
 
 Query insider holdings data for a particular sid:
 
@@ -415,7 +492,14 @@ Query insider holdings data for a particular sid:
 Query Sharadar institutional investor data from the local database and
 download to file.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Sharadar Institutions: https://qrok.it/dl/qr/sharadar-institutions
+
+Examples
+--------
 
 Query institutional investor data aggregated by security:
 
@@ -490,7 +574,14 @@ Query institutional investor data aggregated by security:
 Query Sharadar SEC Form 8-K events data from the local database and download
 to file.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Sharadar SEC Form 8-K: https://qrok.it/dl/qr/sharadar-sec8
+
+Examples
+--------
 
 Query event code 13 (Bankruptcy) for a universe of securities:
 
@@ -563,7 +654,14 @@ Query event code 13 (Bankruptcy) for a universe of securities:
 Query Sharadar S&P 500 index changes (additions and removals) from the
 local database and download to file.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Sharadar S&P 500: https://qrok.it/dl/qr/sharadar-sp500
+
+Examples
+--------
 
 Query S&P 500 index changes since 2010:
 
@@ -632,7 +730,14 @@ local database and download to file.
 
 Intraday data timestamps are UTC.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* IBKR Short Sale Data: https://qrok.it/dl/qr/ibkr-short
+
+Examples
+--------
 
 Query shortable shares for a universe of Australian stocks:
 
@@ -705,7 +810,14 @@ Query aggregated daily data instead:
     examples = """
 Query Interactive Brokers borrow fees from the local database and download to file.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* IBKR Short Sale Data: https://qrok.it/dl/qr/ibkr-short
+
+Examples
+--------
 
 Query borrow fees for a universe of Australian stocks:
 
@@ -776,7 +888,14 @@ example 50 means 50% margin requirement, which is equivalent to 0.5.
 
 Data timestamps are UTC.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* IBKR Margin Requirements: https://qrok.it/dl/qr/ibkr-margin
+
+Examples
+--------
 
 Query margin requirements for a universe of US stocks:
 
@@ -836,7 +955,14 @@ Query margin requirements for a universe of US stocks:
     examples = """
 Query Alpaca easy-to-borrow data from the local database and download to file.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Alpaca ETB: https://qrok.it/dl/qr/alpaca-etb
+
+Examples
+--------
 
 Query easy-to-borrow data for a universe of US stocks:
 
@@ -900,7 +1026,8 @@ Brokers and save to database.
 DEPRECATED. This data is no longer available from Interactive Brokers
 except for legacy subscribers.
 
-Examples:
+Examples
+--------
 
 Collect upcoming earnings dates for a universe of US stocks:
 
@@ -945,7 +1072,8 @@ download to file.
 DEPRECATED. This data is no longer available from Interactive Brokers. Only
 data that was previously saved to the local database can be queried.
 
-Examples:
+Examples
+--------
 
 Query total revenue (COA code RTLR) for a universe of Australian stocks:
 
@@ -1043,7 +1171,8 @@ download to file.
 DEPRECATED. This data is no longer available from Interactive Brokers. Only
 data that was previously saved to the local database can be queried.
 
-Examples:
+Examples
+--------
 
 Query EPS estimates and actuals for a universe of Australian stocks:
 
@@ -1125,7 +1254,8 @@ announcements database and download to file.
 DEPRECATED. This data is no longer available from Interactive Brokers
 except for legacy subscribers.
 
-Examples:
+Examples
+--------
 
 Query earnings dates for a universe of US stocks:
 

@@ -46,6 +46,13 @@ insert_or_replace
 
 insert_or_ignore
     Insert a DataFrame into a SQLite database, ignoring duplicates.
+
+Notes
+-----
+Usage Guide:
+
+* Database Management: https://qrok.it/dl/qr/db
+* Custom Data: https://qrok.it/dl/qr/custom-data
 """
 import getpass
 from typing import TYPE_CHECKING, Union
@@ -100,6 +107,12 @@ def list_databases(
         dict of lists of databases (one key for PostgreSQL databases and one for
         SQLite databases)
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Database Management: https://qrok.it/dl/qr/db
+
     Examples
     --------
     Load database details in a pandas DataFrame:
@@ -130,12 +143,16 @@ def get_s3_config() -> dict[str, str]:
     """
     Return the current S3 configuration, if any.
 
-    See http://qrok.it/h/dbs3 to learn more.
-
     Returns
     -------
     dict
         configuration details
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Amazon S3: http://qrok.it/dl/qr/dbs3
     """
     response = houston.get("/db/s3config")
     houston.raise_for_status_with_json(response)
@@ -153,8 +170,6 @@ def set_s3_config(
     """
     Set AWS S3 configuration for pushing and pulling databases to and from
     S3.
-
-    See http://qrok.it/h/dbs3 to learn more.
 
     Credentials are encrypted at rest and never leave your deployment.
 
@@ -178,6 +193,12 @@ def set_s3_config(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Amazon S3: http://qrok.it/dl/qr/dbs3
     """
     if access_key_id and not secret_access_key:
         secret_access_key = getpass.getpass(prompt="Enter AWS Secret Access Key: ")
@@ -210,8 +231,6 @@ def s3_push_databases(
     """
     Push database(s) to Amazon S3.
 
-    See http://qrok.it/h/dbs3 to learn more.
-
     Parameters
     ----------
     serivces : list of str, optional
@@ -224,6 +243,12 @@ def s3_push_databases(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Amazon S3: http://qrok.it/dl/qr/dbs3
     """
     params = {}
     if services:
@@ -245,8 +270,6 @@ def s3_pull_databases(
     """
     Pull database(s) from Amazon S3.
 
-    See http://qrok.it/h/dbs3 to learn more.
-
     Parameters
     ----------
     serivces : list of str, optional
@@ -263,6 +286,12 @@ def s3_pull_databases(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Amazon S3: http://qrok.it/dl/qr/dbs3
     """
     params = {}
     if services:
@@ -300,6 +329,12 @@ def optimize_databases(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Database Management: https://qrok.it/dl/qr/db
     """
     params = {}
     if codes:
@@ -328,6 +363,12 @@ def connect_sqlite(
     -------
     sqlalchemy.engine.Engine
         database connection
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Custom Data: https://qrok.it/dl/qr/custom-data
     """
     try:
         from sqlalchemy import create_engine
@@ -440,6 +481,12 @@ def insert_or_fail(
     quantrocket.exceptions.DataInsertionError
         catch-all exception class for errors that occur when writing to the
         SQLite database
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Custom Data: https://qrok.it/dl/qr/custom-data
     """
     _insert_into(df, table_name, conn, "FAIL")
 
@@ -477,6 +524,12 @@ def insert_or_replace(
     quantrocket.exceptions.DataInsertionError
         catch-all exception class for errors that occur when writing to the
         SQLite database
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Custom Data: https://qrok.it/dl/qr/custom-data
     """
     _insert_into(df, table_name, conn, "REPLACE")
 
@@ -514,5 +567,11 @@ def insert_or_ignore(
     quantrocket.exceptions.DataInsertionError
         catch-all exception class for errors that occur when writing to the
         SQLite database
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Custom Data: https://qrok.it/dl/qr/custom-data
     """
     _insert_into(df, table_name, conn, "IGNORE")

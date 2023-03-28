@@ -22,7 +22,14 @@ def add_subparser(subparsers):
     examples = """
 Upload a new crontab, or return the current crontab.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Scheduling: https://qrok.it/dl/qr/schedule
+
+Examples
+--------
 
 Upload a new crontab to a service called countdown-australia (replaces
 current crontab):
@@ -56,7 +63,14 @@ Show current crontab for a service called countdown-australia:
     examples = """
 Set or show the countdown service timezone.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Scheduling: https://qrok.it/dl/qr/schedule
+
+Examples
+--------
 
 Set the timezone of the countdown service to America/New_York:
 

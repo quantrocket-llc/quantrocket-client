@@ -29,7 +29,14 @@ restart IB Gateway and takes a moment to complete.
 
 Credentials are encrypted at rest and never leave your deployment.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* IB Gateway: https://qrok.it/dl/qr/ibgateway
+
+Examples
+--------
 
 View current credentials for IB Gateway service named ibg1 (shows username and
 trading mode only):
@@ -88,7 +95,14 @@ live credentials):
     examples = """
 Query statuses of IB Gateways.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* IB Gateway: https://qrok.it/dl/qr/ibgateway
+
+Examples
+--------
 
 List the status of all gateways:
 
@@ -121,7 +135,14 @@ Get a list of gateways that are running:
     examples = """
 Start one or more IB Gateways.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* IB Gateway: https://qrok.it/dl/qr/ibgateway
+
+Examples
+--------
 
 Asynchronously start all gateways (that aren't already running):
 
@@ -162,7 +183,14 @@ Restart all gateways:
     examples = """
 Stop one or more IB Gateways.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* IB Gateway: https://qrok.it/dl/qr/ibgateway
+
+Examples
+--------
 
 Stop all gateways (that aren't already stopped):
 
@@ -200,7 +228,8 @@ Upload a new IB Gateway permissions config, or return the current configuration.
 Permission configs are only necessary when running multiple IB Gateways with
 differing market data permissions.
 
-Examples:
+Examples
+--------
 
 Upload a new config (replaces current config):
 

@@ -25,7 +25,14 @@ Create a new database for collecting real-time tick data from Interactive Broker
 The market data requirements you specify when you create a new database are
 applied each time you collect data for that database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* IBKR Real-time Data: https://qrok.it/dl/qr/realtime-ibkr
+
+Examples
+--------
 
 Create a database for collecting real-time trades and volume for US stocks:
 
@@ -76,7 +83,14 @@ Create a new database for collecting real-time tick data from Polygon.
 The market data requirements you specify when you create a new database are
 applied each time you collect data for that database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Polygon.io Real-time Data: https://qrok.it/dl/qr/realtime-polygon
+
+Examples
+--------
 
 Create a database for collecting real-time trade prices and sizes for US stocks:
 
@@ -117,7 +131,14 @@ Create a new database for collecting real-time tick data from Alpaca.
 The market data requirements you specify when you create a new database are
 applied each time you collect data for that database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Alpaca Real-time Data: https://qrok.it/dl/qr/realtime-alpaca
+
+Examples
+--------
 
 Create a database for collecting real-time trade prices and sizes for US stocks:
 
@@ -158,7 +179,14 @@ Create an aggregate database from a tick database.
 Aggregate databases provide rolled-up views of the underlying tick data,
 aggregated to a desired frequency (such as 1-minute bars).
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Aggregate Databases: https://qrok.it/dl/qr/realtime-agg
+
+Examples
+--------
 
 Create an aggregate database of 1 minute bars consisting of OHLC trades and volume,
 from a tick database of US stocks, resulting in fields called LastPriceOpen, LastPriceHigh,
@@ -211,7 +239,14 @@ quotes, resulting in fields called BidPriceClose, AskPriceClose, BidSizeMean, an
     examples = """
 Return the configuration for a tick database or aggregate database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Real-time Data: https://qrok.it/dl/qr/realtime
+
+Examples
+--------
 
 Return the configuration for a tick database called "cme-fut-taq":
 
@@ -244,7 +279,14 @@ delete the tick database from which it is derived.
 
 Deleting databases is irreversible.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Real-time Data: https://qrok.it/dl/qr/realtime
+
+Examples
+--------
 
 Delete a database called "usa-stk-trades":
 
@@ -287,7 +329,14 @@ deletes chunks in which *all* of the ticks are older than you specify. If
 some of the ticks are older but some are newer, the chunk is not deleted.
 This means you may still see older data returned in queries.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Database Size: https://qrok.it/dl/qr/realtime-dbsize
+
+Examples
+--------
 
 Delete ticks older than 7 days in a database called 'usa-tech-stk-tick' (no
 aggregate records are deleted):
@@ -315,7 +364,14 @@ aggregate records are deleted):
     examples = """
 List tick databases and associated aggregate databases.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Real-time Data: https://qrok.it/dl/qr/realtime
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -338,7 +394,14 @@ supported for all vendors.)
 Streaming real-time data is collected until cancelled, or can be scheduled
 for cancellation using the `--until` parameter.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Real-time Data: https://qrok.it/dl/qr/realtime
+
+Examples
+--------
 
 Collect market data for all securities in a tick database called 'japan-banks-trades':
 
@@ -408,7 +471,14 @@ Collect a market data snapshot and wait until it completes:
     examples = """
 Return the number of tickers currently being collected, by vendor and database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Real-time Data: https://qrok.it/dl/qr/realtime
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -428,7 +498,14 @@ Examples:
     examples = """
 Cancel market data collection.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Real-time Data: https://qrok.it/dl/qr/realtime
+
+Examples
+--------
 
 Cancel market data collection for a tick database called 'cme-fut-taq':
 
@@ -472,7 +549,15 @@ Cancel all market data collection:
     examples = """
 Query market data from a tick database or aggregate database and download to file.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Real-time Market Data File: https://qrok.it/dl/qr/realtime
+* get_prices: https://qrok.it/dl/qr/prices
+
+Examples
+--------
 
 Download a CSV of futures market data since 08:00 AM Chicago time:
 
@@ -551,7 +636,14 @@ Stream incoming market data.
 This command does not cause data to be collected but connects to the stream of
 data already being collected.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* WebSockets Streaming: https://qrok.it/dl/qr/realtime-stream
+
+Examples
+--------
 
 Stream all incoming market data:
 

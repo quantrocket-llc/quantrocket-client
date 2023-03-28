@@ -22,7 +22,14 @@ def add_subparser(subparsers):
     examples = """
 List databases.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Database Management: https://qrok.it/dl/qr/db
+
+Examples
+--------
 
 List all databases:
 
@@ -74,11 +81,16 @@ and list each shard individually:
 Set or show Amazon S3 configuration for pushing and pulling databases to and
 from S3.
 
-See http://qrok.it/h/dbs3 to learn more.
-
 Credentials are encrypted at rest and never leave your deployment.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Amazon S3: http://qrok.it/dl/qr/dbs3
+
+Examples
+--------
 
 Configure S3 (will prompt for secret access key):
 
@@ -123,9 +135,14 @@ Show current configuration:
     examples = """
 Push database(s) to Amazon S3.
 
-See http://qrok.it/h/dbs3 to learn more.
+Notes
+-----
+Usage Guide:
 
-Examples:
+* Amazon S3: http://qrok.it/dl/qr/dbs3
+
+Examples
+--------
 
 Push all databases:
 
@@ -165,9 +182,14 @@ Push a database called quantrocket.history.nyse.sqlite:
     examples = """
 Pull database(s) from Amazon S3 to the db service.
 
-See http://qrok.it/h/dbs3 to learn more.
+Notes
+-----
+Usage Guide:
 
-Examples:
+* Amazon S3: http://qrok.it/dl/qr/dbs3
+
+Examples
+--------
 
 Pull a database stored on S3 as quantrocket.history.nyse.sqlite.gz:
 
@@ -204,7 +226,14 @@ Optimize databases to improve performance.
 This runs the 'VACUUM' command, which defragments the database and
 reclaims disk space.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Database Management: https://qrok.it/dl/qr/db
+
+Examples
+--------
 
 Optimize all blotter databases:
 

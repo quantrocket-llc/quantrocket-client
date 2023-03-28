@@ -24,6 +24,13 @@ get_prices_reindexed_like
     Return a multiindex (Field, Date) DataFrame of prices for one or more history
     databases, real-time aggregate databases, or Zipline bundles, reindexed to match
     the index (dates) and columns (sids) of the input DataFrame.
+
+Notes
+-----
+Usage Guide:
+
+* get_prices: https://qrok.it/dl/qr/prices
+* get_prices_reindexed_like: https://qrok.it/dl/qr/prices-reindex
 """
 import six
 import os
@@ -154,6 +161,10 @@ def get_prices(
     of the relevant exchange whereas real-time aggregate databases store data in UTC. By
     applying the `times` filter as described, users can specify the times in the timezone of
     the relevant exchange for both types of databases.
+
+    Usage Guide:
+
+    * get_prices: https://qrok.it/dl/qr/prices
 
     Examples
     --------
@@ -673,6 +684,12 @@ def get_prices_reindexed_like(
     -------
     DataFrame
         a MultiIndex DataFrame of prices shaped like reindex_like
+
+    Notes
+    -----
+    Usage Guide:
+
+    * get_prices_reindexed_like: https://qrok.it/dl/qr/prices-reindex
 
     Examples
     --------

@@ -26,7 +26,14 @@ Only the files are copied, not the Git metadata. Can be run multiple
 times to clone files from multiple repositories. Won't overwrite
 any existing files unless the `--replace` option is used.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Code Management: https://qrok.it/dl/qr/codeload
+
+Examples
+--------
 
 Clone QuantRocket's "umd" demo repository:
 

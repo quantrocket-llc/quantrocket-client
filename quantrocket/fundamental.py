@@ -114,6 +114,12 @@ get_sharadar_sp500_reindexed_like
     Return a Boolean DataFrame indicating whether securities were in the S&P
     500 on the given dates, reindexed to match the index (dates) and columns
     (sids) of the input DataFrame.
+
+Notes
+-----
+Usage Guide:
+
+* Fundamental Data: https://qrok.it/dl/qr/fundamental
 """
 import six
 import sys
@@ -170,6 +176,11 @@ def collect_alpaca_etb() -> dict[str, str]:
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Alpaca ETB: https://qrok.it/dl/qr/alpaca-etb
     """
     response = houston.post("/fundamental/alpaca/stockloan/etb")
 
@@ -221,6 +232,12 @@ def download_alpaca_etb(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Alpaca ETB: https://qrok.it/dl/qr/alpaca-etb
 
     Examples
     --------
@@ -287,6 +304,12 @@ def get_alpaca_etb_reindexed_like(
         a Boolean DataFrame indicating easy-to-borrow status, shaped like
         the input DataFrame
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Alpaca ETB: https://qrok.it/dl/qr/alpaca-etb
+
     Examples
     --------
     Get easy-to-borrow status for a DataFrame of stocks:
@@ -321,6 +344,11 @@ def collect_ibkr_shortable_shares(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * IBKR Short Sale Data: https://qrok.it/dl/qr/ibkr-short
     """
     params = {}
     if countries:
@@ -353,6 +381,11 @@ def collect_ibkr_borrow_fees(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * IBKR Short Sale Data: https://qrok.it/dl/qr/ibkr-short
     """
     params = {}
     if countries:
@@ -390,6 +423,11 @@ def collect_ibkr_margin_requirements(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * IBKR Margin Requirements: https://qrok.it/dl/qr/ibkr-margin
     """
     params = {}
     params["countries"] = country
@@ -452,6 +490,12 @@ def download_ibkr_shortable_shares(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * IBKR Short Sale Data: https://qrok.it/dl/qr/ibkr-short
 
     Examples
     --------
@@ -548,6 +592,12 @@ def download_ibkr_borrow_fees(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * IBKR Short Sale Data: https://qrok.it/dl/qr/ibkr-short
 
     Examples
     --------
@@ -647,6 +697,12 @@ def download_ibkr_margin_requirements(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * IBKR Margin Requirements: https://qrok.it/dl/qr/ibkr-margin
 
     Examples
     --------
@@ -927,6 +983,12 @@ def get_ibkr_shortable_shares_reindexed_like(
     DataFrame
         a DataFrame of shortable shares, shaped like the input DataFrame
 
+    Notes
+    -----
+    Usage Guide:
+
+    * IBKR Short Sale Data: https://qrok.it/dl/qr/ibkr-short
+
     Examples
     --------
     Get shortable shares as of midnight for a DataFrame of US stocks:
@@ -1029,6 +1091,12 @@ def get_ibkr_borrow_fees_reindexed_like(
     DataFrame
         a DataFrame of borrow fees, shaped like the input DataFrame
 
+    Notes
+    -----
+    Usage Guide:
+
+    * IBKR Short Sale Data: https://qrok.it/dl/qr/ibkr-short
+
     Examples
     --------
     Get borrow fees as of midnight for a DataFrame of US stocks:
@@ -1084,6 +1152,12 @@ def get_ibkr_margin_requirements_reindexed_like(
     DataFrame
         a multiindex (Field, Date) DataFrame of margin requirements, shaped
         like the input DataFrame
+
+    Notes
+    -----
+    Usage Guide:
+
+    * IBKR Margin Requirements: https://qrok.it/dl/qr/ibkr-margin
 
     Examples
     --------
@@ -1826,6 +1900,12 @@ def collect_sharadar_fundamentals(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar Fundamentals: https://qrok.it/dl/qr/sharadar-fundamentals
     """
     params = {}
     if country:
@@ -1853,6 +1933,12 @@ def collect_sharadar_insiders(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar Insiders: https://qrok.it/dl/qr/sharadar-insiders
     """
     params = {}
     if country:
@@ -1887,6 +1973,12 @@ def collect_sharadar_institutions(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar Institutions: https://qrok.it/dl/qr/sharadar-institutions
     """
     params = {}
     if country:
@@ -1915,6 +2007,12 @@ def collect_sharadar_sec8(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar SEC Form 8-K: https://qrok.it/dl/qr/sharadar-sec8
     """
     params = {}
     if country:
@@ -1943,6 +2041,12 @@ def collect_sharadar_sp500(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar S&P 500: https://qrok.it/dl/qr/sharadar-sp500
     """
     params = {}
     if country:
@@ -2011,6 +2115,12 @@ def download_sharadar_fundamentals(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar Fundamentals: https://qrok.it/dl/qr/sharadar-fundamentals
 
     Examples
     --------
@@ -2118,6 +2228,12 @@ def download_sharadar_insiders(
     -------
     None
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar Insiders: https://qrok.it/dl/qr/sharadar-insiders
+
     Examples
     --------
     Query insider holdings data for a particular sid, then load the CSV into Pandas:
@@ -2220,6 +2336,12 @@ def download_sharadar_institutions(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar Institutions: https://qrok.it/dl/qr/sharadar-institutions
 
     Examples
     --------
@@ -2324,6 +2446,12 @@ def download_sharadar_sec8(
     -------
     None
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar SEC Form 8-K: https://qrok.it/dl/qr/sharadar-sec8
+
     Examples
     --------
     Query event code 13 (Bankruptcy) for a universe of securities and load
@@ -2422,6 +2550,12 @@ def download_sharadar_sp500(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar S&P 500: https://qrok.it/dl/qr/sharadar-sp500
 
     Examples
     --------
@@ -2523,6 +2657,12 @@ def get_sharadar_fundamentals_reindexed_like(
     DataFrame
         a multiindex (Field, Date) DataFrame of fundamentals, shaped like
         the input DataFrame
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar Fundamentals: https://qrok.it/dl/qr/sharadar-fundamentals
 
     Examples
     --------
@@ -2711,6 +2851,12 @@ def get_sharadar_institutions_reindexed_like(
         a multiindex (Field, Date) DataFrame of institutional investor data,
         shaped like the input DataFrame
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar Institutions: https://qrok.it/dl/qr/sharadar-institutions
+
     Examples
     --------
     Calculate institutional ownership as a percentage of total market cap:
@@ -2836,6 +2982,12 @@ def get_sharadar_sec8_reindexed_like(
     DataFrame
         a Boolean DataFrame shaped like the input DataFrame
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar SEC Form 8-K: https://qrok.it/dl/qr/sharadar-sec8
+
     Examples
     --------
     Query bankruptcies (event code 13) and use it to mask a prices
@@ -2920,6 +3072,12 @@ def get_sharadar_sp500_reindexed_like(
     -------
     DataFrame
         a Boolean DataFrame shaped like the input DataFrame
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar S&P 500: https://qrok.it/dl/qr/sharadar-sp500
 
     Examples
     --------

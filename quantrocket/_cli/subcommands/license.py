@@ -22,7 +22,14 @@ def add_subparser(subparsers):
     examples = """
 Return the current license profile.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* License Key: https://qrok.it/dl/qr/license
+
+Examples
+--------
 
 View the current license profile:
 
@@ -45,7 +52,14 @@ View the current license profile:
     examples = """
 Set QuantRocket license key.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* License Key: https://qrok.it/dl/qr/license
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -68,7 +82,14 @@ Set Alpaca API key, or view the current API key.
 Your credentials are encrypted at rest and never leave
 your deployment.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Broker and Data Connections: https://qrok.it/dl/qr/connect
+
+Examples
+--------
 
 View current live and paper API keys:
 
@@ -129,7 +150,14 @@ Set Polygon API key, or view the current API key.
 Your credentials are encrypted at rest and never leave
 your deployment.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Broker and Data Connections: https://qrok.it/dl/qr/connect
+
+Examples
+--------
 
 View current API key:
 
@@ -161,7 +189,14 @@ Set Quandl API key, or view the current API key.
 Your credentials are encrypted at rest and never leave
 your deployment.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Broker and Data Connections: https://qrok.it/dl/qr/connect
+
+Examples
+--------
 
 View current API key:
 

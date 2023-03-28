@@ -25,7 +25,14 @@ Create a Zipline bundle for US stocks.
 This command defines the bundle parameters but does not ingest the actual
 data. To ingest the data, see `quantrocket zipline ingest`.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* US Stock bundle: https://qrok.it/dl/qr/zipline-usstock
+
+Examples
+--------
 
 Create a minute data bundle for all US stocks:
 
@@ -85,7 +92,14 @@ Create a Zipline bundle of daily data for Sharadar stocks and/or ETFs.
 This command defines the bundle parameters but does not ingest the actual
 data. To ingest the data, see `quantrocket zipline ingest`.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Sharadar bundle: https://qrok.it/dl/qr/zipline-sharadar
+
+Examples
+--------
 
 Create a bundle for all Sharadar stocks and ETFs:
 
@@ -136,7 +150,14 @@ You can ingest 1-minute or 1-day databases.
 This command defines the bundle parameters but does not ingest the actual
 data. To ingest the data, see `quantrocket zipline ingest`.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* History db bundle: https://qrok.it/dl/qr/zipline-fromdb
+
+Examples
+--------
 
 Create a bundle from a history database called "es-fut-1min" and name
 it like the history database:
@@ -226,7 +247,14 @@ Zipline fields to the database fields:
     examples = """
 Ingest data into a previously defined bundle.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Data bundles: https://qrok.it/dl/qr/zipline-bundles
+
+Examples
+--------
 
 Ingest data into a bundle called usstock-1min:
 
@@ -258,7 +286,14 @@ Ingest data into a bundle called usstock-1min:
     examples = """
 List available data bundles and whether data has been ingested into them.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Data bundles: https://qrok.it/dl/qr/zipline-bundles
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -274,7 +309,14 @@ Examples:
     examples = """
 Return the configuration of a bundle.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Data bundles: https://qrok.it/dl/qr/zipline-bundles
+
+Examples
+--------
 
 Return the configuration of a bundle called 'usstock-1min':
 
@@ -296,7 +338,14 @@ Return the configuration of a bundle called 'usstock-1min':
     examples = """
 Delete a bundle.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Data bundles: https://qrok.it/dl/qr/zipline-bundles
+
+Examples
+--------
 
 Delete a bundle called 'es-fut-1min':
 
@@ -328,7 +377,14 @@ Setting a default bundle is a convenience and is optional. It can be
 overridden by manually specifying a bundle when backtesting or
 trading.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Data bundles: https://qrok.it/dl/qr/zipline-bundles
+
+Examples
+--------
 
 Set a bundle named usstock-1min as the default:
 
@@ -356,7 +412,15 @@ Show current default bundle:
     examples = """
 Query minute or daily data from a Zipline bundle and download to a CSV file.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Query bundle: https://qrok.it/dl/qr/zipline-query-bundle
+* get_prices: https://qrok.it/dl/qr/prices
+
+Examples
+--------
 
 Download a CSV of minute prices since 2015 for a single security from a bundle called
 "usstock-1min":
@@ -436,7 +500,14 @@ The CSV result file contains several DataFrames stacked into one: the Zipline pe
 results, plus the extracted returns, transactions, positions, and benchmark returns from those
 results.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Zipline backtesting: https://qrok.it/dl/qr/zipline-backtest
+
+Examples
+--------
 
 Run a backtest from a strategy file called etf-arb.py and save a CSV file of results,
 logging backtest progress at annual intervals:
@@ -501,7 +572,14 @@ logging backtest progress at annual intervals:
 Run a parameter scan for a Zipline strategy. The resulting CSV can be plotted with
 moonchart.ParamscanTearsheet.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Zipline parameter scans: https://qrok.it/dl/qr/zipline-paramscan
+
+Examples
+--------
 
 Run a parameter scan for a moving average strategy called dma:
 
@@ -604,7 +682,8 @@ Run a parameter scan for a moving average strategy called dma:
     examples = """
 Create a pyfolio PDF tear sheet from a Zipline backtest result.
 
-Examples:
+Examples
+--------
 
 Create a pyfolio tear sheet from a Zipline CSV results file:
 
@@ -641,7 +720,14 @@ the CSV file:
     examples = """
 Trade a Zipline strategy.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Zipline live trading: https://qrok.it/dl/qr/zipline-trade
+
+Examples
+--------
 
 Trade a strategy defined in momentum-pipeline.py:
 
@@ -685,7 +771,14 @@ Trade a strategy defined in momentum-pipeline.py:
     examples = """
 List actively trading Zipline strategies.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Zipline live trading: https://qrok.it/dl/qr/zipline-trade
+
+Examples
+--------
 
 List strategies:
 
@@ -703,7 +796,14 @@ List strategies:
     examples = """
 Cancel actively trading strategies.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Zipline live trading: https://qrok.it/dl/qr/zipline-trade
+
+Examples
+--------
 
 Cancel a single strategy:
 

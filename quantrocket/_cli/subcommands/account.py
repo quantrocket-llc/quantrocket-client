@@ -22,7 +22,14 @@ def add_subparser(subparsers):
     examples = """
 Query account balances.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Account Monitoring: https://qrok.it/dl/qr/account
+
+Examples
+--------
 
 Query the latest account balances.
 
@@ -111,7 +118,14 @@ Query historical account balances over a date range:
     examples = """
 Download current portfolio.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Account Monitoring: https://qrok.it/dl/qr/account
+
+Examples
+--------
 
 View current portfolio in terminal:
 
@@ -196,7 +210,14 @@ The exchange rates in the exchange rate database are sourced from the
 European Central Bank's reference rates, which are updated each day at 4 PM
 CET.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Account Monitoring: https://qrok.it/dl/qr/account
+
+Examples
+--------
 
 Query the latest exchange rates.
 

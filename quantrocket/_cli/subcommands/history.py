@@ -22,7 +22,14 @@ def add_subparser(subparsers):
     examples = """
 Create a new database into which custom data can be loaded.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Custom Data: https://qrok.it/dl/qr/custom-data
+
+Examples
+--------
 
 Create a custom database for loading fundamental data:
 
@@ -66,7 +73,14 @@ Create a custom database for loading intraday OHCLV data:
     examples = """
 Create a new database for collecting historical data from EDI.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* EDI: https://qrok.it/dl/qr/edi-hist
+
+Examples
+--------
 
 Create a database for end-of-day China stock prices from EDI:
 
@@ -96,7 +110,16 @@ Create a new database for collecting historical data from Interactive Brokers.
 The historical data requirements you specify when you create a new database (bar size,
 universes, etc.) are applied each time you collect data for that database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Interactive Brokers Historical Data: https://qrok.it/dl/qr/ibkr-hist
+* Cumulative daily prices for intraday data: https://qrok.it/dl/qr/cumulative-daily
+* Primary vs consolidated prices: https://qrok.it/dl/qr/primary-v-consolidated
+
+Examples
+--------
 
 Create an end-of-day database called "arca-etf-eod" for a universe called "arca-etf":
 
@@ -215,7 +238,14 @@ stocks in 2016:
     examples = """
 Create a new database for collecting historical data from Sharadar.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Sharadar Historical Data: https://qrok.it/dl/qr/sharadar-hist
+
+Examples
+--------
 
 Create a database for Sharadar US stocks and call it "sharadar-us-stk-1d":
 
@@ -248,7 +278,14 @@ Create a database for Sharadar US stocks and call it "sharadar-us-stk-1d":
     examples = """
 Create a new database for collecting historical US stock data from QuantRocket.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* US Stock Historical Data: https://qrok.it/dl/qr/usstock-hist
+
+Examples
+--------
 
 Create a database for end-of-day US stock prices:
 
@@ -288,7 +325,14 @@ Create a database for end-of-day US stock prices:
     examples = """
 List history databases.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Historical Data: https://qrok.it/dl/qr/historical
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -304,7 +348,14 @@ Examples:
     examples = """
 Return the configuration for a history database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Historical Data: https://qrok.it/dl/qr/historical
+
+Examples
+--------
 
 Return the configuration for a database called "jpn-lrg-15m":
 
@@ -327,14 +378,20 @@ Delete a history database.
 
 Deleting a history database deletes its configuration and data and is irreversible.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Historical Data: https://qrok.it/dl/qr/historical
+
+Examples
+--------
 
 Delete a database called "jpn-lrg-15m":
 
 .. code-block:: bash
 
     quantrocket history drop-db jpn-lrg-15m --confirm-by-typing-db-code-again jpn-lrg-15m
-
     """
     parser = _subparsers.add_parser(
         "drop-db",
@@ -359,7 +416,14 @@ The vendor and collection parameters are determined by the stored database
 configuration as defined at the time the database was created. For certain
 vendors, collection parameters can be overridden at the time of data collection.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Historical Data: https://qrok.it/dl/qr/historical
+
+Examples
+--------
 
 Collect historical data for a database of Chinese stock prices:
 
@@ -418,7 +482,14 @@ queue to jump in front of other queued IBKR collections:
     examples = """
 Get the current queue of historical data collections.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Historical Data: https://qrok.it/dl/qr/historical
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -434,7 +505,14 @@ Examples:
     examples = """
 Cancel running or pending historical data collections.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Historical Data: https://qrok.it/dl/qr/historical
+
+Examples
+--------
 
 Cancel collections for a database called japan-1d:
 
@@ -457,7 +535,14 @@ Cancel collections for a database called japan-1d:
     examples = """
 Wait for historical data collection to finish.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* History database as real-time feed: https://qrok.it/dl/qr/history-wait
+
+Examples
+--------
 
 Wait at most 10 minutes for data collection to finish for a database called 'fx-1h':
 
@@ -485,7 +570,14 @@ Wait at most 10 minutes for data collection to finish for a database called 'fx-
     examples = """
 Query historical market data from a history database and download to file.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Historical Data: https://qrok.it/dl/qr/historical
+
+Examples
+--------
 
 Download a CSV of all historical market data since 2015 from a database called
 "arca-eod" to a file called arca.csv:

@@ -21,6 +21,12 @@ get_timezone
 
 set_timezone
     Set the countdown service timezone
+
+Notes
+-----
+Usage Guide:
+
+* Scheduling: https://qrok.it/dl/qr/schedule
 """
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
@@ -99,6 +105,12 @@ def get_timezone(
     -------
     dict
         dict with key timezone
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Scheduling: https://qrok.it/dl/qr/schedule
     """
     service = service or "countdown"
     response = houston.get("/{0}/timezone".format(service))
@@ -125,6 +137,12 @@ def set_timezone(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Scheduling: https://qrok.it/dl/qr/schedule
 
     Examples
     --------

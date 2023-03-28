@@ -70,6 +70,12 @@ ZiplineBacktestResult
     Convenience class for parsing a CSV result file from a Zipline backtest
     into a variety of useful DataFrames, which can be passed to pyfolio or
     inspected by the user.
+
+Notes
+-----
+Usage Guide:
+
+* Zipline: https://qrok.it/dl/qr/zipline
 """
 import sys
 import six
@@ -146,6 +152,12 @@ def create_usstock_bundle(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * US Stock bundle: https://qrok.it/dl/qr/zipline-usstock
+
     Examples
     --------
     Create a minute data bundle for all US stocks:
@@ -212,6 +224,12 @@ def create_sharadar_bundle(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar bundle: https://qrok.it/dl/qr/zipline-sharadar
 
     Examples
     --------
@@ -306,6 +324,12 @@ def create_bundle_from_db(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * History db bundle: https://qrok.it/dl/qr/zipline-fromdb
+
     Examples
     --------
     Create a bundle from a history database called "es-fut-1min" and name
@@ -386,6 +410,12 @@ def ingest_bundle(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Data bundles: https://qrok.it/dl/qr/zipline-bundles
+
     Examples
     --------
     Ingest data into a bundle called usstock-1min:
@@ -416,6 +446,12 @@ def list_bundles() -> dict[str, bool]:
     dict
         data bundles and whether they have data (True indicates
         data, False indicates config only)
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Data bundles: https://qrok.it/dl/qr/zipline-bundles
     """
     response = houston.get("/zipline/bundles")
 
@@ -438,6 +474,12 @@ def get_bundle_config(code: str) -> dict[str, str]:
     -------
     dict
         config
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Data bundles: https://qrok.it/dl/qr/zipline-bundles
     """
     response = houston.get(f"/zipline/bundles/config/{code}")
 
@@ -468,6 +510,12 @@ def drop_bundle(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Data bundles: https://qrok.it/dl/qr/zipline-bundles
+
     Examples
     --------
     Delete a bundle called 'es-fut-1min':
@@ -494,6 +542,12 @@ def get_default_bundle() -> dict[str, str]:
     -------
     dict
         default bundle
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Data bundles: https://qrok.it/dl/qr/zipline-bundles
     """
     response = houston.get("/zipline/config")
     houston.raise_for_status_with_json(response)
@@ -519,6 +573,12 @@ def set_default_bundle(bundle: str) -> dict[str, str]:
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Data bundles: https://qrok.it/dl/qr/zipline-bundles
     """
     data = {
         "default_bundle": bundle
@@ -592,6 +652,17 @@ def download_bundle_file(
     -------
     None
 
+    See Also
+    --------
+    quantrocket.get_prices : load prices into a DataFrame
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Query bundle: https://qrok.it/dl/qr/zipline-query-bundle
+    * get_prices: https://qrok.it/dl/qr/prices
+
     Examples
     --------
     Load minute prices into pandas:
@@ -602,10 +673,6 @@ def download_bundle_file(
     Isolate fields with .loc:
 
     >>> closes = prices.loc["Close"]
-
-    See Also
-    --------
-    quantrocket.get_prices : load prices into a DataFrame
     """
     params = {}
     if start_date:
@@ -707,6 +774,12 @@ def backtest(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Zipline backtesting: https://qrok.it/dl/qr/zipline-backtest
 
     Examples
     --------
@@ -837,6 +910,12 @@ def scan_parameters(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Zipline parameter scans: https://qrok.it/dl/qr/zipline-paramscan
 
     Examples
     --------
@@ -993,6 +1072,12 @@ def trade(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Zipline live trading: https://qrok.it/dl/qr/zipline-trade
+
     Examples
     --------
     Trade a strategy defined in momentum-pipeline.py:
@@ -1025,6 +1110,12 @@ def list_active_strategies() -> dict[str, list[str]]:
     -------
     dict
         dict of account: strategies
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Zipline live trading: https://qrok.it/dl/qr/zipline-trade
     """
     response = houston.get("/zipline/trade")
 
@@ -1058,6 +1149,12 @@ def cancel_strategies(
     dict
         dict of actively trading strategies after canceling
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Zipline live trading: https://qrok.it/dl/qr/zipline-trade
+
     Examples
     --------
     Cancel a single strategy:
@@ -1089,6 +1186,12 @@ class ZiplineBacktestResult(object):
     Convenience class for parsing a CSV result file from a Zipline backtest
     into a variety of useful DataFrames, which can be passed to pyfolio or
     inspected by the user.
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Zipline backtesting: https://qrok.it/dl/qr/zipline-backtest
 
     Examples
     --------
@@ -1129,7 +1232,45 @@ class ZiplineBacktestResult(object):
 
     @classmethod
     def from_csv(cls, filepath_or_buffer: FilepathOrBuffer) -> 'ZiplineBacktestResult':
+        """
+        Parse a CSV result file from a Zipline backtest into a variety of useful
+        DataFrames, which can be passed to pyfolio or inspected by the user.
 
+        Notes
+        -----
+        Usage Guide:
+
+        * Zipline backtesting: https://qrok.it/dl/qr/zipline-backtest
+
+        Examples
+        --------
+        Run a Zipline backtest and parse the CSV results:
+
+        >>> f = io.StringIO()
+        >>> backtest("momentum_pipeline.py",
+                    bundle="etf-sampler-1d",
+                    start="2015-02-04",
+                    end="2015-12-31",
+                    filepath_or_buffer=f)
+        >>> zipline_result = ZiplineBacktestResult.from_csv(f)
+
+        The ZiplineBacktestResult object contains returns, positions, transactions,
+        benchmark_returns, and the performance DataFrame.
+
+        >>> print(zipline_result.returns.head())
+        >>> print(zipline_result.positions.head())
+        >>> print(zipline_result.transactions.head())
+        >>> print(zipline_result.benchmark_returns.head())
+        >>> print(zipline_result.perf.head())
+
+        The outputs are ready to be passed to pyfolio:
+
+        >>> pf.create_full_tear_sheet(
+                zipline_result.returns,
+                positions=zipline_result.positions,
+                transactions=zipline_result.transactions,
+                benchmark_rets=zipline_result.benchmark_returns)
+        """
         # Import pandas lazily since it can take a moment to import
         try:
             import pandas as pd

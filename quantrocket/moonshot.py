@@ -30,6 +30,12 @@ ml_walkforward
 
 trade
     Run one or more strategies and generate orders.
+
+Notes
+-----
+Usage Guide:
+
+* Moonshot: https://qrok.it/dl/qr/moonshot
 """
 import sys
 import os.path
@@ -124,6 +130,16 @@ def backtest(
     -------
     None
 
+    See Also
+    --------
+    read_moonshot_csv : load a Moonshot backtest CSV into a DataFrame
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Moonshot Backtesting: https://qrok.it/dl/qr/moonshot-backtest
+
     Examples
     --------
     Backtest several HML (High Minus Low) strategies from 2005-2015 and return a
@@ -141,10 +157,6 @@ def backtest(
                  end_date="2018-01-01",
                  segment="A",
                  filepath_or_buffer="results.csv")
-
-    See Also
-    --------
-    read_moonshot_csv : load a Moonshot backtest CSV into a DataFrame
     """
     output = output or "csv"
 
@@ -211,6 +223,12 @@ def read_moonshot_csv(
     DataFrame
         a multi-index (Field, Date[, Time]) DataFrame of backtest
         results, with sids or strategy codes as columns
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Moonshot Backtesting: https://qrok.it/dl/qr/moonshot-backtest
 
     Examples
     --------
@@ -306,6 +324,12 @@ def scan_parameters(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Moonshot Parameter Scans: https://qrok.it/dl/qr/moonshot-paramscan
 
     Examples
     --------
@@ -502,6 +526,12 @@ def ml_walkforward(
     -------
     None
 
+    Notes
+    -----
+    Usage Guide:
+
+    * MoonshotML: https://qrok.it/dl/qr/moonshotml
+
     Examples
     --------
     Run a walk-forward optimization using the default model and retrain the model
@@ -673,6 +703,12 @@ def trade(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Moonshot live trading: https://qrok.it/dl/qr/moonshot-trade
     """
     params = {}
     if strategies:

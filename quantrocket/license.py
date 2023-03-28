@@ -40,6 +40,13 @@ get_quandl_key
 
 set_quandl_key
     Set Quandl API key.
+
+Notes
+-----
+Usage Guide:
+
+* License Key: https://qrok.it/dl/qr/license
+* Broker and Data Connections: https://qrok.it/dl/qr/connect
 """
 import getpass
 from quantrocket.houston import houston
@@ -71,6 +78,12 @@ def get_license_profile(force_refresh: bool = False) -> dict[str, str]:
     -------
     dict
         license profile
+
+    Notes
+    -----
+    Usage Guide:
+
+    * License Key: https://qrok.it/dl/qr/license
     """
     params = {}
     if force_refresh:
@@ -96,6 +109,12 @@ def set_license(key: str) -> dict[str, str]:
     -------
     dict
         license profile
+
+    Notes
+    -----
+    Usage Guide:
+
+    * License Key: https://qrok.it/dl/qr/license
     """
     response = houston.put("/license-service/license/{0}".format(key))
     houston.raise_for_status_with_json(response)
@@ -112,6 +131,12 @@ def get_alpaca_key() -> dict[str, str]:
     -------
     dict
         credentials
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Broker and Data Connections: https://qrok.it/dl/qr/connect
     """
     response = houston.get("/license-service/credentials/alpaca")
     houston.raise_for_status_with_json(response)
@@ -151,6 +176,12 @@ def set_alpaca_key(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Broker and Data Connections: https://qrok.it/dl/qr/connect
     """
     if not secret_key:
         secret_key = getpass.getpass(prompt="Enter Alpaca secret key: ")
@@ -179,6 +210,12 @@ def get_polygon_key() -> dict[str, str]:
     -------
     dict
         credentials
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Broker and Data Connections: https://qrok.it/dl/qr/connect
     """
     response = houston.get("/license-service/credentials/polygon")
     houston.raise_for_status_with_json(response)
@@ -203,6 +240,12 @@ def set_polygon_key(api_key: str) -> dict[str, str]:
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Broker and Data Connections: https://qrok.it/dl/qr/connect
     """
     data = {}
     data["api_key"] = api_key
@@ -225,6 +268,12 @@ def get_quandl_key() -> dict[str, str]:
     -------
     dict
         credentials
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Broker and Data Connections: https://qrok.it/dl/qr/connect
     """
     response = houston.get("/license-service/credentials/quandl")
     houston.raise_for_status_with_json(response)
@@ -249,6 +298,12 @@ def set_quandl_key(api_key: str) -> dict[str, str]:
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Broker and Data Connections: https://qrok.it/dl/qr/connect
     """
     data = {}
     data["api_key"] = api_key

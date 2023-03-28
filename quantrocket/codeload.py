@@ -12,12 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Functions for working loading code.
+Functions for loading code.
 
 Functions
 ---------
 clone
     Clone files from a Git repository.
+
+Notes
+-----
+Usage Guide:
+
+* Code Management: https://qrok.it/dl/qr/codeload
 """
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
@@ -65,6 +71,12 @@ def clone(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Code Management: https://qrok.it/dl/qr/codeload
 
     Examples
     --------

@@ -18,6 +18,12 @@ Functions
 ---------
 execute_command
     Execute a Python function or arbitrary shell command on a satellite service.
+
+Notes
+-----
+Usage Guide:
+
+* Custom Scripts: https://qrok.it/dl/qr/satellite
 """
 import sys
 from quantrocket.houston import houston
@@ -76,6 +82,12 @@ def execute_command(
         None if return_file, otherwise status message. If cmd uses Python dot
         notation and the Python function returns a value, it will be included in
         the status message as the "output" key. Return values must be JSON-serializable.
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Custom Scripts: https://qrok.it/dl/qr/satellite
 
     Examples
     --------

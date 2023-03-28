@@ -54,6 +54,12 @@ cancel_market_data
 
 download_market_data_file
     Query market data from a tick database or aggregate database and download to file.
+
+Notes
+-----
+Usage Guide:
+
+* Real-time Data: https://qrok.it/dl/qr/realtime
 """
 import sys
 import requests
@@ -117,6 +123,12 @@ def create_ibkr_tick_db(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * IBKR Real-time Data: https://qrok.it/dl/qr/realtime-ibkr
 
     Examples
     --------
@@ -182,6 +194,12 @@ def create_polygon_tick_db(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Polygon.io Real-time Data: https://qrok.it/dl/qr/realtime-polygon
+
     Examples
     --------
     Create a database for collecting real-time trade prices and sizes for US stocks:
@@ -238,6 +256,12 @@ def create_alpaca_tick_db(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Alpaca Real-time Data: https://qrok.it/dl/qr/realtime-alpaca
 
     Examples
     --------
@@ -299,6 +323,12 @@ def create_agg_db(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Aggregate Databases: https://qrok.it/dl/qr/realtime-agg
 
     Examples
     --------
@@ -362,6 +392,11 @@ def get_db_config(code: str) -> dict[str, str]:
     dict
         config
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Real-time Data: https://qrok.it/dl/qr/realtime
     """
     response = houston.get("/realtime/databases/{0}".format(code))
     houston.raise_for_status_with_json(response)
@@ -405,6 +440,12 @@ def drop_db(
     See Also
     --------
     drop_ticks : Delete ticks from a tick database.
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Real-time Data: https://qrok.it/dl/qr/realtime
     """
     params = {"confirm_by_typing_db_code_again": confirm_by_typing_db_code_again}
     if cascade:
@@ -452,6 +493,12 @@ def drop_ticks(
     --------
     drop_db : Delete a tick database or aggregate database.
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Database Size: https://qrok.it/dl/qr/realtime-dbsize
+
     Examples
     --------
     Delete ticks older than 7 days in a database called 'usa-tech-stk-tick' (no
@@ -476,6 +523,11 @@ def list_databases() -> dict[str, list[str]]:
     dict
         dict of {tick_db: [agg_dbs]}
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Real-time Data: https://qrok.it/dl/qr/realtime
     """
     response = houston.get("/realtime/databases")
     houston.raise_for_status_with_json(response)
@@ -538,6 +590,12 @@ def collect_market_data(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Real-time Data: https://qrok.it/dl/qr/realtime
+
     Examples
     --------
     Collect market data for all securities in a tick database called 'japan-banks-trades':
@@ -594,6 +652,11 @@ def get_active_collections(detail: bool = False) -> dict[str, dict[str, int]]:
     dict
         subscribed tickers by vendor and database
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Real-time Data: https://qrok.it/dl/qr/realtime
     """
     params = {}
     if detail:
@@ -633,6 +696,12 @@ def cancel_market_data(
     -------
     dict
         subscribed tickers by vendor and database, after cancellation
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Real-time Data: https://qrok.it/dl/qr/realtime
 
     Examples
     --------
@@ -718,6 +787,13 @@ def download_market_data_file(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Real-time Market Data File: https://qrok.it/dl/qr/realtime
+    * get_prices: https://qrok.it/dl/qr/prices
 
     Examples
     --------

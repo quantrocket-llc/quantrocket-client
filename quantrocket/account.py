@@ -24,6 +24,12 @@ download_account_portfolio
 
 download_exchange_rates
     Query exchange rates for the base currency.
+
+Notes
+-----
+Usage Guide:
+
+* Account Monitoring: https://qrok.it/dl/qr/account
 """
 import sys
 import requests
@@ -90,6 +96,12 @@ def download_account_balances(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Account Monitoring: https://qrok.it/dl/qr/account
 
     Examples
     --------
@@ -198,6 +210,12 @@ def download_account_portfolio(
     -------
     None
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Account Monitoring: https://qrok.it/dl/qr/account
+
     Examples
     --------
     Download current portfolio. You can use StringIO to load the CSV into pandas.
@@ -286,6 +304,12 @@ def download_exchange_rates(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Account Monitoring: https://qrok.it/dl/qr/account
 
     Examples
     --------

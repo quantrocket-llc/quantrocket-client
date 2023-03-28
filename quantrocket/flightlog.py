@@ -41,6 +41,12 @@ get_papertrail_config
 
 set_papertrail_config
     Set the Papertrail log configuration.
+
+Notes
+-----
+Usage Guide:
+
+* Logging: https://qrok.it/dl/qr/logging
 """
 
 __all__ = [
@@ -113,6 +119,12 @@ def FlightlogHandler(
     Returns
     -------
     `logging.handlers.QueueHandler` or `quantrocket.flightlog._ImpatientHttpHandler`
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Logging: https://qrok.it/dl/qr/logging
 
     Examples
     --------
@@ -225,6 +237,12 @@ def stream_logs(
     -------
     str
         each log line as it arrives
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Logging: https://qrok.it/dl/qr/logging
     """
     params = {}
     if detail:
@@ -287,6 +305,12 @@ def download_logfile(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Logging: https://qrok.it/dl/qr/logging
     """
     if detail:
         logtype = "system"
@@ -351,6 +375,12 @@ def wait_for_message(
     dict
         status dict containing the matching log line
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Wait for Log Messages: https://qrok.it/dl/qr/logging-wait
+
     Examples
     --------
     Wait up to 10 minutes for a message to appear indicating that data
@@ -390,6 +420,12 @@ def get_timezone() -> dict[str, str]:
     -------
     dict
         dict with key timezone
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Logging: https://qrok.it/dl/qr/logging
     """
     response = houston.get("/flightlog/timezone")
     houston.raise_for_status_with_json(response)
@@ -409,6 +445,12 @@ def set_timezone(tz: str) -> dict[str, str]:
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Logging: https://qrok.it/dl/qr/logging
 
     Examples
     --------
@@ -431,12 +473,16 @@ def get_papertrail_config() -> dict[str, str]:
     """
     Return the current Papertrail log configuration, if any.
 
-    See http://qrok.it/h/pt to learn more.
-
     Returns
     -------
     dict
         config details
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Papertrail Integration: https://qrok.it/dl/qr/papertrail
     """
     response = houston.get("/flightlog/papertrail")
     houston.raise_for_status_with_json(response)
@@ -452,8 +498,6 @@ def set_papertrail_config(
     """
     Set the Papertrail log configuration.
 
-    See http://qrok.it/h/pt to learn more.
-
     Parameters
     ----------
     host : str, required
@@ -466,6 +510,12 @@ def set_papertrail_config(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Papertrail Integration: https://qrok.it/dl/qr/papertrail
 
     Examples
     --------

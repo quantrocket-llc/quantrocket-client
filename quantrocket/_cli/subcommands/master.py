@@ -23,7 +23,14 @@ def add_subparser(subparsers):
 Collect securities listings from Alpaca and store in securities master
 database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Alpaca listings: https://qrok.it/dl/qr/master-alpaca
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -40,7 +47,14 @@ Examples:
 Collect securities listings from EDI and store in securities master
 database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* EDI listings: https://qrok.it/dl/qr/master-edi
+
+Examples
+--------
 
 Collect sample listings:
 
@@ -87,7 +101,14 @@ This command does not directly query the OpenFIGI API but rather
 downloads a dump of all FIGIs which QuantRocket has previously
 mapped to securities from other vendors.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* FIGI listings: https://qrok.it/dl/qr/master-figi
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -109,7 +130,14 @@ and/or symbol) to collect listings from the IBKR website and collect
 associated contract details from the IBKR API. Or, specify universes or
 sids to collect details from the IBKR API, bypassing the website.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Interactive Brokers listings: https://qrok.it/dl/qr/master-ibkr
+
+Examples
+--------
 
 Collect free sample listings:
 
@@ -185,7 +213,14 @@ Re-collect contract details for an existing universe called "japan-fin":
 Collect securities listings from Sharadar and store in securities master
 database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Sharadar listings: https://qrok.it/dl/qr/master-sharadar
+
+Examples
+--------
 
 Collect sample listings:
 
@@ -217,7 +252,14 @@ Collect all US listings:
 Collect US stock listings from QuantRocket and store in securities master
 database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* US Stock listings: https://qrok.it/dl/qr/master-usstock
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -238,7 +280,14 @@ per underlying security. Be aware that requesting option chains for large
 universes of underlying securities, such as all stocks on the NYSE, can take
 numerous hours to complete.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* IBKR Option Chains: https://qrok.it/dl/qr/option-chains
+
+Examples
+--------
 
 Collect option chains for several underlying securities:
 
@@ -285,7 +334,32 @@ Collect option chains for a large universe of stocks called "nyse-stk" (see note
 Query security details from the securities master database and download to
 file.
 
-Examples:
+Notes
+-----
+
+Parameters for filtering query results are combined according to the following
+rules. First, the master service determines what to include in the result set,
+based on the inclusion filters: `--exchanges`, `--sec-types`, `--currencies`,
+`--universes`, `--symbols`, and `--sids`. With the exception of `--sids`, these
+parameters are ANDed together. That is, securities must satisfy all of the
+parameters to be included. If `--vendors` is provided, only those vendors are
+searched for the purpose of determining matches.
+
+The `--sids` parameter is treated differently. Securities matching `--sids` are
+always included, regardless of whether they meet the other inclusion criteria.
+
+After determining what to include, the master service then applies the exclusion
+filters (`--exclude-sids`, `--exclude-universes`, `--exclude-delisted`,
+`--exclude-expired`, and `--frontmonth`) to determine what (if anything) should be
+removed from the result set. Exclusion filters are ORed, that is, securities are
+excluded if they match any of the exclusion criteria.
+
+Usage Guide:
+
+* Master file: https://qrok.it/dl/qr/master-file
+
+Examples
+--------
 
 Download NYSE and NASDAQ securities to file, using MICs to specify
 the exchanges:
@@ -314,25 +388,6 @@ terminal display:
 .. code-block:: bash
 
     quantrocket master get --symbols AAPL --fields Exchange Currency | csvlook -I
-
-Notes:
-
-Parameters for filtering query results are combined according to the following
-rules. First, the master service determines what to include in the result set,
-based on the inclusion filters: `--exchanges`, `--sec-types`, `--currencies`,
-`--universes`, `--symbols`, and `--sids`. With the exception of `--sids`, these
-parameters are ANDed together. That is, securities must satisfy all of the
-parameters to be included. If `--vendors` is provided, only those vendors are
-searched for the purpose of determining matches.
-
-The `--sids` parameter is treated differently. Securities matching `--sids` are
-always included, regardless of whether they meet the other inclusion criteria.
-
-After determining what to include, the master service then applies the exclusion
-filters (`--exclude-sids`, `--exclude-universes`, `--exclude-delisted`,
-`--exclude-expired`, and `--frontmonth`) to determine what (if anything) should be
-removed from the result set. Exclusion filters are ORed, that is, securities are
-excluded if they match any of the exclusion criteria.
     """
     parser = _subparsers.add_parser(
         "get",
@@ -433,7 +488,14 @@ excluded if they match any of the exclusion criteria.
     examples = """
 List exchanges by security type and country as found on the IBKR website.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Interactive Brokers listings: https://qrok.it/dl/qr/master-ibkr
+
+Examples
+--------
 
 List all exchanges:
 
@@ -473,7 +535,14 @@ were last collected into the securities master database.
 Diff can be run synchronously or asynchronously (asynchronous is the default
 and is recommended if diffing more than a handful of securities).
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Maintain listings: https://qrok.it/dl/qr/maintain-listings
+
+Examples
+--------
 
 Asynchronously generate a diff for all securities in a universe called
 "italy-stk" and log the results, if any, to flightlog:
@@ -564,7 +633,14 @@ The security can be specified by sid or a combination of other
 parameters (for example, symbol + exchange). As a precaution, the request
 will fail if the parameters match more than one security.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Maintain listings: https://qrok.it/dl/qr/maintain-listings
+
+Examples
+--------
 
 Delist a security by sid:
 
@@ -605,7 +681,14 @@ Delist a security by symbol + exchange:
     examples = """
 List universes and their size.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Universes: https://qrok.it/dl/qr/universes
+
+Examples
+--------
 
 .. code-block:: bash
 
@@ -621,7 +704,14 @@ Examples:
     examples = """
 Create a universe of securities.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Universes: https://qrok.it/dl/qr/universes
+
+Examples
+--------
 
 Download a CSV of Italian stocks then upload it to create a universe called
 "italy-stk":
@@ -699,7 +789,14 @@ Delete a universe.
 The listings details of the member securities won't be deleted, only their
 grouping as a universe.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Universes: https://qrok.it/dl/qr/universes
+
+Examples
+--------
 
 Delete the universe called "italy-stk":
 
@@ -730,7 +827,14 @@ followed by an autoincrementing digit, for example: IC1, IC2, IC3, ...
 If the combo already exists, its sid will be returned instead of creating a
 duplicate record.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Combos: https://qrok.it/dl/qr/combos
+
+Examples
+--------
 
 Create a spread from a JSON file:
 
@@ -757,7 +861,8 @@ Create a spread from a JSON file:
     examples = """
 Upload a new rollover rules config, or return the current rollover rules.
 
-Examples:
+Examples
+--------
 
 Upload a new rollover config (replaces current config):
 
@@ -787,7 +892,14 @@ Show current rollover config:
 Collect upcoming trading hours from IBKR for exchanges and save to securities
 master database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Trading Calendars: https://qrok.it/dl/qr/calendars
+
+Examples
+--------
 
 Collect trading hours for ARCA:
 
@@ -810,7 +922,14 @@ Collect trading hours for ARCA:
     examples = """
 Check whether exchanges are open or closed.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Trading Calendars: https://qrok.it/dl/qr/calendars
+
+Examples
+--------
 
 Check whether NYSE is open or closed now:
 
@@ -870,7 +989,14 @@ Assert that one or more exchanges are open and exit non-zero if closed.
 
 Intended to be used as a conditional for running other commands.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Trading Calendars: https://qrok.it/dl/qr/calendars
+
+Examples
+--------
 
 Place Moonshot orders if NYSE is open now:
 
@@ -948,7 +1074,14 @@ is a valid `freq` argument to `pd.date_range`. See:
 https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases
 https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#anchored-offsets
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Trading Calendars: https://qrok.it/dl/qr/calendars
+
+Examples
+--------
 
 Place Moonshot orders if the NYSE will be closed NYSE in 1 hour:
 
@@ -1029,7 +1162,14 @@ Round prices in a CSV file to valid tick sizes.
 CSV should contain columns `Sid`, `Exchange`, and the columns to be rounded
 (e.g. `LmtPrice`). Additional columns will be ignored and returned unchanged.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Tick sizes: https://qrok.it/dl/qr/tick-sizes
+
+Examples
+--------
 
 Round the LmtPrice column in a CSV of orders and return a new CSV:
 

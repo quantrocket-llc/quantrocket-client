@@ -30,6 +30,12 @@ start_gateways
 
 stop_gateways
     Stop one or more IB Gateways.
+
+Notes
+-----
+Usage Guide:
+
+* IB Gateway: https://qrok.it/dl/qr/ibgateway
 """
 
 import getpass
@@ -58,6 +64,12 @@ def get_credentials(gateway: str) -> dict[str, str]:
     -------
     dict
         credentials
+
+    Notes
+    -----
+    Usage Guide:
+
+    * IB Gateway: https://qrok.it/dl/qr/ibgateway
     """
     statuses = list_gateway_statuses(gateways=[gateway])
     if not statuses:
@@ -104,6 +116,12 @@ def set_credentials(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * IB Gateway: https://qrok.it/dl/qr/ibgateway
     """
     statuses = list_gateway_statuses(gateways=[gateway])
     if not statuses:
@@ -148,6 +166,12 @@ def list_gateway_statuses(
     Returns
     -------
     dict of gateway:status (if status arg not provided), or list of gateways (if status arg provided)
+
+    Notes
+    -----
+    Usage Guide:
+
+    * IB Gateway: https://qrok.it/dl/qr/ibgateway
     """
     params = {}
     if gateways:
@@ -182,6 +206,12 @@ def start_gateways(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * IB Gateway: https://qrok.it/dl/qr/ibgateway
     """
     params = {"wait": wait}
     if gateways:
@@ -215,6 +245,12 @@ def stop_gateways(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * IB Gateway: https://qrok.it/dl/qr/ibgateway
     """
     params = {"wait": wait}
     if gateways:

@@ -18,7 +18,8 @@ def add_subparser(subparsers):
     examples = """
 Show the QuantRocket version number.
 
-Examples:
+Examples
+--------
 
 Show the version number:
 

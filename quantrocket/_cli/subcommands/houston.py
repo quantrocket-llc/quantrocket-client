@@ -22,7 +22,8 @@ def add_subparser(subparsers):
     examples = """
 Ping houston.
 
-Examples:
+Examples
+--------
 
 .. code-block:: bash
 

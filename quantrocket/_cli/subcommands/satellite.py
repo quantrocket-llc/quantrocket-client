@@ -22,7 +22,14 @@ def add_subparser(subparsers):
     examples = """
 Execute a Python function or abitrary shell command on a satellite service.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Custom Scripts: https://qrok.it/dl/qr/satellite
+
+Examples
+--------
 
 Run a Python function called 'create_calendar_spread' defined in '/codeload/scripts/combos.py'
 and pass it arguments:

@@ -54,6 +54,12 @@ wait_for_collections
 
 download_history_file
     Query historical market data from a history database and download to file.
+
+Notes
+-----
+Usage Guide:
+
+* Historical Data: https://qrok.it/dl/qr/historical
 """
 import os
 import sys
@@ -104,6 +110,11 @@ def create_edi_db(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * EDI: https://qrok.it/dl/qr/edi-hist
     """
     params = {
         "vendor": "edi",
@@ -227,6 +238,13 @@ def create_ibkr_db(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Interactive Brokers Historical Data: https://qrok.it/dl/qr/ibkr-hist
+    * Cumulative daily prices for intraday data: https://qrok.it/dl/qr/cumulative-daily
+    * Primary vs Consolidated Prices: https://qrok.it/dl/qr/primary-v-consolidated
     """
     params = {}
     if universes:
@@ -286,6 +304,11 @@ def create_sharadar_db(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar Historical Data: https://qrok.it/dl/qr/sharadar-hist
     """
     params = {"vendor": "sharadar"}
     if sec_type:
@@ -332,11 +355,17 @@ def create_usstock_db(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * US Stock Historical Data: https://qrok.it/dl/qr/usstock-hist
+
     Examples
     --------
-    Create a database for end-of-day US stock prices:
+    Create a database for end-of-day US stock prices::
 
-    create_usstock_db('usstock-1d')
+        create_usstock_db('usstock-1d')
     """
     params = {
         "vendor": "usstock",
@@ -401,6 +430,12 @@ def create_custom_db(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Custom Data: https://qrok.it/dl/qr/custom-data
+
     Examples
     --------
     Create a custom database for loading fundamental data:
@@ -459,6 +494,11 @@ def get_db_config(code: str) -> dict[str, str]:
     dict
         config
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Historical Data: https://qrok.it/dl/qr/historical
     """
     response = houston.get("/history/databases/{0}".format(code))
     houston.raise_for_status_with_json(response)
@@ -491,6 +531,11 @@ def drop_db(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Historical Data: https://qrok.it/dl/qr/historical
     """
     params = {"confirm_by_typing_db_code_again": confirm_by_typing_db_code_again}
     response = houston.delete("/history/databases/{0}".format(code), params=params)
@@ -509,6 +554,11 @@ def list_databases() -> list[str]:
     list
         list of database codes
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Historical Data: https://qrok.it/dl/qr/historical
     """
     response = houston.get("/history/databases")
     houston.raise_for_status_with_json(response)
@@ -564,6 +614,11 @@ def collect_history(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Historical Data: https://qrok.it/dl/qr/historical
     """
     params = {}
     if codes:
@@ -595,6 +650,11 @@ def get_history_queue() -> dict[str, str]:
     dict
         queue by vendor
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Historical Data: https://qrok.it/dl/qr/historical
     """
     response = houston.get("/history/queue")
     houston.raise_for_status_with_json(response)
@@ -617,6 +677,11 @@ def cancel_collections(codes: Union[list[str], str]) -> dict[str, str]:
     dict
         queue by vendor
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Historical Data: https://qrok.it/dl/qr/historical
     """
     params = {}
     if codes:
@@ -649,6 +714,11 @@ def wait_for_collections(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * History database as real-time feed: https://qrok.it/dl/qr/history-wait
     """
     params = {}
     params["codes"] = codes
@@ -722,6 +792,16 @@ def download_history_file(
     -------
     None
 
+    See Also
+    --------
+    quantrocket.get_prices : load prices into a DataFrame
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Historical Data: https://qrok.it/dl/qr/historical
+
     Examples
     --------
     You can use StringIO to load the CSV into pandas.
@@ -729,10 +809,6 @@ def download_history_file(
     >>> f = io.StringIO()
     >>> download_history_file("my-db", f)
     >>> history = pd.read_csv(f, parse_dates=["Date"])
-
-    See Also
-    --------
-    quantrocket.get_prices : load prices into a DataFrame
     """
     params = {}
     if start_date:

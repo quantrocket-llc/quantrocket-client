@@ -90,6 +90,12 @@ list_calendar_statuses
 
 round_to_tick_sizes
     Round prices in a CSV file to valid tick sizes.
+
+Notes
+-----
+Usage Guide:
+
+* Securities Master: https://qrok.it/dl/qr/master
 """
 import sys
 import six
@@ -151,6 +157,12 @@ def list_ibkr_exchanges(
     Returns
     -------
     dict
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Interactive Brokers listings: https://qrok.it/dl/qr/master-ibkr
     """
     params = {}
     if sec_types:
@@ -174,6 +186,12 @@ def collect_alpaca_listings() -> dict[str, str]:
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Alpaca listings: https://qrok.it/dl/qr/master-alpaca
     """
     response = houston.post("/master/securities/alpaca")
     houston.raise_for_status_with_json(response)
@@ -196,6 +214,12 @@ def collect_edi_listings(exchanges: Union[list[str], str] = None) -> dict[str, s
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * EDI listings: https://qrok.it/dl/qr/master-edi
 
     Examples
     --------
@@ -242,6 +266,12 @@ def collect_figi_listings() -> dict[str, str]:
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * FIGI listings: https://qrok.it/dl/qr/master-figi
 
     Examples
     --------
@@ -302,6 +332,12 @@ def collect_ibkr_listings(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Interactive Brokers listings: https://qrok.it/dl/qr/master-ibkr
+
     Examples
     --------
     Collect free sample listings:
@@ -359,6 +395,12 @@ def collect_sharadar_listings(countries: Literal["US", "FREE"] = "US") -> dict[s
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Sharadar listings: https://qrok.it/dl/qr/master-sharadar
     """
     params = {}
     if countries:
@@ -380,6 +422,12 @@ def collect_usstock_listings() -> dict[str, str]:
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * US Stock listings: https://qrok.it/dl/qr/master-usstock
     """
     response = houston.post("/master/securities/usstock")
     houston.raise_for_status_with_json(response)
@@ -417,6 +465,12 @@ def collect_ibkr_option_chains(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * IBKR Option Chains: https://qrok.it/dl/qr/option-chains
     """
     params = {}
     if universes:
@@ -489,6 +543,11 @@ def diff_ibkr_securities(
     dict
         dict of sids and fields that have changed (if wait), or status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Maintain listings: https://qrok.it/dl/qr/maintain-listings
     """
     params = {}
     if universes:
@@ -610,6 +669,10 @@ def download_master_file(
     -------
     None
 
+    See Also
+    --------
+    get_securities : load securities into a DataFrame
+
     Notes
     -----
     Parameters for filtering query results are combined according to the following
@@ -629,6 +692,10 @@ def download_master_file(
     set. Exclusion filters are ORed, that is, securities are excluded if they match any
     of the exclusion criteria.
 
+    Usage Guide:
+
+    * Master file: https://qrok.it/dl/qr/master-file
+
     Examples
     --------
     Download NYSE and NASDAQ securities to file, using MICs to specify
@@ -647,10 +714,6 @@ def download_master_file(
     >>> f = io.StringIO()
     >>> download_master_file(f, fields="*", universes="my-universe")
     >>> securities = pd.read_csv(f)
-
-    See Also
-    --------
-    get_securities : load securities into a DataFrame
     """
     params = {}
     if exchanges:
@@ -800,6 +863,10 @@ def get_securities(
     set. Exclusion filters are ORed, that is, securities are excluded if they match any
     of the exclusion criteria.
 
+    Usage Guide:
+
+    * Master file: https://qrok.it/dl/qr/master-file
+
     Examples
     --------
     Load default fields for NYSE and NASDAQ securities, using MICs to specify
@@ -882,6 +949,13 @@ def get_securities_reindexed_like(
         a multiindex (Field, Date) DataFrame of securities master data, shaped
         like the input DataFrame
 
+    Notes
+    -----
+    Usage Guide:
+
+    * get_securities_reindexed_like: https://qrok.it/dl/qr/master-reindex
+    * Master file: https://qrok.it/dl/qr/master-file
+
     Examples
     --------
     Get exchanges (MICs) using a DataFrame of prices:
@@ -946,6 +1020,12 @@ def get_contract_nums_reindexed_like(
     DataFrame
         a DataFrame of futures chain sequence numbers, shaped like the input
         DataFrame
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Futures contract numbers: https://qrok.it/dl/qr/futures-contract-nums
 
     Examples
     --------
@@ -1073,6 +1153,12 @@ def create_universe(
     dict
         status message
 
+    Notes
+    -----
+    Usage Guide:
+
+    * Universes: https://qrok.it/dl/qr/universes
+
     Examples
     --------
     Create a universe called 'nyse-stk' from a CSV file:
@@ -1140,6 +1226,12 @@ def delete_universe(code: str) -> dict[str, str]:
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Universes: https://qrok.it/dl/qr/universes
     """
 
     url = "/master/universes/{0}".format(code)
@@ -1159,6 +1251,12 @@ def list_universes() -> dict[str, int]:
     -------
     dict
         dict of universe:size
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Universes: https://qrok.it/dl/qr/universes
     """
     response = houston.get("/master/universes")
     houston.raise_for_status_with_json(response)
@@ -1207,6 +1305,12 @@ def delist_ibkr_security(
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Maintain listings: https://qrok.it/dl/qr/maintain-listings
     """
     params = {}
     if sid:
@@ -1254,6 +1358,12 @@ def create_ibkr_combo(
     dict
         returns a dict containing the generated sid of the combo, and whether a new
         record was created
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Combos: https://qrok.it/dl/qr/combos
 
     Examples
     --------
@@ -1341,6 +1451,12 @@ def collect_ibkr_calendar(exchanges: Union[list[str], str] = None) -> dict[str, 
     -------
     dict
         status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Trading Calendars: https://qrok.it/dl/qr/calendars
     """
     params = {}
     if exchanges:
@@ -1388,6 +1504,12 @@ def list_calendar_statuses(
     -------
     dict
         exchange calendar status
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Trading Calendars: https://qrok.it/dl/qr/calendars
     """
     params = {}
     if exchanges:
@@ -1538,6 +1660,12 @@ def round_to_tick_sizes(
     Returns
     -------
     None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Tick sizes: https://qrok.it/dl/qr/tick-sizes
     """
 
     params = {}

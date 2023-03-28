@@ -25,7 +25,14 @@ Place one or more orders.
 Returns a list of order IDs, which can be used to cancel the orders or check
 their status.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Orders and Positions: https://qrok.it/dl/qr/orders
+
+Examples
+--------
 
 Place orders from a CSV file.
 
@@ -69,7 +76,14 @@ Place an order by specifying the order parameters on the command line:
     examples = """
 Cancel one or more orders by order ID, sid, or order ref.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Orders and Positions: https://qrok.it/dl/qr/orders
+
+Examples
+--------
 
 Cancel orders by order ID:
 
@@ -131,7 +145,14 @@ Cancel all open orders:
     examples = """
 Download order statuses.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Orders and Positions: https://qrok.it/dl/qr/orders
+
+Examples
+--------
 
 Download order status by order ID and save to file:
 
@@ -233,7 +254,14 @@ are tracked based on execution records saved to the blotter database.
 "Broker view" (using the `--broker` option) returns positions by account and sid (but
 not order ref) as reported directly by the broker.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Orders and Positions: https://qrok.it/dl/qr/orders
+
+Examples
+--------
 
 Query current positions:
 
@@ -316,7 +344,14 @@ This endpoint can also be used to generate executions for marking a position as
 closed due to a tender offer, merger/acquisition, etc. (See `quantrocket blotter record`
 for more info.)
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Orders and Positions: https://qrok.it/dl/qr/orders
+
+Examples
+--------
 
 Generate MKT orders to close positions for a particular strategy:
 
@@ -382,7 +417,14 @@ in the blotter in order to mark the position as closed:
     examples = """
 Query executions from the executions database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Performance Tracking: https://qrok.it/dl/qr/performance
+
+Examples
+--------
 
 Get a CSV of all executions:
 
@@ -439,7 +481,29 @@ received for your shares.
 
 Returns a list of execution IDs inserted into the database.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Delisted Positions: https://qrok.it/dl/qr/delisted-positions
+
+The required params are:
+
+- Account
+- Action ("BUY" or "SELL")
+- OrderRef
+- Price
+- Sid
+- TotalQuantity
+
+Optional params (rarely needed):
+
+- Commission (default is 0)
+- OrderId (default is an auto-generated ID)
+- Time (the time of execution, default is now)
+
+Examples
+--------
 
 After receiving 23.50 per share in a tender offer for a position, record the execution
 in the blotter in order to mark the position as closed:
@@ -459,21 +523,6 @@ Record an execution by specifying the parameters on the command line:
 .. code-block:: bash
 
     quantrocket blotter record --params Sid:FIBBG123456 Action:BUY TotalQuantity:100 Account:DU12345 OrderRef:my-strategy Price:23.50
-
-The required params are:
-
-- Account
-- Action ("BUY" or "SELL")
-- OrderRef
-- Price
-- Sid
-- TotalQuantity
-
-Optional params (rarely needed):
-
-- Commission (default is 0)
-- OrderId (default is an auto-generated ID)
-- Time (the time of execution, default is now)
     """
     parser = _subparsers.add_parser(
         "record",
@@ -508,7 +557,14 @@ The --old-shares and --new-shares parameters can be specified either using the
 published split ratio (for example, 2-for-1) or the actual number of pre-
 and post-split shares in your account.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Stock Splits: https://qrok.it/dl/qr//dl/qr/apply-split
+
+Examples
+--------
 
 Record a 2-for-1 split:
 
@@ -553,7 +609,14 @@ Query trading performance and return a PDF tearsheet or CSV of results.
 Trading performance is broken down by account and order ref and optionally by
 sid.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Performance Tracking: https://qrok.it/dl/qr/performance
+
+Examples
+--------
 
 Get a Moonchart PDF of all trading performance PNL:
 

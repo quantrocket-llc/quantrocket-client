@@ -22,7 +22,14 @@ def add_subparser(subparsers):
     examples = """
 Stream application logs, `tail -f` style.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Logging: https://qrok.it/dl/qr/logging
+
+Examples
+--------
 
 Stream application logs:
 
@@ -60,7 +67,14 @@ Stream detailed logs:
     examples = """
 Download the logfile.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Logging: https://qrok.it/dl/qr/logging
+
+Examples
+--------
 
 Download application logs:
 
@@ -109,7 +123,14 @@ syslog format, which differs from the format used when streaming
 detailed logs. Download the detailed log file to see the exact format
 your search will run against.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Wait for Log Messages: https://qrok.it/dl/qr/logging-wait
+
+Examples
+--------
 
 Wait up to 10 minutes for a message to appear indicating that data
 ingestion has finished:
@@ -158,7 +179,14 @@ indicating that data collection has finished:
     examples = """
 Log a message.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Logging: https://qrok.it/dl/qr/logging
+
+Examples
+--------
 
 Log a message under the name "myapp":
 
@@ -198,7 +226,14 @@ Log the output from another command:
     examples = """
 Set or show the flightlog timezone.
 
-Examples:
+Notes
+-----
+Usage Guide:
+
+* Logging: https://qrok.it/dl/qr/logging
+
+Examples
+--------
 
 Set the flightlog timezone to America/New_York:
 
@@ -228,9 +263,14 @@ Show the current flightlog timezone:
     examples = """
 Set or show the Papertrail log configuration.
 
-See http://qrok.it/h/pt to learn more.
+Notes
+-----
+Usage Guide:
 
-Examples:
+* Papertrail Integration: https://qrok.it/dl/qr/papertrail
+
+Examples
+--------
 
 Set the Papertrail host and port to log to:
 
