@@ -363,9 +363,9 @@ def create_usstock_db(
 
     Examples
     --------
-    Create a database for end-of-day US stock prices::
+    Create a database for end-of-day US stock prices:
 
-        create_usstock_db('usstock-1d')
+    >>> create_usstock_db('usstock-1d')
     """
     params = {
         "vendor": "usstock",
