@@ -219,7 +219,7 @@ Log the output from another command:
     parser.add_argument(
         "-n", "--name",
         dest="logger_name",
-        default="quantrocket._cli",
+        default="quantrocket.cli",
         help="the logger name")
     parser.set_defaults(func="quantrocket.flightlog._cli_log_message")
 
