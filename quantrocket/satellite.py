@@ -55,6 +55,10 @@ def execute_command(
     params: dict[str, Any] = None,
     service: str = "satellite"
     ) -> dict[str, str]:
+    pass
+
+def execute_command(cmd, return_file=None, filepath_or_buffer=None,
+                    params=None, service="satellite"):
     """
     Execute a Python function or arbitrary shell command on a satellite service.
 
