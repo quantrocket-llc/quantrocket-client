@@ -792,7 +792,7 @@ def download_market_data_file(
     -----
     Usage Guide:
 
-    * Real-time Market Data File: https://qrok.it/dl/qr/realtime
+    * Real-time Market Data File: https://qrok.it/dl/qr/realtime-file
     * get_prices: https://qrok.it/dl/qr/prices
 
     Examples

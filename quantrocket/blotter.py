@@ -827,7 +827,7 @@ def apply_split(
     -----
     Usage Guide:
 
-    * Stock Splits: https://qrok.it/dl/qr//dl/qr/apply-split
+    * Stock Splits: https://qrok.it/dl/qr/apply-split
 
     Examples
     --------
