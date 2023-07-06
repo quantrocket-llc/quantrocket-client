@@ -1020,52 +1020,6 @@ Query easy-to-borrow data for a universe of US stocks:
     parser.set_defaults(func="quantrocket.fundamental._cli_download_alpaca_etb")
 
     examples = """
-Collect Wall Street Horizon upcoming earnings announcement dates from Interactive
-Brokers and save to database.
-
-DEPRECATED. This data is no longer available from Interactive Brokers
-except for legacy subscribers.
-
-Examples
---------
-
-Collect upcoming earnings dates for a universe of US stocks:
-
-.. code-block:: bash
-
-    quantrocket fundamental collect-wsh --universes 'usa-stk'
-
-Collect upcoming earnings dates for a particular security:
-
-.. code-block:: bash
-
-    quantrocket fundamental collect-wsh --sids FIBBG123456
-    """
-    parser = _subparsers.add_parser(
-        "collect-wsh",
-        help=("[DEPRECATED] collect Wall Street Horizon upcoming earnings announcement dates from "
-        "Interactive Brokers and save to database"),
-        epilog=examples,
-        formatter_class=HelpFormatter)
-    parser.add_argument(
-        "-u", "--universes",
-        nargs="*",
-        metavar="UNIVERSE",
-        help="limit to these universes (must provide universes, sids, or both)")
-    parser.add_argument(
-        "-i", "--sids",
-        nargs="*",
-        metavar="SID",
-        help="limit to these sids (must provide universes, sids, or both)")
-    parser.add_argument(
-        "-f", "--force",
-        action="store_true",
-        help="collect earnings dates for all securities even if they were collected "
-        "recently (default is to skip securities that were updated in the last "
-        "12 hours)")
-    parser.set_defaults(func="quantrocket.fundamental._cli_collect_wsh_earnings_dates")
-
-    examples = """
 Query financial statements from the Reuters financials database and
 download to file.
 
@@ -1251,8 +1205,8 @@ Query EPS estimates and actuals for a universe of Australian stocks:
 Query earnings announcement dates from the Wall Street Horizon
 announcements database and download to file.
 
-DEPRECATED. This data is no longer available from Interactive Brokers
-except for legacy subscribers.
+DEPRECATED. This data is no longer available from Interactive Brokers. Only
+data that was previously saved to the local database can be queried.
 
 Examples
 --------

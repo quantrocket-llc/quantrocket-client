@@ -3150,52 +3150,6 @@ def get_sharadar_sp500_reindexed_like(
 
     return are_in_sp500
 
-def collect_wsh_earnings_dates(
-    universes: Union[list[str], str] = None,
-    sids: Union[list[str], str] = None,
-    force: bool = False
-    ) -> dict[str, str]:
-    """
-    Collect Wall Street Horizon upcoming earnings announcement dates from
-    Interactive Brokers and save to database.
-
-    DEPRECATED. This data is no longer available from Interactive Brokers
-    except for legacy subscribers.
-
-    Parameters
-    ----------
-    universes : list of str, optional
-        limit to these universes (must provide universes, sids, or both)
-
-    sids : list of str, optional
-        limit to these sids (must provide universes, sids, or both)
-
-    force : bool
-        collect earnings dates for all securities even if they were collected
-        recently (default is to skip securities that were updated in the last
-        12 hours)
-
-    Returns
-    -------
-    dict
-        status message
-
-    """
-    params = {}
-    if universes:
-        params["universes"] = universes
-    if sids:
-        params["sids"] = sids
-    if force:
-        params["force"] = force
-    response = houston.post("/fundamental/wsh/calendar", params=params)
-
-    houston.raise_for_status_with_json(response)
-    return response.json()
-
-def _cli_collect_wsh_earnings_dates(*args, **kwargs):
-    return json_to_cli(collect_wsh_earnings_dates, *args, **kwargs)
-
 def download_wsh_earnings_dates(
     filepath_or_buffer: FilepathOrBuffer = None,
     output: Literal["csv", "json"] = "csv",
@@ -3212,8 +3166,8 @@ def download_wsh_earnings_dates(
     Query earnings announcement dates from the Wall Street Horizon
     announcements database and download to file.
 
-    DEPRECATED. This data is no longer available from Interactive Brokers
-    except for legacy subscribers.
+    DEPRECATED. This data is no longer available from Interactive Brokers. Only
+    data that was previously saved to the local database can be queried.
 
     Parameters
     ----------
@@ -3311,8 +3265,8 @@ def get_wsh_earnings_dates_reindexed_like(
     Return a multiindex (Field, Date) DataFrame of earnings announcement dates,
     reindexed to match the index (dates) and columns (sids) of `reindex_like`.
 
-    DEPRECATED. This data is no longer available from Interactive Brokers
-    except for legacy subscribers.
+    DEPRECATED. This data is no longer available from Interactive Brokers. Only
+    data that was previously saved to the local database can be queried.
 
     Parameters
     ----------
