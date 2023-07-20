@@ -410,6 +410,20 @@ Show current default bundle:
     parser.set_defaults(func="quantrocket.zipline._cli_get_or_set_default_bundle")
 
     examples = """
+List the sids in a bundle.
+"""
+    parser = _subparsers.add_parser(
+        "sids",
+        help="list the sids in a bundle",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the bundle code")
+    parser.set_defaults(func="quantrocket.zipline._cli_list_sids")
+
+    examples = """
 Query minute or daily data from a Zipline bundle and download to a CSV file.
 
 Notes

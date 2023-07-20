@@ -46,6 +46,9 @@ get_default_bundle
 set_default_bundle
     Set the default bundle to use for backtesting and trading.
 
+list_sids
+    List the sids in a bundle.
+
 download_bundle_file
     Query minute or daily data from a Zipline bundle and download to a CSV file.
 
@@ -106,6 +109,7 @@ __all__ = [
     "drop_bundle",
     "get_default_bundle",
     "set_default_bundle",
+    "list_sids",
     "download_bundle_file",
     "backtest",
     "scan_parameters",
@@ -592,6 +596,28 @@ def _cli_get_or_set_default_bundle(bundle=None, *args, **kwargs):
         return json_to_cli(set_default_bundle, bundle, *args, **kwargs)
     else:
         return json_to_cli(get_default_bundle, *args, **kwargs)
+
+def list_sids(code: str) -> list[str]:
+    """
+    List the sids in a bundle.
+
+    Params
+    ------
+    code : str, required
+        the bundle code
+
+    Returns
+    -------
+    list of str
+        sids
+    """
+    response = houston.get("/zipline/bundles/{0}/sids".format(code))
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_list_sids(*args, **kwargs):
+    return json_to_cli(list_sids, *args, **kwargs)
 
 def download_bundle_file(
     code: str,

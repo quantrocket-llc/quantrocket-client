@@ -568,6 +568,20 @@ Wait at most 10 minutes for data collection to finish for a database called 'fx-
     parser.set_defaults(func="quantrocket.history._cli_wait_for_collections")
 
     examples = """
+List the sids in a history database.
+"""
+    parser = _subparsers.add_parser(
+        "sids",
+        help="list the sids in a history database",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    parser.add_argument(
+        "code",
+        metavar="CODE",
+        help="the database code")
+    parser.set_defaults(func="quantrocket.history._cli_list_sids")
+
+    examples = """
 Query historical market data from a history database and download to file.
 
 Notes

@@ -52,6 +52,9 @@ cancel_collections
 wait_for_collections
     Wait for historical data collection to finish.
 
+list_sids
+    List the sids in a history database.
+
 download_history_file
     Query historical market data from a history database and download to file.
 
@@ -85,6 +88,7 @@ __all__ = [
     "get_history_queue",
     "cancel_collections",
     "wait_for_collections",
+    "list_sids",
     "download_history_file",
 ]
 
@@ -730,6 +734,27 @@ def wait_for_collections(
 
 def _cli_wait_for_collections(*args, **kwargs):
     return json_to_cli(wait_for_collections, *args, **kwargs)
+
+def list_sids(code: str) -> list[str]:
+    """
+    List the sids in a history database.
+
+    Params
+    ------
+    code : str, required
+        the database code
+
+    Returns
+    -------
+    list
+        list of sids
+    """
+    response = houston.get("/history/{0}/sids".format(code))
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_list_sids(*args, **kwargs):
+    return json_to_cli(list_sids, *args, **kwargs)
 
 def download_history_file(
     code: str,
