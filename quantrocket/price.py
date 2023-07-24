@@ -308,7 +308,7 @@ def get_prices(
         elif bar_size == "1 month":
             bar_size = "30 day"
         db_bar_sizes_parsed.add(pd.Timedelta(bar_size))
-        history_db_fields[db] = db_config.get("fields", [])
+        history_db_fields[db] = list(db_config.get("fields", {}))
 
     for db in realtime_agg_dbs:
         db_config = get_realtime_db_config(db)

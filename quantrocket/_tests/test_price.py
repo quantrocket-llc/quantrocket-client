@@ -64,7 +64,7 @@ class GetPricesTestCase(unittest.TestCase):
                 "bar_size": "1 day",
                 "universes": ["usa-stk"],
                 "vendor": "ibkr",
-                "fields": ["Close","Open","High","Low", "Volume"]
+                "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
             }
 
         def _mock_download_history_file(code, f, *args, **kwargs):
@@ -175,14 +175,14 @@ class GetPricesTestCase(unittest.TestCase):
                     "bar_size": "1 day",
                     "universes": ["usa-stk"],
                     "vendor": "ibkr",
-                    "fields": ["Close","Open","High","Low", "Volume"]
+                    "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
                 }
             else:
                 return {
                     "bar_size": "1 day",
                     "universes": ["japan-stk"],
                     "vendor": "ibkr",
-                    "fields": ["Close","Open","High","Low", "Volume"]
+                    "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
                 }
 
         def _mock_get_realtime_db_config(db):
@@ -487,7 +487,7 @@ class GetPricesTestCase(unittest.TestCase):
                 "bar_size": "1 day",
                 "universes": ["usa-stk"],
                 "vendor": "ibkr",
-                "fields": ["Close","Open","High","Low", "Volume"]
+                "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
             }
 
         def mock_download_history_file(code, f, *args, **kwargs):
@@ -587,14 +587,14 @@ class GetPricesTestCase(unittest.TestCase):
                     "bar_size": "1 day",
                     "universes": ["usa-stk"],
                     "vendor": "ibkr",
-                    "fields": ["Close","Open","High","Low", "Volume"]
+                    "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
                 }
             else:
                 return {
                     "bar_size": "1 day",
                     "universes": ["japan-stk"],
                     "vendor": "ibkr",
-                    "fields": ["Close","Open","High","Low", "Volume"]
+                    "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
                 }
 
         def mock_download_history_file(code, f, *args, **kwargs):
@@ -718,7 +718,7 @@ class GetPricesTestCase(unittest.TestCase):
                 "bar_size": "1 day",
                 "universes": ["usa-stk"],
                 "vendor": "ibkr",
-                "fields": ["Close","Open","High","Low", "Volume"]
+                "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
             }
 
         def mock_download_history_file(code, f, *args, **kwargs):
@@ -860,7 +860,7 @@ class GetPricesTestCase(unittest.TestCase):
                 "bar_size": "15 mins",
                 "universes": ["usa-stk"],
                 "vendor": "ibkr",
-                "fields": ["Close","Open","High","Low", "Volume"]
+                "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
             }
 
         def mock_get_realtime_db_config(db):
@@ -1359,13 +1359,13 @@ class GetPricesTestCase(unittest.TestCase):
                 "bar_size": "1 mins",
                 "universes": ["usa-stk"],
                 "vendor": "ibkr",
-                "fields": ["Wap","Open","High","Low", "Volume"]
+                "fields": {"Wap": "float","Open": "float","High": "float","Low": "float", "Volume": "int"}
             }
 
         def mock_get_realtime_db_config(db):
             return {
                 "bar_size": "1 min",
-                "fields": ["LastClose","LastOpen","LastHigh","LastLow", "VolumeClose"]
+                "fields": {"LastClose": "float","LastOpen": "float","LastHigh": "float","LastLow": "float", "VolumeClose": "int"}
             }
 
         def mock_get_bundle_config(db):
@@ -1615,14 +1615,14 @@ class GetPricesTestCase(unittest.TestCase):
                     "bar_size": "1 day",
                     "universes": ["usa-stk"],
                     "vendor": "ibkr",
-                    "fields": ["Close","Open","High","Low", "Volume"]
+                    "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
                 }
             else:
                 return {
                     "bar_size": "1 day",
                     "universes": ["nyse-stk"],
                     "vendor": "ibkr",
-                    "fields": ["Close","Open","High","Low", "Volume"]
+                    "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
                 }
 
         def mock_download_history_file(code, f, *args, **kwargs):
@@ -1778,13 +1778,13 @@ class GetPricesTestCase(unittest.TestCase):
                 "bar_size": "15 mins", # 15 mins plural (IB format)
                 "universes": ["usa-stk"],
                 "vendor": "ibkr",
-                "fields": ["Close","Open","High","Low", "Volume"]
+                "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
             }
 
         def mock_get_realtime_db_config(db):
             return {
                 "bar_size": "15 min", # 15 min Pandas format
-                "fields": ["LastClose","LastOpen","LastHigh","LastLow", "VolumeClose"]
+                "fields": {"LastClose": "float","LastOpen": "float","LastHigh": "float","LastLow": "float", "VolumeClose": "int"}
             }
         def mock_download_history_file(code, f, *args, **kwargs):
             prices = pd.DataFrame(
@@ -1937,14 +1937,14 @@ class GetPricesTestCase(unittest.TestCase):
                     "bar_size": "1 day",
                     "universes": ["usa-stk"],
                     "vendor": "ibkr",
-                "fields": ["Close","Open","High","Low", "Volume"]
+                "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
                 }
             else:
                 return {
                     "bar_size": "1 day",
                     "universes": ["japan-stk"],
                     "vendor": "ibkr",
-                "fields": ["Close","Open","High","Low", "Volume"]
+                "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
                 }
 
         def mock_download_history_file(code, f, *args, **kwargs):
@@ -2046,14 +2046,14 @@ class GetPricesTestCase(unittest.TestCase):
                     "bar_size": "1 day",
                     "universes": ["usa-stk"],
                     "vendor": "ibkr",
-                    "fields": ["Close","Open","High","Low", "Volume"]
+                    "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
                 }
             else:
                 return {
                     "bar_size": "1 day",
                     "universes": ["japan-stk"],
                     "vendor": "ibkr",
-                    "fields": ["Close","Open","High","Low", "Volume"]
+                    "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
                 }
 
         def mock_download_history_file(code, f, *args, **kwargs):
@@ -2096,7 +2096,7 @@ class GetPricesTestCase(unittest.TestCase):
                 "bar_size": "1 day",
                 "universes": ["usa-stk"],
                 "vendor": "ibkr",
-                "fields": ["Close","Open","High","Low", "Volume"]
+                "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
             }
 
         def mock_download_history_file(code, f, *args, **kwargs):
@@ -2207,14 +2207,14 @@ class GetPricesTestCase(unittest.TestCase):
                     "bar_size": "1 day",
                     "universes": ["usa-stk"],
                     "vendor": "ibkr",
-                    "fields": ["Close","Open","High","Low", "Volume"]
+                    "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
                 }
             else:
                 return {
                     "bar_size": "30 mins",
                     "universes": ["japan-stk"],
                     "vendor": "ibkr",
-                    "fields": ["Close","Open","High","Low", "Volume"]
+                    "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
                 }
 
         def mock_list_history_databases():
@@ -2385,7 +2385,7 @@ class GetPricesTestCase(unittest.TestCase):
                 "bar_size": "30 mins",
                 "universes": ["usa-stk"],
                 "vendor": "ibkr",
-                "fields": ["Close","Open","High","Low", "Volume"]
+                "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
             }
 
         def mock_download_history_file(code, f, *args, **kwargs):
@@ -2642,7 +2642,7 @@ class GetPricesTestCase(unittest.TestCase):
                 "bar_size": "5 mins",
                 "universes": ["aapl-arb"],
                 "vendor": "ibkr",
-                "fields": ["Close","Open","High","Low", "Volume"]
+                "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
             }
 
         def mock_download_history_file(code, f, *args, **kwargs):
@@ -2738,7 +2738,7 @@ class GetPricesTestCase(unittest.TestCase):
                 "bar_size": "5 mins",
                 "universes": ["aapl-arb"],
                 "vendor": "ibkr",
-                "fields": ["Close","Open","High","Low", "Volume"]
+                "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
             }
 
         def mock_download_history_file(code, f, *args, **kwargs):
@@ -2895,7 +2895,7 @@ class GetPricesTestCase(unittest.TestCase):
                 "bar_size": "2 hours",
                 "universes": ["usa-stk"],
                 "vendor": "ibkr",
-                "fields": ["Close","Open","High","Low", "Volume"]
+                "fields": {"Close": "float","Open": "float","High": "float","Low": "float", "Volume": "float"}
             }
 
         def mock_download_history_file(code, f, *args, **kwargs):
