@@ -739,8 +739,8 @@ def list_sids(code: str) -> list[str]:
     """
     List the sids in a history database.
 
-    Params
-    ------
+    Parameters
+    ----------
     code : str, required
         the database code
 

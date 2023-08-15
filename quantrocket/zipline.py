@@ -601,8 +601,8 @@ def list_sids(code: str) -> list[str]:
     """
     List the sids in a bundle.
 
-    Params
-    ------
+    Parameters
+    ----------
     code : str, required
         the bundle code
 
