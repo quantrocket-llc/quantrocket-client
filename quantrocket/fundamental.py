@@ -815,7 +815,7 @@ def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
     stockloan_func(
         f, **query_kwargs)
     stockloan_data = pd.read_csv(f)
-    stockloan_data.loc[:, "Date"] = pd.to_datetime(stockloan_data.Date, utc=is_intraday)
+    stockloan_data["Date"] = pd.to_datetime(stockloan_data.Date, utc=is_intraday)
 
     if is_intraday:
         # Determine timezone, from:
@@ -893,7 +893,7 @@ def _get_stockloan_data_reindexed_like(stockloan_func, reindex_like,
         field = field.reindex(
             index=unioned_idx, columns=reindex_like.columns)
 
-        field = field.fillna(method="ffill")
+        field = field.ffill()
 
         if shift and not is_intraday:
             # shift, now that we've forward-filled; do this before reindexing
@@ -1470,7 +1470,7 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
     # dates which are assumed to be in the local timezone of the reported
     # company)
     if reindex_like.index.tz:
-        financials.loc[:, "Date"] = financials.Date.dt.tz_localize(reindex_like.index.tz.zone)
+        financials["Date"] = financials.Date.dt.tz_localize(reindex_like.index.tz.zone)
 
     deduped_source_dates = financials.Date.drop_duplicates()
 
@@ -1497,7 +1497,7 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
         # financial values are sparse so ffill (one field at a time)
         all_fields_for_code = {}
         for field in financials_for_code.index.get_level_values("Field").unique():
-            field_for_code = financials_for_code.loc[field].fillna(method="ffill")
+            field_for_code = financials_for_code.loc[field].ffill()
 
             # Shift to avoid lookahead bias
             field_for_code = field_for_code.shift()
@@ -1799,7 +1799,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
         estimates["Date"] = estimates.apply(lambda row: row.UpdatedDate.tz_localize("UTC").tz_convert(row.Timezone), axis=1)
 
     # Convert to dates (i.e. time = 00:00:00)
-    estimates.loc[:, "Date"] = pd.to_datetime(estimates.Date.apply(
+    estimates["Date"] = pd.to_datetime(estimates.Date.apply(
         lambda x: datetime.datetime.combine(x, pd.Timestamp("00:00:00").time())))
 
     # Drop any fields we don't need
@@ -1816,7 +1816,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     # be joined (tz-aware or tz-naive are both fine, as UpdatedDate was
     # already converted above to the local timezone of the reported company)
     if reindex_like.index.tz:
-        estimates.loc[:, "Date"] = estimates.Date.dt.tz_localize(reindex_like.index.tz.zone)
+        estimates["Date"] = estimates.Date.dt.tz_localize(reindex_like.index.tz.zone)
 
     deduped_announce_dates = estimates.Date.drop_duplicates()
 
@@ -1846,7 +1846,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
             field_for_code = estimates_for_code.loc[field]
 
             if ffill:
-                field_for_code = field_for_code.fillna(method="ffill")
+                field_for_code = field_for_code.ffill()
 
             # Shift to avoid lookahead bias
             if shift:
@@ -2759,7 +2759,7 @@ def get_sharadar_fundamentals_reindexed_like(
     # dates which are assumed to be in the local timezone of the reported
     # company)
     if reindex_like.index.tz:
-        financials.loc[:, "Date"] = financials.Date.dt.tz_localize(reindex_like.index.tz.zone)
+        financials["Date"] = financials.Date.dt.tz_localize(reindex_like.index.tz.zone)
 
     deduped_datekeys = financials.Date.drop_duplicates()
 
@@ -2794,10 +2794,10 @@ def get_sharadar_fundamentals_reindexed_like(
         for _ in range(abs(period_offset)):
             # to get the previous period, we forward-fill, shift, then keep
             # only the shifted values falling on report dates
-            field = field.fillna(method="ffill").shift().where(are_report_dates)
+            field = field.ffill().shift().where(are_report_dates)
 
         # forward-fill values
-        field = field.fillna(method="ffill")
+        field = field.ffill()
 
         # Shift to avoid lookahead bias
         field = field.shift()
@@ -2919,7 +2919,7 @@ def get_sharadar_institutions_reindexed_like(
     # if reindex_like.index is tz-aware, make institutions tz-aware so they can
     # be joined
     if reindex_like.index.tz:
-        institutions.loc[:, "Date"] = institutions.Date.dt.tz_localize(reindex_like.index.tz.zone)
+        institutions["Date"] = institutions.Date.dt.tz_localize(reindex_like.index.tz.zone)
 
     deduped_datekeys = institutions.Date.drop_duplicates()
 
@@ -2939,7 +2939,7 @@ def get_sharadar_institutions_reindexed_like(
     # values are sparse so ffill (one field at a time)
     all_fields = {}
     for fieldname in institutions.index.get_level_values("Field").unique():
-        field = institutions.loc[fieldname].fillna(method="ffill")
+        field = institutions.loc[fieldname].ffill()
 
         # Shift to avoid lookahead bias
         if shift:
@@ -3040,7 +3040,7 @@ def get_sharadar_sec8_reindexed_like(
     # if reindex_like.index is tz-aware, make financials tz-aware so they can
     # be joined
     if reindex_like.index.tz:
-        events.loc[:, "Date"] = events.Date.dt.tz_localize(reindex_like.index.tz.zone)
+        events["Date"] = events.Date.dt.tz_localize(reindex_like.index.tz.zone)
 
     # If multiple events, drop duplicates
     events = events.drop_duplicates(subset=["Sid","Date"])
@@ -3129,7 +3129,7 @@ def get_sharadar_sp500_reindexed_like(
     # if reindex_like.index is tz-aware, make financials tz-aware so they can
     # be joined
     if reindex_like.index.tz:
-        sp500_changes.loc[:, "Date"] = sp500_changes.Date.dt.tz_localize(reindex_like.index.tz.zone)
+        sp500_changes["Date"] = sp500_changes.Date.dt.tz_localize(reindex_like.index.tz.zone)
 
     deduped_datekeys = sp500_changes.Date.drop_duplicates()
 
@@ -3140,7 +3140,7 @@ def get_sharadar_sp500_reindexed_like(
     sp500_changes = sp500_changes.pivot(index="Sid",columns="Date").T
     sp500_changes = sp500_changes.loc["ACTION"]
     sp500_changes = sp500_changes.reindex(index=union_date_idx)
-    are_in_sp500 = sp500_changes.fillna(method="ffill").fillna("removed") == "added"
+    are_in_sp500 = sp500_changes.ffill().fillna("removed") == "added"
 
     # reindex like input DataFrame
     are_in_sp500 = are_in_sp500.reindex(
@@ -3363,7 +3363,7 @@ def get_wsh_earnings_dates_reindexed_like(
 
     # if reindex_like.index is tz-aware, make announcements tz-aware too
     if reindex_like.index.tz:
-        announcements.loc[:, "Date"] = announcements.Date.dt.tz_localize(reindex_like.index.tz.zone)
+        announcements["Date"] = announcements.Date.dt.tz_localize(reindex_like.index.tz.zone)
 
     # There might be duplicate Dates for confirmed vs unconfirmed announcements (or other changes to
     # confirmed or unconfirmed announcements). In this case we keep only the most recently updated

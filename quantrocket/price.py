@@ -772,7 +772,7 @@ def get_prices_reindexed_like(
         prices_for_field = prices_for_field.reindex(index=unioned_idx)
 
         if ffill:
-            prices_for_field = prices_for_field.fillna(method="ffill")
+            prices_for_field = prices_for_field.ffill()
 
         # shift forward to avoid lookahead bias
         prices_for_field = prices_for_field.shift(shift)

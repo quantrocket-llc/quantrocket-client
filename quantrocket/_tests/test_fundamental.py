@@ -699,7 +699,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(roas.index), list(closes.index))
         self.assertListEqual(list(roas.columns), list(closes.columns))
         roas = roas.reset_index()
-        roas.loc[:, "Date"] = roas.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        roas["Date"] = roas.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             roas.to_dict(orient="records"),
             [{'Date': '2018-07-05T00:00:00', "FI12345": 35.0},
@@ -723,7 +723,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
 
         roas = estimates.loc["ROA"].loc["Actual"]
         roas = roas.reset_index()
-        roas.loc[:, "Date"] = roas.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        roas["Date"] = roas.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             roas.to_dict(orient="records"),
             [{'Date': '2018-07-05T00:00:00-0400', "FI12345": 35.0},
@@ -866,7 +866,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
 
         eps = estimates.loc["EPS"].loc["Actual"]
         eps = eps.reset_index()
-        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        eps["Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(eps.to_dict(orient="records"),
             [{'Date': '2018-07-22T00:00:00', "FI12345": 24.5, "FI23456": 11.35},
              {'Date': '2018-07-23T00:00:00', "FI12345": 24.5, "FI23456": 11.35},
@@ -940,7 +940,7 @@ class ReutersEstimatesReindexedLikeTestCase(unittest.TestCase):
         # replace nan with "nan" to allow equality comparisons
         roas = roas.where(roas.notnull(), "nan")
         roas = roas.reset_index()
-        roas.loc[:, "Date"] = roas.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        roas["Date"] = roas.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             roas.to_dict(orient="records"),
             [{'Date': '2018-07-05T00:00:00', "FI12345": 35.0, "FI23456": "nan"},
@@ -1291,7 +1291,7 @@ class ReutersFinancialsReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(atots.index), list(closes.index))
         self.assertListEqual(list(atots.columns), list(closes.columns))
         atots = atots.reset_index()
-        atots.loc[:, "Date"] = atots.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        atots["Date"] = atots.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             atots.to_dict(orient="records"),
             [{'Date': '2018-07-05T00:00:00', "FI12345": 580.0},
@@ -1313,7 +1313,7 @@ class ReutersFinancialsReindexedLikeTestCase(unittest.TestCase):
 
         atots = financials.loc["ATOT"].loc["Amount"]["FI12345"]
         atots = atots.reset_index()
-        atots.loc[:, "Date"] = atots.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        atots["Date"] = atots.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             atots.to_dict(orient="records"),
             [{'Date': '2018-07-05T00:00:00-0400', "FI12345": 580.0},
@@ -1468,7 +1468,7 @@ class WSHEarningsDatesReindexedLikeTestCase(unittest.TestCase):
 
         announce_times = announcements.loc["Time"]
         announce_times = announce_times.reset_index()
-        announce_times.loc[:, "Date"] = announce_times.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        announce_times["Date"] = announce_times.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         announce_times = announce_times.fillna("nan")
 
         self.assertListEqual(
@@ -1492,7 +1492,7 @@ class WSHEarningsDatesReindexedLikeTestCase(unittest.TestCase):
 
         announce_statuses = announcements.loc["Status"]
         announce_statuses = announce_statuses.reset_index()
-        announce_statuses.loc[:, "Date"] = announce_statuses.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        announce_statuses["Date"] = announce_statuses.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         announce_statuses = announce_statuses.fillna("nan")
 
         self.assertListEqual(
@@ -1543,7 +1543,7 @@ class WSHEarningsDatesReindexedLikeTestCase(unittest.TestCase):
         announce_times = announcements.loc["Time"]
         self.assertEqual(announce_times.index.tz.zone, "America/New_York")
         announce_times = announce_times.reset_index()
-        announce_times.loc[:, "Date"] = announce_times.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        announce_times["Date"] = announce_times.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         announce_times = announce_times.fillna("nan")
 
         self.assertListEqual(
@@ -1821,7 +1821,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
                 time="09:30:00 America/New_York")
 
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 [{'Date': '2018-05-01T00:00:00', "FI12345": 10000.0, "FI23456": 3500.0},
@@ -1834,7 +1834,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
                 time="09:30:00 Europe/London")
 
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 [{'Date': '2018-05-01T00:00:00', "FI12345": 10000.0, "FI23456": 3500.0},
@@ -1847,7 +1847,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
                 time="09:30:00 Japan")
 
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 [{'Date': '2018-05-01T00:00:00', "FI12345": 10000.0, "FI23456": 3500.0},
@@ -1905,7 +1905,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
                 time="09:30:00")
 
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 [{'Date': '2018-05-01T00:00:00-0400', "FI12345": 10000.0, "FI23456": 3500.0},
@@ -1970,7 +1970,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
                 time="09:30:00")
 
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 [{'Date': '2018-05-01T00:00:00', "FI12345": 10000.0, "FI23456": 3500.0},
@@ -2134,7 +2134,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
                 time="09:30:00")
 
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 [{'Date': '2018-05-01T00:00:00-0400', "FI12345": 10000.0, "FI23456": 3500.0},
@@ -2189,7 +2189,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
 
             shortable_shares = get_ibkr_shortable_shares_reindexed_like(closes)
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 [{'Date': '2018-05-01T00:00:00-0400', "FI12345": 10000.0, "FI23456": 3500.0},
@@ -2263,7 +2263,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
             # replace nan with "nan" to allow equality comparisons
             shortable_shares = shortable_shares.where(shortable_shares.notnull(), "nan")
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 [{'Date': '2018-04-13T00:00:00-0400', "FI12345": "nan", "FI23456": "nan"},
@@ -2278,7 +2278,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
             # replace nan with "nan" to allow equality comparisons
             shortable_shares = shortable_shares.where(shortable_shares.notnull(), "nan")
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%d")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%d")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 [{'Field': 'MinQuantity', 'Date': '2018-04-13', 'FI12345': 'nan', 'FI23456': 'nan'},
@@ -2338,7 +2338,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
             # replace nan with "nan" to allow equality comparisons
             margin_requirements = margin_requirements.where(margin_requirements.notnull(), "nan")
             margin_requirements = margin_requirements.reset_index()
-            margin_requirements.loc[:, "Date"] = margin_requirements.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            margin_requirements["Date"] = margin_requirements.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 margin_requirements.to_dict(orient="records"),
                 [{'Date': '2018-04-13T00:00:00-0400',
@@ -2507,7 +2507,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
             # without shift
             shortable_shares = get_ibkr_shortable_shares_reindexed_like(closes, aggregate=True, fields="MeanQuantity")
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%d")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%d")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 [{'Field': 'MeanQuantity', 'Date': '2019-04-16', 'FI12345': 4334.0, 'FI23456': 251.0},
@@ -2516,7 +2516,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
             # with shift
             shortable_shares = get_ibkr_shortable_shares_reindexed_like(closes, aggregate=True, fields="MeanQuantity", shift=1)
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%d")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%d")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 [{'Field': 'MeanQuantity', 'Date': '2019-04-16', 'FI12345': 5300.0, 'FI23456': 151.0},
@@ -2526,7 +2526,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
             # without shift
             shortable_shares = get_ibkr_shortable_shares_reindexed_like(closes, time="09:30:00 America/New_York")
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 [{'Date': '2019-04-16T00:00:00-0400', 'FI12345': 9000.0, 'FI23456': 300.0},
@@ -2536,7 +2536,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
             # with shift
             shortable_shares = get_ibkr_shortable_shares_reindexed_like(closes, time="09:30:00 America/New_York", shift=1)
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 # currently, first row is Nan (becomes 0) for intraday dataframes
@@ -2579,7 +2579,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
             margin_requirements = get_ibkr_margin_requirements_reindexed_like(closes)
             margin_requirements = margin_requirements.loc["ShortInitialMargin"]
             margin_requirements = margin_requirements.reset_index()
-            margin_requirements.loc[:, "Date"] = margin_requirements.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            margin_requirements["Date"] = margin_requirements.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 margin_requirements.to_dict(orient="records"),
                 [{'Date': '2019-04-16T00:00:00-0400', 'FI12345': 50.0, 'FI23456': 0.0},
@@ -2590,7 +2590,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
             margin_requirements = get_ibkr_margin_requirements_reindexed_like(closes, shift=1)
             margin_requirements = margin_requirements.loc["ShortInitialMargin"]
             margin_requirements = margin_requirements.reset_index()
-            margin_requirements.loc[:, "Date"] = margin_requirements.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            margin_requirements["Date"] = margin_requirements.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 margin_requirements.to_dict(orient="records"),
                 # currently, first row is Nan (becomes 0) for intraday dataframes
@@ -2695,7 +2695,7 @@ class IBKRShortableSharesReindexedLikeTestCase(unittest.TestCase):
             # replace nan with "nan" to allow equality comparisons
             shortable_shares = shortable_shares.where(shortable_shares.notnull(), "nan")
             shortable_shares = shortable_shares.reset_index()
-            shortable_shares.loc[:, "Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%d")
+            shortable_shares["Date"] = shortable_shares.Date.dt.strftime("%Y-%m-%d")
             self.assertListEqual(
                 shortable_shares.to_dict(orient="records"),
                 [{'Field': 'MeanQuantity', 'Date': '2018-05-15', 'FI12345': 5300.0, 'FI23456': 0.0},
@@ -2755,7 +2755,7 @@ class IBKRBorrowFeesReindexedLikeTestCase(unittest.TestCase):
             borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes)
 
             borrow_fees = borrow_fees.reset_index()
-            borrow_fees.loc[:, "Date"] = borrow_fees.Date.dt.strftime("%Y-%m-%d")
+            borrow_fees["Date"] = borrow_fees.Date.dt.strftime("%Y-%m-%d")
             self.assertListEqual(
                 borrow_fees.to_dict(orient="records"),
                 [{'Date': '2018-05-01', "FI12345": 1.65, "FI23456": 0.40},
@@ -2809,7 +2809,7 @@ class IBKRBorrowFeesReindexedLikeTestCase(unittest.TestCase):
             borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes)
 
             borrow_fees = borrow_fees.reset_index()
-            borrow_fees.loc[:, "Date"] = borrow_fees.Date.dt.strftime("%Y-%m-%d")
+            borrow_fees["Date"] = borrow_fees.Date.dt.strftime("%Y-%m-%d")
             self.assertListEqual(
                 borrow_fees.to_dict(orient="records"),
                 [{'Date': '2018-05-01', "FI12345": 1.65, "FI23456": 0.40},
@@ -2821,7 +2821,7 @@ class IBKRBorrowFeesReindexedLikeTestCase(unittest.TestCase):
             borrow_fees = get_ibkr_borrow_fees_reindexed_like(closes, shift=1)
 
             borrow_fees = borrow_fees.reset_index()
-            borrow_fees.loc[:, "Date"] = borrow_fees.Date.dt.strftime("%Y-%m-%d")
+            borrow_fees["Date"] = borrow_fees.Date.dt.strftime("%Y-%m-%d")
             self.assertListEqual(
                 borrow_fees.to_dict(orient="records"),
                 [{'Date': '2018-05-01', 'FI12345': 1.5, 'FI23456': 0.35},
@@ -2885,7 +2885,7 @@ class IBKRMarginRequirementsReindexedLikeTestCase(unittest.TestCase):
             # replace nan with "nan" to allow equality comparisons
             margin_requirements = margin_requirements.where(margin_requirements.notnull(), "nan")
             margin_requirements = margin_requirements.reset_index()
-            margin_requirements.loc[:, "Date"] = margin_requirements.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            margin_requirements["Date"] = margin_requirements.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 margin_requirements.to_dict(orient="records"),
                 [{'Date': '2018-04-16T00:00:00-0400',
@@ -2946,7 +2946,7 @@ class IBKRMarginRequirementsReindexedLikeTestCase(unittest.TestCase):
             # replace nan with "nan" to allow equality comparisons
             margin_requirements = margin_requirements.where(margin_requirements.notnull(), "nan")
             margin_requirements = margin_requirements.reset_index()
-            margin_requirements.loc[:, "Date"] = margin_requirements.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            margin_requirements["Date"] = margin_requirements.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 margin_requirements.to_dict(orient="records"),
                 [{'Date': '2018-04-15T00:00:00-0400',
@@ -3028,7 +3028,7 @@ class AlpacaETBReindexedLikeTestCase(unittest.TestCase):
             etb = get_alpaca_etb_reindexed_like(closes)
 
             etb = etb.reset_index()
-            etb.loc[:, "Date"] = etb.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            etb["Date"] = etb.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 etb.to_dict(orient="records"),
                 [{'Date': '2019-05-01T00:00:00-0400', "FI12345": True, "FI23456": False},
@@ -3500,7 +3500,7 @@ class SharadarFundamentalsReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(revenues.index), list(revenues.index))
         self.assertListEqual(list(revenues.columns), list(revenues.columns))
         revenues = revenues.reset_index()
-        revenues.loc[:, "Date"] = revenues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        revenues["Date"] = revenues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             revenues.to_dict(orient="records"),
             [{'Date': '2018-07-05T00:00:00', "FI12345": 580.0},
@@ -3526,7 +3526,7 @@ class SharadarFundamentalsReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(revenues.index), list(revenues.index))
         self.assertListEqual(list(revenues.columns), list(revenues.columns))
         revenues = revenues.reset_index()
-        revenues.loc[:, "Date"] = revenues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        revenues["Date"] = revenues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             revenues.to_dict(orient="records"),
             [{'Date': '2018-07-05T00:00:00-0400', "FI12345": 580.0},
@@ -3687,7 +3687,7 @@ class SharadarInstitutionsReindexedLikeTestCase(unittest.TestCase):
 
         sharevalues = institutions.loc["SHRVALUE"]
         sharevalues = sharevalues.reset_index()
-        sharevalues.loc[:, "Date"] = sharevalues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        sharevalues["Date"] = sharevalues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             sharevalues.to_dict(orient="records"),
             [{'Date': '2018-08-11T00:00:00', 'FI12345': 500000.0, 'FI23456': 700000.0},
@@ -3700,7 +3700,7 @@ class SharadarInstitutionsReindexedLikeTestCase(unittest.TestCase):
 
         totalvalues = institutions.loc["TOTALVALUE"]
         totalvalues = totalvalues.reset_index()
-        totalvalues.loc[:, "Date"] = totalvalues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        totalvalues["Date"] = totalvalues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             totalvalues.to_dict(orient="records"),
             [{'Date': '2018-08-11T00:00:00', 'FI12345': 1500000.0, 'FI23456': 1700000.0},
@@ -3720,7 +3720,7 @@ class SharadarInstitutionsReindexedLikeTestCase(unittest.TestCase):
 
         sharevalues = institutions.loc["SHRVALUE"]
         sharevalues = sharevalues.reset_index()
-        sharevalues.loc[:, "Date"] = sharevalues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        sharevalues["Date"] = sharevalues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             sharevalues.to_dict(orient="records"),
             [{'Date': '2018-08-11T00:00:00', 'FI12345': 500000.0, 'FI23456': 700000.0},
@@ -3780,7 +3780,7 @@ class SharadarInstitutionsReindexedLikeTestCase(unittest.TestCase):
 
         sharevalues = institutions.loc["SHRVALUE"]
         sharevalues = sharevalues.reset_index()
-        sharevalues.loc[:, "Date"] = sharevalues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        sharevalues["Date"] = sharevalues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             sharevalues.to_dict(orient="records"),
             [{'Date': '2018-08-11T00:00:00', 'FI12345': 500000.0, 'FI23456': 700000.0},
@@ -3806,7 +3806,7 @@ class SharadarInstitutionsReindexedLikeTestCase(unittest.TestCase):
 
         sharevalues = institutions.loc["SHRVALUE"]
         sharevalues = sharevalues.reset_index()
-        sharevalues.loc[:, "Date"] = sharevalues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        sharevalues["Date"] = sharevalues.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             sharevalues.to_dict(orient="records"),
             [{'Date': '2018-08-11T00:00:00-0400', 'FI12345': 500000.0, 'FI23456': 700000.0},
@@ -3943,7 +3943,7 @@ class SharadarSEC8ReindexedLikeTestCase(unittest.TestCase):
             have_events = get_sharadar_sec8_reindexed_like(closes, event_codes=[13])
 
         have_events = have_events.reset_index()
-        have_events.loc[:, "Date"] = have_events.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        have_events["Date"] = have_events.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             have_events.to_dict(orient="records"),
             [{'Date': '2018-08-13T00:00:00', 'FI12345': False, 'FI23456': False},
@@ -3986,7 +3986,7 @@ class SharadarSEC8ReindexedLikeTestCase(unittest.TestCase):
             have_events = get_sharadar_sec8_reindexed_like(closes, event_codes=[13, 14])
 
         have_events = have_events.reset_index()
-        have_events.loc[:, "Date"] = have_events.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        have_events["Date"] = have_events.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             have_events.to_dict(orient="records"),
             [{'Date': '2018-08-13T00:00:00', 'FI12345': False, 'FI23456': False},
@@ -4013,7 +4013,7 @@ class SharadarSEC8ReindexedLikeTestCase(unittest.TestCase):
             have_events = get_sharadar_sec8_reindexed_like(closes, event_codes=[13])
 
         have_events = have_events.reset_index()
-        have_events.loc[:, "Date"] = have_events.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        have_events["Date"] = have_events.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             have_events.to_dict(orient="records"),
             [{'Date': '2018-08-13T00:00:00', 'FI12345': False, 'FI23456': False},
@@ -4058,7 +4058,7 @@ class SharadarSEC8ReindexedLikeTestCase(unittest.TestCase):
             have_events = get_sharadar_sec8_reindexed_like(closes, event_codes=[13])
 
         have_events = have_events.reset_index()
-        have_events.loc[:, "Date"] = have_events.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        have_events["Date"] = have_events.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             have_events.to_dict(orient="records"),
             [{'Date': '2018-08-13T00:00:00', 'FI12345': False, 'FI23456': False},
@@ -4080,7 +4080,7 @@ class SharadarSEC8ReindexedLikeTestCase(unittest.TestCase):
             have_events = get_sharadar_sec8_reindexed_like(closes, event_codes=[13])
 
         have_events = have_events.reset_index()
-        have_events.loc[:, "Date"] = have_events.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        have_events["Date"] = have_events.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             have_events.to_dict(orient="records"),
             [{'Date': '2018-08-13T00:00:00-0400', 'FI12345': False, 'FI23456': False},
@@ -4222,7 +4222,7 @@ class SharadarSP500ReindexedLikeTestCase(unittest.TestCase):
             in_sp500 = get_sharadar_sp500_reindexed_like(closes)
 
         in_sp500 = in_sp500.reset_index()
-        in_sp500.loc[:, "Date"] = in_sp500.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        in_sp500["Date"] = in_sp500.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             in_sp500.to_dict(orient="records"),
             [{'Date': '2018-08-13T00:00:00', 'FI12345': True, 'FI23456': False},
@@ -4250,7 +4250,7 @@ class SharadarSP500ReindexedLikeTestCase(unittest.TestCase):
             in_sp500 = get_sharadar_sp500_reindexed_like(closes)
 
         in_sp500 = in_sp500.reset_index()
-        in_sp500.loc[:, "Date"] = in_sp500.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        in_sp500["Date"] = in_sp500.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             in_sp500.to_dict(orient="records"),
             [{'Date': '2018-08-13T00:00:00', 'FI12345': False, 'FI23456': False},
@@ -4298,7 +4298,7 @@ class SharadarSP500ReindexedLikeTestCase(unittest.TestCase):
             in_sp500 = get_sharadar_sp500_reindexed_like(closes)
 
         in_sp500 = in_sp500.reset_index()
-        in_sp500.loc[:, "Date"] = in_sp500.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        in_sp500["Date"] = in_sp500.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             in_sp500.to_dict(orient="records"),
             [{'Date': '2018-08-13T00:00:00', 'FI12345': True, 'FI23456': False},
@@ -4320,7 +4320,7 @@ class SharadarSP500ReindexedLikeTestCase(unittest.TestCase):
             in_sp500 = get_sharadar_sp500_reindexed_like(closes)
 
         in_sp500 = in_sp500.reset_index()
-        in_sp500.loc[:, "Date"] = in_sp500.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        in_sp500["Date"] = in_sp500.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             in_sp500.to_dict(orient="records"),
             [{'Date': '2018-08-13T00:00:00-0400', 'FI12345': True, 'FI23456': False},

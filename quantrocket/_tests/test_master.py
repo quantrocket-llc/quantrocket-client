@@ -869,7 +869,7 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
 
         symbols = securities.loc["Symbol"]
         symbols = symbols.reset_index()
-        symbols.loc[:, "Date"] = symbols.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        symbols["Date"] = symbols.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             symbols.to_dict(orient="records"),
             [{'Date': '2018-05-01T00:00:00', "FI12345": "ABC", "FI23456": "DEF"},
@@ -880,7 +880,7 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
         for field in ("Delisted", "edi_Delisted"):
             delisted = securities.loc[field]
             delisted = delisted.reset_index()
-            delisted.loc[:, "Date"] = delisted.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            delisted["Date"] = delisted.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 delisted.to_dict(orient="records"),
                 [{'Date': '2018-05-01T00:00:00', "FI12345": False, "FI23456": True},
@@ -891,7 +891,7 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
         for field in ("Etf", "ibkr_Etf"):
             etfs = securities.loc[field]
             etfs = etfs.reset_index()
-            etfs.loc[:, "Date"] = etfs.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            etfs["Date"] = etfs.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
             self.assertListEqual(
                 etfs.to_dict(orient="records"),
                 [{'Date': '2018-05-01T00:00:00', "FI12345": True, "FI23456": False},
@@ -937,7 +937,7 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
             self.maxDiff = None
 
             securities = securities.reset_index()
-            securities.loc[:, "Date"] = securities.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            securities["Date"] = securities.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
 
             self.assertListEqual(
                 securities.to_dict(orient="records"),
@@ -1023,7 +1023,7 @@ class SecuritiesReindexedLikeTestCase(unittest.TestCase):
                 fields="Symbol")
 
             securities = securities.reset_index()
-            securities.loc[:, "Date"] = securities.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+            securities["Date"] = securities.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
 
             self.assertListEqual(
                 securities.to_dict(orient="records"),
@@ -1424,7 +1424,7 @@ class ContractNumsReindexedLikeTestCase(unittest.TestCase):
         self.assertEqual(list(contract_nums.index.names), ["Date","Time"])
 
         contract_nums = contract_nums.reset_index().fillna("nan")
-        contract_nums.loc[:, "Date"] = contract_nums.Date.dt.strftime("%Y-%m-%d")
+        contract_nums["Date"] = contract_nums.Date.dt.strftime("%Y-%m-%d")
 
         self.assertListEqual(
             contract_nums.to_dict(orient="records"),

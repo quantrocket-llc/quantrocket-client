@@ -501,7 +501,7 @@ class ReadPnlCsvTestCase(unittest.TestCase):
         results = read_pnl_csv("results.csv")
 
         results = results.reset_index()
-        results.loc[:, "Date"] = results.Date.dt.strftime("%Y-%m-%d")
+        results["Date"] = results.Date.dt.strftime("%Y-%m-%d")
         results = results.set_index(["Field", "Date", "Time"])
 
         self.assertDictEqual(
@@ -519,7 +519,7 @@ class ReadPnlCsvTestCase(unittest.TestCase):
         results = read_pnl_csv("results.csv")
 
         results = results.reset_index()
-        results.loc[:, "Date"] = results.Date.dt.strftime("%Y-%m-%d")
+        results["Date"] = results.Date.dt.strftime("%Y-%m-%d")
         results = results.set_index(["Field", "Date", "Time"])
 
         results = results.where(results.notnull(), None)

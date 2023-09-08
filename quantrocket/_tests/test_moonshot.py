@@ -315,7 +315,7 @@ class ReadMoonshotCsvTestCase(unittest.TestCase):
         results = read_moonshot_csv("results.csv")
 
         results = results.reset_index()
-        results.loc[:, "Date"] = results.Date.dt.strftime("%Y-%m-%d")
+        results["Date"] = results.Date.dt.strftime("%Y-%m-%d")
         results = results.set_index(["Field", "Date"])
 
         self.assertDictEqual(
@@ -332,7 +332,7 @@ class ReadMoonshotCsvTestCase(unittest.TestCase):
         results = read_moonshot_csv("results.csv")
 
         results = results.reset_index()
-        results.loc[:, "Date"] = results.Date.dt.strftime("%Y-%m-%d")
+        results["Date"] = results.Date.dt.strftime("%Y-%m-%d")
         results = results.set_index(["Field", "Date"])
 
         self.assertDictEqual(
@@ -349,7 +349,7 @@ class ReadMoonshotCsvTestCase(unittest.TestCase):
         results = read_moonshot_csv("results.csv")
 
         results = results.reset_index()
-        results.loc[:, "Date"] = results.Date.dt.strftime("%Y-%m-%d")
+        results["Date"] = results.Date.dt.strftime("%Y-%m-%d")
         results = results.set_index(["Field", "Date", "Time"])
 
         self.assertDictEqual(
@@ -366,7 +366,7 @@ class ReadMoonshotCsvTestCase(unittest.TestCase):
         results = read_moonshot_csv("results.csv")
 
         results = results.reset_index()
-        results.loc[:, "Date"] = results.Date.dt.strftime("%Y-%m-%d")
+        results["Date"] = results.Date.dt.strftime("%Y-%m-%d")
         results = results.set_index(["Field", "Date", "Time"])
 
         self.assertDictEqual(

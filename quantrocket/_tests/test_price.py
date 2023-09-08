@@ -560,7 +560,7 @@ class GetPricesTestCase(unittest.TestCase):
             ["Close", "Close", "Close", "Volume", "Volume", "Volume"])
         closes = prices.loc["Close"]
         closes = closes.reset_index()
-        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes["Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 20.1, "FI23456": 50.5},
@@ -569,7 +569,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
         volumes = prices.loc["Volume"]
         volumes = volumes.reset_index()
-        volumes.loc[:, "Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        volumes["Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             volumes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 15000, "FI23456": 98000},
@@ -689,7 +689,7 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertListEqual(list(prices.columns), ["FI12345","FI23456","FI56789"])
         closes = prices.loc["Close"]
         closes = closes.reset_index()
-        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes["Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 20.1, "FI23456": 50.5, "FI56789": 5900.0},
@@ -698,7 +698,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
         volumes = prices.loc["Volume"]
         volumes = volumes.reset_index()
-        volumes.loc[:, "Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        volumes["Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             volumes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 15000, "FI23456": 98000, "FI56789": 18000},
@@ -831,7 +831,7 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertListEqual(list(prices.columns), ["FI12345","FI23456"])
         closes = prices.loc["Close"]
         closes = closes.reset_index()
-        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes["Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 20.1, "FI23456": 50.5},
@@ -840,7 +840,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
         last_closes = prices.loc["LastClose"]
         last_closes = last_closes.reset_index()
-        last_closes.loc[:, "Date"] = last_closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        last_closes["Date"] = last_closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
 
         self.assertListEqual(
             last_closes.fillna("nan").to_dict(orient="records"),
@@ -980,7 +980,7 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertListEqual(list(prices.columns), ["FI12345","FI23456"])
         closes = prices.loc["Close"]
         closes = closes.reset_index()
-        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes["Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', 'Time': '09:30:00', "FI12345": 20.1, "FI23456": 50.5},
@@ -990,7 +990,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
         volumes = prices.loc["Volume"]
         volumes = volumes.reset_index()
-        volumes.loc[:, "Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        volumes["Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             volumes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', 'Time': '09:30:00', "FI12345": 15000.0, "FI23456": 98000.0},
@@ -1001,7 +1001,7 @@ class GetPricesTestCase(unittest.TestCase):
 
         last_closes = prices.loc["LastClose"]
         last_closes = last_closes.reset_index()
-        last_closes.loc[:, "Date"] = last_closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        last_closes["Date"] = last_closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             last_closes.fillna("nan").to_dict(orient="records"),
             # Data was UTC but now NY
@@ -1090,7 +1090,7 @@ class GetPricesTestCase(unittest.TestCase):
 
         last_closes = prices.loc["LastClose"]
         last_closes = last_closes.reset_index()
-        last_closes.loc[:, "Date"] = last_closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        last_closes["Date"] = last_closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             last_closes.fillna("nan").to_dict(orient="records"),
             # Data was UTC but now Mexico_City
@@ -1100,7 +1100,7 @@ class GetPricesTestCase(unittest.TestCase):
 
         last_counts = prices.loc["LastCount"]
         last_counts = last_counts.reset_index()
-        last_counts.loc[:, "Date"] = last_counts.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        last_counts["Date"] = last_counts.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             last_counts.fillna("nan").to_dict(orient="records"),
             # Data was UTC but now Mexico_City
@@ -1209,7 +1209,7 @@ class GetPricesTestCase(unittest.TestCase):
 
         closes = prices.loc["Close"]
         closes = closes.reset_index()
-        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes["Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes.fillna("nan").to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', 'Time': '09:30:00', 'FI12345': 48.9, 'FI23456': 59.5},
@@ -1220,7 +1220,7 @@ class GetPricesTestCase(unittest.TestCase):
 
         volumes = prices.loc["Volume"]
         volumes = volumes.reset_index()
-        volumes.loc[:, "Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        volumes["Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             volumes.fillna("nan").to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', 'Time': '09:30:00', 'FI12345': 100, 'FI23456': 500},
@@ -1561,7 +1561,7 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertListEqual(list(prices.columns), ["FI12345","FI23456"])
         waps = prices.loc["Wap"]
         waps = waps.reset_index()
-        waps.loc[:, "Date"] = waps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        waps["Date"] = waps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             waps.fillna("nan").to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', 'Time': '09:30:00', "FI12345": 20.1, "FI23456": 50.5},
@@ -1571,7 +1571,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
         volumes = prices.loc["Volume"]
         volumes = volumes.reset_index()
-        volumes.loc[:, "Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        volumes["Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             volumes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', 'Time': '09:30:00', "FI12345": 15000.0, "FI23456": 98000.0},
@@ -1582,7 +1582,7 @@ class GetPricesTestCase(unittest.TestCase):
 
         last_closes = prices.loc["LastClose"]
         last_closes = last_closes.reset_index()
-        last_closes.loc[:, "Date"] = last_closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        last_closes["Date"] = last_closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             last_closes.fillna("nan").to_dict(orient="records"),
             # Data was UTC but now NY
@@ -1594,7 +1594,7 @@ class GetPricesTestCase(unittest.TestCase):
 
         closes = prices.loc["Close"]
         closes = closes.reset_index()
-        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes["Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes.fillna("nan").to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', 'Time': '09:30:00', 'FI12345': 48.9, 'FI23456': 59.5},
@@ -1714,7 +1714,7 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertListEqual(list(prices.columns), ["FI12345","FI23456"])
         closes = prices.loc["Close"]
         closes = closes.reset_index()
-        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes["Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 20.1, "FI23456": 50.5},
@@ -1723,7 +1723,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
         volumes = prices.loc["Volume"]
         volumes = volumes.reset_index()
-        volumes.loc[:, "Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        volumes["Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             volumes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 15000, "FI23456": 98000},
@@ -1749,7 +1749,7 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertListEqual(list(prices.columns), ["FI12345","FI23456"])
         closes = prices.loc["Close"]
         closes = closes.reset_index()
-        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes["Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 5900.0, "FI23456": 50.5},
@@ -1758,7 +1758,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
         volumes = prices.loc["Volume"]
         volumes = volumes.reset_index()
-        volumes.loc[:, "Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        volumes["Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         # Since volume is null in nyse-stk-1d, we get the volume from usa-stk-1d
         self.assertListEqual(
             volumes.to_dict(orient="records"),
@@ -1896,7 +1896,7 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertListEqual(list(prices.columns), ["FI12345","FI23456"])
         closes = prices.loc["Close"]
         closes = closes.reset_index()
-        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes["Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', 'Time': '09:30:00', "FI12345": 20.1, "FI23456": 50.5},
@@ -1906,7 +1906,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
         volumes = prices.loc["Volume"]
         volumes = volumes.reset_index()
-        volumes.loc[:, "Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        volumes["Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             volumes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', 'Time': '09:30:00', "FI12345": 15000.0, "FI23456": 98000.0},
@@ -1917,7 +1917,7 @@ class GetPricesTestCase(unittest.TestCase):
 
         last_closes = prices.loc["LastClose"]
         last_closes = last_closes.reset_index()
-        last_closes.loc[:, "Date"] = last_closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        last_closes["Date"] = last_closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             last_closes.fillna("nan").to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', 'Time': '09:30:00', "FI12345": "nan", "FI23456": "nan"},
@@ -2018,7 +2018,7 @@ class GetPricesTestCase(unittest.TestCase):
         self.assertListEqual(list(prices.columns), ["FI12345","FI23456"])
         closes = prices.loc["Close"]
         closes = closes.reset_index()
-        closes.loc[:, "Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes["Date"] = closes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 20.1, "FI23456": 50.5},
@@ -2027,7 +2027,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
         volumes = prices.loc["Volume"]
         volumes = volumes.reset_index()
-        volumes.loc[:, "Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        volumes["Date"] = volumes.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             volumes.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 15000, "FI23456": 98000},
@@ -2475,7 +2475,7 @@ class GetPricesTestCase(unittest.TestCase):
         closes = prices.loc["Close"]
         closes_830 = closes.xs("08:30:00", level="Time")
         closes_830 = closes_830.reset_index()
-        closes_830.loc[:, "Date"] = closes_830.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes_830["Date"] = closes_830.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes_830.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 20.1, "FI23456": 50.15},
@@ -2483,7 +2483,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
         closes_900 = closes.xs("09:00:00", level="Time")
         closes_900 = closes_900.reset_index()
-        closes_900.loc[:, "Date"] = closes_900.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes_900["Date"] = closes_900.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes_900.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 20.25, "FI23456": 50.59},
@@ -2493,7 +2493,7 @@ class GetPricesTestCase(unittest.TestCase):
         volumes = prices.loc["Volume"]
         volumes_830 = volumes.xs("08:30:00", level="Time")
         volumes_830 = volumes_830.reset_index()
-        volumes_830.loc[:, "Date"] = volumes_830.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        volumes_830["Date"] = volumes_830.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             volumes_830.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 1500.0, "FI23456": 9000.0},
@@ -2606,7 +2606,7 @@ class GetPricesTestCase(unittest.TestCase):
         closes = prices.loc["Close"]
         closes_930 = closes.xs("09:30:00", level="Time")
         closes_930 = closes_930.reset_index()
-        closes_930.loc[:, "Date"] = closes_930.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes_930["Date"] = closes_930.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes_930.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 20.1, "FI23456": 50.15},
@@ -2614,7 +2614,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
         closes_1000 = closes.xs("10:00:00", level="Time")
         closes_1000 = closes_1000.reset_index()
-        closes_1000.loc[:, "Date"] = closes_1000.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes_1000["Date"] = closes_1000.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes_1000.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 20.25, "FI23456": 50.59},
@@ -2624,7 +2624,7 @@ class GetPricesTestCase(unittest.TestCase):
         volumes = prices.loc["Volume"]
         volumes_930 = volumes.xs("09:30:00", level="Time")
         volumes_930 = volumes_930.reset_index()
-        volumes_930.loc[:, "Date"] = volumes_930.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        volumes_930["Date"] = volumes_930.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             volumes_930.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 1500.0, "FI23456": 9000.0},
@@ -2826,7 +2826,7 @@ class GetPricesTestCase(unittest.TestCase):
         closes = prices.loc["Close"]
         closes_930 = closes.xs("09:30:00", level="Time")
         closes_930 = closes_930.reset_index()
-        closes_930.loc[:, "Date"] = closes_930.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes_930["Date"] = closes_930.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes_930.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 20.1, "FI23456": 50.15},
@@ -2834,7 +2834,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
         closes_1000 = closes.xs("10:00:00", level="Time")
         closes_1000 = closes_1000.reset_index()
-        closes_1000.loc[:, "Date"] = closes_1000.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes_1000["Date"] = closes_1000.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes_1000.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 20.25, "FI23456": 50.59},
@@ -2869,7 +2869,7 @@ class GetPricesTestCase(unittest.TestCase):
         closes = prices.loc["Close"]
         closes_830 = closes.xs("08:30:00", level="Time")
         closes_830 = closes_830.reset_index()
-        closes_830.loc[:, "Date"] = closes_830.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes_830["Date"] = closes_830.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes_830.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 20.1, "FI23456": 50.15},
@@ -2877,7 +2877,7 @@ class GetPricesTestCase(unittest.TestCase):
         )
         closes_900 = closes.xs("09:00:00", level="Time")
         closes_900 = closes_900.reset_index()
-        closes_900.loc[:, "Date"] = closes_900.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        closes_900["Date"] = closes_900.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             closes_900.to_dict(orient="records"),
             [{'Date': '2018-04-01T00:00:00', "FI12345": 20.25, "FI23456": 50.59},
@@ -3155,7 +3155,7 @@ class GetPricesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(eps.index), list(closes.index))
         self.assertListEqual(list(eps.columns), list(closes.columns))
         eps = eps.reset_index()
-        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        eps["Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             eps.to_dict(orient="records"),
             [{'Date': '2018-06-30T00:00:00', 'FI12345': 9.0},
@@ -3182,7 +3182,7 @@ class GetPricesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(eps.index), list(closes.index))
         self.assertListEqual(list(eps.columns), list(closes.columns))
         eps = eps.reset_index()
-        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        eps["Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             eps.to_dict(orient="records"),
             [{'Date': '2018-06-30T00:00:00-0400', 'FI12345': 9.0},
@@ -3233,7 +3233,7 @@ class GetPricesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(eps.index), list(closes.index))
         self.assertListEqual(list(eps.columns), list(closes.columns))
         eps = eps.reset_index()
-        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        eps["Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             eps.to_dict(orient="records"),
             [{'Date': '2018-06-30T00:00:00', 'FI12345': 9.0},
@@ -3260,7 +3260,7 @@ class GetPricesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(eps.index), list(closes.index))
         self.assertListEqual(list(eps.columns), list(closes.columns))
         eps = eps.reset_index()
-        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        eps["Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             eps.to_dict(orient="records"),
             [{'Date': '2018-07-01T00:00:00', 'FI12345': 9.0},
@@ -3287,7 +3287,7 @@ class GetPricesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(eps.index), list(closes.index))
         self.assertListEqual(list(eps.columns), list(closes.columns))
         eps = eps.reset_index()
-        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        eps["Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             eps.to_dict(orient="records"),
             [{'Date': '2018-06-30T00:00:00', 'FI12345': 9.5},
@@ -3339,7 +3339,7 @@ class GetPricesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(eps.index), list(closes.index))
         self.assertListEqual(list(eps.columns), list(closes.columns))
         eps = eps.reset_index()
-        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        eps["Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
         self.assertListEqual(
             eps.to_dict(orient="records"),
             [{'Date': '2018-06-30T00:00:00', 'FI12345': 9.0},
@@ -3366,7 +3366,7 @@ class GetPricesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(eps.index), list(closes.index))
         self.assertListEqual(list(eps.columns), list(closes.columns))
         eps = eps.reset_index()
-        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        eps["Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
 
         # replace Nan with "nan" to allow equality comparisons
         eps = eps.fillna("nan")
@@ -3421,7 +3421,7 @@ class GetPricesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(eps.index), list(closes.index))
         self.assertListEqual(list(eps.columns), list(closes.columns))
         eps = eps.reset_index()
-        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        eps["Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
 
         # replace Nan with "nan" to allow equality comparisons
         eps = eps.fillna("nan")
@@ -3481,7 +3481,7 @@ class GetPricesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(eps.index), list(closes.index))
         self.assertListEqual(list(eps.columns), list(closes.columns))
         eps = eps.reset_index()
-        eps.loc[:, "Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        eps["Date"] = eps.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
 
         # replace Nan with "nan" to allow equality comparisons
         eps = eps.fillna("nan")
@@ -3541,7 +3541,7 @@ class GetPricesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(data.index), list(closes.index))
         self.assertListEqual(list(data.columns), list(closes.columns))
         data = data.reset_index()
-        data.loc[:, "Date"] = data.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        data["Date"] = data.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
 
         # replace Nan with "nan" to allow equality comparisons
         data = data.fillna("nan")
@@ -3566,7 +3566,7 @@ class GetPricesReindexedLikeTestCase(unittest.TestCase):
 
         data = data.loc["Close"]
         data = data.reset_index()
-        data.loc[:, "Date"] = data.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        data["Date"] = data.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
 
         # replace Nan with "nan" to allow equality comparisons
         data = data.fillna("nan")
@@ -3628,7 +3628,7 @@ class GetPricesReindexedLikeTestCase(unittest.TestCase):
         self.assertListEqual(list(data.index), list(closes.index))
         self.assertListEqual(list(data.columns), list(closes.columns))
         data = data.reset_index()
-        data.loc[:, "Date"] = data.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        data["Date"] = data.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
 
         # replace Nan with "nan" to allow equality comparisons
         data = data.fillna("nan")

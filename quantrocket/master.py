@@ -1083,7 +1083,7 @@ def get_contract_nums_reindexed_like(
             index=pd.date_range(start=min_date, end=max_date))
 
         # RolloverDate is when we roll out of the contract, hence we backfill
-        _rollover_dates = _rollover_dates.fillna(method="bfill")
+        _rollover_dates = _rollover_dates.bfill()
 
         # Stack to Series of Date, nth sid
         _rollover_dates = _rollover_dates.stack()
