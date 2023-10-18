@@ -1062,7 +1062,7 @@ def get_contract_nums_reindexed_like(
         raise ParameterError("input DataFrame does not appear to contain any futures contracts")
 
     if reindex_like_dt_index.tz:
-        rollover_dates.loc[:, "RolloverDate"] = rollover_dates.RolloverDate.dt.tz_localize(reindex_like_dt_index.tz.zone)
+        rollover_dates["RolloverDate"] = rollover_dates.RolloverDate.dt.tz_localize(reindex_like_dt_index.tz.zone)
 
     min_date = reindex_like_dt_index.min()
     max_date = max([rollover_dates.RolloverDate.max(),

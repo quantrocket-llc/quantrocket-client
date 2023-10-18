@@ -406,13 +406,13 @@ def _insert_into(df, table_name, conn, on_conflict):
     # Cast booleans to ints or they will load into SQLite as strings
     df_bools = df.select_dtypes(['bool'])
     if not df_bools.empty:
-        df.loc[:, df_bools.columns] = df_bools.astype(int)
+        df[df_bools.columns] = df_bools.astype(int)
 
     # Cast datetimes to str and replace space separator with T separator
     # (replace is a no-op for dates, which are cast to str as YYYY-MM-DD)
     df_dts = df.select_dtypes(["datetime", "datetimetz"])
     if not df_dts.empty:
-        df.loc[:, df_dts.columns] = df_dts.astype(str).apply(
+        df[df_dts.columns] = df_dts.astype(str).apply(
             lambda col: col.str.replace(" ", "T"))
 
     df.to_csv(temp_file_name, index=False)

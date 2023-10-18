@@ -2082,7 +2082,7 @@ class StockloanDataReindexedLikeTestCase(unittest.TestCase):
             with self.assertRaises(ParameterError) as cm:
                 get_ibkr_shortable_shares_reindexed_like(closes, time="foo")
 
-                self.assertIn("could not parse time 'foo': could not convert string to Timestamp", str(cm.exception))
+                self.assertIn("could not parse time 'foo': Unknown datetime string format, unable to parse", str(cm.exception))
 
 
     def test_pass_time(self):

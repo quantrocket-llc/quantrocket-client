@@ -3303,7 +3303,7 @@ def get_wsh_earnings_dates_reindexed_like(
     before the next session's open, first extend the index of the input DataFrame to include
     the next session:
 
-    >>> from trading_calendars import get_calendar
+    >>> from exchange_calendars import get_calendar
     >>> nyse_cal = get_calendar("NYSE")
     >>> latest_session = closes.index.max()
     >>> # wind latest session to end of day and use calendar to get next session
