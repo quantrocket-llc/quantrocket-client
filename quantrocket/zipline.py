@@ -610,6 +610,12 @@ def list_sids(code: str) -> list[str]:
     -------
     list of str
         sids
+
+    Examples
+    --------
+    List the sids in a bundle called 'usstock-1min':
+
+    >>> list_sids("usstock-1min")
     """
     response = houston.get("/zipline/bundles/{0}/sids".format(code))
 

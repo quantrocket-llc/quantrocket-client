@@ -125,10 +125,11 @@ Examples
 Collect securities listings from Interactive Brokers and store in
 securities master database.
 
-Specify an exchange (optionally filtering by security type, currency,
-and/or symbol) to collect listings from the IBKR website and collect
-associated contract details from the IBKR API. Or, specify universes or
-sids to collect details from the IBKR API, bypassing the website.
+Specify a country or exchange (optionally filtering by security type,
+currency, and/or symbol) to collect listings from the IBKR website and
+collect associated contract details from the IBKR API. Or, specify
+universes or sids to collect details from the IBKR API, bypassing the
+website.
 
 Notes
 -----
@@ -145,23 +146,17 @@ Collect free sample listings:
 
     quantrocket master collect-ibkr --exchanges FREE
 
-Collect all Toronto Stock Exchange stock listings:
+Collect all US stock and ETF listings:
 
 .. code-block:: bash
 
-    quantrocket master collect-ibkr --exchanges TSE --sec-types STK
+    quantrocket master collect-ibkr --countries US --sec-types STK ETF
 
-Collect all NYSE ARCA ETF listings:
-
-.. code-block:: bash
-
-    quantrocket master collect-ibkr -e ARCA --sec-types ETF
-
-Collect specific symbols from Nasdaq:
+Collect specific symbols:
 
 .. code-block:: bash
 
-    quantrocket master collect-ibkr -e NASDAQ --symbols AAPL GOOG NFLX
+    quantrocket master collect-ibkr -c US --symbols AAPL GOOG NFLX
 
 Re-collect contract details for an existing universe called "japan-fin":
 
@@ -176,11 +171,16 @@ Re-collect contract details for an existing universe called "japan-fin":
         epilog=examples,
         formatter_class=HelpFormatter)
     parser.add_argument(
+        "-c", "--countries",
+        nargs="*",
+        metavar="COUNTRY_CODE",
+        help="one or more two-letter country codes to collect listings for. "
+        "For sample data use country code 'FREE'")
+    parser.add_argument(
         "-e", "--exchanges",
         nargs="*",
         metavar="EXCHANGE",
-        help="one or more exchange codes to collect listings for (required unless "
-        "providing universes or sids). For sample data use exchange code 'FREE'")
+        help="one or more exchange codes to collect listings for")
     parser.add_argument(
         "-t", "--sec-types",
         nargs="*",
@@ -188,7 +188,7 @@ Re-collect contract details for an existing universe called "japan-fin":
         choices=["STK", "ETF", "FUT", "CASH", "IND"],
         help="limit to these security types. Possible choices: %(choices)s")
     parser.add_argument(
-        "-c", "--currencies",
+        "--currencies",
         nargs="*",
         metavar="CURRENCY",
         help="limit to these currencies")
@@ -507,7 +507,7 @@ List stock exchanges in North America:
 
 .. code-block:: bash
 
-    quantrocket master list-ibkr-exchanges --regions north_america --sec-types STK
+    quantrocket master list-ibkr-exchanges --regions americas --sec-types STK
     """
     parser = _subparsers.add_parser(
         "list-ibkr-exchanges",
@@ -517,7 +517,7 @@ List stock exchanges in North America:
     parser.add_argument(
         "-r", "--regions",
         nargs="*",
-        choices=["north_america", "europe", "asia", "global"],
+        choices=["americas", "europe", "asia", "global"],
         metavar="REGION",
         help="limit to these regions. Possible choices: %(choices)s")
     parser.add_argument(

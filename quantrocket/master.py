@@ -137,8 +137,8 @@ __all__ = [
 
 def list_ibkr_exchanges(
     regions: Union[list[
-        Literal["north_america", "europe", "asia", "global"]],
-        Literal["north_america", "europe", "asia", "global"]] = None,
+        Literal["americas", "europe", "asia", "global"]],
+        Literal["americas", "europe", "asia", "global"]] = None,
     sec_types: Union[list[
         Literal["STK", "ETF", "FUT", "CASH", "IND"]],
         Literal["STK", "ETF", "FUT", "CASH", "IND"]] = None
@@ -149,7 +149,7 @@ def list_ibkr_exchanges(
     Parameters
     ----------
     regions : list of str, optional
-        limit to these regions. Possible choices: north_america, europe, asia, global
+        limit to these regions. Possible choices: americas, europe, asia, global
 
     sec_types : list of str, optional
         limit to these securitiy types. Possible choices: STK, ETF, FUT, CASH, IND
@@ -287,6 +287,7 @@ def _cli_collect_figi_listings(*args, **kwargs):
     return json_to_cli(collect_figi_listings, *args, **kwargs)
 
 def collect_ibkr_listings(
+    countries: Union[list[str], str] = None,
     exchanges: Union[list[str], str] = None,
     sec_types: Union[list[
         Literal["STK", "ETF", "FUT", "CASH", "IND"]],
@@ -300,17 +301,20 @@ def collect_ibkr_listings(
     Collect securities listings from Interactive Brokers and store in
     securities master database.
 
-    Specify an exchange (optionally filtering by security type, currency,
-    and/or symbol) to collect listings from the IBKR website and collect
-    associated contract details from the IBKR API. Or, specify universes or
-    sids to collect details from the IBKR API, bypassing the website.
+    Specify a country or exchange (optionally filtering by security type,
+    currency, and/or symbol) to collect listings from the IBKR website and
+    collect associated contract details from the IBKR API. Or, specify
+    universes or sids to collect details from the IBKR API, bypassing the
+    website.
 
     Parameters
     ----------
-    exchanges : list or str
-        one or more IBKR exchange codes to collect listings for (required
-        unless providing universes or sids). For sample data use exchange
-        code 'FREE'
+    countries : list of str or str, optional
+        one or more two-letter country codes to collect listings for. For
+        sample data use country code 'FREE'.
+
+    exchanges : list of str or str
+        one or more IBKR exchange codes to collect listings for.
 
     sec_types : list of str, optional
         limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND
@@ -363,6 +367,8 @@ def collect_ibkr_listings(
     params = {}
     if exchanges:
         params["exchanges"] = exchanges
+    if countries:
+        params["countries"] = countries
     if sec_types:
         params["sec_types"] = sec_types
     if currencies:

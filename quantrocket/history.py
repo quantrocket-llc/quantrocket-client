@@ -748,6 +748,12 @@ def list_sids(code: str) -> list[str]:
     -------
     list
         list of sids
+
+    Examples
+    --------
+    List the sids in the database "usstock-1d":
+
+    >>> list_sids("usstock-1d")
     """
     response = houston.get("/history/{0}/sids".format(code))
     houston.raise_for_status_with_json(response)
