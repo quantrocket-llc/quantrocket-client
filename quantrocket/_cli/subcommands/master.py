@@ -503,7 +503,7 @@ List all exchanges:
 
     quantrocket master list-ibkr-exchanges
 
-List stock exchanges in North America:
+List stock exchanges in the Americas:
 
 .. code-block:: bash
 
@@ -523,7 +523,7 @@ List stock exchanges in North America:
     parser.add_argument(
         "-t", "--sec-types",
         nargs="*",
-        choices=["STK", "ETF", "FUT", "CASH", "IND"],
+        choices=["STK", "FUT", "CASH", "IND"],
         metavar="SEC_TYPE",
         help="limit to these security types. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.master._cli_list_ibkr_exchanges")

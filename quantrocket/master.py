@@ -140,8 +140,8 @@ def list_ibkr_exchanges(
         Literal["americas", "europe", "asia", "global"]],
         Literal["americas", "europe", "asia", "global"]] = None,
     sec_types: Union[list[
-        Literal["STK", "ETF", "FUT", "CASH", "IND"]],
-        Literal["STK", "ETF", "FUT", "CASH", "IND"]] = None
+        Literal["STK", "FUT", "CASH", "IND"]],
+        Literal["STK", "FUT", "CASH", "IND"]] = None
     ) -> dict[str, str]:
     """
     List exchanges by security type and country as found on the IBKR website.
@@ -152,7 +152,7 @@ def list_ibkr_exchanges(
         limit to these regions. Possible choices: americas, europe, asia, global
 
     sec_types : list of str, optional
-        limit to these securitiy types. Possible choices: STK, ETF, FUT, CASH, IND
+        limit to these securitiy types. Possible choices: STK, FUT, CASH, IND
 
     Returns
     -------
