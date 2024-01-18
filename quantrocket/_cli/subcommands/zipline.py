@@ -70,10 +70,12 @@ Create a minute data bundle of free sample data:
     parser.add_argument(
         "-i", "--sids",
         metavar="SID",
+        nargs="*",
         help="limit to these sids (only supported for minute data bundles)")
     parser.add_argument(
         "-u", "--universes",
         metavar="UNIVERSE",
+        nargs="*",
         help="limit to these universes (only supported for minute data bundles)")
     parser.add_argument(
         "--free",
