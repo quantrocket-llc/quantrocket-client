@@ -19,8 +19,8 @@ Functions
 get_version
     Show the QuantRocket version number.
 """
+from typing import overload
 from quantrocket import __version__
-from quantrocket.utils._typing import Union
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
 
@@ -28,7 +28,13 @@ __all__ = [
     "get_version",
 ]
 
-def get_version(detail: bool = False) -> Union[str, dict[str, str]]:
+@overload
+def get_version(detail: None = None) -> str:...
+
+@overload
+def get_version(detail: bool = True) -> dict[str, str]:...
+
+def get_version(detail=False):
     """
     Show the QuantRocket version number.
 
