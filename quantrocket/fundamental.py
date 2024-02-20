@@ -273,7 +273,11 @@ def download_alpaca_etb(
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "no easy-to-borrow data match the query parameters" in repr(e).lower():
+        no_data_messages = (
+            "no easy-to-borrow data match the query parameters",
+            "no free securities match",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
             raise NoFundamentalData(e)
         raise
 
@@ -539,7 +543,11 @@ def download_ibkr_shortable_shares(
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "no shortable shares data match the query parameters" in repr(e).lower():
+        no_data_messages = (
+            "no shortable shares data match the query parameters",
+            "no free securities match",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
             raise NoFundamentalData(e)
         raise
 
@@ -633,7 +641,11 @@ def download_ibkr_borrow_fees(
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "no borrow fees data match the query parameters" in repr(e).lower():
+        no_data_messages = (
+            "no borrow fees data match the query parameters",
+            "no free securities match",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
             raise NoFundamentalData(e)
         raise
 
@@ -738,7 +750,11 @@ def download_ibkr_margin_requirements(
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "no margin requirements data match the query parameters" in repr(e).lower():
+        no_data_messages = (
+            "no margin requirements data match the query parameters",
+            "no free securities match",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
             raise NoFundamentalData(e)
         raise
 
@@ -2168,7 +2184,11 @@ def download_sharadar_fundamentals(
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "match the query parameters" in repr(e).lower():
+        no_data_messages = (
+            "match the query parameters",
+            "no free securities match",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
             raise NoFundamentalData(e)
         raise
 
@@ -2270,7 +2290,11 @@ def download_sharadar_insiders(
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "match the query parameters" in repr(e).lower():
+        no_data_messages = (
+            "match the query parameters",
+            "no free securities match",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
             raise NoFundamentalData(e)
         raise
 
@@ -2382,7 +2406,11 @@ def download_sharadar_institutions(
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "match the query parameters" in repr(e).lower():
+        no_data_messages = (
+            "match the query parameters",
+            "no free securities match",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
             raise NoFundamentalData(e)
         raise
 
@@ -2491,7 +2519,11 @@ def download_sharadar_sec8(
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "match the query parameters" in repr(e).lower():
+        no_data_messages = (
+            "match the query parameters",
+            "no free securities match",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
             raise NoFundamentalData(e)
         raise
 
@@ -2599,7 +2631,11 @@ def download_sharadar_sp500(
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "match the query parameters" in repr(e).lower():
+        no_data_messages = (
+            "match the query parameters",
+            "no free securities match",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
             raise NoFundamentalData(e)
         raise
 

@@ -745,7 +745,12 @@ def download_bundle_file(
     except requests.HTTPError as e:
         # Raise a dedicated exception
         # This endpoint returns "no minute|daily data match the query parameters"
-        if "data match the query parameters" in repr(e).lower():
+        no_data_messages = (
+            "data match the query parameters",
+            "no free securities match",
+            "no data has been ingested",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
             raise NoHistoricalData(e)
         raise
 

@@ -873,7 +873,11 @@ def download_history_file(
         houston.raise_for_status_with_json(response)
     except requests.HTTPError as e:
         # Raise a dedicated exception
-        if "no history matches the query parameters" in repr(e).lower():
+        no_data_messages = (
+            "no history matches the query parameters",
+            "no free securities match",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
             raise NoHistoricalData(e)
         raise
 
