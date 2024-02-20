@@ -124,6 +124,7 @@ def create_usstock_bundle(
     sids: Union[list[str], str] = None,
     universes: Union[list[str], str] = None,
     free: bool = False,
+    learn: bool = False,
     data_frequency: Literal["daily", "minute", "d", "m"] = None
     ) -> dict[str, str]:
     """
@@ -144,7 +145,11 @@ def create_usstock_bundle(
         limit to these universes (only supported for minute data bundles)
 
     free : bool
-        limit to free sample data
+        limit to free sample data (complete minute data history for a small number
+        of stocks)
+
+    learn : bool
+        create the learning data bundle (daily history for all stocks from 2007-2011)
 
     data_frequency : str, optional
          whether to collect minute data (which also includes daily data) or only
@@ -176,9 +181,13 @@ def create_usstock_bundle(
 
     >>> create_usstock_bundle("usstock-tech-1min", universes="us-tech")
 
-    Create a minute data bundle of free sample data:
+    Create a minute data bundle of free sample data (full minute history for a small number of stocks):
 
     >>> create_usstock_bundle("usstock-free-1min", free=True)
+
+    Create the learning bundle (daily history for all stocks from 2007-2011):
+
+    >>> create_usstock_bundle("usstock-learn-1d", learn=True)
     """
     params = {}
     params["ingest_type"] = "usstock"
@@ -188,6 +197,8 @@ def create_usstock_bundle(
         params["universes"] = universes
     if free:
         params["free"] = free
+    if learn:
+        params["learn"] = learn
     if data_frequency:
         params["data_frequency"] = data_frequency
 

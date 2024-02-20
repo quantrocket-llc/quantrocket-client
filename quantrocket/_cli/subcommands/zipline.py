@@ -52,11 +52,17 @@ Create a minute data bundle based on a universe:
 
     quantrocket zipline create-usstock-bundle usstock-tech-1min --universes us-tech
 
-Create a minute data bundle of free sample data:
+Create a minute data bundle of free sample data (full minute history for a small number of stocks):
 
 .. code-block:: bash
 
     quantrocket zipline create-usstock-bundle usstock-free-1min --free
+
+Create the learning bundle (daily history for all stocks from 2007-2011):
+
+.. code-block:: bash
+
+    quantrocket zipline create-usstock-bundle usstock-learn-1d --learn
     """
     parser = _subparsers.add_parser(
         "create-usstock-bundle",
@@ -81,6 +87,10 @@ Create a minute data bundle of free sample data:
         "--free",
         action="store_true",
         help="limit to free sample data")
+    parser.add_argument(
+        "--learn",
+        action="store_true",
+        help="create the learning data bundle (daily history for all stocks from 2007-2011)")
     parser.add_argument(
         "-d", "--data-frequency",
         choices=["daily", "d", "minute", "m"],
