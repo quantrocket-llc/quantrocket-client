@@ -1,4 +1,4 @@
-# Copyright 2017-2023 QuantRocket - All Rights Reserved
+# Copyright 2017-2024 QuantRocket - All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -374,6 +374,7 @@ def get_prices(
                     continue
 
             prices = pd.read_csv(tmp_filepath)
+            # Note: this step sorts the columns
             prices = prices.pivot(index="Sid", columns="Date").T
             prices.index.set_names(["Field", "Date"], inplace=True)
             all_prices.append(prices)
@@ -414,6 +415,7 @@ def get_prices(
                     continue
 
             prices = pd.read_csv(tmp_filepath)
+            # Note: this step sorts the columns
             prices = prices.pivot(index="Sid", columns="Date").T
             prices.index.set_names(["Field", "Date"], inplace=True)
             all_prices.append(prices)
@@ -450,6 +452,7 @@ def get_prices(
 
             prices = pd.read_csv(tmp_filepath, index_col=["Field", "Date"])
             prices.columns.name = "Sid"
+            # Note: Zipline returns sorted columns
             all_prices.append(prices)
 
             os.remove(tmp_filepath)
