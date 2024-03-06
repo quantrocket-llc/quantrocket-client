@@ -41,10 +41,10 @@ import sys
 import os.path
 import six
 from zipfile import ZipFile
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Union, Literal
 if TYPE_CHECKING:
     import pandas as pd
-from quantrocket.utils._typing import FilepathOrBuffer, Any, Union, Literal
+from quantrocket.utils._typing import FilepathOrBuffer
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
 from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer

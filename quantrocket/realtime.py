@@ -65,7 +65,8 @@ import sys
 import requests
 import urllib.parse
 import subprocess
-from quantrocket.utils._typing import FilepathOrBuffer, Union, Literal
+from typing import Union, Literal
+from quantrocket.utils._typing import FilepathOrBuffer
 from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoRealtimeData, ParameterError

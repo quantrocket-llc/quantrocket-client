@@ -83,15 +83,10 @@ Usage Guide:
 import sys
 import six
 import requests
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union, Literal, Any
 if TYPE_CHECKING:
     import pandas as pd
-from quantrocket.utils._typing import (
-    FilepathOrBuffer,
-    Union,
-    Any,
-    Literal
-)
+from quantrocket.utils._typing import FilepathOrBuffer
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoHistoricalData
 from quantrocket._cli.utils.output import json_to_cli

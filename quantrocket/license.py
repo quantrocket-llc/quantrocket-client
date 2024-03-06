@@ -51,7 +51,7 @@ Usage Guide:
 import getpass
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
-from quantrocket.utils._typing import Literal
+from typing import Literal
 
 __all__ = [
     "get_license_profile",

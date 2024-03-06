@@ -60,11 +60,11 @@ Usage Guide:
 import sys
 import six
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union, Literal
 if TYPE_CHECKING:
     import pandas as pd
 from quantrocket.houston import houston
-from quantrocket.utils._typing import FilepathOrBuffer, Union, Literal
+from quantrocket.utils._typing import FilepathOrBuffer
 from quantrocket._cli.utils.output import json_to_cli
 from quantrocket._cli.utils.stream import to_bytes
 from quantrocket._cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs

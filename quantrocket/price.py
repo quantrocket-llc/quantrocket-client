@@ -38,10 +38,9 @@ import time
 import itertools
 import tempfile
 import requests
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING, Union, Literal
 if TYPE_CHECKING:
     import pandas as pd
-from quantrocket.utils._typing import Union, Literal
 from quantrocket.master import download_master_file
 from quantrocket.exceptions import ParameterError, NoHistoricalData, NoRealtimeData
 from quantrocket.history import (

@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union, Any, TextIO, Literal
-
-# help Sphinx autoapi find this
-Any = Any
-Union = Union
-Literal = Literal
+from typing import Union, TextIO
 
 FilepathOrBuffer = Union[str, TextIO]

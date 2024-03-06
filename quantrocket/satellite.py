@@ -27,8 +27,8 @@ Usage Guide:
 """
 import sys
 from quantrocket.houston import houston
-from typing import overload
-from quantrocket.utils._typing import FilepathOrBuffer, Any, Union
+from typing import overload, Any
+from quantrocket.utils._typing import FilepathOrBuffer
 from quantrocket._cli.utils.output import json_to_cli
 from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket._cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs

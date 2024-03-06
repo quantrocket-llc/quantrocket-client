@@ -41,7 +41,7 @@ Usage Guide:
 import getpass
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
-from quantrocket.utils._typing import Union, Literal
+from typing import Union, Literal
 
 __all__ = [
     "get_credentials",

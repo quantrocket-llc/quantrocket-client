@@ -126,10 +126,10 @@ import sys
 import os
 import datetime
 import requests
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, Literal
 if TYPE_CHECKING:
     import pandas as pd
-from quantrocket.utils._typing import FilepathOrBuffer, Literal
+from quantrocket.utils._typing import FilepathOrBuffer
 from quantrocket.houston import houston
 from quantrocket.master import download_master_file
 from quantrocket._cli.utils.output import json_to_cli

@@ -33,7 +33,8 @@ Usage Guide:
 """
 import sys
 import requests
-from quantrocket.utils._typing import FilepathOrBuffer, Union, Literal
+from typing import Union, Literal
+from quantrocket.utils._typing import FilepathOrBuffer
 from quantrocket.houston import houston
 from quantrocket.exceptions import NoAccountData
 from quantrocket._cli.utils.output import json_to_cli
