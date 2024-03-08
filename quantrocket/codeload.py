@@ -25,6 +25,9 @@ Usage Guide:
 
 * Code Management: https://qrok.it/dl/qr/codeload
 """
+import os
+from IPython import get_ipython
+from IPython.display import display, FileLink
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
 
@@ -111,7 +114,26 @@ def clone(
 
     response = houston.post("/codeload/repo", data=data)
     houston.raise_for_status_with_json(response)
-    return response.json()
+    status = response.json()
+
+    # If we're running in a Jupyter notebook, display a link
+    # to the Introduction file
+    if os.environ.get("YOU_ARE_INSIDE_JUPYTER", False) and get_ipython() is not None:
+        files = status['files'].get('added', status['files'].get('updated', []))
+        intro_file = next((f for f in files if f.lower().endswith("introduction.ipynb")), None)
+        if intro_file:
+            root = os.environ.get("JUPYTER_SERVER_ROOT", "/codeload")
+            abs_path = f"{root}/{intro_file}"
+            display(
+                FileLink(
+                    # IPython requires a relative path to open the file in JupyterLab
+                    # (absolute paths open in a new browser tab)
+                    os.path.relpath(abs_path),
+                    result_html_prefix="Start here: "
+                )
+            )
+
+    return status
 
 def _cli_clone(*args, **kwargs):
     return json_to_cli(clone, *args, **kwargs)
