@@ -786,14 +786,17 @@ def backtest(
 
     data_frequency : str, optional
         the data frequency of the simulation. Possible choices: daily, minute
-        (or aliases d, m). Default is minute.
+        (or aliases d, m). Defaults to minute for minute bundles and daily
+        for daily bundles. Only needs to set to request daily data from a
+        minute bundle.
 
     capital_base : float, optional
         the starting capital for the simulation (default is 1e6 (1 million))
 
     bundle : str, optional
-        the data bundle to use for the simulation. If omitted, the default bundle (if set)
-        is used.
+        the data bundle to use for the simulation. Can be omitted if a BUNDLE variable
+        is defined in the algorithm file. If omitted and a BUNDLE variable is not
+        defined, the default bundle (if set) is used.
 
     start_date : str (YYYY-MM-DD), optional
         the start date of the simulation (defaults to the bundle start date)
