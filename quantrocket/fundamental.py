@@ -115,6 +115,43 @@ get_sharadar_sp500_reindexed_like
     500 on the given dates, reindexed to match the index (dates) and columns
     (sids) of the input DataFrame.
 
+collect_brain_bsi
+    Collect Brain Sentiment Indicator (BSI) data and save to database.
+
+collect_brain_blmcf
+    Collect Brain Language Metrics on Company Filings (BLMCF) data and save to
+    database.
+
+collect_brain_blmect
+    Collect Brain Language Metrics on Earnings Call Transcripts (BLMECT) data
+    and save to database.
+
+download_brain_bsi
+    Query Brain Sentiment Indicator (BSI) data from the local database and download
+    to file.
+
+download_brain_blmcf
+    Query Brain Language Metrics on Company Filings (BLMCF) data from the local
+    database and download to file.
+
+download_brain_blmect
+    Query Brain Language Metrics on Earnings Call Transcripts (BLMECT) data from
+    the local database and download to file.
+
+get_brain_bsi_reindexed_like
+    Return a multiindex (Field, Date) DataFrame of Brain Sentiment Indicator (BSI) data,
+    reindexed to match the index (dates) and columns (sids) of the input DataFrame.
+
+get_brain_blmcf_reindexed_like
+    Return a multiindex (Field, Date) DataFrame of Brain Language Metrics on Company
+    Filings (BLMCF) data, reindexed to match the index (dates) and columns (sids) of
+    the input DataFrame.
+
+get_brain_blmect_reindexed_like
+    Return a multiindex (Field, Date) DataFrame of Brain Language Metrics on Earnings
+    Call Transcripts (BLMECT) data, reindexed to match the index (dates) and columns
+    (sids) of the input DataFrame.
+
 Notes
 -----
 Usage Guide:
@@ -163,6 +200,15 @@ __all__ = [
     "get_sharadar_institutions_reindexed_like",
     "get_sharadar_sec8_reindexed_like",
     "get_sharadar_sp500_reindexed_like",
+    "collect_brain_bsi",
+    "collect_brain_blmcf",
+    "collect_brain_blmect",
+    "download_brain_bsi",
+    "download_brain_blmcf",
+    "download_brain_blmect",
+    "get_brain_bsi_reindexed_like",
+    "get_brain_blmcf_reindexed_like",
+    "get_brain_blmect_reindexed_like",
 ]
 
 def collect_alpaca_etb() -> dict[str, str]:
@@ -3422,3 +3468,769 @@ def get_wsh_earnings_dates_reindexed_like(
     announcements = announcements.reindex(index=multiidx, columns=reindex_like.columns)
 
     return announcements
+
+def collect_brain_bsi() -> dict[str, str]:
+    """
+    Collect Brain Sentiment Indicator (BSI) data and save to database.
+
+    This dataset provides news sentiment scores for US stocks, with history
+    back to August 2, 2016.
+
+    Returns
+    -------
+    dict
+        status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Brain Sentiment Indicator: https://qrok.it/dl/qr/brain-bsi
+    """
+    response = houston.post("/fundamental/brain/bsi")
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_brain_bsi(*args, **kwargs):
+    return json_to_cli(collect_brain_bsi, *args, **kwargs)
+
+def collect_brain_blmcf() -> dict[str, str]:
+    """
+    Collect Brain Language Metrics on Company Filings (BLMCF) data and
+    save to database.
+
+    This dataset provides sentiment scores and other language metrics for
+    10-K and 10-Q company filings for US stocks, with history back to
+    January 1, 2010.
+
+    Returns
+    -------
+    dict
+        status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Brain Language Metrics on Company Filings: https://qrok.it/dl/qr/brain-blmcf
+    """
+    response = houston.post("/fundamental/brain/blmcf")
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_brain_blmcf(*args, **kwargs):
+    return json_to_cli(collect_brain_blmcf, *args, **kwargs)
+
+def collect_brain_blmect() -> dict[str, str]:
+    """
+    Collect Brain Language Metrics on Earnings Call Transcripts (BLMECT) data
+    and save to database.
+
+    This dataset provides sentiment scores and other language metrics for
+    earnings call transcripts for US stocks, with history back to January 1, 2012.
+
+    Returns
+    -------
+    dict
+        status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Brain Language Metrics on Earnings Call Transcripts: https://qrok.it/dl/qr/brain-blmect
+    """
+    response = houston.post("/fundamental/brain/blmect")
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_collect_brain_blmect(*args, **kwargs):
+    return json_to_cli(collect_brain_blmect, *args, **kwargs)
+
+def download_brain_bsi(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    N: Literal[1, 7, 30] = None,
+    start_date: str = None,
+    end_date: str = None,
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
+    fields: Union[list[str], str] = None,
+    output: Literal["csv", "json"] = "csv"
+    ) -> None:
+    """
+    Query Brain Sentiment Indicator (BSI) data from the local database and download
+    to file.
+
+    The sentiment scores are averaged using news articles published over the last
+    1, 7, or 30 days. The date of a record means the sentiment score was available
+    before the market open on that date.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    N : int, optional
+        limit to records with this calculation window. Choices are 1, 7, or 30.
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to records on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to records on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    fields : list of str, optional
+        only return these fields (pass '?' or any invalid fieldname to see
+        available fields)
+
+    output : str
+        output format (json, csv, default is csv)
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Brain Sentiment Indicator: https://qrok.it/dl/qr/brain-bsi
+
+    Examples
+    --------
+    Download news sentiment scores averaged over the last 7 days for
+    a universe of tech stocks:
+
+    >>> download_brain_bsi("bsi7.csv", N=7, universes=["usa-tech"], start_date="2024-01-01")
+    >>> bsi = pd.read_csv("bsi7.csv", parse_dates=["Date"])
+    """
+    params = {}
+    if N:
+        params["N"] = N
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+    if fields:
+        params["fields"] = fields
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/brain/bsi.{0}".format(output), params=params)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        no_data_messages = (
+            "match the query parameters",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_brain_bsi(*args, **kwargs):
+    return json_to_cli(download_brain_bsi, *args, **kwargs)
+
+def get_brain_bsi_reindexed_like(
+    reindex_like: 'pd.DataFrame',
+    N: Literal[1, 7, 30] = 1,
+    fields: Union[list[str], str] = None,
+    ) -> 'pd.DataFrame':
+    """
+    Return a multiindex (Field, Date) DataFrame of Brain Sentiment Indicator
+    (BSI) data, reindexed to match the index (dates) and columns (sids) of
+    the input DataFrame.
+
+    The sentiment scores are averaged using news articles published over the last
+    1, 7, or 30 days. The date of a record means the sentiment score was available
+    before the market open on that date.
+
+    Data are not forward-filled; NaNs mean that no scores were calculated for that
+    security on that date.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and sids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    N : int, optional
+        The calculation window over which news articles are aggregated to calculate
+        sentiment scores. Choices are 1, 7, or 30. Defaults to 1.
+
+    fields : list of str
+        a list of fields to include in the resulting DataFrame. Defaults to
+        including all fields.
+
+    Returns
+    -------
+    DataFrame
+        a multiindex (Field, Date) DataFrame of sentiment data, shaped like
+        the input DataFrame
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Brain Sentiment Indicator: https://qrok.it/dl/qr/brain-bsi
+
+    Examples
+    --------
+    Query 1-day sentiment scores using a DataFrame of historical prices:
+
+    >>> closes = prices.loc["Close"]
+    >>> bsi = get_brain_bsi_reindexed_like(closes, N=1, fields=["SENTIMENT_SCORE"])
+    >>> scores = bsi.loc["SENTIMENT_SCORE"]
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join([str(name) for name in index_levels])))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    sids = list(reindex_like.columns)
+    start_date = reindex_like.index.min().date()
+    start_date -= pd.Timedelta(days=10)
+    start_date = start_date.isoformat()
+    end_date = reindex_like.index.max().date().isoformat()
+
+    if fields and not isinstance(fields, (list,tuple)):
+        fields = [fields]
+
+    f = six.StringIO()
+    download_brain_bsi(
+        filepath_or_buffer=f, N=N, sids=sids, start_date=start_date, end_date=end_date,
+        fields=fields)
+    bsi = pd.read_csv(
+        f, parse_dates=["Date"])
+
+    # if reindex_like.index is tz-aware, make BSI tz-aware so they can
+    # be joined
+    if reindex_like.index.tz:
+        bsi["Date"] = bsi.Date.dt.tz_localize(reindex_like.index.tz.zone)
+
+    bsi = bsi.pivot(index="Sid",columns="Date").T
+    multiidx = pd.MultiIndex.from_product(
+        (bsi.index.get_level_values(0).unique(), reindex_like.index),
+        names=["Field", "Date"])
+    bsi = bsi.reindex(index=multiidx, columns=reindex_like.columns)
+
+    return bsi
+
+def download_brain_blmcf(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    report_category: Literal['10-K', '10-Q'] = None,
+    start_date: str = None,
+    end_date: str = None,
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
+    fields: Union[list[str], str] = None,
+    output: Literal["csv", "json"] = "csv"
+    ) -> None:
+    """
+    Query Brain Language Metrics on Company Filings (BLMCF) data from the local
+    database and download to file.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    report_category : str, optional
+        limit to this report category. Choices are 10-K or 10-Q. If omitted,
+        both report categories are returned.
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to records on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to records on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    fields : list of str, optional
+        only return these fields (pass '?' or any invalid fieldname to see
+        available fields). Metrics are calculated separately for the Risk
+        Factors section of the report (fields starting with RF), the Management
+        Discussion and Analysis section (fields starting with MD), and the
+        report as a whole (fields not starting with RF or MD). Fields
+        containing "DELTA" or "SIMILARITY" in the name compare the current
+        report with the previous report of the same period and category.
+
+    output : str
+        output format (json, csv, default is csv)
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Brain Language Metrics on Company Filings: https://qrok.it/dl/qr/brain-blmcf
+
+    Examples
+    --------
+    Download language metrics on company filings for all available stocks for a single
+    year:
+
+    >>> download_brain_blmcf("blmcf.csv", start_date="2023-01-01", end_date="2024-01-01")
+    >>> blmcf = pd.read_csv("blmcf.csv", parse_dates=["Date"])
+    """
+    params = {}
+    if report_category:
+        params["report_categories"] = report_category
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+    if fields:
+        params["fields"] = fields
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/brain/blmcf.{0}".format(output), params=params)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        no_data_messages = (
+            "match the query parameters",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_brain_blmcf(*args, **kwargs):
+    return json_to_cli(download_brain_blmcf, *args, **kwargs)
+
+def _get_brain_blm_reindexed_like(
+    reindex_like, download_func, fields=None, **kwargs
+    ) -> 'pd.DataFrame':
+    """
+    Common function for get_brain_blmcf_reindexed_like and
+    get_brain_blmect_reindexed_like.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and sids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    download_func : function
+        the download function to use
+
+    fields : list of str
+        a list of fields to include in the resulting DataFrame. Defaults to
+        including all fields. For faster performance, limiting fields to
+        those needed is highly recommended, especially for large universes.
+
+    kwargs : dict, optional
+        additional keyword arguments to pass to the download function
+
+    Returns
+    -------
+    DataFrame
+        a multiindex (Field, Date) DataFrame of metrics, shaped like
+        the input DataFrame
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Brain Language Metrics on Company Filings: https://qrok.it/dl/qr/brain-blmcf
+
+    Examples
+    --------
+    Query metrics using a DataFrame of historical prices:
+
+    >>> closes = prices.loc["Close"]
+    >>> metrics = get_brain_blmcf_reindexed_like(closes, fields=["SENTIMENT", "SCORE_LITIGIOUS"])
+    >>> sentiment_scores = metrics.loc["SENTIMENT"]
+    >>> litigious_scores = metrics.loc["SCORE_LITIGIOUS"]
+
+    Query metrics for 10-K filings only:
+
+    >>> metrics = get_brain_blmcf_reindexed_like(closes, report_category="10-K", fields=["SENTIMENT"])
+    >>> sentiment_scores = metrics.loc["SENTIMENT"]
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise ImportError("pandas must be installed to use this function")
+
+    index_levels = reindex_like.index.names
+    if "Time" in index_levels:
+        raise ParameterError(
+            "reindex_like should not have 'Time' in index, please take a cross-section first, "
+            "for example: `prices.loc['Close'].xs('15:45:00', level='Time')`")
+
+    if index_levels != ["Date"]:
+        raise ParameterError(
+            "reindex_like must have index called 'Date', but has {0}".format(
+                ",".join([str(name) for name in index_levels])))
+
+    if not hasattr(reindex_like.index, "date"):
+        raise ParameterError("reindex_like must have a DatetimeIndex")
+
+    sids = list(reindex_like.columns)
+    start_date = reindex_like.index.min().date()
+    # Since company filings are sparse, start well before the reindex_like
+    # min date
+    start_date -= pd.Timedelta(days=365 + 180)
+    start_date = start_date.isoformat()
+    end_date = reindex_like.index.max().date().isoformat()
+
+    if fields and not isinstance(fields, (list,tuple)):
+        fields = [fields]
+
+    f = six.StringIO()
+    download_func(
+        filepath_or_buffer=f, sids=sids, start_date=start_date, end_date=end_date,
+        fields=fields, **kwargs)
+    metrics = pd.read_csv(
+        f, parse_dates=["Date"])
+
+    # if reindex_like.index is tz-aware, make metrics tz-aware so they can
+    # be joined (tz-aware or tz-naive are both fine, as DATEKEY represents
+    # dates which are assumed to be in the local timezone of the reported
+    # company)
+    if reindex_like.index.tz:
+        metrics["Date"] = metrics.Date.dt.tz_localize(reindex_like.index.tz.zone)
+
+    deduped_dates = metrics.Date.drop_duplicates()
+
+    # Create a unioned index of input DataFrame and statement dates
+    union_date_idx = reindex_like.index.union(pd.DatetimeIndex(deduped_dates)).sort_values()
+
+    # There might be duplicate dates if a company announced
+    # reports for several fiscal periods at once. In this case we keep
+    # only the last value (i.e. latest fiscal period)
+    metrics = metrics.drop_duplicates(subset=["Sid", "Date"], keep="last")
+    metrics = metrics.pivot(index="Sid",columns="Date").T
+    multiidx = pd.MultiIndex.from_product(
+        (metrics.index.get_level_values(0).unique(), union_date_idx),
+        names=["Field", "Date"])
+    metrics = metrics.reindex(index=multiidx, columns=reindex_like.columns)
+
+    # reports are sparse so ffill (one field at a time)
+    all_fields = {}
+
+    for fieldname in metrics.index.get_level_values("Field").unique():
+
+        field = metrics.loc[fieldname]
+
+        # forward-fill values (we don't shift because Brain already does that)
+        field = field.ffill()
+
+        all_fields[fieldname] = field
+
+    metrics = pd.concat(all_fields, names=["Field", "Date"])
+
+    # In cases the statements included dates not in the input
+    # DataFrame, drop those now that we've ffilled
+    extra_dates = union_date_idx.difference(reindex_like.index)
+    if not extra_dates.empty:
+        metrics.drop(extra_dates, axis=0, level="Date", inplace=True)
+
+    return metrics
+
+def get_brain_blmcf_reindexed_like(
+    reindex_like: 'pd.DataFrame',
+    fields: Union[list[str], str] = None,
+    report_category: Literal['10-K', '10-Q'] = None,
+    ) -> 'pd.DataFrame':
+    """
+    Return a multiindex (Field, Date) DataFrame of Brain Language Metrics
+    on Company Filings (BLMCF) data, reindexed to match the index (dates)
+    and columns (sids) of `reindex_like`. Language metrics are forward-filled
+    to provide the latest reading at any given date.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and sids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    fields : list of str
+        a list of fields to include in the resulting DataFrame. Defaults to
+        including all fields. For faster performance, limiting fields to
+        those needed is highly recommended, especially for large universes.
+        Pass '?' or any invalid fieldname to see available fields. Metrics
+        are calculated separately for the Risk Factors section of the report
+        (fields starting with RF), the Management Discussion and Analysis
+        section (fields starting with MD), and the report as a whole (fields
+        not starting with RF or MD). Fields containing "DELTA" or "SIMILARITY"
+        in the name compare the current report with the previous report of
+        the same period and category.
+
+    report_category : str, optional
+        limit to this report category. Choices are 10-K or 10-Q. If omitted,
+        both report categories are returned.
+
+    Returns
+    -------
+    DataFrame
+        a multiindex (Field, Date) DataFrame of metrics, shaped like
+        the input DataFrame
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Brain Language Metrics on Company Filings: https://qrok.it/dl/qr/brain-blmcf
+
+    Examples
+    --------
+    Query metrics using a DataFrame of historical prices:
+
+    >>> closes = prices.loc["Close"]
+    >>> metrics = get_brain_blmcf_reindexed_like(closes, fields=["SENTIMENT", "SCORE_LITIGIOUS"])
+    >>> sentiment_scores = metrics.loc["SENTIMENT"]
+    >>> litigious_scores = metrics.loc["SCORE_LITIGIOUS"]
+
+    Query metrics for 10-K filings only:
+
+    >>> metrics = get_brain_blmcf_reindexed_like(closes, report_category="10-K", fields=["SENTIMENT"])
+    >>> sentiment_scores = metrics.loc["SENTIMENT"]
+    """
+    return _get_brain_blm_reindexed_like(
+        reindex_like, download_brain_blmcf, fields=fields, report_category=report_category
+    )
+
+def download_brain_blmect(
+    filepath_or_buffer: FilepathOrBuffer = None,
+    start_date: str = None,
+    end_date: str = None,
+    universes: Union[list[str], str] = None,
+    sids: Union[list[str], str] = None,
+    exclude_universes: Union[list[str], str] = None,
+    exclude_sids: Union[list[str], str] = None,
+    fields: Union[list[str], str] = None,
+    output: Literal["csv", "json"] = "csv"
+    ) -> None:
+    """
+    Query Brain Language Metrics on Earnings Call Transcripts (BLMECT) data from
+    the local database and download to file.
+
+    Parameters
+    ----------
+    filepath_or_buffer : str or file-like object
+        filepath to write the data to, or file-like object (defaults to stdout)
+
+    start_date : str (YYYY-MM-DD), optional
+        limit to records on or after this date
+
+    end_date : str (YYYY-MM-DD), optional
+        limit to records on or before this date
+
+    universes : list of str, optional
+        limit to these universes
+
+    sids : list of str, optional
+        limit to these sids
+
+    exclude_universes : list of str, optional
+        exclude these universes
+
+    exclude_sids : list of str, optional
+        exclude these sids
+
+    fields : list of str, optional
+        only return these fields (pass '?' or any invalid fieldname to see
+        available fields). Fields are organized into three sections,
+        corresponding to three sections of the earnings call transcripts:
+        "Management Discussion" (MD), "Analyst Questions" (AQ), and
+        "Management Answers" (MA). Fields containing "DELTA" or "SIMILARITY"
+        in the name compare the current earnings call transcript to the
+        previous earnings call transcript.
+
+    output : str
+        output format (json, csv, default is csv)
+
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Brain Language Metrics on Earnings Call Transcripts: https://qrok.it/dl/qr/brain-blmect
+
+    Examples
+    --------
+    Download language metrics on earnings call transcripts for all available stocks
+    for a single year:
+
+    >>> download_brain_blmect("blmect.csv", start_date="2023-01-01", end_date="2024-01-01")
+    >>> blmect = pd.read_csv("blmect.csv", parse_dates=["Date"])
+    """
+    params = {}
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
+    if universes:
+        params["universes"] = universes
+    if sids:
+        params["sids"] = sids
+    if exclude_universes:
+        params["exclude_universes"] = exclude_universes
+    if exclude_sids:
+        params["exclude_sids"] = exclude_sids
+    if fields:
+        params["fields"] = fields
+
+    output = output or "csv"
+
+    if output not in ("csv", "json"):
+        raise ValueError("Invalid ouput: {0}".format(output))
+
+    response = houston.get("/fundamental/brain/blmect.{0}".format(output), params=params)
+
+    try:
+        houston.raise_for_status_with_json(response)
+    except requests.HTTPError as e:
+        # Raise a dedicated exception
+        no_data_messages = (
+            "match the query parameters",
+        )
+        if any([msg in repr(e).lower() for msg in no_data_messages]):
+            raise NoFundamentalData(e)
+        raise
+
+    filepath_or_buffer = filepath_or_buffer or sys.stdout
+
+    write_response_to_filepath_or_buffer(filepath_or_buffer, response)
+
+def _cli_download_brain_blmect(*args, **kwargs):
+    return json_to_cli(download_brain_blmect, *args, **kwargs)
+
+def get_brain_blmect_reindexed_like(
+    reindex_like: 'pd.DataFrame',
+    fields: Union[list[str], str] = None,
+    ) -> 'pd.DataFrame':
+    """
+    Return a multiindex (Field, Date) DataFrame of Brain Language Metrics
+    on Earnings Call Transcripts (BLMECT) data, reindexed to match the
+    index (dates) and columns (sids) of `reindex_like`. Language metrics
+    are forward-filled to provide the latest reading at any given date.
+
+    Parameters
+    ----------
+    reindex_like : DataFrame, required
+        a DataFrame (usually of prices) with dates for the index and sids
+        for the columns, to which the shape of the resulting DataFrame will
+        be conformed
+
+    fields : list of str
+        a list of fields to include in the resulting DataFrame. Defaults to
+        including all fields. For faster performance, limiting fields to
+        those needed is highly recommended, especially for large universes.
+        Pass '?' or any invalid fieldname to see available fields. Fields
+        are organized into three sections, corresponding to three sections
+        of the earnings call transcripts: "Management Discussion" (MD),
+        "Analyst Questions" (AQ), and "Management Answers" (MA). Fields
+        containing "DELTA" or "SIMILARITY" in the name compare the current
+        earnings call transcript to the previous earnings call transcript.
+
+    Returns
+    -------
+    DataFrame
+        a multiindex (Field, Date) DataFrame of metrics, shaped like
+        the input DataFrame
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Brain Language Metrics on Earnings Call Transcripts: https://qrok.it/dl/qr/brain-blmect
+
+    Examples
+    --------
+    Query metrics using a DataFrame of historical prices:
+
+    >>> closes = prices.loc["Close"]
+    >>> metrics = get_brain_blmect_reindexed_like(closes, fields=["MD_SENTIMENT", "MD_SCORE_LITIGIOUS"])
+    >>> sentiment_scores = metrics.loc["MD_SENTIMENT"]
+    >>> litigious_scores = metrics.loc["MD_SCORE_LITIGIOUS"]
+    """
+    return _get_brain_blm_reindexed_like(
+        reindex_like, download_brain_blmect, fields=fields
+    )

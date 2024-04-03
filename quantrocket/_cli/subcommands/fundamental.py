@@ -328,6 +328,94 @@ Collect easy-to-borrow data:
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_alpaca_etb")
 
     examples = """
+Collect Brain Sentiment Indicator (BSI) data and save to database.
+
+This dataset provides news sentiment scores for US stocks, with history back to
+August 2, 2016.
+
+Notes
+-----
+Usage Guide:
+
+* Brain Sentiment Indicator: https://qrok.it/dl/qr/brain-bsi
+
+Examples
+--------
+
+Collect Brain Sentiment Indicator data:
+
+.. code-block:: bash
+
+    quantrocket fundamental collect-brain-bsi
+    """
+    parser = _subparsers.add_parser(
+        "collect-brain-bsi",
+        help="collect Brain Sentiment Indicator (BSI) data and save to database",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_brain_bsi")
+
+    examples = """
+Collect Brain Language Metrics on Company Filings (BLMCF) data and
+save to database.
+
+This dataset provides sentiment scores and other language metrics for
+10-K and 10-Q company filings for US stocks, with history back to
+January 1, 2010.
+
+Notes
+-----
+Usage Guide:
+
+* Brain Language Metrics on Company Filings: https://qrok.it/dl/qr/brain-blmcf
+
+Examples
+--------
+
+Collect Brain Language Metrics on Company Filings data:
+
+.. code-block:: bash
+
+    quantrocket fundamental collect-brain-blmcf
+    """
+    parser = _subparsers.add_parser(
+        "collect-brain-blmcf",
+        help="collect Brain Language Metrics on Company Filings (BLMCF) data and save to database",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_brain_blmcf")
+
+    examples = """
+Collect Brain Language Metrics on Earnings Call Transcripts (BLMECT) data
+and save to database.
+
+This dataset provides sentiment scores and other language metrics for
+earnings call transcripts for US stocks, with history back to January 1, 2012.
+
+
+Notes
+-----
+Usage Guide:
+
+* Brain Language Metrics on Earnings Call Transcripts: https://qrok.it/dl/qr/brain-blmect
+
+Examples
+--------
+
+Collect Brain Language Metrics on Earnings Call Transcripts data:
+
+.. code-block:: bash
+
+    quantrocket fundamental collect-brain-blmect
+    """
+    parser = _subparsers.add_parser(
+        "collect-brain-blmect",
+        help="collect Brain Language Metrics on Earnings Call Transcripts (BLMECT) data and save to database",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    parser.set_defaults(func="quantrocket.fundamental._cli_collect_brain_blmect")
+
+    examples = """
 Query Sharadar Fundamentals from the local database and download to file.
 
 Notes
@@ -1018,6 +1106,250 @@ Query easy-to-borrow data for a universe of US stocks:
         dest="output",
         help="format output as JSON (default is CSV)")
     parser.set_defaults(func="quantrocket.fundamental._cli_download_alpaca_etb")
+
+    examples = """
+Query Brain Sentiment Indicator (BSI) data from the local database and download
+to file.
+
+Notes
+-----
+Usage Guide:
+
+* Brain Sentiment Indicator: https://qrok.it/dl/qr/brain-bsi
+
+Examples
+--------
+Download news sentiment scores averaged over the last 7 days for
+a universe of tech stocks:
+
+.. code-block:: bash
+
+    quantrocket fundamental brain-bsi -N 7 -u usa-tech -s 2024-01-01 -o bsi7.csv
+    """
+    parser = _subparsers.add_parser(
+        "brain-bsi",
+        help="query Brain Sentiment Indicator (BSI) data from the local database and download to file",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-N",
+        type=int,
+        metavar="INT",
+        choices=[1, 7, 30],
+        help="limit to records with this calculation window. Possible choices: %(choices)s ")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to records on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to records on or before this date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields))")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_brain_bsi")
+
+    examples = """
+Query Brain Language Metrics on Company Filings (BLMCF) data from the local
+database and download to file.
+
+Notes
+-----
+Usage Guide:
+
+* Brain Language Metrics on Company Filings: https://qrok.it/dl/qr/brain-blmcf
+
+Examples
+--------
+Download language metrics on company filings for all available stocks for a single
+year:
+
+.. code-block:: bash
+
+    quantrocket fundamental brain-blmcf -s 2023-01-01 -e 2024-01-01 -o blmcf.csv
+    """
+    parser = _subparsers.add_parser(
+        "brain-blmcf",
+        help="query Brain Language Metrics on Company Filings (BLMCF) data from the local database and download to file",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-c", "--report-category",
+        metavar="CATEGORY",
+        choices=["10-K", "10-Q"],
+        help="limit to this report category. Possible choices: %(choices)s. If omitted, "
+        "both report categories are returned.")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to records on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to records on or before this date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields). Metrics are calculated separately for the Risk Factors "
+        "section of the report (fields starting with RF), the Management Discussion "
+        "and Analysis section (fields starting with MD), and the report as a whole "
+        '(fields not starting with RF or MD). Fields containing "DELTA" or "SIMILARITY" '
+        "in the name compare the current report with the previous report of the same "
+        "period and category.")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_brain_blmcf")
+
+    examples = """
+Query Brain Language Metrics on Earnings Call Transcripts (BLMECT) data from the
+local database and download to file.
+
+Notes
+-----
+Usage Guide:
+
+* Brain Language Metrics on Earnings Call Transcripts: https://qrok.it/dl/qr/brain-blmect
+
+Examples
+--------
+Download language metrics on earnings call transcripts for all available stocks
+for a single year:
+
+.. code-block:: bash
+
+    quantrocket fundamental brain-blmect -s 2023-01-01 -e 2024-01-01 -o blmect.csv
+    """
+    parser = _subparsers.add_parser(
+        "brain-blmect",
+        help="query Brain Language Metrics on Earnings Call Transcripts (BLMECT) data from the local database and download to file",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    filters = parser.add_argument_group("filtering options")
+    filters.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="limit to records on or after this date")
+    filters.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="limit to records on or before this date")
+    filters.add_argument(
+        "-u", "--universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="limit to these universes")
+    filters.add_argument(
+        "-i", "--sids",
+        nargs="*",
+        metavar="SID",
+        help="limit to these sids")
+    filters.add_argument(
+        "--exclude-universes",
+        nargs="*",
+        metavar="UNIVERSE",
+        help="exclude these universes")
+    filters.add_argument(
+        "--exclude-sids",
+        nargs="*",
+        metavar="SID",
+        help="exclude these sids")
+    outputs = parser.add_argument_group("output options")
+    outputs.add_argument(
+        "-o", "--outfile",
+        metavar="OUTFILE",
+        dest="filepath_or_buffer",
+        help="filename to write the data to (default is stdout)")
+    output_format_group = outputs.add_mutually_exclusive_group()
+    output_format_group.add_argument(
+        "-j", "--json",
+        action="store_const",
+        const="json",
+        dest="output",
+        help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "-f", "--fields",
+        metavar="FIELD",
+        nargs="*",
+        help="only return these fields (pass '?' or any invalid fieldname to see "
+        "available fields). Fields are organized into three sections, "
+        "corresponding to three sections of the earnings call transcripts: "
+        '"Management Discussion" (MD), "Analyst Questions" (AQ), and '
+        '"Management Answers" (MA). Fields containing "DELTA" or "SIMILARITY" '
+        "in the name compare the current earnings call transcript to the "
+        "previous earnings call transcript.")
+    parser.set_defaults(func="quantrocket.fundamental._cli_download_brain_blmect")
 
     examples = """
 Query financial statements from the Reuters financials database and

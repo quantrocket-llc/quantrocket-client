@@ -34,7 +34,10 @@ from quantrocket.fundamental import (
     get_sharadar_institutions_reindexed_like,
     get_sharadar_sec8_reindexed_like,
     get_sharadar_sp500_reindexed_like,
-    get_wsh_earnings_dates_reindexed_like
+    get_wsh_earnings_dates_reindexed_like,
+    get_brain_bsi_reindexed_like,
+    get_brain_blmcf_reindexed_like,
+    get_brain_blmect_reindexed_like,
 )
 from quantrocket.exceptions import ParameterError, MissingData, NoFundamentalData
 
@@ -4329,4 +4332,374 @@ class SharadarSP500ReindexedLikeTestCase(unittest.TestCase):
             {'Date': '2018-08-16T00:00:00-0400', 'FI12345': False, 'FI23456': True},
             {'Date': '2018-08-17T00:00:00-0400', 'FI12345': False, 'FI23456': True},
             {'Date': '2018-08-18T00:00:00-0400', 'FI12345': False, 'FI23456': True}]
+        )
+
+class BrainReindexedLikeTestCase(unittest.TestCase):
+
+    def test_complain_if_time_level_in_index(self):
+        """
+        Tests error handling when reindex_like has a Time level in the index.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=["FI12345","FI23456"],
+            index=pd.MultiIndex.from_product((
+                pd.date_range(start="2018-01-01", periods=3, freq="D"),
+                ["15:00:00","15:15:00"]), names=["Date", "Time"]))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_brain_bsi_reindexed_like(closes)
+
+        self.assertIn("reindex_like should not have 'Time' in index", str(cm.exception))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_brain_blmcf_reindexed_like(closes)
+
+        self.assertIn("reindex_like should not have 'Time' in index", str(cm.exception))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_brain_blmect_reindexed_like(closes)
+
+        self.assertIn("reindex_like should not have 'Time' in index", str(cm.exception))
+
+    def test_complain_if_date_level_not_in_index(self):
+        """
+        Tests error handling when reindex_like doesn't have an index named
+        Date.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-01-01", periods=3, freq="D"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_brain_bsi_reindexed_like(closes)
+
+        self.assertIn("reindex_like must have index called 'Date'", str(cm.exception))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_brain_blmcf_reindexed_like(closes)
+
+        self.assertIn("reindex_like must have index called 'Date'", str(cm.exception))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_brain_blmect_reindexed_like(closes)
+
+        self.assertIn("reindex_like must have index called 'Date'", str(cm.exception))
+
+    def test_complain_if_not_datetime_index(self):
+        """
+        Tests error handling when the reindex_like index is named Date but is
+        not a DatetimeIndex.
+        """
+
+        closes = pd.DataFrame(
+            np.random.rand(3,2),
+            columns=["FI12345","FI23456"],
+            index=pd.Index(["foo","bar","bat"], name="Date"))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_brain_bsi_reindexed_like(closes)
+
+        self.assertIn("reindex_like must have a DatetimeIndex", str(cm.exception))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_brain_blmcf_reindexed_like(closes)
+
+        self.assertIn("reindex_like must have a DatetimeIndex", str(cm.exception))
+
+        with self.assertRaises(ParameterError) as cm:
+            get_brain_blmect_reindexed_like(closes)
+
+        self.assertIn("reindex_like must have a DatetimeIndex", str(cm.exception))
+
+    @patch("quantrocket.fundamental.download_brain_bsi")
+    def test_bsi_pass_args_correctly(self,
+                                 mock_download_brain_bsi):
+        """
+        Tests that sids, date ranges, and N are correctly
+        passed to download_brain_bsi.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-08-13", periods=6, freq="D", name="Date"))
+
+        def _mock_download_brain_bsi(filepath_or_buffer, *args, **kwargs):
+            bsi = pd.DataFrame(
+                dict(
+                    Date=[
+                        "2018-08-15",
+                        "2018-08-16"
+                        ],
+                    Sid=[
+                         "FI12345",
+                         "FI23456",
+                         ],
+                     SENTIMENT_SCORE=[
+                         0.5,
+                         0.4
+                     ],
+                     VOLUME=[
+                            1000000,
+                            2000000
+                     ],
+                    ))
+            bsi.to_csv(filepath_or_buffer, index=False)
+            filepath_or_buffer.seek(0)
+
+        mock_download_brain_bsi.side_effect = _mock_download_brain_bsi
+
+        get_brain_bsi_reindexed_like(
+            closes, N=1, fields=["SENTIMENT_SCORE", "VOLUME"])
+
+        brain_bsi_call = mock_download_brain_bsi.mock_calls[0]
+        _, args, kwargs = brain_bsi_call
+        self.assertEqual(kwargs["start_date"], "2018-08-03")
+        self.assertEqual(kwargs["end_date"], "2018-08-18")
+        self.assertEqual(kwargs["N"], 1)
+        self.assertEqual(kwargs["fields"], ["SENTIMENT_SCORE", "VOLUME"])
+
+    def test_bsi(self):
+        """
+        Tests get_brain_bsi_reindexed_like.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-08-13", periods=6, freq="D", name="Date"))
+
+        def mock_download_brain_bsi(filepath_or_buffer, *args, **kwargs):
+            bsi = pd.DataFrame(
+                dict(
+                    Date=[
+                        "2018-08-15",
+                        "2018-08-15",
+                        "2018-08-16",
+                        '2018-08-17'
+                        ],
+                    Sid=[
+                         "FI12345",
+                         "FI23456",
+                         "FI12345",
+                         "FI23456",
+                         ],
+                    SENTIMENT_SCORE=[
+                        0.5,
+                        0.4,
+                        0.55,
+                        0.45
+                    ],
+                    VOLUME=[
+                        100,
+                        200,
+                        150,
+                        250
+                    ],
+                )
+            )
+            bsi.to_csv(filepath_or_buffer, index=False)
+            filepath_or_buffer.seek(0)
+
+        with patch("quantrocket.fundamental.download_brain_bsi", new=mock_download_brain_bsi):
+            bsi = get_brain_bsi_reindexed_like(closes, N=7, fields=["SENTIMENT_SCORE", "VOLUME"])
+
+        bsi.fillna(-999, inplace=True)
+        bsi = bsi.loc["SENTIMENT_SCORE"].reset_index()
+        bsi["Date"] = bsi.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            bsi.to_dict(orient="records"),
+            [{'Date': '2018-08-13T00:00:00', 'FI12345': -999.0, 'FI23456': -999.0},
+            {'Date': '2018-08-14T00:00:00', 'FI12345': -999.0, 'FI23456': -999.0},
+            {'Date': '2018-08-15T00:00:00', 'FI12345': 0.5, 'FI23456': 0.4},
+            {'Date': '2018-08-16T00:00:00', 'FI12345': 0.55, 'FI23456': -999.0},
+            {'Date': '2018-08-17T00:00:00', 'FI12345': -999.0, 'FI23456': 0.45},
+            {'Date': '2018-08-18T00:00:00', 'FI12345': -999.0, 'FI23456': -999.0}]
+        )
+
+        # repeat with tz-aware index
+        with patch("quantrocket.fundamental.download_brain_bsi", new=mock_download_brain_bsi):
+            closes.index = closes.index.tz_localize("America/New_York")
+            bsi = get_brain_bsi_reindexed_like(closes, N=7, fields=["SENTIMENT_SCORE", "VOLUME"])
+
+        bsi.fillna(-999, inplace=True)
+        bsi = bsi.loc["SENTIMENT_SCORE"].reset_index()
+        bsi["Date"] = bsi.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            bsi.to_dict(orient="records"),
+            [{'Date': '2018-08-13T00:00:00-0400', 'FI12345': -999.0, 'FI23456': -999.0},
+            {'Date': '2018-08-14T00:00:00-0400', 'FI12345': -999.0, 'FI23456': -999.0},
+            {'Date': '2018-08-15T00:00:00-0400', 'FI12345': 0.5, 'FI23456': 0.4},
+            {'Date': '2018-08-16T00:00:00-0400', 'FI12345': 0.55, 'FI23456': -999.0},
+            {'Date': '2018-08-17T00:00:00-0400', 'FI12345': -999.0, 'FI23456': 0.45},
+            {'Date': '2018-08-18T00:00:00-0400', 'FI12345': -999.0, 'FI23456': -999.0}]
+        )
+
+    @patch("quantrocket.fundamental.download_brain_blmcf")
+    def test_blmcf_pass_args_correctly(self,
+                                 mock_download_brain_blmcf):
+        """
+        Tests that sids, date ranges, and report_category are correctly
+        passed to download_brain_blmcf.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-08-13", periods=6, freq="D", name="Date"))
+
+        def _mock_download_brain_blmcf(filepath_or_buffer, *args, **kwargs):
+            metrics = pd.DataFrame(
+                dict(
+                    Date=[
+                        "2018-05-15",
+                        "2018-6-01",
+                        "2018-08-15",
+                        "2018-08-16",
+                        ],
+                    Sid=[
+                         "FI12345",
+                         "FI23456",
+                         "FI12345",
+                         "FI23456",
+                         ],
+                     SENTIMENT=[
+                         0.5,
+                         0.4,
+                         0.55,
+                         0.45
+                     ],
+                    ))
+            metrics.to_csv(filepath_or_buffer, index=False)
+            filepath_or_buffer.seek(0)
+
+        mock_download_brain_blmcf.side_effect = _mock_download_brain_blmcf
+
+        get_brain_blmcf_reindexed_like(
+            closes, fields="SENTIMENT")
+
+        brain_call = mock_download_brain_blmcf.mock_calls[0]
+        _, args, kwargs = brain_call
+        self.assertEqual(kwargs["start_date"], "2017-02-14")
+        self.assertEqual(kwargs["end_date"], "2018-08-18")
+        self.assertEqual(kwargs["report_category"], None)
+        self.assertEqual(kwargs["fields"], ["SENTIMENT"])
+
+    def test_blmcf(self):
+        """
+        Tests get_brain_blmcf_reindexed_like.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-08-13", periods=6, freq="D", name="Date"))
+
+        def mock_download_brain_blmcf(filepath_or_buffer, *args, **kwargs):
+            metrics = pd.DataFrame(
+                dict(
+                    Date=[
+                        "2018-05-15",
+                        "2018-6-01",
+                        "2018-08-15",
+                        "2018-08-16",
+                        ],
+                    Sid=[
+                         "FI12345",
+                         "FI23456",
+                         "FI12345",
+                         "FI23456",
+                         ],
+                     SENTIMENT=[
+                         0.5,
+                         0.4,
+                         0.55,
+                         0.45
+                     ],
+                    ))
+            metrics.to_csv(filepath_or_buffer, index=False)
+            filepath_or_buffer.seek(0)
+
+        with patch("quantrocket.fundamental.download_brain_blmcf", new=mock_download_brain_blmcf):
+            metrics = get_brain_blmcf_reindexed_like(
+                closes, fields=["SENTIMENT"])
+
+        metrics = metrics.loc["SENTIMENT"].reset_index()
+        metrics["Date"] = metrics.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            metrics.to_dict(orient="records"),
+            [{'Date': '2018-08-13T00:00:00', 'FI12345': 0.5, 'FI23456': 0.4},
+             {'Date': '2018-08-14T00:00:00', 'FI12345': 0.5, 'FI23456': 0.4},
+             {'Date': '2018-08-15T00:00:00', 'FI12345': 0.55, 'FI23456': 0.4},
+             {'Date': '2018-08-16T00:00:00', 'FI12345': 0.55, 'FI23456': 0.45},
+             {'Date': '2018-08-17T00:00:00', 'FI12345': 0.55, 'FI23456': 0.45},
+             {'Date': '2018-08-18T00:00:00', 'FI12345': 0.55, 'FI23456': 0.45}]
+        )
+
+        # repeat with tz-aware index
+        with patch("quantrocket.fundamental.download_brain_blmcf", new=mock_download_brain_blmcf):
+            closes.index = closes.index.tz_localize("America/New_York")
+            metrics = get_brain_blmcf_reindexed_like(
+                closes, fields=["SENTIMENT"])
+
+        metrics = metrics.loc["SENTIMENT"].reset_index()
+        metrics["Date"] = metrics.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            metrics.to_dict(orient="records"),
+            [{'Date': '2018-08-13T00:00:00-0400', 'FI12345': 0.5, 'FI23456': 0.4},
+             {'Date': '2018-08-14T00:00:00-0400', 'FI12345': 0.5, 'FI23456': 0.4},
+             {'Date': '2018-08-15T00:00:00-0400', 'FI12345': 0.55, 'FI23456': 0.4},
+             {'Date': '2018-08-16T00:00:00-0400', 'FI12345': 0.55, 'FI23456': 0.45},
+             {'Date': '2018-08-17T00:00:00-0400', 'FI12345': 0.55, 'FI23456': 0.45},
+             {'Date': '2018-08-18T00:00:00-0400', 'FI12345': 0.55, 'FI23456': 0.45}]
+        )
+
+    def test_blmect(self):
+        """
+        Tests get_brain_blmect_reindexed_like.
+        """
+        closes = pd.DataFrame(
+            np.random.rand(6,2),
+            columns=["FI12345","FI23456"],
+            index=pd.date_range(start="2018-08-13", periods=6, freq="D", name="Date"))
+
+        def mock_download_brain_blmect(filepath_or_buffer, *args, **kwargs):
+            metrics = pd.DataFrame(
+                dict(
+                    Date=[
+                        "2018-05-15",
+                        "2018-6-01",
+                        "2018-08-15",
+                        "2018-08-16",
+                        ],
+                    Sid=[
+                         "FI12345",
+                         "FI23456",
+                         "FI12345",
+                         "FI23456",
+                         ],
+                     MD_SENTIMENT=[
+                         0.5,
+                         0.4,
+                         0.55,
+                         0.45
+                     ],
+                    ))
+            metrics.to_csv(filepath_or_buffer, index=False)
+            filepath_or_buffer.seek(0)
+
+        with patch("quantrocket.fundamental.download_brain_blmect", new=mock_download_brain_blmect):
+            metrics = get_brain_blmect_reindexed_like(
+                closes, fields=["MD_SENTIMENT"])
+
+        metrics = metrics.loc["MD_SENTIMENT"].reset_index()
+        metrics["Date"] = metrics.Date.dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+        self.assertListEqual(
+            metrics.to_dict(orient="records"),
+            [{'Date': '2018-08-13T00:00:00', 'FI12345': 0.5, 'FI23456': 0.4},
+             {'Date': '2018-08-14T00:00:00', 'FI12345': 0.5, 'FI23456': 0.4},
+             {'Date': '2018-08-15T00:00:00', 'FI12345': 0.55, 'FI23456': 0.4},
+             {'Date': '2018-08-16T00:00:00', 'FI12345': 0.55, 'FI23456': 0.45},
+             {'Date': '2018-08-17T00:00:00', 'FI12345': 0.55, 'FI23456': 0.45},
+             {'Date': '2018-08-18T00:00:00', 'FI12345': 0.55, 'FI23456': 0.45}]
         )
