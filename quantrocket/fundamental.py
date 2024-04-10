@@ -2822,8 +2822,13 @@ def get_sharadar_fundamentals_reindexed_like(
     download_sharadar_fundamentals(
         filepath_or_buffer=f, sids=sids, start_date=start_date, end_date=end_date,
         fields=fields, dimensions=dimension)
+    date_fields = ["DATEKEY"]
+    if fields:
+        for date_field in ("CALENDARDATE", "REPORTPERIOD"):
+            if date_field in fields:
+                date_fields.append(date_field)
     financials = pd.read_csv(
-        f, parse_dates=["DATEKEY"])
+        f, parse_dates=date_fields)
 
     # Rename DATEKEY to match price history index name
     financials = financials.rename(columns={"DATEKEY": "Date"})
@@ -3962,8 +3967,13 @@ def _get_brain_blm_reindexed_like(
     download_func(
         filepath_or_buffer=f, sids=sids, start_date=start_date, end_date=end_date,
         fields=fields, **kwargs)
+    date_fields = ["Date"]
+    if fields:
+        for date_field in ("LAST_REPORT_DATE", "PREV_REPORT_DATE", "LAST_TRANSCRIPT_DATE", "PREV_TRANSCRIPT_DATE"):
+            if date_field in fields:
+                date_fields.append(date_field)
     metrics = pd.read_csv(
-        f, parse_dates=["Date"])
+        f, parse_dates=date_fields)
 
     # if reindex_like.index is tz-aware, make metrics tz-aware so they can
     # be joined (tz-aware or tz-naive are both fine, as DATEKEY represents
