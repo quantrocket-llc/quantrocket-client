@@ -26,8 +26,6 @@ Usage Guide:
 * Code Management: https://qrok.it/dl/qr/codeload
 """
 import os
-from IPython import get_ipython
-from IPython.display import display, FileLink
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
 
@@ -118,7 +116,18 @@ def clone(
 
     # If we're running in a Jupyter notebook, display a link
     # to the Introduction file
-    if os.environ.get("YOU_ARE_INSIDE_JUPYTER", False) and get_ipython() is not None:
+    try:
+        from IPython import get_ipython
+        from IPython.display import display, FileLink
+        ipython_installed = True
+    except ImportError:
+        ipython_installed = False
+
+    if (
+        ipython_installed
+        and os.environ.get("YOU_ARE_INSIDE_JUPYTER", False)
+        and get_ipython() is not None):
+
         files = status['files'].get('added', status['files'].get('updated', []))
         intro_file = next((f for f in files if f.lower().endswith("introduction.ipynb")), None)
         if intro_file:
