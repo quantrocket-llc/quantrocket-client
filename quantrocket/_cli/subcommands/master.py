@@ -185,7 +185,7 @@ Re-collect contract details for an existing universe called "japan-fin":
         "-t", "--sec-types",
         nargs="*",
         metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "IND"],
+        choices=["STK", "ETF", "FUT", "CASH", "IND", "CFD"],
         help="limit to these security types. Possible choices: %(choices)s")
     parser.add_argument(
         "--currencies",
@@ -405,7 +405,7 @@ terminal display:
         "-t", "--sec-types",
         nargs="*",
         metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG"],
+        choices=["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG", "CFD"],
         help="limit to these security types. Possible choices: %(choices)s")
     filters.add_argument(
         "-c", "--currencies",
@@ -523,7 +523,7 @@ List stock exchanges in the Americas:
     parser.add_argument(
         "-t", "--sec-types",
         nargs="*",
-        choices=["STK", "FUT", "CASH", "IND"],
+        choices=["STK", "FUT", "CASH", "IND", "CFD"],
         metavar="SEC_TYPE",
         help="limit to these security types. Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.master._cli_list_ibkr_exchanges")
@@ -674,7 +674,7 @@ Delist a security by symbol + exchange:
     parser.add_argument(
         "-t", "--sec-type",
         metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "IND"],
+        choices=["STK", "ETF", "FUT", "CASH", "IND", "CFD"],
         help="the security type of the security to be delisted (if needed to disambiguate). Possible choices: %(choices)s")
     parser.set_defaults(func="quantrocket.master._cli_delist_ibkr_security")
 

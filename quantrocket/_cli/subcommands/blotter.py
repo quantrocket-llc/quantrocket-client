@@ -140,6 +140,15 @@ Cancel all open orders:
         default=False,
         dest="cancel_all",
         help="cancel all open orders")
+    parser.add_argument(
+        "--cancel-cfd-by-underlying",
+        action="store_true",
+        default=False,
+        dest="cancel_cfd_by_underlying",
+        help="cancel CFD orders by specifying the sid of the underlying security "
+        "rather than the CFD sid when using the `--sids` parameter. If omitted, cancel "
+        "CFD orders using the CFD sid. Has no effect on non-CFD orders or if the `--sids` "
+        "parameter is not used.")
     parser.set_defaults(func="quantrocket.blotter._cli_cancel_orders")
 
     examples = """
@@ -241,6 +250,15 @@ Download order status of open orders by order ref:
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "--map-cfd-to-underlying",
+        action="store_true",
+        default=False,
+        dest="map_cfd_to_underlying",
+        help="return CFD order statuses (if any) with the sid of the underlying "
+        "security rather than the CFD sid. (In this case, if using the `--sids` parameter, "
+        "specifying the underlying sid will retrieve the CFD.) If omitted, return CFD "
+        "order statuses with the CFD sid. Has no effect on non-CFD order statuses.")
     parser.set_defaults(func="quantrocket.blotter._cli_download_order_statuses")
 
     examples = """
@@ -332,6 +350,15 @@ Query positions using broker view:
         const="json",
         dest="output",
         help="format output as JSON (default is CSV)")
+    outputs.add_argument(
+        "--map-cfd-to-underlying",
+        action="store_true",
+        default=False,
+        dest="map_cfd_to_underlying",
+        help="return CFD positions (if any) with the sid of the underlying "
+        "security rather than the CFD sid. (In this case, if using the `--sids` parameter, "
+        "specifying the underlying sid will retrieve the CFD.) If omitted, return CFD "
+        "positions with the CFD sid. Has no effect on non-CFD positions.")
     parser.set_defaults(func="quantrocket.blotter._cli_download_positions")
 
     examples = """
@@ -467,6 +494,15 @@ Get a CSV of all executions:
         metavar="OUTFILE",
         dest="filepath_or_buffer",
         help="filename to write the data to (default is stdout)")
+    outputs.add_argument(
+        "--map-cfd-to-underlying",
+        action="store_true",
+        default=False,
+        dest="map_cfd_to_underlying",
+        help="return CFD executions (if any) with the sid of the underlying "
+        "security rather than the CFD sid. (In this case, if using the `--sids` parameter, "
+        "specifying the underlying sid will retrieve the CFD.) If omitted, return CFD "
+        "executions with the CFD sid. Has no effect on non-CFD executions.")
     parser.set_defaults(func="quantrocket.blotter._cli_download_executions")
 
     examples = """

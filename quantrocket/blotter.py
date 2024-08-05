@@ -171,7 +171,8 @@ def cancel_orders(
     sids: Union[list[str], str] = None,
     order_refs: Union[list[str], str] = None,
     accounts: Union[list[str], str] = None,
-    cancel_all: bool = None
+    cancel_all: bool = None,
+    cancel_cfd_by_underlying: bool = None
     ) -> dict[str, str]:
     """
     Cancel one or more orders by order ID, sid, or order ref.
@@ -192,6 +193,12 @@ def cancel_orders(
 
     cancel_all : bool
         cancel all open orders
+
+    cancel_cfd_by_underlying : bool
+        if True, cancel CFD orders by specifying the sid of the underlying security
+        rather than the CFD sid when using the `sids` parameter. If False, cancel CFD
+        orders using the CFD sid. Has no effect on non-CFD orders or if the `sids`
+        parameter is not used.
 
     Returns
     -------
@@ -233,6 +240,8 @@ def cancel_orders(
         params["accounts"] = accounts
     if cancel_all:
         params["cancel_all"] = cancel_all
+    if cancel_cfd_by_underlying:
+        params["cancel_cfd_by_underlying"] = cancel_cfd_by_underlying
 
     response = houston.delete("/blotter/orders", params=params)
     houston.raise_for_status_with_json(response)
@@ -251,7 +260,8 @@ def download_order_statuses(
     open_orders: bool = None,
     start_date: str = None,
     end_date: str = None,
-    fields: Union[list[str], str] = None
+    fields: Union[list[str], str] = None,
+    map_cfd_to_underlying: bool = None
     ) -> None:
     """
     Download order statuses.
@@ -288,6 +298,12 @@ def download_order_statuses(
     fields : list of str, optional
         return these fields in addition to the default fields (pass '?' or any invalid
         fieldname to see available fields)
+
+    map_cfd_to_underlying : bool
+        if True, return CFD order statuses (if any) with the sid of the underlying
+        security rather than the CFD sid. (In this case, if using the `sids` parameter,
+        specifying the underlying sid will retrieve the CFD.) If False, return CFD
+        order statuses with the CFD sid. Has no effect on non-CFD order statuses.
 
     Returns
     -------
@@ -336,6 +352,8 @@ def download_order_statuses(
         params["start_date"] = start_date
     if end_date:
         params["end_date"] = end_date
+    if map_cfd_to_underlying:
+        params["map_cfd_to_underlying"] = map_cfd_to_underlying
 
     output = output or "csv"
 
@@ -364,7 +382,8 @@ def download_positions(
     accounts: Union[list[str], str] = None,
     sids: Union[list[str], str] = None,
     view: str = "blotter",
-    diff: bool = False
+    diff: bool = False,
+    map_cfd_to_underlying: bool = None,
     ) -> None:
     """
     Query current positions and write results to file.
@@ -405,6 +424,12 @@ def download_positions(
         limit to positions where the blotter quantity and broker quantity disagree
         (requires `view='broker'`)
 
+    map_cfd_to_underlying : bool
+        if True, return CFD positions (if any) with the sid of the underlying
+        security rather than the CFD sid. (In this case, if using the `sids` parameter,
+        specifying the underlying sid will retrieve the CFD.) If False, return CFD
+        positions with the CFD sid. Has no effect on non-CFD positions.
+
     Returns
     -------
     None
@@ -430,6 +455,8 @@ def download_positions(
         params["view"] = view
     if diff:
         params["diff"] = diff
+    if map_cfd_to_underlying:
+        params["map_cfd_to_underlying"] = map_cfd_to_underlying
 
     output = output or "csv"
 
@@ -456,7 +483,8 @@ def list_positions(
     accounts: Union[list[str], str] = None,
     sids: Union[list[str], str] = None,
     view: str = "blotter",
-    diff: bool = False
+    diff: bool = False,
+    map_cfd_to_underlying: bool = None
     ) -> list[dict[str, Union[str, float]]]:
     """
     Query current positions and return them as a Python list.
@@ -489,6 +517,12 @@ def list_positions(
         limit to positions where the blotter quantity and broker quantity disagree
         (requires `view='broker'`)
 
+    map_cfd_to_underlying : bool
+        if True, return CFD positions (if any) with the sid of the underlying
+        security rather than the CFD sid. (In this case, if using the `sids` parameter,
+        specifying the underlying sid will retrieve the CFD.) If False, return CFD
+        positions with the CFD sid. Has no effect on non-CFD positions.
+
     Returns
     -------
     list
@@ -511,7 +545,7 @@ def list_positions(
     download_positions(f, output="json",
                        sids=sids, accounts=accounts,
                        order_refs=order_refs, view=view,
-                       diff=diff)
+                       diff=diff, map_cfd_to_underlying=map_cfd_to_underlying)
 
     if f.getvalue():
         return json.loads(f.getvalue())
@@ -564,7 +598,7 @@ def close_positions(
     See Also
     --------
     place_orders : place one or more orders
-    record_executions : record executions that happened outside of QuantRocket’s knowledge
+    record_executions : record executions that happened outside of QuantRocket's knowledge
 
     Notes
     -----
@@ -629,7 +663,8 @@ def download_executions(
     accounts: Union[list[str], str] = None,
     sids: Union[list[str], str] = None,
     start_date: str = None,
-    end_date: str = None
+    end_date: str = None,
+    map_cfd_to_underlying: bool = None
     ) -> None:
     """
     Query executions from the executions database.
@@ -654,6 +689,12 @@ def download_executions(
     end_date : str (YYYY-MM-DD), optional
         limit to executions on or before this date
 
+    map_cfd_to_underlying : bool
+        if True, return CFD executions (if any) with the sid of the underlying
+        security rather than the CFD sid. (In this case, if using the `sids` parameter,
+        specifying the underlying sid will retrieve the CFD.) If False, return CFD
+        executions with the CFD sid. Has no effect on non-CFD executions.
+
     Returns
     -------
     None
@@ -675,6 +716,8 @@ def download_executions(
         params["start_date"] = start_date
     if end_date:
         params["end_date"] = end_date
+    if map_cfd_to_underlying:
+        params["map_cfd_to_underlying"] = map_cfd_to_underlying
 
     response = houston.get("/blotter/executions.csv", params=params)
 
