@@ -68,6 +68,7 @@ def backtest(
     nlv: dict[str, float] = None,
     params: dict[str, Any] = None,
     details: bool = None,
+    progress: bool = False,
     output: Literal["csv", "pdf"] = "csv",
     filepath_or_buffer: FilepathOrBuffer = None,
     no_cache: bool = False
@@ -114,6 +115,10 @@ def backtest(
     details : bool
         return detailed results for all securities instead of aggregating to
         strategy level (only supported for single-strategy backtests)
+
+    progress : bool
+        log equity curve and basic performance metrics to flightlog during
+        backtest (default False). Only supported for segmented backtests.
 
     output : str, required
         the output format (choices are csv or pdf)
@@ -179,6 +184,8 @@ def backtest(
         _params["nlv"] = dict_to_dict_strs(nlv)
     if details:
         _params["details"] = details
+    if progress:
+        _params["progress"] = progress
     if params:
         _params["params"] = dict_to_dict_strs(params)
     if no_cache:

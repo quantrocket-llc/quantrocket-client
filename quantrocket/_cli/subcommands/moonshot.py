@@ -118,6 +118,11 @@ Run a backtest in 1-year segments to reduce memory usage:
         help="return detailed results for all securities instead of aggregating to "
         "strategy level (only supported for single-strategy backtests)")
     outputs.add_argument(
+        "--progress",
+        action="store_true",
+        help="log equity curve and basic performance metrics to flightlog during "
+        "backtest (default False). Only supported for segmented backtests.")
+    outputs.add_argument(
         "--pdf",
         action="store_const",
         const="pdf",
