@@ -290,8 +290,8 @@ def collect_ibkr_listings(
     countries: Union[list[str], str] = None,
     exchanges: Union[list[str], str] = None,
     sec_types: Union[list[
-        Literal["STK", "ETF", "FUT", "CASH", "IND"]],
-        Literal["STK", "ETF", "FUT", "CASH", "IND"]] = None,
+        Literal["STK", "ETF", "FUT", "CASH", "IND", "CFD"]],
+        Literal["STK", "ETF", "FUT", "CASH", "IND", "CFD"]] = None,
     currencies: Union[list[str], str] = None,
     symbols: Union[list[str], str] = None,
     universes: Union[list[str], str] = None,
@@ -317,7 +317,8 @@ def collect_ibkr_listings(
         one or more IBKR exchange codes to collect listings for.
 
     sec_types : list of str, optional
-        limit to these security types. Possible choices: STK, ETF, FUT, CASH, IND
+        limit to these security types. Possible choices: STK, ETF, FUT, CASH,
+        IND, CFD
 
     currencies : list of str, optional
         limit to these currencies
@@ -596,8 +597,8 @@ def download_master_file(
     output: Literal["csv", "json"] = "csv",
     exchanges: Union[list[str], str] = None,
     sec_types: Union[list[
-        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG"]],
-        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG"]] = None,
+        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG", "CFD"]],
+        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG", "CFD"]] = None,
     currencies: Union[list[str], str] = None,
     universes: Union[list[str], str] = None,
     symbols: Union[list[str], str] = None,
