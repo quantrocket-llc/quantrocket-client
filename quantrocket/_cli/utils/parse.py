@@ -17,10 +17,23 @@ import argparse
 class HelpFormatter(argparse.RawDescriptionHelpFormatter):
 
     def format_help(self):
+        import re
         help_text = super().format_help()
         # Strip the RST code blocks directives which are used for doc
         # generation but not desired for end-user viewing
         help_text = help_text.replace(".. code-block:: bash\n\n", "")
+
+        # show URLs in blue, underlined, unless they're in a code block
+        BLUE = "\033[4;94m"
+        NO_COLOR = "\033[0m"
+        urls_except_in_code_blocks = r"^(?!\s{4}quantrocket)(?:.*)\b(https?://[^\s]+)"
+        help_text = re.sub(urls_except_in_code_blocks, lambda match: match.group(0).replace(match.group(1), BLUE + match.group(1) + NO_COLOR), help_text, flags=re.MULTILINE)
+
+        # show code examples in white text with black background
+        CODE_BLOCK = "\033[37;40m"
+        pattern = r'^(\n {4}quantrocket.*)' # <4 spaces>quantrocket ...
+        help_text = re.sub(pattern, lambda match: CODE_BLOCK +"\n" + match.group() + "\n" + NO_COLOR, help_text, flags=re.MULTILINE)
+
         return help_text
 
 def list_or_int_or_float_or_str(value):

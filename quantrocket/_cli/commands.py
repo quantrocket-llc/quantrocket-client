@@ -110,6 +110,8 @@ def main():
                 print(result)
             # otherwise print
             else:
+                if exit_code > 0:
+                    result = f"\033[31m{result}\033[0m"
                 print(result)
 
         return exit_code
