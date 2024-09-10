@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from quantrocket._cli.utils.parse import HelpFormatter
+from quantrocket._cli.utils import completers
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("flightlog", description="QuantRocket logging service CLI", help="Monitor and download logs")
@@ -102,7 +103,8 @@ Download detailed logs for the history service:
     parser.add_argument(
         "outfile",
         metavar="OUTFILE",
-        help="filename to write the logfile to")
+        help="filename to write the logfile to").completer = completers.outfile_completer(
+            ["txt"], outfile_prefix="logs")
     parser.add_argument(
         "-d", "--detail",
         action="store_true",
@@ -111,7 +113,8 @@ Download detailed logs for the history service:
     parser.add_argument(
         "-m", "--match",
         metavar="PATTERN",
-        help="filter the logfile to lines containing this string")
+        help="filter the logfile to lines containing this string"
+        ).completer = completers.example_completer("string_to_search_for")
     parser.set_defaults(func="quantrocket.flightlog._cli_download_logfile")
 
     examples = r"""
@@ -153,7 +156,7 @@ indicating that data collection has finished:
         formatter_class=HelpFormatter)
     parser.add_argument(
         "message",
-        help="the log message to search for")
+        help="the log message to search for").completer = completers.example_completer("string_to_search_for")
     parser.add_argument(
         "-r", "--regex",
         action="store_true",
@@ -168,12 +171,12 @@ indicating that data collection has finished:
         "--tail",
         type=int,
         help="search the most recent N lines of the logs in addition to searching "
-        "future logs (default is to only search future logs)")
+        "future logs (default is to only search future logs)").completer = completers.example_completer("10")
     parser.add_argument(
         "--timeout",
         help="fail if the message is not found after this much time (use Pandas "
         "timedelta string, e.g. 30sec or 5min or 2h; default is to wait "
-        "indefinitely)")
+        "indefinitely)").completer = completers.timedelta_completer
     parser.set_defaults(func="quantrocket.flightlog._cli_wait_for_message")
 
     examples = """
@@ -209,18 +212,18 @@ Log the output from another command:
         "msg",
         nargs="?",
         default="-",
-        help="the message to be logged")
+        help="the message to be logged").completer = lambda *args, **kwargs: {"-": "stdin", "string_to_log": "example"}
     parser.add_argument(
         "-l", "--level",
         default="INFO",
         metavar="LEVEL",
         choices=("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"),
-        help="the log level for the message. Possible choices: %(choices)s")
+        help="the log level for the message. Possible choices: DEBUG, INFO, WARNING, ERROR, CRITICAL")
     parser.add_argument(
         "-n", "--name",
         dest="logger_name",
         default="quantrocket.cli",
-        help="the logger name")
+        help="the logger name").completer = completers.example_completer("quantrocket.cli")
     parser.set_defaults(func="quantrocket.flightlog._cli_log_message")
 
     examples = """
@@ -257,7 +260,8 @@ Show the current flightlog timezone:
         nargs="?",
         metavar="TZ",
         help="the timezone to set (pass a partial timezone string such as 'newyork' "
-        "or 'europe' to see close matches, or pass '?' to see all choices)")
+        "or 'europe' to see close matches, or pass '?' to see all choices)"
+        ).completer = completers.timezone_completer
     parser.set_defaults(func="quantrocket.flightlog._cli_get_or_set_timezone")
 
     examples = """

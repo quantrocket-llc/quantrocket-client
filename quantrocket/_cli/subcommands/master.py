@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from quantrocket._cli.utils.parse import HelpFormatter
+from quantrocket._cli.utils import completers
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("master", description="QuantRocket securities master CLI", help="Manage and query the securities master database")
@@ -83,7 +84,8 @@ Collect all Chinese stock listings:
         "-e", "--exchanges",
         nargs="*",
         metavar="MIC",
-        help="collect listings for these exchanges (identified by MICs)")
+        help="collect listings for these exchanges (identified by MICs)"
+        ).completer = completers.example_completer(["XSHG", "XSHE"])
     parser.set_defaults(func="quantrocket.master._cli_collect_edi_listings")
 
     examples = """
@@ -164,6 +166,14 @@ Re-collect contract details for an existing universe called "japan-fin":
 
     quantrocket master collect-ibkr --universes japan-fin
     """
+    sectype_choices = [
+        "STK",
+        "ETF",
+        "FUT",
+        "CASH",
+        "IND",
+        "CFD"
+    ]
     parser = _subparsers.add_parser(
         "collect-ibkr",
         help="collect securities listings from Interactive Brokers and store "
@@ -175,38 +185,42 @@ Re-collect contract details for an existing universe called "japan-fin":
         nargs="*",
         metavar="COUNTRY_CODE",
         help="one or more two-letter country codes to collect listings for. "
-        "For sample data use country code 'FREE'")
+        "For sample data use country code 'FREE'"
+        ).completer = completers.ibkr_country_completer
     parser.add_argument(
         "-e", "--exchanges",
         nargs="*",
         metavar="EXCHANGE",
-        help="one or more exchange codes to collect listings for")
+        help="one or more exchange codes to collect listings for"
+        ).completer = completers.ibkr_exchange_completer
     parser.add_argument(
         "-t", "--sec-types",
         nargs="*",
         metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "IND", "CFD"],
-        help="limit to these security types. Possible choices: %(choices)s")
+        choices=sectype_choices,
+        help=f"limit to these security types. Possible choices: {', '.join(sectype_choices)}"
+        ).completer = completers.sec_type_completer(sectype_choices)
     parser.add_argument(
         "--currencies",
         nargs="*",
         metavar="CURRENCY",
-        help="limit to these currencies")
+        help="limit to these currencies"
+        ).completer = completers.currency_completer
     parser.add_argument(
         "-s", "--symbols",
         nargs="*",
         metavar="SYMBOL",
-        help="limit to these symbols")
+        help="limit to these symbols").completer = completers.symbol_completer
     parser.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     parser.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     parser.set_defaults(func="quantrocket.master._cli_collect_ibkr_listings")
 
     examples = """
@@ -245,7 +259,7 @@ Collect all US listings:
         metavar="COUNTRY",
         default=["US"],
         choices=["US", "FREE"],
-        help="collect listings for these countries. Possible choices: %(choices)s")
+        help="collect listings for these countries. Possible choices: US, FREE")
     parser.set_defaults(func="quantrocket.master._cli_collect_sharadar_listings")
 
     examples = """
@@ -316,18 +330,18 @@ Collect option chains for a large universe of stocks called "nyse-stk" (see note
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="collect options for these universes of underlying securities")
+        help="collect options for these universes of underlying securities").completer = completers.universe_completer
     parser.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="collect options for these underlying sids")
+        help="collect options for these underlying sids").completer = completers.sid_completer
     parser.add_argument(
         "-f", "--infile",
         metavar="INFILE",
         dest="infilepath_or_buffer",
-        help="collect options for the sids in this file (specify '-' to read "
-        "file from stdin)")
+        help="collect options for the sids in this CSV file (specify '-' to read "
+        "file from stdin)").completer = completers.infile_completer(["csv"], allow_stdin=True)
     parser.set_defaults(func="quantrocket.master._cli_collect_ibkr_option_chains")
 
     examples = """
@@ -389,6 +403,24 @@ terminal display:
 
     quantrocket master get --symbols AAPL --fields Exchange Currency | csvlook -I
     """
+    sectype_choices = [
+        "STK",
+        "ETF",
+        "FUT",
+        "CASH",
+        "IND",
+        "OPT",
+        "FOP",
+        "BAG",
+        "CFD"
+    ]
+    vendors = {
+        "usstock": "US Stock",
+        "sharadar": "Sharadar",
+        "ibkr": "Interactive Brokers",
+        "edi": "EDI",
+        "alpaca": "Alpaca",
+    }
     parser = _subparsers.add_parser(
         "get",
         help="query security details from the securities master database and download to file",
@@ -400,43 +432,44 @@ terminal display:
         nargs="*",
         metavar="EXCHANGE",
         help="limit to these exchanges. You can specify exchanges using the MIC or the "
-        "vendor's exchange code.")
+        "vendor's exchange code.").completer = completers.exchange_calendar_completer
     filters.add_argument(
         "-t", "--sec-types",
         nargs="*",
         metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG", "CFD"],
-        help="limit to these security types. Possible choices: %(choices)s")
+        choices=sectype_choices,
+        help=f"limit to these security types. Possible choices: {', '.join(sectype_choices)}"
+        ).completer = completers.sec_type_completer(sectype_choices)
     filters.add_argument(
         "-c", "--currencies",
         nargs="*",
         metavar="CURRENCY",
-        help="limit to these currencies")
+        help="limit to these currencies").completer = completers.currency_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-s", "--symbols",
         nargs="*",
         metavar="SYMBOL",
-        help="limit to these symbols")
+        help="limit to these symbols").completer = completers.symbol_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-delisted",
         action="store_true",
@@ -456,14 +489,16 @@ terminal display:
         "-v", "--vendors",
         nargs="*",
         metavar="VENDOR",
-        choices=["alpaca", "edi", "ibkr", "sharadar", "usstock"],
-        help="limit to these vendors. Possible choices: %(choices)s")
+        choices=vendors.keys(),
+        help=f"limit to these vendors. Possible choices: {', '.join(vendors.keys())}"
+        ).completer = lambda *args, **kwargs: vendors
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="securities")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -482,7 +517,7 @@ terminal display:
         'vendor, pass the vendor prefix followed by "*", for example "edi*" '
         'for all EDI fields. Pass "?*" (or any invalid vendor prefix plus "*") '
         'to see available vendor prefixes. Pass "?" or any invalid fieldname '
-        'to see all available fields.')
+        'to see all available fields.').completer = completers.master_fields_completer
     parser.set_defaults(func="quantrocket.master._cli_download_master_file")
 
     examples = """
@@ -509,6 +544,9 @@ List stock exchanges in the Americas:
 
     quantrocket master list-ibkr-exchanges --regions americas --sec-types STK
     """
+    sectype_choices = [
+        "STK", "FUT", "CASH", "IND", "CFD"
+    ]
     parser = _subparsers.add_parser(
         "list-ibkr-exchanges",
         help="list exchanges by security type and country as found on the IBKR website",
@@ -519,13 +557,14 @@ List stock exchanges in the Americas:
         nargs="*",
         choices=["americas", "europe", "asia", "global"],
         metavar="REGION",
-        help="limit to these regions. Possible choices: %(choices)s")
+        help="limit to these regions. Possible choices: americas, europe, asia, global")
     parser.add_argument(
         "-t", "--sec-types",
         nargs="*",
-        choices=["STK", "FUT", "CASH", "IND", "CFD"],
+        choices=sectype_choices,
         metavar="SEC_TYPE",
-        help="limit to these security types. Possible choices: %(choices)s")
+        help=f"limit to these security types. Possible choices: {', '.join(sectype_choices)}"
+        ).completer = completers.sec_type_completer(sectype_choices)
     parser.set_defaults(func="quantrocket.master._cli_list_ibkr_exchanges")
 
     examples = """
@@ -588,22 +627,23 @@ or that are now associated with the PINK exchange:
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     parser.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     parser.add_argument(
         "-n", "--infile",
         metavar="INFILE",
         dest="infilepath_or_buffer",
-        help="limit to the sids in this file (specify '-' to read file from stdin)")
+        help="limit to the sids in this CSV file (specify '-' to read file from stdin)").completer = completers.infile_completer(["csv"], allow_stdin=True)
     parser.add_argument(
         "-f", "--fields",
         nargs="*",
         metavar="FIELD",
-        help="only diff these fields (field name should start with 'ibkr')")
+        help="only diff these fields (field name should start with 'ibkr')"
+        ).completer = completers.diff_ibkr_fields_completer
     parser.add_argument(
         "--delist-missing",
         action="store_true",
@@ -654,6 +694,9 @@ Delist a security by symbol + exchange:
 
     quantrocket master delist-ibkr -s ABC -e NYSE
     """
+    sectype_choices = [
+        "STK", "ETF", "FUT", "CASH", "IND", "CFD"
+    ]
     parser = _subparsers.add_parser(
         "delist-ibkr",
         help="mark an IBKR security as delisted",
@@ -661,21 +704,25 @@ Delist a security by symbol + exchange:
         formatter_class=HelpFormatter)
     parser.add_argument(
         "-i", "--sid",
-        help="the sid of the security to be delisted")
+        help="the sid of the security to be delisted").completer = completers.sid_completer
     parser.add_argument(
         "-s", "--symbol",
-        help="the symbol to be delisted (if sid not provided)")
+        help="the symbol to be delisted (if sid not provided)").completer = completers.symbol_completer
     parser.add_argument(
         "-e", "--exchange",
-        help="the exchange of the security to be delisted (if needed to disambiguate)")
+        help="the exchange of the security to be delisted (if needed to disambiguate)"
+        ).completer = completers.ibkr_exchange_completer
     parser.add_argument(
         "-c", "--currency",
-        help="the currency of the security to be delisted (if needed to disambiguate)")
+        help="the currency of the security to be delisted (if needed to disambiguate)"
+        ).completer = completers.currency_completer
     parser.add_argument(
         "-t", "--sec-type",
         metavar="SEC_TYPE",
-        choices=["STK", "ETF", "FUT", "CASH", "IND", "CFD"],
-        help="the security type of the security to be delisted (if needed to disambiguate). Possible choices: %(choices)s")
+        choices=sectype_choices,
+        help="the security type of the security to be delisted (if needed to disambiguate). "
+        f"Possible choices: {', '.join(sectype_choices)}"
+    ).completer = completers.sec_type_completer(sectype_choices)
     parser.set_defaults(func="quantrocket.master._cli_delist_ibkr_security")
 
     examples = """
@@ -750,23 +797,25 @@ Copy a universe but exclude delisted securities:
     parser.add_argument(
         "code",
         metavar="CODE",
-        help="the code to assign to the universe (lowercase alphanumerics and hyphens only)")
+        help="the code to assign to the universe (lowercase alphanumerics and hyphens only)"
+        ).completer = completers.example_completer(["my-universe"])
     parser.add_argument(
         "-f", "--infile",
         metavar="INFILE",
         dest="infilepath_or_buffer",
-        help="create the universe from the sids in this file (specify '-' to read file "
-        "from stdin)")
+        help="create the universe from the sids in this CSV file (specify '-' to read file "
+        "from stdin)").completer = completers.infile_completer(["csv"], allow_stdin=True)
     parser.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="create the universe from these sids")
+        help="create the universe from these sids").completer = completers.sid_completer
     parser.add_argument(
         "--from-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="create the universe from these existing universes")
+        help="create the universe from these existing universes"
+        ).completer = completers.universe_completer
     parser.add_argument(
         "--exclude-delisted",
         action="store_true",
@@ -811,7 +860,7 @@ Delete the universe called "italy-stk":
         formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
-        help="the universe code")
+        help="the universe code").completer = completers.universe_completer
     parser.set_defaults(func="quantrocket.master._cli_delete_universe")
 
     examples = """
@@ -855,7 +904,8 @@ Create a spread from a JSON file:
         "combo_filepath",
         metavar="PATH",
         help="a JSON file containing an array of the combo legs, where each "
-        "leg is an array specifying action, ratio, and sid")
+        "leg is an array specifying action, ratio, and sid"
+        ).completer = completers.infile_completer(["json"])
     parser.set_defaults(func="quantrocket.master._cli_create_ibkr_combo")
 
     examples = """
@@ -885,7 +935,8 @@ Show current rollover config:
         "filename",
         nargs="?",
         metavar="FILENAME",
-        help="the rollover rules YAML config file to upload (if omitted, return the current config)")
+        help="the rollover rules YAML config file to upload (if omitted, return the current config)"
+        ).completer = completers.infile_completer(["yml"])
     parser.set_defaults(func="quantrocket.master._cli_load_or_show_rollrules")
 
     examples = """
@@ -916,7 +967,7 @@ Collect trading hours for ARCA:
         "-e", "--exchanges",
         nargs="*",
         metavar="EXCHANGE",
-        help="limit to these exchanges")
+        help="limit to these exchanges").completer = completers.ibkr_exchange_completer
     parser.set_defaults(func="quantrocket.master._cli_collect_ibkr_calendar")
 
     examples = """
@@ -949,6 +1000,7 @@ Check whether CME will be open or closed in 30 minutes:
 
     quantrocket master calendar CME --in 30min
     """
+    sectype_choices = ["STK", "FUT", "CASH", "OPT"]
     parser = _subparsers.add_parser(
         "calendar",
         help="check whether exchanges are open or closed",
@@ -958,25 +1010,28 @@ Check whether CME will be open or closed in 30 minutes:
         "exchanges",
         metavar="EXCHANGE",
         nargs="+",
-        help="the exchange(s) to check")
+        help="the exchange(s) to check").completer = completers.exchange_calendar_completer
     parser.add_argument(
         "-t", "--sec-type",
         metavar="SEC_TYPE",
-        choices=["STK", "FUT", "CASH", "OPT"],
+        choices=sectype_choices,
         help="the security type, if needed to disambiguate for exchanges that "
-        "trade multiple security types. Possible choices: %(choices)s")
+        f"trade multiple security types. Possible choices: {', '.join(sectype_choices)}"
+        ).completer = completers.sec_type_completer(sectype_choices)
     timedelta_group = parser.add_mutually_exclusive_group()
     timedelta_group.add_argument(
         "-i", "--in",
         metavar="TIMEDELTA",
         dest="in_",
         help="check whether exchanges will be open or closed at this point in the "
-        "future (use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+        "future (use Pandas timedelta string, e.g. 2h or 30min or 1d)"
+        ).completer = completers.timedelta_completer
     timedelta_group.add_argument(
         "-a", "--ago",
         metavar="TIMEDELTA",
         help="check whether exchanges were open or closed this long ago "
-        "(use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+        "(use Pandas timedelta string, e.g. 2h or 30min or 1d)"
+        ).completer = completers.timedelta_completer
     parser.add_argument(
         "-o", "--outside-rth",
         action="store_true",
@@ -1016,6 +1071,7 @@ Log a message if the London Stock Exchange will be open in 30 minutes:
 
     quantrocket master isopen LSE --in 30min && quantrocket flightlog log 'the market opens soon!'
     """
+    sectype_choices = ["STK", "FUT", "CASH", "OPT"]
     parser = _subparsers.add_parser(
         "isopen",
         help="assert that one or more exchanges are open and exit non-zero if closed",
@@ -1025,38 +1081,43 @@ Log a message if the London Stock Exchange will be open in 30 minutes:
         "exchanges",
         metavar="EXCHANGE",
         nargs="+",
-        help="the exchange(s) to check")
+        help="the exchange(s) to check").completer = completers.exchange_calendar_completer
     parser.add_argument(
         "-t", "--sec-type",
         metavar="SEC_TYPE",
-        choices=["STK", "FUT", "CASH", "OPT"],
+        choices=sectype_choices,
         help="the security type, if needed to disambiguate for exchanges that "
-        "trade multiple security types. Possible choices: %(choices)s")
+        f"trade multiple security types. Possible choices: {', '.join(sectype_choices)}"
+        ).completer = completers.sec_type_completer(sectype_choices)
     timedelta_group = parser.add_mutually_exclusive_group()
     timedelta_group.add_argument(
         "-i", "--in",
         metavar="TIMEDELTA",
         dest="in_",
         help="assert that exchanges will be open at this point in the "
-        "future (use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+        "future (use Pandas timedelta string, e.g. 2h or 30min or 1d)"
+        ).completer = completers.timedelta_completer
     timedelta_group.add_argument(
         "-a", "--ago",
         metavar="TIMEDELTA",
         help="assert that exchanges were open this long ago "
-        "(use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+        "(use Pandas timedelta string, e.g. 2h or 30min or 1d)"
+        ).completer = completers.timedelta_completer
     sinceuntil_group = parser.add_mutually_exclusive_group()
     sinceuntil_group.add_argument(
         "-s", "--since",
         metavar="FREQ",
         help="assert that exchanges have been opened (as of --in or --ago if "
         "applicable) since at least this time (use Pandas frequency string, "
-        "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))")
+        "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))"
+        ).completer = completers.frequency_completer
     sinceuntil_group.add_argument(
         "-u", "--until",
         metavar="FREQ",
         help="assert that exchanges will be opened (as of --in or --ago if "
         "applicable) until at least this time (use Pandas frequency string, "
-        "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))")
+        "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))"
+        ).completer = completers.frequency_completer
     parser.add_argument(
         "-o", "--outside-rth",
         action="store_true",
@@ -1108,6 +1169,7 @@ Place Moonshot orders if the NYSE will be closed in 1 hour and remain closed thr
 
     quantrocket master isclosed NYSE --in 1H --until Q && quantrocket moonshot orders end-of-quarter-strategy | quantrocket blotter order -f -
     """
+    sectype_choices = ["STK", "FUT", "CASH", "OPT"]
     parser = _subparsers.add_parser(
         "isclosed",
         help="assert that one or more exchanges are closed and exit non-zero if open",
@@ -1117,38 +1179,43 @@ Place Moonshot orders if the NYSE will be closed in 1 hour and remain closed thr
         "exchanges",
         metavar="EXCHANGE",
         nargs="+",
-        help="the exchange(s) to check")
+        help="the exchange(s) to check").completer = completers.exchange_calendar_completer
     parser.add_argument(
         "-t", "--sec-type",
         metavar="SEC_TYPE",
-        choices=["STK", "FUT", "CASH", "OPT"],
+        choices=sectype_choices,
         help="the security type, if needed to disambiguate for exchanges that "
-        "trade multiple security types. Possible choices: %(choices)s")
+        f"trade multiple security types. Possible choices: {', '.join(sectype_choices)}"
+        ).completer = completers.sec_type_completer(sectype_choices)
     timedelta_group = parser.add_mutually_exclusive_group()
     timedelta_group.add_argument(
         "-i", "--in",
         metavar="TIMEDELTA",
         dest="in_",
         help="assert that exchanges will be closed at this point in the "
-        "future (use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+        "future (use Pandas timedelta string, e.g. 2h or 30min or 1d)"
+        ).completer = completers.timedelta_completer
     timedelta_group.add_argument(
         "-a", "--ago",
         metavar="TIMEDELTA",
         help="assert that exchanges were closed this long ago "
-        "(use Pandas timedelta string, e.g. 2h or 30min or 1d)")
+        "(use Pandas timedelta string, e.g. 2h or 30min or 1d)"
+        ).completer = completers.timedelta_completer
     sinceuntil_group = parser.add_mutually_exclusive_group()
     sinceuntil_group.add_argument(
         "-s", "--since",
         metavar="FREQ",
         help="assert that exchanges have been closed (as of --in or --ago if "
         "applicable) since at least this time (use Pandas frequency string, "
-        "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))")
+        "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))"
+        ).completer = completers.frequency_completer
     sinceuntil_group.add_argument(
         "-u", "--until",
         metavar="FREQ",
         help="assert that exchanges will be closed (as of --in or --ago if "
         "applicable) until at least this time (use Pandas frequency string, "
-        "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))")
+        "e.g. 'W' (week end), 'M' (month end), 'Q' (quarter end), 'A' (year end))"
+        ).completer = completers.frequency_completer
     parser.add_argument(
         "-o", "--outside-rth",
         action="store_true",
@@ -1200,14 +1267,15 @@ Round the LmtPrice column in a CSV of Moonshot orders then place the orders:
         required=True,
         metavar="INFILE",
         dest="infilepath_or_buffer",
-        help="CSV file with prices to be rounded (specify '-' to read file from stdin)")
+        help="CSV file with prices to be rounded (specify '-' to read file from stdin)"
+        ).completer = completers.infile_completer(["csv"], allow_stdin=True)
     parser.add_argument(
         "-r", "--round",
         nargs="+",
         required=True,
         metavar="FIELD",
         dest="round_fields",
-        help="columns to be rounded")
+        help="columns to be rounded").completer = completers.example_completer(["LmtPrice", "AuxPrice"])
     parser.add_argument(
         "-d", "--how",
         metavar="DIRECTION",
@@ -1222,5 +1290,6 @@ Round the LmtPrice column in a CSV of Moonshot orders then place the orders:
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="outfilepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv"], outfile_prefix="rounded")
     parser.set_defaults(func="quantrocket.master._cli_round_to_tick_sizes")

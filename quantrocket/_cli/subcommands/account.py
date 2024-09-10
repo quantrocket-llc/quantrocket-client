@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from quantrocket._cli.utils.parse import dict_str, HelpFormatter
+from quantrocket._cli.utils.parse import (
+    dict_str,
+    HelpFormatter
+)
+from quantrocket._cli.utils import completers
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("account", description="QuantRocket account CLI", help="Query account balances and exchange rates")
@@ -66,12 +70,12 @@ Query historical account balances over a date range:
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
         help="limit to account balance snapshots taken on or after "
-        "this date")
+        "this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
         help="limit to account balance snapshots taken on or before "
-        "this date")
+        "this date").completer = completers.end_date_completer
     filters.add_argument(
         "-l", "--latest",
         action="store_true",
@@ -80,7 +84,7 @@ Query historical account balances over a date range:
         "-a", "--accounts",
         nargs="*",
         metavar="ACCOUNT",
-        help="limit to these accounts")
+        help="limit to these accounts").completer = completers.account_completer
     filters.add_argument(
         "-b", "--below",
         type=dict_str,
@@ -93,7 +97,8 @@ Query historical account balances over a date range:
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="balances")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -107,7 +112,8 @@ Query historical account balances over a date range:
         nargs="*",
         help="only return these fields. By default a core set of fields is returned. "
         "Pass a list of fields, or '*' to return all fields. Pass '?' or any "
-        "invalid fieldname to see available fields.")
+        "invalid fieldname to see available fields."
+        ).completer = completers.account_balance_fields_completer
     parser.add_argument(
         "--force-refresh",
         action="store_true",
@@ -149,33 +155,33 @@ Download current portfolio for a particular account and save to file:
         "-b", "--brokers",
         nargs="*",
         metavar="BROKER",
-        choices=["alpaca","ibkr"],
-        help="limit to these brokers. Possible choices: %(choices)s")
+        choices=["ibkr", "alpaca"],
+        help="limit to these brokers. Possible choices: ibkr, alpaca")
     filters.add_argument(
         "-a", "--accounts",
         nargs="*",
         metavar="ACCOUNT",
-        help="limit to these accounts")
+        help="limit to these accounts").completer = completers.account_completer
     filters.add_argument(
         "-t", "--sec-types",
         nargs="*",
         metavar="SEC_TYPE",
-        help="limit to these security types")
+        help="limit to these security types").completer = completers.sec_type_completer()
     filters.add_argument(
         "-e", "--exchanges",
         nargs="*",
         metavar="EXCHANGE",
-        help="limit to these exchanges")
+        help="limit to these exchanges").completer = completers.exchange_calendar_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "-s", "--symbols",
         nargs="*",
         metavar="SYMBOL",
-        help="limit to these symbols")
+        help="limit to these symbols").completer = completers.symbol_completer
     filters.add_argument(
         "-z", "--zero",
         action="store_true",
@@ -187,7 +193,8 @@ Download current portfolio for a particular account and save to file:
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="portfolio")
     outputs.add_argument(
         "-j", "--json",
         action="store_const",
@@ -200,7 +207,8 @@ Download current portfolio for a particular account and save to file:
         nargs="*",
         help="only return these fields. By default a core set of fields is returned. "
         "Pass a list of fields, or '*' to return all fields. Pass '?' or any "
-        "invalid fieldname to see available fields.")
+        "invalid fieldname to see available fields."
+        ).completer = completers.account_portfolio_fields_completer
     parser.set_defaults(func="quantrocket.account._cli_download_account_portfolio")
 
     examples = """
@@ -234,11 +242,11 @@ Query the latest exchange rates.
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to exchange rates on or after this date")
+        help="limit to exchange rates on or after this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to exchange rates on or before this date")
+        help="limit to exchange rates on or before this date").completer = completers.end_date_completer
     filters.add_argument(
         "-l", "--latest",
         action="store_true",
@@ -247,18 +255,21 @@ Query the latest exchange rates.
         "-b", "--base-currencies",
         nargs="*",
         metavar="CURRENCY",
-        help="limit to these base currencies")
+        help="limit to these base currencies"
+        ).completer = completers.currency_completer
     filters.add_argument(
         "-q", "--quote-currencies",
         nargs="*",
         metavar="CURRENCY",
-        help="limit to these quote currencies")
+        help="limit to these quote currencies"
+        ).completer = completers.currency_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="rates")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",

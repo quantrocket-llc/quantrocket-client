@@ -13,6 +13,11 @@
 # limitations under the License.
 
 from quantrocket._cli.utils.parse import HelpFormatter
+from quantrocket._cli.utils import completers
+from quantrocket._cli.utils.completers.countries import (
+    IBKR_SUBSIDIARIES,
+    IBKR_STOCKLOAN_COUNTRIES
+)
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("fundamental", description="QuantRocket fundamental data CLI", help="Collect and query fundamental data")
@@ -45,7 +50,7 @@ Examples
         metavar="COUNTRY",
         choices=["US","FREE"],
         default="US",
-        help="country to collect fundamentals for. Possible choices: %(choices)s")
+        help="country to collect fundamentals for. Possible choices: US, FREE")
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_fundamentals")
 
     examples = """
@@ -74,7 +79,7 @@ Examples
         metavar="COUNTRY",
         choices=["US","FREE"],
         default="US",
-        help="country to collect insider holdings data for. Possible choices: %(choices)s")
+        help="country to collect insider holdings data for. Possible choices: US, FREE")
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_insiders")
 
     examples = """
@@ -111,7 +116,7 @@ Collect detailed institutional investor data (not aggregated by security):
         metavar="COUNTRY",
         choices=["US","FREE"],
         default="US",
-        help="country to collect institutional investor data for. Possible choices: %(choices)s")
+        help="country to collect institutional investor data for. Possible choices: US, FREE")
     parser.add_argument(
         "-d", "--detail",
         action="store_true",
@@ -147,7 +152,7 @@ Examples
         metavar="COUNTRY",
         choices=["US","FREE"],
         default="US",
-        help="country to collect events data for. Possible choices: %(choices)s")
+        help="country to collect events data for. Possible choices: US, FREE")
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_sec8")
 
     examples = """
@@ -177,7 +182,7 @@ Examples
         metavar="COUNTRY",
         choices=["US","FREE"],
         default="US",
-        help="country to collect S&P 500 constituents data for. Possible choices: %(choices)s")
+        help="country to collect S&P 500 constituents data for. Possible choices: US, FREE")
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_sharadar_sp500")
 
     examples = """
@@ -218,7 +223,7 @@ Collect shortable shares data for all stocks:
         nargs="*",
         metavar="COUNTRY",
         help="limit to these countries (pass '?' or any invalid country to see "
-        "available countries)")
+        "available countries)").completer = completers.completer_from_dict(IBKR_STOCKLOAN_COUNTRIES)
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_ibkr_shortable_shares")
 
     examples = """
@@ -258,7 +263,7 @@ Collect borrow fees for all stocks:
         nargs="*",
         metavar="COUNTRY",
         help="limit to these countries (pass '?' or any invalid country to see "
-        "available countries)")
+        "available countries)").completer = completers.completer_from_dict(IBKR_STOCKLOAN_COUNTRIES)
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_ibkr_borrow_fees")
 
     examples = """
@@ -297,7 +302,8 @@ Collect margin requirements for a US-based account:
         required=True,
         metavar="COUNTRY",
         help="the country of the IBKR subsidiary where your account is located "
-        "(pass '?' or any invalid country to see available countries)")
+        "(pass '?' or any invalid country to see available countries)"
+        ).completer = completers.completer_from_dict(IBKR_SUBSIDIARIES)
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_ibkr_margin_requirements")
 
     examples = """
@@ -440,6 +446,14 @@ Query as-reported quarterly (ARQ) fundamentals for select indicators for a unive
 
     quantrocket fundamental sharadar-fundamentals -u usa-stk --dimensions ARQ -f REVENUE EPS -o sharadar_fundamentals.csv
     """
+    dimensions_choices = {
+        "ART": "as-reported trailing twelve months",
+        "ARQ": "as-reported quarterly",
+        "ARY": "as-reported annual",
+        "MRT": "most recent reported trailing twelve months",
+        "MRQ": "most recent reported quarterly",
+        "MRY": "most recent reported annual",
+    }
     parser = _subparsers.add_parser(
         "sharadar-fundamentals",
         help="query Sharadar Fundamentals from the local database and download to file",
@@ -449,44 +463,47 @@ Query as-reported quarterly (ARQ) fundamentals for select indicators for a unive
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to fundamentals on or after this fiscal period end date")
+        help="limit to fundamentals on or after this fiscal period end date"
+        ).completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to fundamentals on or before this fiscal period end date")
+        help="limit to fundamentals on or before this fiscal period end date"
+        ).completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     filters.add_argument(
         "-m", "--dimensions",
         nargs="*",
-        choices=["ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"],
-        help="limit to these dimensions. Possible choices: %(choices)s. "
+        choices=dimensions_choices.keys(),
+        help=f"limit to these dimensions. Possible choices: {', '.join(dimensions_choices.keys())}. "
         "AR=As Reported, MR=Most Recent Reported, Q=Quarterly, Y=Annual, "
-        "T=Trailing Twelve Month.")
+        "T=Trailing Twelve Month.").completer = completers.completer_from_dict(dimensions_choices)
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="sharadar_fundamentals")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -499,7 +516,7 @@ Query as-reported quarterly (ARQ) fundamentals for select indicators for a unive
         metavar="FIELD",
         nargs="*",
         help="only return these fields (pass '?' or any invalid fieldname to see "
-        "available fields))")
+        "available fields))").completer = completers.sharadar_fundamentals_fields_completer
     parser.set_defaults(func="quantrocket.fundamental._cli_download_sharadar_fundamentals")
 
     examples = """
@@ -530,37 +547,38 @@ Query insider holdings data for a particular sid:
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or after this filing date")
+        help="limit to data on or after this filing date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or before this filing date")
+        help="limit to data on or before this filing date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="sharadar_insiders")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -573,7 +591,8 @@ Query insider holdings data for a particular sid:
         metavar="FIELD",
         nargs="*",
         help="only return these fields (pass '?' or any invalid fieldname to see "
-        "available fields)")
+        "available fields)"
+        ).completer = completers.sharadar_insiders_fields_completer
     parser.set_defaults(func="quantrocket.fundamental._cli_download_sharadar_insiders")
 
     examples = """
@@ -604,37 +623,38 @@ Query institutional investor data aggregated by security:
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or after this quarter end date")
+        help="limit to data on or after this quarter end date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or before this quarter end date")
+        help="limit to data on or before this quarter end date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="sharadar_institutions")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -647,7 +667,8 @@ Query institutional investor data aggregated by security:
         metavar="FIELD",
         nargs="*",
         help="only return these fields (pass '?' or any invalid fieldname to see "
-        "available fields)")
+        "available fields)"
+        ).completer = completers.sharadar_institutions_fields_completer
     outputs.add_argument(
         "-d", "--detail",
         action="store_true",
@@ -686,31 +707,31 @@ Query event code 13 (Bankruptcy) for a universe of securities:
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or after this filing date")
+        help="limit to data on or after this filing date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or before this filing date")
+        help="limit to data on or before this filing date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     filters.add_argument(
         "-c", "--event-codes",
         nargs="*",
@@ -722,7 +743,8 @@ Query event code 13 (Bankruptcy) for a universe of securities:
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="sharadar_sec8")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -766,37 +788,38 @@ Query S&P 500 index changes since 2010:
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to index changes on or after this date")
+        help="limit to index changes on or after this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to index changes on or before this date")
+        help="limit to index changes on or before this date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="sharadar_sp500")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -849,37 +872,38 @@ Query aggregated daily data instead:
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or after this date")
+        help="limit to data on or after this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or before this date")
+        help="limit to data on or before this date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="ibkr_shortable_shares")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -922,37 +946,38 @@ Query borrow fees for a universe of Australian stocks:
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or after this date")
+        help="limit to data on or after this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or before this date")
+        help="limit to data on or before this date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="ibkr_borrowfees")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -1000,37 +1025,38 @@ Query margin requirements for a universe of US stocks:
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or after this date")
+        help="limit to data on or after this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or before this date")
+        help="limit to data on or before this date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="ibkr_margin_requirements")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -1067,37 +1093,38 @@ Query easy-to-borrow data for a universe of US stocks:
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or after this date")
+        help="limit to data on or after this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to data on or before this date")
+        help="limit to data on or before this date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="alpaca_etb")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -1137,41 +1164,42 @@ a universe of tech stocks:
         type=int,
         metavar="INT",
         choices=[1, 7, 30],
-        help="limit to records with this calculation window. Possible choices: %(choices)s ")
+        help="limit to records with this calculation window. Possible choices: 1, 7, 30")
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to records on or after this date")
+        help="limit to records on or after this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to records on or before this date")
+        help="limit to records on or before this date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="brain_bsi")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -1216,42 +1244,43 @@ year:
         "-c", "--report-category",
         metavar="CATEGORY",
         choices=["10-K", "10-Q"],
-        help="limit to this report category. Possible choices: %(choices)s. If omitted, "
+        help="limit to this report category. Possible choices: 10-K, 10-Q. If omitted, "
         "both report categories are returned.")
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to records on or after this date")
+        help="limit to records on or after this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to records on or before this date")
+        help="limit to records on or before this date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="brain_blmcf")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -1300,37 +1329,38 @@ for a single year:
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to records on or after this date")
+        help="limit to records on or after this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to records on or before this date")
+        help="limit to records on or before this date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="brain_blmect")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -1395,31 +1425,31 @@ minimal set of fields (several required fields will always be returned)
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to statements on or after this fiscal period end date")
+        help="limit to statements on or after this fiscal period end date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to statements on or before this fiscal period end date")
+        help="limit to statements on or before this fiscal period end date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     filters.add_argument(
         "-q", "--interim",
         action="store_true",
@@ -1434,7 +1464,8 @@ minimal set of fields (several required fields will always be returned)
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="reuters_financials")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -1480,44 +1511,45 @@ Query EPS estimates and actuals for a universe of Australian stocks:
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to estimates and actuals on or after this fiscal period end date")
+        help="limit to estimates and actuals on or after this fiscal period end date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to estimates and actuals on or before this fiscal period end date")
+        help="limit to estimates and actuals on or before this fiscal period end date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     filters.add_argument(
         "-t", "--period-types",
         nargs="*",
         choices=["A", "Q", "S"],
         metavar="PERIOD_TYPE",
-        help="limit to these fiscal period types. Possible choices: %(choices)s, where "
+        help="limit to these fiscal period types. Possible choices: A, Q, S, where "
         "A=Annual, Q=Quarterly, S=Semi-Annual")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="reuters_estimates")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -1558,43 +1590,44 @@ Query earnings dates for a universe of US stocks:
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to announcements on or after this date")
+        help="limit to announcements on or after this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to announcements on or before this date")
+        help="limit to announcements on or before this date").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes").completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes").completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     filters.add_argument(
         "-t", "--statuses",
         nargs="*",
         choices=["Confirmed", "Unconfirmed"],
         metavar="STATUS",
-        help="limit to these confirmation statuses. Possible choices: %(choices)s")
+        help="limit to these confirmation statuses. Possible choices: Confirmed, Unconfirmed")
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="wsh_earnings_dates")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",

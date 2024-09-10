@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from quantrocket._cli.utils.parse import dict_str, HelpFormatter
+from quantrocket._cli.utils import completers
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("satellite", description="QuantRocket Satellite CLI", help="Run custom scripts")
@@ -53,7 +54,8 @@ Run a backtrader backtest and save the performance chart to file:
         "cmd",
         metavar="CMD",
         help="the shell command to run, or the Python function in dot notation (must "
-        "start with 'codeload.' to be interpreted as a Python function)")
+        "start with 'codeload.' to be interpreted as a Python function)"
+        ).completer = completers.example_completer(["codeload.scripts.combos.create_calendar_spread", "python /codeload/path/to/script.py"])
     parser.add_argument(
         "-r", "--return-file",
         metavar="FILEPATH",
@@ -62,13 +64,16 @@ Run a backtrader backtest and save the performance chart to file:
         "-o", "--outfile",
         metavar="FILEPATH",
         dest="filepath_or_buffer",
-        help="the location to write the return_file (omit to write to stdout)")
+        help="the location to write the return_file (omit to write to stdout)").completer = completers.outfile_completer(
+            ["csv", "json", "pdf", "png", "txt", "anything"])
     parser.add_argument(
         "-p", "--params",
         nargs="*",
         type=dict_str,
         metavar="PARAM:VALUE",
-        help="one or more params to pass to the Python function (pass as {param:value})")
+        help="one or more params to pass to the Python function (pass as {param:value})"
+        ).completer = completers.example_completer(
+            ["universe:cl-fut", "contract_months:1"], "param:value or 'param:[value1,value2]' (examples only)")
     parser.add_argument(
         "-s", "--service",
         metavar="SERVICE_NAME",

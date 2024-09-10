@@ -88,11 +88,70 @@ __all__ = [
     "download_market_data_file",
 ]
 
+ibkr_RealtimeField = Literal[
+    'AskExch',
+    'AskOptionComputation',
+    'AskPrice',
+    'AskSize',
+    'AskYield',
+    'AuctionImbalance',
+    'AuctionPrice',
+    'AuctionVolume',
+    'AvgOptVolume',
+    'AvgVolume',
+    'BidExch',
+    'BidOptionComputation',
+    'BidPrice',
+    'BidSize',
+    'BidYield',
+    'Close',
+    'CreditmanSlowMarkPrice',
+    'CustOptionComputation',
+    'FuturesOpenInterest',
+    'Halted',
+    'High',
+    'High_13Week',
+    'High_26Week',
+    'High_52Week',
+    'IndexFuturePremium',
+    'LastExch',
+    'LastOptionComputation',
+    'LastPrice',
+    'LastRthTrade',
+    'LastSize',
+    'LastTimestamp',
+    'LastYield',
+    'Low',
+    'Low_13Week',
+    'Low_26Week',
+    'Low_52Week',
+    'MarkPrice',
+    'ModelOptionComputation',
+    'Open',
+    'OptionCallOpenInterest',
+    'OptionCallVolume',
+    'OptionHistoricalVol',
+    'OptionImpliedVol',
+    'OptionPutOpenInterest',
+    'OptionPutVolume',
+    'RegulatoryImbalance',
+    'RtHistoricalVolatility',
+    'ShortTermVolume10min',
+    'ShortTermVolume3min',
+    'ShortTermVolume5min',
+    'Shortable',
+    'TimeSales',
+    'TimeSalesFiltered',
+    'TradeCount',
+    'TradeRate',
+    'Volume',
+    'VolumeRate']
+
 def create_ibkr_tick_db(
     code: str,
     universes: Union[list[str], str] = None,
     sids: Union[list[str], str] = None,
-    fields: Union[list[str], str] = None,
+    fields: Union[ibkr_RealtimeField, list[str]] = None,
     primary_exchange: bool = False
     ) -> dict[str, str]:
     """
@@ -163,11 +222,44 @@ def create_ibkr_tick_db(
 def _cli_create_ibkr_tick_db(*args, **kwargs):
     return json_to_cli(create_ibkr_tick_db, *args, **kwargs)
 
+polygon_RealtimeField = Literal[
+    'AskExchangeId',
+    'AskPrice',
+    'AskSize',
+    'AuctionExchangeId',
+    'AuctionImbalanceQuantity',
+    'AuctionPairedQuantity',
+    'AuctionPrice',
+    'AuctionSymbolSequence',
+    'AuctionTime',
+    'BidExchangeId',
+    'BidPrice',
+    'BidSize',
+    'ExchangeId',
+    'LastPrice',
+    'LastSize',
+    'MinuteClose',
+    'MinuteHigh',
+    'MinuteLow',
+    'MinuteOpen',
+    'MinuteVolume',
+    'MinuteVwap',
+    'QuoteCondition',
+    'SecondClose',
+    'SecondHigh',
+    'SecondLow',
+    'SecondOpen',
+    'SecondVolume',
+    'SecondVwap',
+    'Tape',
+    'TradeConditions',
+    'TradeId']
+
 def create_polygon_tick_db(
     code: str,
     universes: Union[list[str], str] = None,
     sids: Union[list[str], str] = None,
-    fields: Union[list[str], str] = None
+    fields: Union[polygon_RealtimeField, list[str]] = None
     ) -> dict[str, str]:
     """
     Create a new database for collecting real-time tick data from Polygon.
@@ -226,11 +318,30 @@ def create_polygon_tick_db(
 def _cli_create_polygon_tick_db(*args, **kwargs):
     return json_to_cli(create_polygon_tick_db, *args, **kwargs)
 
+alpaca_RealtimeField = Literal[
+    'AskExchangeId',
+    'AskPrice',
+    'AskSize',
+    'BidExchangeId',
+    'BidPrice',
+    'BidSize',
+    'ExchangeId',
+    'LastPrice',
+    'LastSize',
+    'MinuteClose',
+    'MinuteHigh',
+    'MinuteLow',
+    'MinuteOpen',
+    'MinuteVolume',
+    'QuoteTape',
+    'TradeId',
+    'TradeTape']
+
 def create_alpaca_tick_db(
     code: str,
     universes: Union[list[str], str] = None,
     sids: Union[list[str], str] = None,
-    fields: Union[list[str], str] = None
+    fields: Union[alpaca_RealtimeField, list[str]] = None
     ) -> dict[str, str]:
     """
     Create a new database for collecting real-time tick data from Alpaca.

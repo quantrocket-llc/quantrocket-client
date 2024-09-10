@@ -136,12 +136,12 @@ __all__ = [
 ]
 
 def list_ibkr_exchanges(
-    regions: Union[list[
-        Literal["americas", "europe", "asia", "global"]],
-        Literal["americas", "europe", "asia", "global"]] = None,
-    sec_types: Union[list[
-        Literal["STK", "FUT", "CASH", "IND"]],
-        Literal["STK", "FUT", "CASH", "IND"]] = None
+    regions: Union[
+        Literal["americas", "europe", "asia", "global"],
+        list[str]] = None,
+    sec_types: Union[
+        Literal["STK", "FUT", "CASH", "IND"],
+        list[str]] = None
     ) -> dict[str, str]:
     """
     List exchanges by security type and country as found on the IBKR website.
@@ -289,9 +289,9 @@ def _cli_collect_figi_listings(*args, **kwargs):
 def collect_ibkr_listings(
     countries: Union[list[str], str] = None,
     exchanges: Union[list[str], str] = None,
-    sec_types: Union[list[
-        Literal["STK", "ETF", "FUT", "CASH", "IND", "CFD"]],
-        Literal["STK", "ETF", "FUT", "CASH", "IND", "CFD"]] = None,
+    sec_types: Union[
+        Literal["STK", "ETF", "FUT", "CASH", "IND", "CFD"],
+        list[str]] = None,
     currencies: Union[list[str], str] = None,
     symbols: Union[list[str], str] = None,
     universes: Union[list[str], str] = None,
@@ -465,7 +465,7 @@ def collect_ibkr_option_chains(
         collect options for these underlying sids
 
     infilepath_or_buffer : str or file-like object, optional
-        collect options for the sids in this file (specify '-' to read file
+        collect options for the sids in this CSV file (specify '-' to read file
         from stdin)
 
     Returns
@@ -505,11 +505,13 @@ def collect_ibkr_option_chains(
 def _cli_collect_ibkr_option_chains(*args, **kwargs):
     return json_to_cli(collect_ibkr_option_chains, *args, **kwargs)
 
+ibkr_Field = Literal['ibkr_ConId', 'ibkr_Symbol', 'ibkr_SecType', 'ibkr_Etf', 'ibkr_PrimaryExchange', 'ibkr_Currency', 'ibkr_StockType', 'ibkr_LocalSymbol', 'ibkr_TradingClass', 'ibkr_MarketName', 'ibkr_LongName', 'ibkr_Timezone', 'ibkr_ValidExchanges', 'ibkr_AggGroup', 'ibkr_Sector', 'ibkr_Industry', 'ibkr_Category', 'ibkr_MinTick', 'ibkr_PriceMagnifier', 'ibkr_MdSizeMultiplier', 'ibkr_LastTradeDate', 'ibkr_ContractMonth', 'ibkr_RealExpirationDate', 'ibkr_Multiplier', 'ibkr_CfdSid', 'ibkr_UnderConId', 'ibkr_UnderSymbol', 'ibkr_UnderSecType', 'ibkr_MarketRuleIds', 'ibkr_Strike', 'ibkr_Right', 'ibkr_Isin', 'ibkr_Cusip', 'ibkr_EvRule', 'ibkr_EvMultiplier', 'ibkr_MinSize', 'ibkr_SizeIncrement', 'ibkr_SuggestedSizeIncrement', 'ibkr_Delisted', 'ibkr_DateDelisted']
+
 def diff_ibkr_securities(
     universes: Union[list[str], str] = None,
     sids: Union[list[str], str] = None,
     infilepath_or_buffer: FilepathOrBuffer = None,
-    fields: Union[list[str], str] = None,
+    fields: Union[ibkr_Field, list[str]] = None,
     delist_missing: bool = False,
     delist_exchanges: Union[list[str], str] = None,
     wait: bool = False
@@ -530,7 +532,7 @@ def diff_ibkr_securities(
         limit to these sids
 
     infilepath_or_buffer : str or file-like object, optional
-        limit to the sids in this file (specify '-' to read file from stdin)
+        limit to the sids in this CSV file (specify '-' to read file from stdin)
 
     fields : list of str, optional
         only diff these fields (field name should start with "ibkr")
@@ -592,13 +594,16 @@ def diff_ibkr_securities(
 def _cli_diff_ibkr_securities(*args, **kwargs):
     return json_to_cli(diff_ibkr_securities, *args, **kwargs)
 
+Field = Literal[
+    'Sid', 'Symbol', 'Exchange', 'Currency', 'SecType', 'Etf', 'Timezone', 'Name', 'PriceMagnifier', 'Multiplier', 'Delisted', 'DateDelisted', 'LastTradeDate', 'RolloverDate', 'alpaca_AssetId', 'alpaca_AssetClass', 'alpaca_Exchange', 'alpaca_Symbol', 'alpaca_Name', 'alpaca_Status', 'alpaca_Tradable', 'alpaca_Marginable', 'alpaca_Shortable', 'alpaca_EasyToBorrow', 'edi_SecId', 'edi_Currency', 'edi_PrimaryMic', 'edi_Mic', 'edi_MicSegment', 'edi_MicTimezone', 'edi_IsPrimaryListing', 'edi_LocalSymbol', 'edi_IssuerId', 'edi_IssuerName', 'edi_IsoCountryInc', 'edi_CountryInc', 'edi_IsoCountryListed', 'edi_CountryListed', 'edi_SicCode', 'edi_Sic', 'edi_SicIndustryGroup', 'edi_SicMajorGroup', 'edi_SicDivision', 'edi_Cik', 'edi_Industry', 'edi_SecTypeCode', 'edi_SecTypeDesc', 'edi_SecurityDesc', 'edi_PreferredName', 'edi_GlobalListingStatus', 'edi_ExchangeListingStatus', 'edi_DateDelisted', 'edi_StructureCode', 'edi_StructureDesc', 'edi_RecordModified', 'edi_RecordCreated', 'edi_FirstPriceDate', 'edi_LastPriceDate', 'ibkr_ConId', 'ibkr_Symbol', 'ibkr_SecType', 'ibkr_Etf', 'ibkr_PrimaryExchange', 'ibkr_Currency', 'ibkr_StockType', 'ibkr_LocalSymbol', 'ibkr_TradingClass', 'ibkr_MarketName', 'ibkr_LongName', 'ibkr_Timezone', 'ibkr_ValidExchanges', 'ibkr_AggGroup', 'ibkr_Sector', 'ibkr_Industry', 'ibkr_Category', 'ibkr_MinTick', 'ibkr_PriceMagnifier', 'ibkr_MdSizeMultiplier', 'ibkr_LastTradeDate', 'ibkr_ContractMonth', 'ibkr_RealExpirationDate', 'ibkr_Multiplier', 'ibkr_CfdSid', 'ibkr_UnderConId', 'ibkr_UnderSymbol', 'ibkr_UnderSecType', 'ibkr_MarketRuleIds', 'ibkr_Strike', 'ibkr_Right', 'ibkr_Isin', 'ibkr_Cusip', 'ibkr_EvRule', 'ibkr_EvMultiplier', 'ibkr_MinSize', 'ibkr_SizeIncrement', 'ibkr_SuggestedSizeIncrement', 'ibkr_Delisted', 'ibkr_DateDelisted', 'sharadar_Permaticker', 'sharadar_Ticker', 'sharadar_Name', 'sharadar_Exchange', 'sharadar_Delisted', 'sharadar_DateDelisted', 'sharadar_Category', 'sharadar_Cusips', 'sharadar_SicCode', 'sharadar_SicSector', 'sharadar_SicIndustry', 'sharadar_FamaSector', 'sharadar_FamaIndustry', 'sharadar_Sector', 'sharadar_Industry', 'sharadar_ScaleMarketCap', 'sharadar_ScaleRevenue', 'sharadar_RelatedTickers', 'sharadar_Currency', 'sharadar_Location', 'sharadar_CountryListed', 'sharadar_LastUpdated', 'sharadar_FirstAdded', 'sharadar_FirstPriceDate', 'sharadar_LastPriceDate', 'sharadar_FirstQuarter', 'sharadar_LastQuarter', 'sharadar_SecFilings', 'sharadar_CompanySite', 'usstock_Mic', 'usstock_Symbol', 'usstock_Name', 'usstock_Sector', 'usstock_Industry', 'usstock_SicCode', 'usstock_Sic', 'usstock_SicIndustryGroup', 'usstock_SicMajorGroup', 'usstock_SicDivision', 'usstock_SecurityType', 'usstock_SecurityType2', 'usstock_CIK', 'usstock_PrimaryShareSid', 'usstock_DateDelisted', 'usstock_FirstPriceDate', 'usstock_LastPriceDate', 'figi_Figi', 'figi_Name', 'figi_Ticker', 'figi_CompositeFigi', 'figi_ExchCode', 'figi_UniqueId', 'figi_SecurityType', 'figi_MarketSector', 'figi_ShareClassFigi', 'figi_UniqueIdFutOpt', 'figi_SecurityType2', 'figi_SecurityDescription']
+
 def download_master_file(
     filepath_or_buffer: FilepathOrBuffer = None,
     output: Literal["csv", "json"] = "csv",
     exchanges: Union[list[str], str] = None,
-    sec_types: Union[list[
-        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG", "CFD"]],
-        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG", "CFD"]] = None,
+    sec_types: Union[
+        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG", "CFD"],
+        list[str]] = None,
     currencies: Union[list[str], str] = None,
     universes: Union[list[str], str] = None,
     symbols: Union[list[str], str] = None,
@@ -608,10 +613,10 @@ def download_master_file(
     exclude_delisted: bool = False,
     exclude_expired: bool = False,
     frontmonth: bool = False,
-    vendors: Union[list[
-        Literal["alpaca", "edi", "ibkr", "sharadar", "usstock"]],
-        Literal["alpaca", "edi", "ibkr", "sharadar", "usstock"]] = None,
-    fields: Union[list[str], str] = None
+    vendors: Union[
+        Literal["alpaca", "edi", "ibkr", "sharadar", "usstock"],
+        list[str]] = None,
+    fields: Union[Field, list[str]] = None,
     ) -> None:
     """
     Query security details from the securities master database and download to file.
@@ -777,9 +782,9 @@ def _cli_download_master_file(*args, **kwargs):
 def get_securities(
     symbols: Union[list[str], str] = None,
     exchanges: Union[list[str], str] = None,
-    sec_types: Union[list[
-        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG"]],
-        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG"]] = None,
+    sec_types: Union[
+        Literal["STK", "ETF", "FUT", "CASH", "IND", "OPT", "FOP", "BAG"],
+        list[str]] = None,
     currencies: Union[list[str], str] = None,
     universes: Union[list[str], str] = None,
     sids: Union[list[str], str] = None,
@@ -788,10 +793,10 @@ def get_securities(
     exclude_delisted: bool = False,
     exclude_expired: bool = False,
     frontmonth: bool = False,
-    vendors: Union[list[
-        Literal["alpaca", "edi", "ibkr", "sharadar", "usstock"]],
-        Literal["alpaca", "edi", "ibkr", "sharadar", "usstock"]] = None,
-    fields: Union[list[str], str] = None
+    vendors: Union[
+        Literal["alpaca", "edi", "ibkr", "sharadar", "usstock"],
+        list[str]] = None,
+    fields: Union[Field, list[str]] = None,
     ) -> 'pd.DataFrame':
     """
     Return a DataFrame of security details from the securities master database.
@@ -927,7 +932,7 @@ def get_securities(
 
 def get_securities_reindexed_like(
     reindex_like: 'pd.DataFrame',
-    fields: Union[list[str], str] = None
+    fields: Union[Field, list[str]] = None,
     ) -> 'pd.DataFrame':
     """
     Return a multiindex DataFrame of securities master data, reindexed to
@@ -1137,7 +1142,7 @@ def create_universe(
         the code to assign to the universe (lowercase alphanumerics and hyphens only)
 
     infilepath_or_buffer : str or file-like object, optional
-        create the universe from the sids in this file (specify '-' to read file from stdin)
+        create the universe from the sids in this CSV file (specify '-' to read file from stdin)
 
     sids : list of str, optional
         create the universe from these sids

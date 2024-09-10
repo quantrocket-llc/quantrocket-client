@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from quantrocket._cli.utils.parse import HelpFormatter
+from quantrocket._cli.utils import completers
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("countdown", description="QuantRocket cron service CLI", help="Manage crontabs")
@@ -100,7 +101,8 @@ Show the timezone for a service called countdown-australia:
         nargs="?",
         metavar="TZ",
         help="the timezone to set (pass a partial timezone string such as 'newyork' "
-        "or 'europe' to see close matches, or pass '?' to see all choices)")
+        "or 'europe' to see close matches, or pass '?' to see all choices)"
+        ).completer = completers.timezone_completer
     parser.add_argument(
         "-s", "--service",
         metavar="SERVICE_NAME",

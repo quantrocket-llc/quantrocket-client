@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from quantrocket._cli.utils.parse import HelpFormatter
+from quantrocket._cli.utils import completers
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("ibg", description="QuantRocket IB Gateway service CLI", help="Start and stop IB Gateway")
@@ -67,11 +68,12 @@ live credentials):
         "gateway",
         metavar="SERVICE_NAME",
         help="name of IB Gateway service to set credentials for (for example, "
-        "'ibg1')")
+        "'ibg1')").completer = completers.ibg_completer
     parser.add_argument(
         "-u", "--username",
         metavar="USERNAME",
-        help="IBKR username (optional if only modifying trading mode)")
+        help="IBKR username (optional if only modifying trading mode)"
+        ).completer = completers.example_completer(["yourusername"])
     parser.add_argument(
         "-p", "--password",
         metavar="PASSWORD",
@@ -124,12 +126,12 @@ Get a list of gateways that are running:
     parser.add_argument(
         "-s", "--status",
         choices=["running", "stopped", "error"],
-        help="limit to IB Gateways in this status. Possible choices: %(choices)s")
+        help="limit to IB Gateways in this status. Possible choices: running, stopped, error")
     parser.add_argument(
         "-g", "--gateways",
         metavar="SERVICE_NAME",
         nargs="*",
-        help="limit to these IB Gateways")
+        help="limit to these IB Gateways").completer = completers.ibg_completer
     parser.set_defaults(func="quantrocket.ibg._cli_list_gateway_statuses")
 
     examples = """
@@ -171,7 +173,7 @@ Restart all gateways:
         "-g", "--gateways",
         metavar="SERVICE_NAME",
         nargs="*",
-        help="limit to these IB Gateways")
+        help="limit to these IB Gateways").completer = completers.ibg_completer
     parser.add_argument(
         "-w", "--wait",
         action="store_true",
@@ -213,7 +215,7 @@ Stop specific gateways and wait for them to stop:
         "-g", "--gateways",
         metavar="SERVICE_NAME",
         nargs="*",
-        help="limit to these IB Gateways")
+        help="limit to these IB Gateways").completer = completers.ibg_completer
     parser.add_argument(
         "-w", "--wait",
         action="store_true",
@@ -252,5 +254,6 @@ Show current config:
         "filename",
         nargs="?",
         metavar="FILENAME",
-        help="the config file to upload (if omitted, return the current config)")
+        help="the config file to upload (if omitted, return the current config)"
+    ).completer = completers.infile_completer(["yml"])
     parser.set_defaults(func="quantrocket.ibg._cli_load_or_show_config")

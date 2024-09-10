@@ -18,6 +18,7 @@
 # to make argcomplete perky, limit imports to the minimum here and in
 # subcommand modules
 import sys
+import os
 import six
 import argparse
 import pkgutil
@@ -67,8 +68,13 @@ class ArgumentParser(argparse.ArgumentParser):
     ArgumentParser that logs parsing errors to flightlog if not a tty.
     """
     def error(self, message):
-        if not sys.stdin.isatty():
-            handle_error(message)
+        # we only want to log parsing errors in non-tty environments like
+        # crontab; during completions, stdin is disabled by zsh, so the
+        # environment will apppear to be non-tty, but we don't want to log
+        # errors during completions, so check for _ARGCOMPLETE, which is
+        # temporarily set by argcomplete during completions.
+        if not sys.stdin.isatty() and "_ARGCOMPLETE" not in os.environ:
+            handle_error("called from ArgumentParser: " + message)
         return super(ArgumentParser, self).error(message)
 
 def get_parser():
@@ -80,13 +86,20 @@ def get_parser():
 
 def main():
     parser = get_parser()
-    if sys.stdin.isatty():
-        try:
-            import argcomplete
-        except ImportError:
-            pass
-        else:
-            argcomplete.autocomplete(parser)
+    try:
+        import argcomplete
+    except ImportError:
+        pass
+    else:
+        # autocomplete decides whether to run based on an environment variable
+        # set by argcomplete's shell script; if autocomplete runs, it calls
+        # os._exit() when done, so subsequent code doesn't run
+        argcomplete.autocomplete(
+            parser,
+            always_complete_options=False,
+            # don't fall back to FilesCompleter, which is usually inapplicable
+            default_completer=lambda *args, **kwargs: {},
+        )
     args = parser.parse_args()
     args = vars(args)
     args.pop("command")

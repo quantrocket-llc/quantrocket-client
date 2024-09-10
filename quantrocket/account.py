@@ -47,6 +47,52 @@ __all__ = [
     "download_exchange_rates",
 ]
 
+AccountField = Literal[
+    'Account',
+    'AccountType',
+    'AccruedCash',
+    'AvailableFunds',
+    'Broker',
+    'BuyingPower',
+    'Currency',
+    'Cushion',
+    'Date',
+    'DayTradeBuyingPower',
+    'DayTradeCount',
+    'DayTradesRemaining',
+    'EquityWithLoanValue',
+    'ExcessLiquidity',
+    'FullAvailableFunds',
+    'FullExcessLiquidity',
+    'FullInitMarginReq',
+    'FullMaintMarginReq',
+    'GrossPositionValue',
+    'HighestSeverity',
+    'InitMarginReq',
+    'LastUpdated',
+    'Leverage',
+    'LongMarketValue',
+    'LookAheadAvailableFunds',
+    'LookAheadExcessLiquidity',
+    'LookAheadInitMarginReq',
+    'LookAheadMaintMarginReq',
+    'LookAheadNextChange',
+    'MaintMarginReq',
+    'MarginMultiplier',
+    'NetLiquidation',
+    'Paper',
+    'PatternDayTrader',
+    'PreviousEquity',
+    'PreviousEquityWithLoanValue',
+    'PreviousMaintMarginReq',
+    'RegTBuyingPower',
+    'RegTEquity',
+    'RegTMargin',
+    'SMA',
+    'SettledCash',
+    'ShortMarketValue',
+    'TotalCashValue']
+
 def download_account_balances(
     filepath_or_buffer: FilepathOrBuffer = None,
     output: Literal["csv", "json"] = "csv",
@@ -55,7 +101,7 @@ def download_account_balances(
     latest: bool = False,
     accounts: Union[list[str], str] = None,
     below: dict[str, float] = None,
-    fields: Union[list[str], str] = None,
+    fields: Union[AccountField, list[str]] = None,
     force_refresh: bool = False
     ) -> None:
     """
@@ -157,17 +203,42 @@ def _cli_download_account_balances(*args, **kwargs):
         kwargs["below"] = dict_strs_to_dict(*below)
     return json_to_cli(download_account_balances, *args, **kwargs)
 
+PortfolioField = Literal[
+    'Account',
+    'AssetId',
+    'AverageCost',
+    'Broker',
+    'ConId',
+    'CostBasis',
+    'Currency',
+    'Description',
+    'Exchange',
+    'LastUpdated',
+    'MarketPrice',
+    'MarketValue',
+    'PctChange',
+    'Position',
+    'PriorClose',
+    'RealizedPnl',
+    'SecType',
+    'Sid',
+    'Symbol',
+    'UnrealizedIntradayPnl',
+    'UnrealizedIntradayPnlPct',
+    'UnrealizedPnl',
+    'UnrealizedPnlPct']
+
 def download_account_portfolio(
     filepath_or_buffer: FilepathOrBuffer = None,
     output: Literal["csv", "json"] = "csv",
-    brokers: Union[list[Literal["alpaca", "ibkr"]], Literal["alpaca", "ibkr"]] = None,
+    brokers: Union[Literal["alpaca", "ibkr"], list[str]] = None,
     accounts: Union[list[str], str] = None,
     sec_types: Union[list[str], str] = None,
     exchanges: Union[list[str], str] = None,
     sids: Union[list[str], str] = None,
     symbols: Union[list[str], str] = None,
     include_zero: bool = False,
-    fields: Union[list[str], str] = None
+    fields: Union[PortfolioField, list[str]] = None
     ) -> None:
     """
     Download current portfolio.

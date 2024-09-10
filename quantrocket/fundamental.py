@@ -2120,6 +2120,119 @@ def collect_sharadar_sp500(
 def _cli_collect_sharadar_sp500(*args, **kwargs):
     return json_to_cli(collect_sharadar_sp500, *args, **kwargs)
 
+SharadarFundamentalsField = Literal[
+    'ACCOCI',
+    'ASSETS',
+    'ASSETSAVG',
+    'ASSETSC',
+    'ASSETSNC',
+    'ASSETTURNOVER',
+    'BVPS',
+    'CALENDARDATE',
+    'CAPEX',
+    'CASHNEQ',
+    'CASHNEQUSD',
+    'CONSOLINC',
+    'COR',
+    'CURRENTRATIO',
+    'DATEKEY',
+    'DE',
+    'DEBT',
+    'DEBTC',
+    'DEBTNC',
+    'DEBTUSD',
+    'DEFERREDREV',
+    'DEPAMOR',
+    'DEPOSITS',
+    'DIMENSION',
+    'DIVYIELD',
+    'DPS',
+    'EBIT',
+    'EBITDA',
+    'EBITDAMARGIN',
+    'EBITDAUSD',
+    'EBITUSD',
+    'EBT',
+    'EPS',
+    'EPSDIL',
+    'EPSUSD',
+    'EQUITY',
+    'EQUITYAVG',
+    'EQUITYUSD',
+    'EV',
+    'EVEBIT',
+    'EVEBITDA',
+    'FCF',
+    'FCFPS',
+    'FXUSD',
+    'GP',
+    'GROSSMARGIN',
+    'INTANGIBLES',
+    'INTEXP',
+    'INVCAP',
+    'INVCAPAVG',
+    'INVENTORY',
+    'INVESTMENTS',
+    'INVESTMENTSC',
+    'INVESTMENTSNC',
+    'LASTUPDATED',
+    'LIABILITIES',
+    'LIABILITIESC',
+    'LIABILITIESNC',
+    'MARKETCAP',
+    'NCF',
+    'NCFBUS',
+    'NCFCOMMON',
+    'NCFDEBT',
+    'NCFDIV',
+    'NCFF',
+    'NCFI',
+    'NCFINV',
+    'NCFO',
+    'NCFX',
+    'NETINC',
+    'NETINCCMN',
+    'NETINCCMNUSD',
+    'NETINCDIS',
+    'NETINCNCI',
+    'NETMARGIN',
+    'OPEX',
+    'OPINC',
+    'PAYABLES',
+    'PAYOUTRATIO',
+    'PB',
+    'PE',
+    'PE1',
+    'PPNENET',
+    'PREFDIVIS',
+    'PRICE',
+    'PS',
+    'PS1',
+    'RECEIVABLES',
+    'REPORTPERIOD',
+    'RETEARN',
+    'REVENUE',
+    'REVENUEUSD',
+    'RND',
+    'ROA',
+    'ROE',
+    'ROIC',
+    'ROS',
+    'SBCOMP',
+    'SGNA',
+    'SHAREFACTOR',
+    'SHARESBAS',
+    'SHARESWA',
+    'SHARESWADIL',
+    'SPS',
+    'TANGIBLES',
+    'TAXASSETS',
+    'TAXEXP',
+    'TAXLIABILITIES',
+    'TBVPS',
+    'TICKER',
+    'WORKINGCAPITAL']
+
 def download_sharadar_fundamentals(
     filepath_or_buffer: FilepathOrBuffer = None,
     start_date: str = None,
@@ -2128,11 +2241,10 @@ def download_sharadar_fundamentals(
     sids: Union[list[str], str] = None,
     exclude_universes: Union[list[str], str] = None,
     exclude_sids: Union[list[str], str] = None,
-    dimensions: Union[list[Literal[
-        "ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"]],
-        Literal[
-            "ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"]] = None,
-    fields: Union[list[str], str] = None,
+    dimensions: Union[Literal[
+        "ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"],
+        list[str]] = None,
+    fields: Union[SharadarFundamentalsField, list[str]] = None,
     output: Literal["csv", "json"] = "csv"
     ) -> None:
     """
@@ -2245,6 +2357,32 @@ def download_sharadar_fundamentals(
 def _cli_download_sharadar_fundamentals(*args, **kwargs):
     return json_to_cli(download_sharadar_fundamentals, *args, **kwargs)
 
+SharadarInsidersField = Literal[
+    'DATEEXERCISABLE',
+    'DIRECTORINDIRECT',
+    'EXPIRATIONDATE',
+    'FILINGDATE',
+    'FORMTYPE',
+    'ISDIRECTOR',
+    'ISOFFICER',
+    'ISSUERNAME',
+    'ISTENPERCENTOWNER',
+    'NATUREOFOWNERSHIP',
+    'OFFICERTITLE',
+    'OWNERNAME',
+    'PRICEEXERCISABLE',
+    'ROWNUM',
+    'SECURITYADCODE',
+    'SECURITYTITLE',
+    'SHARESOWNEDBEFORETRANSACTION',
+    'SHARESOWNEDFOLLOWINGTRANSACTION',
+    'TICKER',
+    'TRANSACTIONCODE',
+    'TRANSACTIONDATE',
+    'TRANSACTIONPRICEPERSHARE',
+    'TRANSACTIONSHARES',
+    'TRANSACTIONVALUE']
+
 def download_sharadar_insiders(
     filepath_or_buffer: FilepathOrBuffer = None,
     start_date: str = None,
@@ -2253,7 +2391,7 @@ def download_sharadar_insiders(
     sids: Union[list[str], str] = None,
     exclude_universes: Union[list[str], str] = None,
     exclude_sids: Union[list[str], str] = None,
-    fields: Union[list[str], str] = None,
+    fields: Union[SharadarInsidersField, list[str]] = None,
     output: Literal["csv", "json"] = "csv"
     ) -> None:
     """
@@ -2351,6 +2489,37 @@ def download_sharadar_insiders(
 def _cli_download_sharadar_insiders(*args, **kwargs):
     return json_to_cli(download_sharadar_insiders, *args, **kwargs)
 
+SharadarInstitutionsField = Literal[
+    'CALENDARDATE',
+    'CLLHOLDERS',
+    'CLLUNITS',
+    'CLLVALUE',
+    'DBTHOLDERS',
+    'DBTUNITS',
+    'DBTVALUE',
+    'FNDHOLDERS',
+    'FNDUNITS',
+    'FNDVALUE',
+    'NAME',
+    'PERCENTOFTOTAL',
+    'PRFHOLDERS',
+    'PRFUNITS',
+    'PRFVALUE',
+    'PUTHOLDERS',
+    'PUTUNITS',
+    'PUTVALUE',
+    'SHRHOLDERS',
+    'SHRUNITS',
+    'SHRVALUE',
+    'TICKER',
+    'TOTALVALUE',
+    'UNDHOLDERS',
+    'UNDUNITS',
+    'UNDVALUE',
+    'WNTHOLDERS',
+    'WNTUNITS',
+    'WNTVALUE']
+
 def download_sharadar_institutions(
     filepath_or_buffer: FilepathOrBuffer = None,
     start_date: str = None,
@@ -2360,7 +2529,7 @@ def download_sharadar_institutions(
     exclude_universes: Union[list[str], str] = None,
     exclude_sids: Union[list[str], str] = None,
     detail: Union[list[str], str] = False,
-    fields: Union[list[str], str] = None,
+    fields: Union[SharadarInstitutionsField, list[str]] = None,
     output: Literal["csv", "json"] = "csv"
     ) -> None:
     """
@@ -2694,7 +2863,7 @@ def _cli_download_sharadar_sp500(*args, **kwargs):
 
 def get_sharadar_fundamentals_reindexed_like(
     reindex_like: 'pd.DataFrame',
-    fields: Union[list[str], str] = None,
+    fields: Union[SharadarFundamentalsField, list[str]] = None,
     dimension: Literal[
         "ARQ", "ARY", "ART", "MRQ", "MRY", "MRT"] = "ART",
     period_offset: int = 0
@@ -2903,7 +3072,7 @@ def get_sharadar_fundamentals_reindexed_like(
 
 def get_sharadar_institutions_reindexed_like(
     reindex_like: 'pd.DataFrame',
-    fields: Union[list[str], str] = None,
+    fields: Union[SharadarInstitutionsField, list[str]] = None,
     shift: int = 45
     ) -> 'pd.DataFrame':
     """

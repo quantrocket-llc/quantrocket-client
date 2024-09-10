@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from quantrocket._cli.utils.parse import dict_str, HelpFormatter
+from quantrocket._cli.utils import completers
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("blotter", description="QuantRocket blotter CLI", help="Place orders and track executions")
@@ -63,14 +64,17 @@ Place an order by specifying the order parameters on the command line:
         metavar="INFILE",
         dest="infilepath_or_buffer",
         help="place orders from this CSV or JSON file (specify '-' to read file "
-            "from stdin)")
+            "from stdin)").completer = completers.infile_completer(["csv", "json"], allow_stdin=True)
     source_group.add_argument(
         "-p", "--params",
         nargs="*",
         type=dict_str,
         metavar="PARAM:VALUE",
         help="order details as multiple key-value pairs (pass as 'param:value', for "
-        "example OrderType:MKT)")
+        "example OrderType:MKT)").completer = completers.example_completer([
+            "Sid:FIBBG123456", "Action:BUY", "Exchange:SMART", "TotalQuantity:100",
+            "OrderType:MKT", "Tif:Day", "Account:DU12345", "OrderRef:my-strategy",
+        ])
     parser.set_defaults(func="quantrocket.blotter._cli_place_orders")
 
     examples = """
@@ -123,17 +127,17 @@ Cancel all open orders:
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="cancel orders for these sids")
+        help="cancel orders for these sids").completer = completers.sid_completer
     parser.add_argument(
         "-r", "--order-refs",
         nargs="*",
         metavar="ORDER_REF",
-        help="cancel orders for these order refs")
+        help="cancel orders for these order refs").completer = completers.order_ref_completer
     parser.add_argument(
         "-a", "--accounts",
         nargs="*",
         metavar="ACCOUNT",
-        help="cancel orders for these accounts")
+        help="cancel orders for these accounts").completer = completers.account_completer
     parser.add_argument(
         "--all",
         action="store_true",
@@ -208,17 +212,17 @@ Download order status of open orders by order ref:
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to orders for these sids")
+        help="limit to orders for these sids").completer = completers.sid_completer
     filters.add_argument(
         "-r", "--order-refs",
         nargs="*",
         metavar="ORDER_REF",
-        help="limit to orders for these order refs")
+        help="limit to orders for these order refs").completer = completers.order_ref_completer
     filters.add_argument(
         "-a", "--accounts",
         nargs="*",
         metavar="ACCOUNT",
-        help="limit to orders for these accounts")
+        help="limit to orders for these accounts").completer = completers.account_completer
     filters.add_argument(
         "--open",
         action="store_true",
@@ -227,23 +231,25 @@ Download order status of open orders by order ref:
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to orders submitted on or after this date")
+        help="limit to orders submitted on or after this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to orders submitted on or before this date")
+        help="limit to orders submitted on or before this date").completer = completers.end_date_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-f", "--fields",
         metavar="FIELD",
         nargs="*",
         help="return these fields in addition to the default fields (pass '?' or any invalid "
-        "fieldname to see available fields)")
+        "fieldname to see available fields)"
+        ).completer = completers.order_status_fields_completer
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="order_statuses")
     outputs.add_argument(
         "-j", "--json",
         action="store_const",
@@ -315,17 +321,18 @@ Query positions using broker view:
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "-r", "--order-refs",
         nargs="*",
         metavar="ORDER_REF",
-        help="limit to these order refs (not supported with broker view)")
+        help="limit to these order refs (not supported with broker view)"
+        ).completer = completers.order_ref_completer
     filters.add_argument(
         "-a", "--accounts",
         nargs="*",
         metavar="ACCOUNT",
-        help="limit to these accounts")
+        help="limit to these accounts").completer = completers.account_completer
     filters.add_argument(
         "--diff",
         action="store_true",
@@ -343,7 +350,8 @@ Query positions using broker view:
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="positions")
     outputs.add_argument(
         "-j", "--json",
         action="store_const",
@@ -409,30 +417,34 @@ in the blotter in order to mark the position as closed:
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "-r", "--order-refs",
         nargs="*",
         metavar="ORDER_REF",
-        help="limit to these order refs")
+        help="limit to these order refs").completer = completers.order_ref_completer
     filters.add_argument(
         "-a", "--accounts",
         nargs="*",
         metavar="ACCOUNT",
-        help="limit to these accounts")
+        help="limit to these accounts").completer = completers.account_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="closing_orders")
     outputs.add_argument(
         "-p", "--params",
         nargs="*",
         type=dict_str,
         metavar="PARAM:VALUE",
         help="additional parameters to append to each row in output "
-        "(pass as 'param:value', for example OrderType:MKT)")
+        "(pass as 'param:value', for example OrderType:MKT)"
+        ).completer = completers.example_completer([
+            "Exchange:SMART", "OrderType:MKT", "Tif:Day"
+        ])
     outputs.add_argument(
         "-j", "--json",
         action="store_const",
@@ -469,31 +481,32 @@ Get a CSV of all executions:
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "-r", "--order-refs",
         nargs="*",
         metavar="ORDER_REF",
-        help="limit to these order refs")
+        help="limit to these order refs").completer = completers.order_ref_completer
     filters.add_argument(
         "-a", "--accounts",
         nargs="*",
         metavar="ACCOUNT",
-        help="limit to these accounts")
+        help="limit to these accounts").completer = completers.account_completer
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to executions on or after this date")
+        help="limit to executions on or after this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to executions on or before this date")
+        help="limit to executions on or before this date").completer = completers.end_date_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv"], outfile_prefix="executions")
     outputs.add_argument(
         "--map-cfd-to-underlying",
         action="store_true",
@@ -571,14 +584,17 @@ Record an execution by specifying the parameters on the command line:
         metavar="INFILE",
         dest="infilepath_or_buffer",
         help="record executions from this CSV or JSON file (specify '-' to read file "
-            "from stdin)")
+            "from stdin)").completer = completers.infile_completer(["csv", "json"], allow_stdin=True)
     source_group.add_argument(
         "-p", "--params",
         nargs="*",
         type=dict_str,
         metavar="PARAM:VALUE",
         help="execution details as multiple key-value pairs (pass as 'param:value', for "
-        "example Price:23.50)")
+        "example Price:23.50)").completer = completers.example_completer([
+            "Sid:FIBBG123456", "Action:BUY", "TotalQuantity:100", "Account:DU12345",
+            "OrderRef:my-strategy", "Price:23.50"
+        ])
     parser.set_defaults(func="quantrocket.blotter._cli_record_executions")
 
     examples = """
@@ -624,7 +640,7 @@ Record a 1-for-10 reverse split:
         metavar="SID",
         required=True,
         help="the sid that underwent a split. There must currently be an open "
-        "position in this security.")
+        "position in this security.").completer = completers.sid_completer
     parser.add_argument(
         "-o", "--old-shares",
         type=int,
@@ -682,25 +698,25 @@ Get a CSV of performance results for a particular date range:
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     filters.add_argument(
         "-r", "--order-refs",
         nargs="*",
         metavar="ORDER_REF",
-        help="limit to these order refs")
+        help="limit to these order refs").completer = completers.order_ref_completer
     filters.add_argument(
         "-a", "--accounts",
         nargs="*",
         metavar="ACCOUNT",
-        help="limit to these accounts")
+        help="limit to these accounts").completer = completers.account_completer
     filters.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="limit to pnl on or after this date")
+        help="limit to pnl on or after this date").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="limit to pnl on or before this date")
+        help="limit to pnl on or before this date").completer = completers.end_date_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-d", "--details",
@@ -710,7 +726,8 @@ Get a CSV of performance results for a particular date range:
         "at a time)")
     outputs.add_argument(
         "-t", "--timezone",
-        help="return execution times in this timezone (default UTC)")
+        help="return execution times in this timezone (default UTC)"
+        ).completer = completers.timezone_completer
     outputs.add_argument(
         "--pdf",
         action="store_const",
@@ -721,5 +738,6 @@ Get a CSV of performance results for a particular date range:
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "pdf"], outfile_prefix="pnl")
     parser.set_defaults(func="quantrocket.blotter._cli_download_pnl")

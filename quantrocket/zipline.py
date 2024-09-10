@@ -209,7 +209,7 @@ def create_sharadar_bundle(
     code: str,
     sec_types: Union[list[
         Literal["STK", "ETF"]],
-        Literal["STK", "ETF"]] = None,
+        str] = None,
     free: bool = False
     ) -> dict[str, str]:
     """

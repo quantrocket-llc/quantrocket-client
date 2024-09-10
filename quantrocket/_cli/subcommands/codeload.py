@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from quantrocket._cli.utils.parse import HelpFormatter
+from quantrocket._cli.utils import completers
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("codeload", description="QuantRocket code management CLI", help="Clone and manage code")
@@ -69,10 +70,10 @@ personal access token (GitHub) in the URL:
         "repo",
         help="the name or URL of the repo. Can be the name of a QuantRocket demo "
         "repo (e.g. 'umd'), a GitHub username/repo (e.g. 'myuser/myrepo'), or the "
-        "URL of any Git repository")
+        "URL of any Git repository").completer = completers.codeload_repo_completer
     parser.add_argument(
         "-b", "--branch",
-        help="the branch to clone (default 'master')")
+        help="the branch to clone (default 'master' or 'main')").completer = completers.example_completer(["main"])
     on_conflict_group = parser.add_mutually_exclusive_group()
     on_conflict_group.add_argument(
         "-r", "--replace",
@@ -87,5 +88,5 @@ personal access token (GitHub) in the URL:
     parser.add_argument(
         "-d", "--target-dir",
         help="the directory into which files should be cloned. Default is '/codeload'"
-    )
+    ).completer = completers.directory_completer
     parser.set_defaults(func="quantrocket.codeload._cli_clone")

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from quantrocket._cli.utils.parse import HelpFormatter
+from quantrocket._cli.utils import completers
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("realtime", description="QuantRocket real-time market data CLI", help="Collect and query real-time market data")
@@ -54,23 +55,25 @@ Create a database for collecting trades and quotes for a universe of futures:
     parser.add_argument(
         "code",
         metavar="CODE",
-        help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
+        help="the code to assign to the database (lowercase alphanumerics and hyphens only)"
+        ).completer = completers.example_completer(["usa-stk-trades", "cme-fut-taq"])
     parser.add_argument(
         "-u", "--universes",
         metavar="UNIVERSE",
         nargs="*",
-        help="include these universes")
+        help="include these universes").completer = completers.universe_completer
     parser.add_argument(
         "-i", "--sids",
         metavar="SID",
         nargs="*",
-        help="include these sids")
+        help="include these sids").completer = completers.sid_completer
     parser.add_argument(
         "-f", "--fields",
         metavar="FIELD",
         nargs="*",
         help="collect these fields (pass '?' or any invalid fieldname to see "
-        "available fields, default fields are 'LastPrice' and 'Volume')")
+        "available fields, default fields are 'LastPrice' and 'Volume')"
+        ).completer = completers.ibkr_realtime_fields_completer
     parser.add_argument(
         "-p", "--primary-exchange",
         action="store_true",
@@ -106,23 +109,25 @@ Create a database for collecting real-time trade prices and sizes for US stocks:
     parser.add_argument(
         "code",
         metavar="CODE",
-        help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
+        help="the code to assign to the database (lowercase alphanumerics and hyphens only)"
+        ).completer = completers.example_completer(["usa-stk-trades"])
     parser.add_argument(
         "-u", "--universes",
         metavar="UNIVERSE",
         nargs="*",
-        help="include these universes")
+        help="include these universes").completer = completers.universe_completer
     parser.add_argument(
         "-i", "--sids",
         metavar="SID",
         nargs="*",
-        help="include these sids")
+        help="include these sids").completer = completers.sid_completer
     parser.add_argument(
         "-f", "--fields",
         metavar="FIELD",
         nargs="*",
         help="collect these fields (pass '?' or any invalid fieldname to see "
-        "available fields, default fields are 'LastPrice' and 'LastSize')")
+        "available fields, default fields are 'LastPrice' and 'LastSize')"
+        ).completer = completers.polygon_realtime_fields_completer
     parser.set_defaults(func="quantrocket.realtime._cli_create_polygon_tick_db")
 
     examples = """
@@ -154,23 +159,25 @@ Create a database for collecting real-time trade prices and sizes for US stocks:
     parser.add_argument(
         "code",
         metavar="CODE",
-        help="the code to assign to the database (lowercase alphanumerics and hyphens only)")
+        help="the code to assign to the database (lowercase alphanumerics and hyphens only)"
+        ).completer = completers.example_completer(["usa-stk-trades"])
     parser.add_argument(
         "-u", "--universes",
         metavar="UNIVERSE",
         nargs="*",
-        help="include these universes")
+        help="include these universes").completer = completers.universe_completer
     parser.add_argument(
         "-i", "--sids",
         metavar="SID",
         nargs="*",
-        help="include these sids")
+        help="include these sids").completer = completers.sid_completer
     parser.add_argument(
         "-f", "--fields",
         metavar="FIELD",
         nargs="*",
         help="collect these fields (pass '?' or any invalid fieldname to see "
-        "available fields, default fields are 'LastPrice' and 'LastSize')")
+        "available fields, default fields are 'LastPrice' and 'LastSize')"
+        ).completer = completers.alpaca_realtime_fields_completer
     parser.set_defaults(func="quantrocket.realtime._cli_create_alpaca_tick_db")
 
     examples = """
@@ -212,19 +219,21 @@ quotes, resulting in fields called BidPriceClose, AskPriceClose, BidSizeMean, an
     parser.add_argument(
         "code",
         metavar="CODE",
-        help="the code to assign to the aggregate database (lowercase alphanumerics and hyphens only)")
+        help="the code to assign to the aggregate database (lowercase alphanumerics and hyphens only)"
+        ).completer = completers.example_completer(["usa-stk-trades-1min", "cme-fut-taq-1sec"])
     parser.add_argument(
         "-t", "--tick-db",
         metavar="CODE",
         required=True,
         dest="tick_db_code",
-        help="the code of the tick database to aggregate")
+        help="the code of the tick database to aggregate"
+        ).completer = completers.realtime_tick_db_completer
     parser.add_argument(
         "-z", "--bar-size",
         metavar="BAR_SIZE",
         required=True,
         help="the time frequency to aggregate to (use a Pandas timedelta string, for example "
-        "10s or 1m or 2h or 1d)")
+        "10s or 1m or 2h or 1d)").completer = completers.timedelta_completer
     parser.add_argument(
         "-f", "--fields",
         metavar="FIELD",
@@ -233,7 +242,8 @@ quotes, resulting in fields called BidPriceClose, AskPriceClose, BidSizeMean, an
         "list of strings mapping tick db fields to a comma-separated list of aggregate functions "
         "to apply to the field. Format strings as 'FIELD:FUNC1,FUNC2'. Available aggregate functions "
         "are 'Close', 'Open', 'High', 'Low', 'Mean', 'Sum', and 'Count'. See examples. If not "
-        "specified, defaults to including the 'Close' for each tick db field.")
+        "specified, defaults to including the 'Close' for each tick db field."
+        ).completer = completers.realtime_agg_db_fields_completer
     parser.set_defaults(func="quantrocket.realtime._cli_create_agg_db")
 
     examples = """
@@ -267,7 +277,8 @@ Return the configuration for an aggregate database called "cme-fut-taq-1s":
         formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
-        help="the tick database code or aggregate database code")
+        help="the tick database code or aggregate database code"
+        ).completer = completers.realtime_db_completer
     parser.set_defaults(func="quantrocket.realtime._cli_get_db_config")
 
     examples = """
@@ -301,13 +312,14 @@ Delete a database called "usa-stk-trades":
         formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
-        help="the tick database code or aggregate database code")
+        help="the tick database code or aggregate database code"
+        ).completer = completers.realtime_db_completer
     parser.add_argument(
         "--confirm-by-typing-db-code-again",
         metavar="CODE",
         required=True,
         help="enter the db code again to confirm you want to drop the database, its config, "
-        "and all its data")
+        "and all its data").completer = completers.realtime_db_completer
     parser.add_argument(
         "--cascade",
         action="store_true",
@@ -352,13 +364,14 @@ aggregate records are deleted):
         formatter_class=HelpFormatter)
     parser.add_argument(
         "code",
-        help="the tick database code")
+        help="the tick database code"
+        ).completer = completers.realtime_tick_db_completer
     parser.add_argument(
         "-o", "--older-than",
         metavar="TIMEDELTA",
         required=True,
         help="delete ticks older than this (use a Pandas timedelta string, for example "
-        "7d)")
+        "7d)").completer = completers.timedelta_completer
     parser.set_defaults(func="quantrocket.realtime._cli_drop_ticks")
 
     examples = """
@@ -431,31 +444,35 @@ Collect a market data snapshot and wait until it completes:
         "codes",
         metavar="CODE",
         nargs="+",
-        help="the tick database code(s) to collect data for")
+        help="the tick database code(s) to collect data for"
+        ).completer = completers.realtime_tick_db_completer
     parser.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
         help="collect market data for these sids, overriding db config "
-        "(typically used to collect a subset of securities)")
+        "(typically used to collect a subset of securities)"
+        ).completer = completers.sid_completer
     parser.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
         help="collect market data for these universes, overriding db config "
-        "(typically used to collect a subset of securities)")
+        "(typically used to collect a subset of securities)"
+        ).completer = completers.universe_completer
     parser.add_argument(
         "-f", "--fields",
         nargs="*",
         metavar="FIELD",
-        help="limit to these fields, overriding db config")
+        help="limit to these fields, overriding db config"
+        ).completer = completers.realtime_db_fields_completer
     parser.add_argument(
         "--until",
         metavar="TIME_OR_TIMEDELTA",
         help="schedule data collection to end at this time. Can be a datetime "
         "(YYYY-MM-DD HH:MM:SS), a time (HH:MM:SS), or a Pandas timedelta "
         "string (e.g. 2h or 30min). If not provided, market data is collected "
-        "until cancelled.")
+        "until cancelled.").completer = completers.timedelta_completer
     parser.add_argument(
         "-s", "--snapshot",
         action="store_true",
@@ -528,17 +545,20 @@ Cancel all market data collection:
         "codes",
         metavar="CODE",
         nargs="*",
-        help="the tick database code(s) to cancel collection for")
+        help="the tick database code(s) to cancel collection for"
+        ).completer = completers.realtime_tick_db_completer
     parser.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="cancel market data for these sids, overriding db config")
+        help="cancel market data for these sids, overriding db config"
+        ).completer = completers.sid_completer
     parser.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="cancel market data for these universes, overriding db config")
+        help="cancel market data for these universes, overriding db config"
+        ).completer = completers.universe_completer
     parser.add_argument(
         "-a", "--all",
         action="store_true",
@@ -573,7 +593,8 @@ Download a CSV of futures market data since 08:00 AM Chicago time:
     parser.add_argument(
         "code",
         metavar="CODE",
-        help="the code of the tick database or aggregate database to query")
+        help="the code of the tick database or aggregate database to query"
+        ).completer = completers.realtime_db_completer
     filters = parser.add_argument_group("filtering options")
     filters.add_argument(
         "-s", "--start-date",
@@ -582,39 +603,43 @@ Download a CSV of futures market data since 08:00 AM Chicago time:
         "datetime with optional timezone (YYYY-MM-DD HH:MM:SS TZ), or time with "
         "optional timezone. A time without date will be interpreted as referring to "
         "today if the time is earlier than now, or yesterday if the time is later than "
-        "now.")
+        "now.").completer = completers.start_date_completer
     filters.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
         help="limit to market data on or before this datetime. Can pass a date (YYYY-MM-DD), "
         "datetime with optional timezone (YYYY-MM-DD HH:MM:SS TZ), or time with "
-        "optional timezone.")
+        "optional timezone.").completer = completers.end_date_completer
     filters.add_argument(
         "-u", "--universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="limit to these universes")
+        help="limit to these universes"
+        ).completer = completers.universe_completer
     filters.add_argument(
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids"
+        ).completer = completers.sid_completer
     filters.add_argument(
         "--exclude-universes",
         nargs="*",
         metavar="UNIVERSE",
-        help="exclude these universes")
+        help="exclude these universes"
+        ).completer = completers.universe_completer
     filters.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     outputs = parser.add_argument_group("output options")
     outputs.add_argument(
         "-o", "--outfile",
         metavar="OUTFILE",
         dest="filepath_or_buffer",
-        help="filename to write the data to (default is stdout)")
+        help="filename to write the data to (default is stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="realtime_data")
     output_format_group = outputs.add_mutually_exclusive_group()
     output_format_group.add_argument(
         "-j", "--json",
@@ -627,7 +652,7 @@ Download a CSV of futures market data since 08:00 AM Chicago time:
         metavar="FIELD",
         nargs="*",
         help="only return these fields (pass '?' or any invalid fieldname to see "
-        "available fields)")
+        "available fields)").completer = completers.realtime_db_fields_completer
     parser.set_defaults(func="quantrocket.realtime._cli_download_market_data_file")
 
     examples = """
@@ -666,12 +691,12 @@ Stream a subset of fields and sids:
         "-i", "--sids",
         nargs="*",
         metavar="SID",
-        help="limit to these sids")
+        help="limit to these sids").completer = completers.sid_completer
     parser.add_argument(
         "--exclude-sids",
         nargs="*",
         metavar="SID",
-        help="exclude these sids")
+        help="exclude these sids").completer = completers.sid_completer
     parser.add_argument(
         "-f", "--fields",
         nargs="*",

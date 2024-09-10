@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from quantrocket._cli.utils.parse import HelpFormatter
+from quantrocket._cli.utils import completers
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("license", description="QuantRocket license service CLI", help="Query license details")
@@ -73,7 +74,8 @@ Examples
     parser.add_argument(
         "key",
         metavar="LICENSEKEY",
-        help="the license key for your account")
+        help="the license key for your account"
+        ).completer = completers.example_completer("YOUR_LICENSE_KEY")
     parser.set_defaults(func="quantrocket.license._cli_set_license")
 
     examples = """
@@ -118,7 +120,7 @@ Set Alpaca paper API key (will prompt for secret key):
     parser.add_argument(
         "-a", "--api-key",
         metavar="API_KEY",
-        help="Alpaca API key ID")
+        help="Alpaca API key ID").completer = completers.example_completer(["YOUR_API_KEY"])
     parser.add_argument(
         "-s", "--secret-key",
         metavar="SECRET_KEY",
@@ -141,7 +143,7 @@ Set Alpaca paper API key (will prompt for secret key):
         choices=["iex", "sip"],
         metavar="DATA_FEED",
         help="the real-time data feed to which this API key is subscribed. Possible "
-        "choices: %(choices)s. Default is 'iex'.")
+        "choices: iex, sip. Default is 'iex'.")
     parser.set_defaults(func="quantrocket.license._cli_get_or_set_alpaca_key")
 
     examples = """
@@ -180,7 +182,7 @@ Set Polygon API key:
         "api_key",
         nargs="?",
         metavar="API_KEY",
-        help="Polygon API key")
+        help="Polygon API key").completer = completers.example_completer(["YOUR_API_KEY"])
     parser.set_defaults(func="quantrocket.license._cli_get_or_set_polygon_key")
 
     examples = """
@@ -219,5 +221,5 @@ Set Polygon API key:
         "api_key",
         nargs="?",
         metavar="API_KEY",
-        help="Quandl API key")
+        help="Quandl API key").completer = completers.example_completer(["YOUR_API_KEY"])
     parser.set_defaults(func="quantrocket.license._cli_get_or_set_quandl_key")

@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from quantrocket._cli.utils.parse import dict_str, list_or_int_or_float_or_str, HelpFormatter
+from quantrocket._cli.utils.parse import (
+    dict_str,
+    list_or_int_or_float_or_str,
+    HelpFormatter
+)
+from quantrocket._cli.utils import completers
 
 def add_subparser(subparsers):
     _parser = subparsers.add_parser("moonshot", description="QuantRocket Moonshot CLI", help="Backtest and trade Moonshot strategies")
@@ -67,29 +72,32 @@ Run a backtest in 1-year segments to reduce memory usage:
         "strategies",
         nargs="+",
         metavar="CODE",
-        help="one or more strategy codes")
+        help="one or more strategy codes").completer = completers.moonshot_strategy_completer("moonshot")
     backtest_options = parser.add_argument_group("backtest options")
     backtest_options.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="the backtest start date (default is to use all available history)")
+        help="the backtest start date (default is to use all available history)"
+        ).completer = completers.start_date_completer
     backtest_options.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="the backtest end date (default is to use all available history)")
+        help="the backtest end date (default is to use all available history)"
+        ).completer = completers.end_date_completer
     backtest_options.add_argument(
         "-g", "--segment",
         metavar="FREQ",
         help="backtest in date segments of this size, to reduce memory usage "
         "(use Pandas frequency string, e.g. 'A' for annual segments or 'Q' "
-        "for quarterly segments)")
+        "for quarterly segments)").completer = completers.moonshot_segment_frequency_completer
     backtest_options.add_argument(
         "-l", "--allocations",
         type=dict_str,
         metavar="CODE:FLOAT",
         nargs="*",
         help="the allocation for each strategy, passed as 'code:allocation' (default "
-        "allocation is 1.0 / number of strategies)")
+        "allocation is 1.0 / number of strategies)"
+        ).completer = completers.moonshot_allocations_completer
     backtest_options.add_argument(
         "-n", "--nlv",
         nargs="*",
@@ -97,14 +105,15 @@ Run a backtest in 1-year segments to reduce memory usage:
         metavar="CURRENCY:NLV",
         help="the NLV (net liquidation value, i.e. account balance) to assume for "
         "the backtest, expressed in each currency represented in the backtest (pass "
-        "as 'currency:nlv')")
+        "as 'currency:nlv')").completer = completers.moonshot_nlv_completer
     backtest_options.add_argument(
         "-p", "--params",
         nargs="*",
         type=dict_str,
         metavar="PARAM:VALUE",
         help="one or more strategy params to set on the fly before backtesting "
-        "(pass as 'param:value')")
+        "(pass as 'param:value')"
+        ).completer = completers.param_val_completer
     backtest_options.add_argument(
         "--no-cache",
         action="store_true",
@@ -133,7 +142,7 @@ Run a backtest in 1-year segments to reduce memory usage:
         "-o", "--outfile",
         metavar="FILEPATH",
         dest="filepath_or_buffer",
-        help="the location to write the results file (omit to write to stdout)")
+        help="the location to write the results file (omit to write to stdout)").completer = completers.outfile_completer(["csv", "pdf"])
     parser.set_defaults(func="quantrocket.moonshot._cli_backtest")
 
     examples="""
@@ -179,28 +188,31 @@ Run a parameter scan in 1-year segments to reduce memory usage:
         "strategies",
         nargs="+",
         metavar="CODE",
-        help="one or more strategy codes")
+        help="one or more strategy codes").completer = completers.moonshot_strategy_completer("moonshot")
     backtest_options = parser.add_argument_group("backtest options")
     backtest_options.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
-        help="the backtest start date (default is to use all available history)")
+        help="the backtest start date (default is to use all available history)"
+        ).completer = completers.start_date_completer
     backtest_options.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
-        help="the backtest end date (default is to use all available history)")
+        help="the backtest end date (default is to use all available history)"
+        ).completer = completers.end_date_completer
     backtest_options.add_argument(
         "-g", "--segment",
         metavar="FREQ",
         help="backtest in date segments of this size, to reduce memory usage "
         "(use Pandas frequency string, e.g. 'A' for annual segments or 'Q' "
-        "for quarterly segments)")
+        "for quarterly segments)").completer = completers.moonshot_segment_frequency_completer
     backtest_options.add_argument(
         "-p", "--param1",
         metavar="PARAM",
         type=str,
         required=True,
-        help="the name of the parameter to test (a class attribute on the strategy)")
+        help="the name of the parameter to test (a class attribute on the strategy)"
+        ).completer = completers.paramscan_param_completer
     backtest_options.add_argument(
         "-v", "--vals1",
         type=list_or_int_or_float_or_str,
@@ -209,12 +221,13 @@ Run a parameter scan in 1-year segments to reduce memory usage:
         required=True,
         help="parameter values to test (values can be integers, floats, strings, 'True', "
         "'False', 'None', or 'default' (to test current param value); for lists/tuples, "
-        "use comma-separated values)")
+        "use comma-separated values)").completer = completers.paramscan_vals_completer
     backtest_options.add_argument(
         "--param2",
         metavar="PARAM",
         type=str,
-        help="name of a second parameter to test (for 2-D parameter scans)")
+        help="name of a second parameter to test (for 2-D parameter scans)"
+        ).completer = completers.paramscan_param_completer
     backtest_options.add_argument(
         "--vals2",
         type=list_or_int_or_float_or_str,
@@ -222,14 +235,16 @@ Run a parameter scan in 1-year segments to reduce memory usage:
         nargs="*",
         help="values to test for parameter 2 (values can be integers, floats, strings, "
         "'True', 'False', 'None', or 'default' (to test current param value); for "
-        "lists/tuples, use comma-separated values)")
+        "lists/tuples, use comma-separated values)"
+        ).completer = completers.paramscan_vals_completer
     backtest_options.add_argument(
         "-l", "--allocations",
         type=dict_str,
         metavar="CODE:FLOAT",
         nargs="*",
         help="the allocation for each strategy, passed as 'code:allocation' (default "
-        "allocation is 1.0 / number of strategies)")
+        "allocation is 1.0 / number of strategies)"
+        ).completer = completers.moonshot_allocations_completer
     backtest_options.add_argument(
         "-n", "--nlv",
         nargs="*",
@@ -237,21 +252,22 @@ Run a parameter scan in 1-year segments to reduce memory usage:
         metavar="CURRENCY:NLV",
         help="the NLV (net liquidation value, i.e. account balance) to assume for "
         "the backtests, expressed in each currency represented in the backtest (pass "
-        "as 'currency:nlv')")
+        "as 'currency:nlv')").completer = completers.moonshot_nlv_completer
     backtest_options.add_argument(
         "--params",
         nargs="*",
         type=dict_str,
         metavar="PARAM:VALUE",
         help="one or more strategy params to set on the fly before running the "
-        "parameter scan (pass as 'param:value')")
+        "parameter scan (pass as 'param:value')"
+        ).completer = completers.param_val_completer
     backtest_options.add_argument(
         "--num-workers",
         type=int,
         metavar="INT",
         help="the number of parallel workers to run. Running in parallel can speed "
         "up the parameter scan if your system has adequate resources. Default "
-        "is 1, meaning no parallel processing.")
+        "is 1, meaning no parallel processing.").completer = completers.backtest_num_workers_completer
     backtest_options.add_argument(
         "--no-cache",
         action="store_true",
@@ -269,7 +285,7 @@ Run a parameter scan in 1-year segments to reduce memory usage:
         "-o", "--outfile",
         metavar="FILEPATH",
         dest="filepath_or_buffer",
-        help="the location to write the results file (omit to write to stdout)")
+        help="the location to write the results file (omit to write to stdout)").completer = completers.outfile_completer(["csv", "pdf"])
     parser.set_defaults(func="quantrocket.moonshot._cli_scan_parameters")
 
     examples = """
@@ -325,42 +341,49 @@ memory usage:
     parser.add_argument(
         "strategy",
         metavar="CODE",
-        help="the strategy code")
+        help="the strategy code"
+    ).completer = completers.moonshot_strategy_completer("moonshotml")
     walkforward_options = parser.add_argument_group("walk-forward analysis options")
     walkforward_options.add_argument(
         "-s", "--start-date",
         metavar="YYYY-MM-DD",
         required=True,
         help="the analysis start date (note that model training will start on this date "
-        "but backtesting will not start until after the initial training period)")
+        "but backtesting will not start until after the initial training period)"
+        ).completer = completers.start_date_completer
     walkforward_options.add_argument(
         "-e", "--end-date",
         metavar="YYYY-MM-DD",
         required=True,
-        help="the analysis end date")
+        help="the analysis end date"
+        ).completer = completers.end_date_completer
     walkforward_options.add_argument(
         "-t", "--train",
         metavar="FREQ",
         required=True,
         help="train model this frequently (use Pandas frequency string, e.g. 'A' "
-        "for annual training or 'Q' for quarterly training)")
+        "for annual training or 'Q' for quarterly training)"
+        ).completer = completers.frequency_completer
     walkforward_options.add_argument(
         "-m", "--min-train",
         metavar="FREQ",
         help="don't backtest until at least this much model training has occurred; "
         "defaults to the length of `--train` if not specified (use Pandas frequency "
-        "string, e.g. '5Y' for 5 years of initial training)")
+        "string, e.g. '5Y' for 5 years of initial training)"
+        ).completer = completers.frequency_completer
     walkforward_options.add_argument(
         "-r", "--rolling-train",
         metavar="FREQ",
         help="train model with a rolling window of this length; if omitted, train "
         "model with an expanding window (use Pandas frequency string, e.g. '3Y' for "
-        "a 3-year rolling training window)")
+        "a 3-year rolling training window)"
+        ).completer = completers.frequency_completer
     walkforward_options.add_argument(
         "-f", "--model",
         dest="model_filepath",
         help="filepath of serialized model to use, filename must end in '.joblib' or "
-        "'.pkl' (if omitted, default model is scikit-learn's StandardScaler+SGDRegressor)")
+        "'.pkl' (if omitted, default model is scikit-learn's StandardScaler+SGDRegressor)"
+        ).completer = completers.infile_completer(["joblib"], allow_stdin=False)
     walkforward_options.add_argument(
         "--force-nonincremental",
         action="store_true",
@@ -375,12 +398,13 @@ memory usage:
         help="train and backtest in date segments of this size, to reduce memory "
         "usage; must be smaller than `--train`/`--min-train` or will have no effect "
         "(use Pandas frequency string, e.g. 'A' for annual segments or 'Q' for "
-        "quarterly segments)")
+        "quarterly segments)").completer = completers.moonshot_segment_frequency_completer
     backtest_options.add_argument(
         "-l", "--allocation",
         type=float,
         metavar="FLOAT",
-        help="the allocation for the strategy (default 1.0)")
+        help="the allocation for the strategy (default 1.0)"
+        ).completer = completers.example_completer('1.0')
     backtest_options.add_argument(
         "-n", "--nlv",
         nargs="*",
@@ -388,14 +412,14 @@ memory usage:
         metavar="CURRENCY:NLV",
         help="the NLV (net liquidation value, i.e. account balance) to assume for "
         "the backtest, expressed in each currency represented in the backtest (pass "
-        "as 'currency:nlv')")
+        "as 'currency:nlv')").completer = completers.moonshot_nlv_completer
     backtest_options.add_argument(
         "-p", "--params",
         nargs="*",
         type=dict_str,
         metavar="PARAM:VALUE",
         help="one or more strategy params to set on the fly before backtesting "
-        "(pass as 'param:value')")
+        "(pass as 'param:value')").completer = completers.param_val_completer
     backtest_options.add_argument(
         "--no-cache",
         action="store_true",
@@ -418,7 +442,8 @@ memory usage:
         dest="filepath_or_buffer",
         help="the location to write the ZIP file to; or, if path ends with '*', the "
         "pattern to use for extracting the zipped files. For example, if the path is "
-        "my_ml*, files will extracted to my_ml_results.csv and my_ml_trained_model.joblib.")
+        "my_ml*, files will extracted to my_ml_results.csv and my_ml_trained_model.joblib.").completer = completers.outfile_completer(
+            ["zip"], outfile_prefix="mlwalkforward_results")
     parser.set_defaults(func="quantrocket.moonshot._cli_ml_walkforward")
 
     examples = """
@@ -468,16 +493,17 @@ Generate orders as if it were an earlier date (for purpose of review):
         "strategies",
         nargs="+",
         metavar="CODE",
-        help="one or more strategy codes")
+        help="one or more strategy codes").completer = completers.moonshot_strategy_completer("all")
     parser.add_argument(
         "-a", "--accounts",
         metavar="ACCOUNT",
         nargs="*",
-        help="limit to these accounts")
+        help="limit to these accounts").completer = completers.account_completer
     parser.add_argument(
-         "-r", "--review-date",
-         metavar="YYYY-MM-DD",
-         help="generate orders as if it were this date, rather than using today's date")
+        "-r", "--review-date",
+        metavar="YYYY-MM-DD",
+        help="generate orders as if it were this date, rather than using today's date"
+        ).completer = completers.end_date_completer
     parser.add_argument(
         "-j", "--json",
         action="store_const",
@@ -488,5 +514,6 @@ Generate orders as if it were an earlier date (for purpose of review):
         "-o", "--outfile",
         metavar="FILEPATH",
         dest="filepath_or_buffer",
-        help="the location to write the orders file (omit to write to stdout)")
+        help="the location to write the orders file (omit to write to stdout)").completer = completers.outfile_completer(
+            ["csv", "json"], outfile_prefix="moonshot_orders")
     parser.set_defaults(func="quantrocket.moonshot._cli_trade")
