@@ -1,8 +1,11 @@
 IBKR_SUBSIDIARIES = {
+    "australia": "Australia",
     "canada": "Canada",
     "hongkong": "Hong Kong",
     "india": "India",
     "japan": "Japan",
+    "singapore": "Singapore",
+    "uk": "United Kingdom",
     "usa": "United States",
 }
 
