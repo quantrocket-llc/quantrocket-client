@@ -910,7 +910,12 @@ def get_securities(
         exclude_expired=exclude_expired, frontmonth=frontmonth,
         vendors=vendors, fields=fields)
 
-    securities = pd.read_csv(f, index_col="Sid")
+    securities = pd.read_csv(
+        f, index_col="Sid",
+        # don't treat ticker "NA" as NaN
+        keep_default_na=False,
+        # But still treat empty strings as NaN
+        na_values=[""])
 
     for col in securities.columns:
         col_without_vendor_prefix = col.split("_")[-1]
