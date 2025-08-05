@@ -81,8 +81,8 @@ Place an order by specifying the order parameters on the command line:
 Modify the quantity or price of one or more open orders, identified by order
 ID.
 
-The order file or list of orders should include an OrderId field and one or more of the
-of the following fields: TotalQuantity, LmtPrice, and AuxPrice. These are the
+The order file or list of orders should include an `OrderId` field and one or more of the
+of the following fields: `TotalQuantity`, `LmtPrice`, and `AuxPrice`. These are the
 only fields that can be modified. Omit fields that you do not want to modify.
 
 
