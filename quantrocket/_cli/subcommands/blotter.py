@@ -78,6 +78,59 @@ Place an order by specifying the order parameters on the command line:
     parser.set_defaults(func="quantrocket.blotter._cli_place_orders")
 
     examples = """
+Modify the quantity or price of one or more open orders, identified by order
+ID.
+
+The order file or list of orders should include an OrderId field and one or more of the
+of the following fields: TotalQuantity, LmtPrice, and AuxPrice. These are the
+only fields that can be modified. Omit fields that you do not want to modify.
+
+
+Notes
+-----
+Usage Guide:
+
+* Orders and Positions: https://qrok.it/dl/qr/orders
+
+Examples
+--------
+
+Modify orders from a CSV file.
+
+.. code-block:: bash
+
+    quantrocket blotter modify -f orders.csv
+
+Modify an order by specifying the order parameters on the command line:
+
+.. code-block:: bash
+
+    quantrocket blotter modify --params OrderId:6001:45 TotalQuantity:200 LmtPrice:56.78
+    """
+    parser = _subparsers.add_parser(
+        "modify",
+        help="modify the quantity or price of one or more open orders, identified by order ID",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    source_group = parser.add_mutually_exclusive_group()
+    source_group.add_argument(
+        "-f", "--infile",
+        metavar="INFILE",
+        dest="infilepath_or_buffer",
+        help="modify orders from this CSV or JSON file (specify '-' to read file "
+            "from stdin)").completer = completers.infile_completer(["csv", "json"], allow_stdin=True)
+    source_group.add_argument(
+        "-p", "--params",
+        nargs="*",
+        type=dict_str,
+        metavar="PARAM:VALUE",
+        help="order details as multiple key-value pairs (pass as 'param:value', for "
+        "example TotalQuantity:200)").completer = completers.example_completer([
+            "OrderId:6001:1", "TotalQuantity:200", "LmtPrice:56.78",
+        ])
+    parser.set_defaults(func="quantrocket.blotter._cli_modify_orders")
+
+    examples = """
 Cancel one or more orders by order ID, sid, or order ref.
 
 Notes

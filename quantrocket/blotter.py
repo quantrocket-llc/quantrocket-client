@@ -60,7 +60,7 @@ Usage Guide:
 import sys
 import six
 import json
-from typing import TYPE_CHECKING, Union, Literal
+from typing import TYPE_CHECKING, Union, Literal, Mapping
 if TYPE_CHECKING:
     import pandas as pd
 from quantrocket.houston import houston
@@ -73,6 +73,7 @@ from quantrocket.utils._parse import _read_moonshot_or_pnl_csv
 
 __all__ = [
     "place_orders",
+    "modify_orders",
     "cancel_orders",
     "download_order_statuses",
     "download_positions",
@@ -86,7 +87,7 @@ __all__ = [
 ]
 
 def place_orders(
-    orders: list[dict[str, Union[str, float]]] = None,
+    orders: list[Mapping[str, Union[str, float, int]]] = None,
     infilepath_or_buffer: FilepathOrBuffer = None
     ) -> list[str]:
     """
@@ -165,6 +166,84 @@ def _cli_place_orders(*args, **kwargs):
         orders.append(order1)
         kwargs["orders"] = orders
     return json_to_cli(place_orders, *args, **kwargs)
+
+def modify_orders(
+    orders: list[Mapping[str, Union[str, float, int]]] = None,
+    infilepath_or_buffer: FilepathOrBuffer = None
+    ) -> dict[str, str]:
+    """
+    Modify the quantity or price of one or more open orders, identified by order
+    ID.
+
+    The order file or list of orders should include an OrderId field and one or more of the
+    of the following fields: TotalQuantity, LmtPrice, and AuxPrice. These are the
+    only fields that can be modified. Omit fields that you do not want to modify.
+
+    Parameters
+    ----------
+    orders : list of dict of PARAM:VALUE, optional
+        a list of one or more orders, where each order is a dict specifying the
+        order parameters (see examples)
+
+    infilepath_or_buffer : str or file-like object, optional
+        modify orders from this CSV or JSON file (specify '-' to read file
+        from stdin). Mutually exclusive with `orders` argument.
+
+    Returns
+    -------
+    dict
+        status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Orders and Positions: https://qrok.it/dl/qr/orders
+
+    Examples
+    --------
+    >>> orders = []
+    >>> order1 = {
+            'OrderId':'6001:45',
+            'TotalQuantity':200,
+            'LmtPrice':56.78
+        }
+    >>> orders.append(order1)
+    >>> modify_orders(orders)
+    """
+    if orders and infilepath_or_buffer:
+        raise ValueError("orders and infilepath_or_buffer are mutually exclusive")
+
+    url = "/blotter/orders"
+
+    if orders:
+        response = houston.patch(url, json=orders)
+
+    elif infilepath_or_buffer == "-":
+        response = houston.patch(url, data=to_bytes(sys.stdin))
+
+    elif infilepath_or_buffer and hasattr(infilepath_or_buffer, "read"):
+        if infilepath_or_buffer.seekable():
+            infilepath_or_buffer.seek(0)
+        response = houston.patch(url, data=to_bytes(infilepath_or_buffer))
+
+    elif infilepath_or_buffer:
+        with open(infilepath_or_buffer, "rb") as f:
+            response = houston.patch(url, data=f)
+    else:
+        response = houston.patch(url)
+
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_modify_orders(*args, **kwargs):
+    params = kwargs.pop("params", None)
+    if params:
+        orders = []
+        order1 = dict_strs_to_dict(*params)
+        orders.append(order1)
+        kwargs["orders"] = orders
+    return json_to_cli(modify_orders, *args, **kwargs)
 
 def cancel_orders(
     order_ids: Union[list[str], str] = None,
