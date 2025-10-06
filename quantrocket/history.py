@@ -406,7 +406,10 @@ def create_custom_db(
         "float",
         "str",
         "date",
-        "datetime"]] = None
+        "datetime"]] = None,
+    shard: str = None,
+    start_date: str = None,
+    end_date: str = None,
     ) -> dict[str, str]:
     """
     Create a new database into which custom data can be loaded.
@@ -428,6 +431,23 @@ def create_custom_db(
         start with a letter and include only letters, numbers, and underscores.
         Sid and Date columns are automatically created and need not be specified.
         For boolean columns, choose type 'int' and store 1 or 0.
+
+    shard : str, optional
+        whether and how to shard the database, i.e. break it into smaller pieces.
+        Possible choices are `year` (separate database for each year) or `off`
+        (no sharding).
+
+    start_date : str (YYYY-MM-DD), optional
+        the start year of the first shard, when sharding by year. Must be specified
+        for sharded databases and omitted otherwise. Enter as a date, but only the
+        year matters.
+
+    end_date : str (YYYY-MM-DD), optional
+        the end year of the last shard, when sharding by year. Must be specified
+        for sharded databases and omitted otherwise. Enter as a date, but only the
+        year matters. All shards are created at the time of database creation,
+        so set the end date far enough in the future to accommodate ongoing data
+        loading.
 
     Returns
     -------
@@ -464,12 +484,33 @@ def create_custom_db(
                 "Low":"float",
                 "Close":"float",
                 "Volume":"int"})
+
+    Create a custom database, sharded by year, that will accommodate
+    daily data from 2010 to 2050:
+
+    >>> create_custom_db(
+            "custom-prices",
+            bar_size="1 day",
+            columns={
+                "Close":"float",
+                "Volume":"int"
+            },
+            shard="year",
+            start_date="2010-01-01",
+            end_date="2050-12-31"
+        )
     """
     params = {}
     if bar_size:
         params["bar_size"] = bar_size
     if columns:
         params["columns"] = dict_to_dict_strs(columns)
+    if shard:
+        params["shard"] = shard
+    if start_date:
+        params["start_date"] = start_date
+    if end_date:
+        params["end_date"] = end_date
 
     params["vendor"] = "custom"
 

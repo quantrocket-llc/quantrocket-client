@@ -43,6 +43,12 @@ Create a custom database for loading intraday OHCLV data:
 .. code-block:: bash
 
     quantrocket history create-custom-db custom-stk-1sec --bar-size '1 sec' --columns Open:float High:float Low:float Close:float Volume:int
+
+Create a custom database, sharded by year, that will accommodate daily data from 2010 to 2050:
+
+.. code-block:: bash
+
+    quantrocket history create-custom-db custom-prices --bar-size '1 day' --columns Close:float Volume:int --shard year -s 2010-01-01 -e 2050-12-31
 """
     parser = _subparsers.add_parser(
         "create-custom-db",
@@ -72,6 +78,28 @@ Create a custom database for loading intraday OHCLV data:
         "numbers, and underscores. Sid and Date columns are automatically created and "
         "need not be specified. For boolean columns, choose type 'int' and store 1 or 0. "
         ).completer = completers.example_completer(["Close:float", "Volume:int", "Name:str"])
+    parser.add_argument(
+        "--shard",
+        metavar="HOW",
+        choices=["year", "off"],
+        help="whether and how to shard the database, i.e. break it into smaller pieces. "
+        "Possible choices are `year` (separate database for each year) or `off` "
+        "(no sharding).")
+    parser.add_argument(
+        "-s", "--start-date",
+        metavar="YYYY-MM-DD",
+        help="the start year of the first shard, when sharding by year. Must be specified "
+        "for sharded databases and omitted otherwise. Enter as a date, but only the year "
+        "matters."
+        ).completer = completers.start_date_completer
+    parser.add_argument(
+        "-e", "--end-date",
+        metavar="YYYY-MM-DD",
+        help="the end date of the last shard, when sharding by year. Must be specified "
+        "for sharded databases and omitted otherwise. Enter as a date, but only the year "
+        "matters. All shards are created at the time of database creation, so set "
+        "the end date far enough in the future to accommodate ongoing data loading."
+        ).completer = completers.end_date_completer
     parser.set_defaults(func="quantrocket.history._cli_create_custom_db")
 
     examples = """
