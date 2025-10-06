@@ -410,10 +410,9 @@ def _insert_into(df, table_name, conn, on_conflict):
 
     # Cast datetimes to str and replace space separator with T separator
     # (replace is a no-op for dates, which are cast to str as YYYY-MM-DD)
-    df_dts = df.select_dtypes(["datetime", "datetimetz"])
-    if not df_dts.empty:
-        df.loc[:, df_dts.columns] = df_dts.astype(str).apply(
-            lambda col: col.str.replace(" ", "T"))
+    dt_cols = df.select_dtypes(["datetime", "datetimetz"]).columns
+    if len(dt_cols):
+        df = df.assign(**{c: df[c].astype(str).str.replace(" ", "T") for c in dt_cols})
 
     df.to_csv(temp_file_name, index=False)
 
