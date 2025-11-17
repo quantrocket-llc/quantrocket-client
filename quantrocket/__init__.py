@@ -84,8 +84,7 @@ get_prices_reindexed_like
     databases, real-time aggregate databases, or Zipline bundles, reindexed to match
     the index (dates) and columns (sids) of the input DataFrame.
 """
-from . import _version
-__version__ = _version.get_versions()['version']
+from ._version import version as __version__
 
 from quantrocket import (
     account,
