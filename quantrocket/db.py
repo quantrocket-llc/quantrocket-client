@@ -371,24 +371,58 @@ def connect_sqlite(
     * Custom Data: https://qrok.it/dl/qr/custom-data
     """
     try:
-        from sqlalchemy import create_engine
+        from sqlalchemy import create_engine, text
     except ImportError:
         raise ValueError(
             "this function requires sqlalchemy and must be run in a QuantRocket container")
 
-    conn = create_engine("sqlite:///{0}".format(db_path),
+    engine = create_engine("sqlite:///{0}".format(db_path),
                          connect_args={"isolation_level": None})
-    # Set some speed optimizations
-    # Hand off writes to the OS and don't wait
-    conn.execute("PRAGMA synchronous = 0")
-    # Each page is ~1K; allow ~50MB
-    conn.execute("PRAGMA cache_size = 50000")
-    # Store temp tables in memory
-    conn.execute("PRAGMA temp_store = 2")
-    # Wait up to 10 seconds rather than instantly failing on SQLITE_BUSY
-    conn.execute("PRAGMA busy_timeout = 10000")
 
-    return conn
+    # Patch in a convenience execute() method to mimic SQLAlchemy <2.0 behavior
+    def _patched_execute(self, sql, params=None, *args, **kwargs):
+        """
+        Backward-compatible convenience method for SQLAlchemy 2.x.
+
+        Allows:
+            conn.execute("SELECT * FROM table")
+            conn.execute("INSERT INTO table VALUES (?, ?)", (1, 2))
+            conn.execute("INSERT INTO table VALUES (:a, :b)", {"a": 1, "b": 2})
+
+        Automatically:
+        • Wraps SQL strings in text() when needed
+        • Uses AUTOCOMMIT mode (no explicit commit required)
+        """
+
+        with self.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+            # Detect raw positional ('?') parameters → use DBAPI path
+            if isinstance(sql, str) and "?" in sql:
+                # Convert list of scalars to tuple for single execution
+                if isinstance(params, list):
+                    params = tuple(params)
+                return conn.exec_driver_sql(sql, params or ())
+
+            # Named parameters or no params → use SQLAlchemy text() path
+            stmt = text(sql) if isinstance(sql, str) else sql
+            return conn.execute(stmt, params or {})
+
+    # Attach method if not already present
+    if not hasattr(engine, "execute"):
+        engine.execute = _patched_execute.__get__(engine, type(engine))
+
+    with engine.connect() as conn:
+        # Set some speed optimizations
+        # Hand off writes to the OS and don't wait
+        conn.execute(text("PRAGMA synchronous = 0"))
+        # Each page is ~1K; allow ~50MB
+        conn.execute(text("PRAGMA cache_size = 50000"))
+        # Store temp tables in memory
+        conn.execute(text("PRAGMA temp_store = 2"))
+        # Wait up to 10 seconds rather than instantly failing on SQLITE_BUSY
+        conn.execute(text("PRAGMA busy_timeout = 10000"))
+        conn.commit()  # commit pragma settings if needed
+
+    return engine
 
 def _insert_into(df, table_name, conn, on_conflict):
 
