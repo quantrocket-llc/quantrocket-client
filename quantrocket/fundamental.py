@@ -1559,7 +1559,7 @@ def get_reuters_financials_reindexed_like(reindex_like, coa_codes, fields=["Amou
         # financial values are sparse so ffill (one field at a time)
         all_fields_for_code = {}
         for field in financials_for_code.index.get_level_values("Field").unique():
-            field_for_code = financials_for_code.loc[field].ffill()
+            field_for_code = financials_for_code.loc[field].infer_objects(copy=False).ffill()
 
             # Shift to avoid lookahead bias
             field_for_code = field_for_code.shift()
@@ -1908,7 +1908,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
             field_for_code = estimates_for_code.loc[field]
 
             if ffill:
-                field_for_code = field_for_code.ffill()
+                field_for_code = field_for_code.infer_objects(copy=False).ffill()
 
             # Shift to avoid lookahead bias
             if shift:

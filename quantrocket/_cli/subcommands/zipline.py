@@ -559,7 +559,7 @@ logging backtest progress at annual intervals:
 
 .. code-block:: bash
 
-    quantrocket zipline backtest etf-arb --bundle arca-etf-eod -s 2010-04-01 -e 2016-02-01 -o results.csv --progress A
+    quantrocket zipline backtest etf-arb --bundle arca-etf-eod -s 2010-04-01 -e 2016-02-01 -o results.csv --progress Y
     """
     parser = _subparsers.add_parser(
         "backtest",
@@ -601,7 +601,7 @@ logging backtest progress at annual intervals:
         "-p", "--progress",
         metavar="FREQ",
         help="log backtest progress at this interval (use a pandas offset alias, "
-        "for example 'D' for daily, 'W' for weeky, 'M' for monthly, 'A' for annually)"
+        "for example 'D' for daily, 'W' for weeky, 'M' for monthly, 'Y' for yearly)"
         ).completer = completers.frequency_completer
     parser.add_argument(
         "--params",
@@ -725,7 +725,7 @@ Run a parameter scan for a moving average strategy called dma:
         "--progress",
         metavar="FREQ",
         help="log backtest progress at this interval (use a pandas offset alias, "
-        "for example 'D' for daily, 'W' for weeky, 'M' for monthly, 'A' for annually). "
+        "for example 'D' for daily, 'W' for weeky, 'M' for monthly, 'Y' for yearly). "
         "This parameter controls logging in the underlying backtests; a summary of scan "
         "results will be logged regardless of this parameter. Using this parameter when "
         "--num-workers is greater than 1 will result in messy and interleaved log output "

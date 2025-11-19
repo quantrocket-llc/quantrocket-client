@@ -45,6 +45,7 @@ from typing import TYPE_CHECKING, Any, Union, Literal
 if TYPE_CHECKING:
     import pandas as pd
 from quantrocket.utils._typing import FilepathOrBuffer
+from quantrocket.utils.dt import normalize_pandas_alias
 from quantrocket.houston import houston
 from quantrocket._cli.utils.output import json_to_cli
 from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
@@ -96,7 +97,7 @@ def backtest(
 
     segment : str, optional
         backtest in date segments of this size, to reduce memory usage
-        (use Pandas frequency string, e.g. 'A' for annual segments or 'Q'
+        (use Pandas frequency string, e.g. 'Y' for yearly segments or 'Q'
         for quarterly segments)
 
     allocations : dict of CODE:FLOAT, optional
@@ -160,7 +161,7 @@ def backtest(
     >>> backtest("big-strategy",
                  start_date="2000-01-01",
                  end_date="2018-01-01",
-                 segment="A",
+                 segment="Y",
                  filepath_or_buffer="results.csv")
     """
     output = output or "csv"
@@ -177,7 +178,7 @@ def backtest(
     if end_date:
         _params["end_date"] = end_date
     if segment:
-        _params["segment"] = segment
+        _params["segment"] = normalize_pandas_alias(segment)
     if allocations:
         _params["allocations"] = dict_to_dict_strs(allocations)
     if nlv:
@@ -280,7 +281,7 @@ def scan_parameters(
 
     segment : str, optional
         backtest in date segments of this size, to reduce memory usage
-        (use Pandas frequency string, e.g. 'A' for annual segments or 'Q'
+        (use Pandas frequency string, e.g. 'Y' for yearly segments or 'Q'
         for quarterly segments)
 
     param1 : str, required
@@ -365,7 +366,7 @@ def scan_parameters(
     >>> scan_parameters("big-strategy",
                         start_date="2000-01-01",
                         end_date="2018-01-01",
-                        segment="A",
+                        segment="Y",
                         param1="MAVG_WINDOW",
                         vals1=[20, 50, 100],
                         filepath_or_buffer="big_strategy_MAVG_WINDOW.csv")
@@ -383,7 +384,7 @@ def scan_parameters(
     if end_date:
         _params["end_date"] = end_date
     if segment:
-        _params["segment"] = segment
+        _params["segment"] = normalize_pandas_alias(segment)
     if param1:
         _params["param1"] = param1
     if vals1:
@@ -472,8 +473,8 @@ def ml_walkforward(
         the analysis end date
 
     train : str, required
-        train model this frequently (use Pandas frequency string, e.g. 'A'
-        for annual training or 'Q' for quarterly training)
+        train model this frequently (use Pandas frequency string, e.g. 'Y'
+        for yearly training or 'Q' for quarterly training)
 
     min_train : str, optional
         don't backtest until at least this much model training has occurred;
@@ -498,7 +499,7 @@ def ml_walkforward(
     segment : str, optional
         train and backtest in date segments of this size, to reduce memory usage;
         must be smaller than `train`/`min_train` or will have no effect (use Pandas frequency string,
-        e.g. 'A' for annual segments or 'Q' for quarterly segments)
+        e.g. 'Y' for yearly segments or 'Q' for quarterly segments)
 
     allocation : float, optional
         the allocation for the strategy (default 1.0)
@@ -549,7 +550,7 @@ def ml_walkforward(
             "demo-ml",
             "2007-01-01",
             "2018-12-31",
-            train="A",
+            train="Y",
             filepath_or_buffer="demo_ml*")
 
     Create a scikit-learn model, serialize it with joblib, and use it to
@@ -563,7 +564,7 @@ def ml_walkforward(
             "demo-ml",
             "2007-01-01",
             "2018-12-31",
-            train="A",
+            train="Y",
             model_filepath="my_model.joblib",
             filepath_or_buffer="demo_ml*")
 
@@ -577,7 +578,7 @@ def ml_walkforward(
             "2007-01-01",
             "2018-12-31",
             model_filepath="my_model.joblib",
-            train="A",
+            train="Y",
             min_train="5Y",
             segment="Q",
             filepath_or_buffer="demo_ml*")
@@ -599,7 +600,7 @@ def ml_walkforward(
             "neuralnet-ml",
             "2007-01-01",
             "2018-12-31",
-            train="A",
+            train="Y",
             model_filepath="my_model.keras.h5",
             filepath_or_buffer="neuralnet_ml*")
     """
@@ -607,15 +608,15 @@ def ml_walkforward(
 
     _params["start_date"] = start_date
     _params["end_date"] = end_date
-    _params["train"] = train
+    _params["train"] = normalize_pandas_alias(train)
     if min_train:
-        _params["min_train"] = min_train
+        _params["min_train"] = normalize_pandas_alias(min_train)
     if rolling_train:
-        _params["rolling_train"] = rolling_train
+        _params["rolling_train"] = normalize_pandas_alias(rolling_train)
     if force_nonincremental:
         _params["force_nonincremental"] = force_nonincremental
     if segment:
-        _params["segment"] = segment
+        _params["segment"] = normalize_pandas_alias(segment)
     if allocation:
         _params["allocation"] = allocation
     if nlv:

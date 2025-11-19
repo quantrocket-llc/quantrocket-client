@@ -47,7 +47,7 @@ class DateUtilsTestCase(unittest.TestCase):
              ('2013-12-31', '2014-04-05')]
         )
 
-        segments = segmented_date_range("2010-06-15","2014-04-05", segment="2A")
+        segments = segmented_date_range("2010-06-15","2014-04-05", segment="2Y")
         self.assertListEqual(
             segments,
             [('2010-06-15', '2010-12-30'),

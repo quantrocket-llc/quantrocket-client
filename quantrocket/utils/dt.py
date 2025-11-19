@@ -12,10 +12,55 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+def normalize_pandas_alias(alias: str) -> str:
+    """
+    Normalize pandas offset aliases for pandas >= 2.2.
+    Handles:
+      - basic aliases (M, BM, Q, Y, etc.)
+      - anchored aliases (Q-NOV, Y-JUN, etc.)
+      - multipliers (2M, 3Q-DEC, etc.)
+    """
+    import re
+
+    deprecated_base = {
+        "M": "ME",
+        "BM": "BME",
+        "SM": "SME",
+        "CBM": "CBME",
+        "Q": "QE",
+        "BQ": "BQE",
+        "Y": "YE",
+        "A": "YE",
+        "BY": "BYE",
+    }
+
+    # Pattern:
+    #   optional number prefix
+    #   base alias (letters)
+    #   optional anchored month (-XXX)
+    pattern = re.compile(r"^(\d*)([A-Z]+)(?:-([A-Z]+))?$", re.IGNORECASE)
+
+    m = pattern.match(alias)
+    if not m:
+        # Unknown format; return unchanged
+        return alias
+
+    multiplier, base, anchor = m.groups()
+    base_up = base.upper()
+
+    # Replace base if deprecated
+    new_base = deprecated_base.get(base_up, base_up)
+
+    # Reconstruct alias
+    if anchor:
+        return f"{multiplier}{new_base}-{anchor.upper()}"
+    else:
+        return f"{multiplier}{new_base}"
+
 def segmented_date_range(
     start_date: str,
     end_date: str,
-    segment: str = "A"
+    segment: str = "Y"
     ) -> list[tuple[str, str]]:
     """
     Split a date range into smaller segments.
@@ -31,8 +76,8 @@ def segmented_date_range(
 
     segment : str, required
         split date range into segments of this size (use Pandas
-        frequency string, e.g. 'A' for annual segments or 'Q' for quarterly
-        segments; default 'A')
+        frequency string, e.g. 'Y' for yearly segments or 'Q' for quarterly
+        segments; default 'Y')
 
     Returns
     -------
@@ -54,7 +99,7 @@ def segmented_date_range(
         raise ImportError("pandas must be installed to use this function")
 
     date_segments = []
-    period_boundaries = list(pd.date_range(start_date, end_date, freq=segment))
+    period_boundaries = list(pd.date_range(start_date, end_date, freq=normalize_pandas_alias(segment)))
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
     if start_date not in period_boundaries:

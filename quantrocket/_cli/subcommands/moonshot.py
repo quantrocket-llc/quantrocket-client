@@ -61,7 +61,7 @@ Run a backtest in 1-year segments to reduce memory usage:
 
 .. code-block:: bash
 
-    quantrocket moonshot backtest big-strategy -s 2000-01-01 -e 2018-01-01 --segment A -o results.csv
+    quantrocket moonshot backtest big-strategy -s 2000-01-01 -e 2018-01-01 --segment Y -o results.csv
     """
     parser = _subparsers.add_parser(
         "backtest",
@@ -88,7 +88,7 @@ Run a backtest in 1-year segments to reduce memory usage:
         "-g", "--segment",
         metavar="FREQ",
         help="backtest in date segments of this size, to reduce memory usage "
-        "(use Pandas frequency string, e.g. 'A' for annual segments or 'Q' "
+        "(use Pandas frequency string, e.g. 'Y' for yearly segments or 'Q' "
         "for quarterly segments)").completer = completers.moonshot_segment_frequency_completer
     backtest_options.add_argument(
         "-l", "--allocations",
@@ -177,7 +177,7 @@ Run a parameter scan in 1-year segments to reduce memory usage:
 
 .. code-block:: bash
 
-    quantrocket moonshot paramscan big-strategy -s 2000-01-01 -e 2018-01-01 --segment A -p MAVG_WINDOW -v 20 50 100 --pdf -o tearsheet.pdf
+    quantrocket moonshot paramscan big-strategy -s 2000-01-01 -e 2018-01-01 --segment Y -p MAVG_WINDOW -v 20 50 100 --pdf -o tearsheet.pdf
     """
     parser = _subparsers.add_parser(
         "paramscan",
@@ -204,7 +204,7 @@ Run a parameter scan in 1-year segments to reduce memory usage:
         "-g", "--segment",
         metavar="FREQ",
         help="backtest in date segments of this size, to reduce memory usage "
-        "(use Pandas frequency string, e.g. 'A' for annual segments or 'Q' "
+        "(use Pandas frequency string, e.g. 'Y' for yearly segments or 'Q' "
         "for quarterly segments)").completer = completers.moonshot_segment_frequency_completer
     backtest_options.add_argument(
         "-p", "--param1",
@@ -322,7 +322,7 @@ demo_ml_trained_model.joblib, respectively:
 
 .. code-block:: bash
 
-    quantrocket moonshot ml-walkforward demo-ml -s 2007-01-01 -e 2018-12-31 --train A -o demo_ml*
+    quantrocket moonshot ml-walkforward demo-ml -s 2007-01-01 -e 2018-12-31 --train Y -o demo_ml*
 
 Run a walk-forward optimization using a custom model (serialized with joblib), retrain the
 model annually, don't perform backtesting until after 5 years of initial training,
@@ -331,7 +331,7 @@ memory usage:
 
 .. code-block:: bash
 
-    quantrocket moonshot ml-walkforward demo-ml -s 2007-01-01 -e 2018-12-31 --model my_model.joblib --train A --min-train 5Y --segment Q -o demo_ml*
+    quantrocket moonshot ml-walkforward demo-ml -s 2007-01-01 -e 2018-12-31 --model my_model.joblib --train Y --min-train 5Y --segment Q -o demo_ml*
     """
     parser = _subparsers.add_parser(
         "ml-walkforward",
@@ -361,8 +361,8 @@ memory usage:
         "-t", "--train",
         metavar="FREQ",
         required=True,
-        help="train model this frequently (use Pandas frequency string, e.g. 'A' "
-        "for annual training or 'Q' for quarterly training)"
+        help="train model this frequently (use Pandas frequency string, e.g. 'Y' "
+        "for yearly training or 'Q' for quarterly training)"
         ).completer = completers.frequency_completer
     walkforward_options.add_argument(
         "-m", "--min-train",
@@ -397,7 +397,7 @@ memory usage:
         metavar="FREQ",
         help="train and backtest in date segments of this size, to reduce memory "
         "usage; must be smaller than `--train`/`--min-train` or will have no effect "
-        "(use Pandas frequency string, e.g. 'A' for annual segments or 'Q' for "
+        "(use Pandas frequency string, e.g. 'Y' for yearly segments or 'Q' for "
         "quarterly segments)").completer = completers.moonshot_segment_frequency_completer
     backtest_options.add_argument(
         "-l", "--allocation",

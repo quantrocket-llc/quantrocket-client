@@ -93,6 +93,7 @@ from quantrocket._cli.utils.output import json_to_cli
 from quantrocket._cli.utils.files import write_response_to_filepath_or_buffer
 from quantrocket._cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 from quantrocket.utils._warn import deprecated_replaced_by
+from quantrocket.utils.dt import normalize_pandas_alias
 
 __all__ = [
     "create_usstock_bundle",
@@ -807,7 +808,7 @@ def backtest(
     progress : str, optional
         log backtest progress at this interval (use a pandas offset alias,
         for example "D" for daily, "W" for weeky, "M" for monthly,
-        "A" for annually)
+        "Y" for yearly)
 
     params : dict of PARAM:VALUE, optional
         one or more strategy parameters (defined as module-level attributes
@@ -856,7 +857,7 @@ def backtest(
     if params:
         _params["params"] = dict_to_dict_strs(params)
     if progress:
-        _params["progress"] = progress
+        _params["progress"] = normalize_pandas_alias(progress)
 
     response = houston.post("/zipline/backtests/{0}".format(strategy), params=_params, timeout=60*60*96)
 
@@ -945,7 +946,7 @@ def scan_parameters(
     progress : str, optional
         log backtest progress at this interval (use a pandas offset alias,
         for example "D" for daily, "W" for weeky, "M" for monthly,
-        "A" for annually). This parameter controls logging in the underlying
+        "Y" for yearly). This parameter controls logging in the underlying
         backtests; a summary of scan results will be logged regardless of this
         parameter. Using this parameter when num_workers is greater than 1 will
         result in messy and interleaved log output and is not recommended.
@@ -1007,7 +1008,7 @@ def scan_parameters(
     if end_date:
         _params["end_date"] = end_date
     if progress:
-        _params["progress"] = progress
+        _params["progress"] = normalize_pandas_alias(progress)
     if param1:
         _params["param1"] = param1
     if vals1:
@@ -1323,6 +1324,17 @@ class ZiplineBacktestResult(object):
         except ImportError:
             raise ImportError("pandas must be installed to use ZiplineBacktestResult")
 
+        def _to_numeric_or_ignore(s):
+            """
+            Try to convert a Series to numeric, otherwise return as-is.
+            Replacement for pd.to_numeric(s, errors="ignore"), which is
+            deprecated in pandas >= 2.3.
+            """
+            try:
+                return pd.to_numeric(s)
+            except (ValueError, TypeError):
+                return s
+
         zipline_result = cls()
 
         results = pd.read_csv(
@@ -1358,7 +1370,7 @@ class ZiplineBacktestResult(object):
             transactions.index = transactions.index.tz_localize("UTC")
         else:
             transactions.index = transactions.index.tz_convert("UTC")
-        zipline_result.transactions = transactions.apply(pd.to_numeric, errors='ignore')
+        zipline_result.transactions = transactions.apply(_to_numeric_or_ignore)
 
         # Extract benchmark returns
         if "benchmark" in results.index.get_level_values("dataframe"):
@@ -1377,7 +1389,7 @@ class ZiplineBacktestResult(object):
             perf.index = perf.index.tz_localize("UTC")
         else:
             perf.index = perf.index.tz_convert("UTC")
-        zipline_result.perf = perf.apply(pd.to_numeric, errors='ignore')
+        zipline_result.perf = perf.apply(_to_numeric_or_ignore)
 
         return zipline_result
 
