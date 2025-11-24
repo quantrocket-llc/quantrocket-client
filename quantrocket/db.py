@@ -376,8 +376,7 @@ def connect_sqlite(
         raise ValueError(
             "this function requires sqlalchemy and must be run in a QuantRocket container")
 
-    engine = create_engine("sqlite:///{0}".format(db_path),
-                         connect_args={"isolation_level": None})
+    engine = create_engine("sqlite:///{0}".format(db_path))
 
     # Patch in a convenience execute() method to mimic SQLAlchemy <2.0 behavior
     def _patched_execute(self, sql, params=None, *args, **kwargs):
@@ -412,8 +411,9 @@ def connect_sqlite(
 
     with engine.connect() as conn:
         # Set some speed optimizations
-        # Hand off writes to the OS and don't wait
-        conn.execute(text("PRAGMA synchronous = 0"))
+        # "NORMAL" is the optimization sweet spot for WAL mode: fast writes
+        # without risking DB corruption
+        conn.execute(text("PRAGMA synchronous = NORMAL"))
         # Each page is ~1K; allow ~50MB
         conn.execute(text("PRAGMA cache_size = 50000"))
         # Store temp tables in memory
