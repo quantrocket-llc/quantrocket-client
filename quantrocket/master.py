@@ -1562,14 +1562,18 @@ def _cli_in_status_since(status, since=None, in_=None, ago=None):
 
     dt = dt.tz_localize(None)
 
-    required_since = pd.date_range(periods=5, end=dt,
-                                   freq=since, normalize=False)
+    offset = pd.tseries.frequencies.to_offset(since)
 
-    # For >1D freq, normalize to midnight
-    if required_since.freq.is_anchored() or required_since.freq.rule_code == "D":
-        required_since = pd.date_range(periods=5, end=dt, freq=since, normalize=True)
-        required_since = required_since[-1]
+    # Decide whether "since" is daily or lower (Tick offsets like Day/Hour/Minute/Second)
+    is_daily_or_subdaily = not isinstance(offset, pd.tseries.offsets.Tick)  # Tick = fixed-duration offsets
+    is_superdaily = not is_daily_or_subdaily
+
+    # For calendar frequencies >= 1 day (e.g. d, W, ME, QE, YE, etc.), normalize to midnight
+    # For sub-daily, do NOT normalize.
+    if is_superdaily or offset.rule_code == "D":
+        required_since = pd.date_range(periods=5, end=dt, freq=offset, normalize=True)[-1]
     else:
+        required_since = pd.date_range(periods=5, end=dt, freq=offset, normalize=False)
         # If not normalized, the last value is dt, so use the penultimate value
         required_since = required_since[-2]
 
@@ -1591,18 +1595,24 @@ def _cli_in_status_until(status, until=None, in_=None, ago=None):
 
     dt = dt.tz_localize(None)
 
-    required_until = pd.date_range(start=dt, periods=5,
-                                   freq=until, normalize=False)
+    offset = pd.tseries.frequencies.to_offset(until)
 
-    # For >1D freq, normalize to midnight
-    if required_until.freq.is_anchored() or required_until.freq.rule_code == "D":
+    # Decide whether "until" is daily or lower (Tick offsets like Day/Hour/Minute/Second)
+    is_daily_or_subdaily = not isinstance(offset, pd.tseries.offsets.Tick)  # Tick = fixed-duration offsets
+    is_superdaily = not is_daily_or_subdaily
+
+    # For calendar frequencies >= 1 day (e.g. d, W, ME, QE, YE, etc.), normalize to midnight
+    # For sub-daily, do NOT normalize.
+    if is_superdaily or offset.rule_code == "D":
         required_until = pd.date_range(start=dt, periods=5,
-                                   freq=until, normalize=True)
+                                   freq=offset, normalize=True)
         # due to normalize=True, the date range might include a time before the
         # start dt; filter it out
         required_until = required_until[required_until > dt]
         required_until = required_until[0]
     else:
+        required_until = pd.date_range(start=dt, periods=5,
+                                       freq=until, normalize=False)
         # If not normalized, the first value is dt, so use the second value
         required_until = required_until[1]
 
