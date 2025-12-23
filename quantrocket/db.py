@@ -425,9 +425,9 @@ def _insert_into(df, table_name, conn, on_conflict):
     temp_file_name = "/tmp/sqlite_{}.csv".format(temp_table_name)
 
     # Cast booleans to ints or they will load into SQLite as strings
-    df_bools = df.select_dtypes(['bool'])
-    if not df_bools.empty:
-        df.loc[:, df_bools.columns] = df_bools.astype(int)
+    bool_cols = df.select_dtypes(include=["bool"]).columns
+    if len(bool_cols):
+        df[bool_cols] = df[bool_cols].astype("int8")
 
     # Cast datetimes to str and replace space separator with T separator
     # (replace is a no-op for dates, which are cast to str as YYYY-MM-DD)
