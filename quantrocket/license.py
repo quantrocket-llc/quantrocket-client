@@ -35,11 +35,11 @@ get_polygon_key
 set_polygon_key
     Set Polygon API key.
 
-get_quandl_key
-    Returns the current API key for Quandl.
+get_nasdaq_key
+    Returns the current API key for Nasdaq Data Link.
 
-set_quandl_key
-    Set Quandl API key.
+set_nasdaq_key
+    Set Nasdaq Data Link API key.
 
 Notes
 -----
@@ -60,8 +60,8 @@ __all__ = [
     "set_alpaca_key",
     "get_polygon_key",
     "set_polygon_key",
-    "get_quandl_key",
-    "set_quandl_key",
+    "get_nasdaq_key",
+    "set_nasdaq_key",
 ]
 
 def get_license_profile(force_refresh: bool = False) -> dict[str, str]:
@@ -260,9 +260,9 @@ def _cli_get_or_set_polygon_key(*args, **kwargs):
     else:
         return json_to_cli(get_polygon_key)
 
-def get_quandl_key() -> dict[str, str]:
+def get_nasdaq_key() -> dict[str, str]:
     """
-    Returns the current API key for Quandl.
+    Returns the current API key for Nasdaq Data Link.
 
     Returns
     -------
@@ -275,16 +275,16 @@ def get_quandl_key() -> dict[str, str]:
 
     * Broker and Data Connections: https://qrok.it/dl/qr/connect
     """
-    response = houston.get("/license-service/credentials/quandl")
+    response = houston.get("/license-service/credentials/nasdaq")
     houston.raise_for_status_with_json(response)
     # It's possible to get a 204 empty response
     if not response.content:
         return {}
     return response.json()
 
-def set_quandl_key(api_key: str) -> dict[str, str]:
+def set_nasdaq_key(api_key: str) -> dict[str, str]:
     """
-    Set Quandl API key.
+    Set Nasdaq Data Link API key.
 
     Your credentials are encrypted at rest and never leave
     your deployment.
@@ -292,7 +292,7 @@ def set_quandl_key(api_key: str) -> dict[str, str]:
     Parameters
     ----------
     api_key : str, required
-        Quandl API key
+        Nasdaq Data Link API key
 
     Returns
     -------
@@ -308,12 +308,12 @@ def set_quandl_key(api_key: str) -> dict[str, str]:
     data = {}
     data["api_key"] = api_key
 
-    response = houston.put("/license-service/credentials/quandl", data=data)
+    response = houston.put("/license-service/credentials/nasdaq", data=data)
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_get_or_set_quandl_key(*args, **kwargs):
+def _cli_get_or_set_nasdaq_key(*args, **kwargs):
     if any(kwargs.values()):
-        return json_to_cli(set_quandl_key, *args, **kwargs)
+        return json_to_cli(set_nasdaq_key, *args, **kwargs)
     else:
-        return json_to_cli(get_quandl_key)
+        return json_to_cli(get_nasdaq_key)

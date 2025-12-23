@@ -186,7 +186,7 @@ Set Polygon API key:
     parser.set_defaults(func="quantrocket.license._cli_get_or_set_polygon_key")
 
     examples = """
-Set Quandl API key, or view the current API key.
+Set Nasdaq Data Link API key, or view the current API key.
 
 Your credentials are encrypted at rest and never leave
 your deployment.
@@ -204,22 +204,22 @@ View current API key:
 
 .. code-block:: bash
 
-    quantrocket license quandl-key
+    quantrocket license nasdaq-key
 
-Set Polygon API key:
+Set Nasdaq Data Link API key:
 
 .. code-block:: bash
 
-    quantrocket license quandl-key K123
+    quantrocket license nasdaq-key K123
     """
     parser = _subparsers.add_parser(
-        "quandl-key",
-        help="set Quandl API key, or view the current API key",
+        "nasdaq-key",
+        help="set Nasdaq Data Link API key, or view the current API key",
         epilog=examples,
         formatter_class=HelpFormatter)
     parser.add_argument(
         "api_key",
         nargs="?",
         metavar="API_KEY",
-        help="Quandl API key").completer = completers.example_completer(["YOUR_API_KEY"])
-    parser.set_defaults(func="quantrocket.license._cli_get_or_set_quandl_key")
+        help="Nasdaq Data Link API key").completer = completers.example_completer(["YOUR_API_KEY"])
+    parser.set_defaults(func="quantrocket.license._cli_get_or_set_nasdaq_key")
