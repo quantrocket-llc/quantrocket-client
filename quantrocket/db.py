@@ -369,58 +369,45 @@ def connect_sqlite(
     Usage Guide:
 
     * Custom Data: https://qrok.it/dl/qr/custom-data
+
+    Examples
+    --------
+    Query a SQLite database:
+
+    >>> from quantrocket.db import connect_sqlite
+    >>> from sqlalchemy import text
+    >>> engine = connect_sqlite("/path/to/my.db")
+    >>> with engine.connect() as conn:
+    >>>     result = conn.execute(text("SELECT * FROM my_table"))
     """
     try:
-        from sqlalchemy import create_engine, text
+        from sqlalchemy import create_engine, text, event
+        from sqlalchemy.pool import NullPool
     except ImportError:
         raise ValueError(
             "this function requires sqlalchemy and must be run in a QuantRocket container")
 
-    engine = create_engine("sqlite:///{0}".format(db_path))
+    engine = create_engine(
+        "sqlite:///{0}".format(db_path),
+        isolation_level="AUTOCOMMIT",
+        skip_autocommit_rollback=True,
+        poolclass=NullPool
+    )
 
-    # Patch in a convenience execute() method to mimic SQLAlchemy <2.0 behavior
-    def _patched_execute(self, sql, params=None, *args, **kwargs):
-        """
-        Backward-compatible convenience method for SQLAlchemy 2.x.
-
-        Allows:
-            conn.execute("SELECT * FROM table")
-            conn.execute("INSERT INTO table VALUES (?, ?)", (1, 2))
-            conn.execute("INSERT INTO table VALUES (:a, :b)", {"a": 1, "b": 2})
-
-        Automatically:
-        • Wraps SQL strings in text() when needed
-        • Uses AUTOCOMMIT mode (no explicit commit required)
-        """
-
-        with self.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
-            # Detect raw positional ('?') parameters → use DBAPI path
-            if isinstance(sql, str) and "?" in sql:
-                # Convert list of scalars to tuple for single execution
-                if isinstance(params, list):
-                    params = tuple(params)
-                return conn.exec_driver_sql(sql, params or ())
-
-            # Named parameters or no params → use SQLAlchemy text() path
-            stmt = text(sql) if isinstance(sql, str) else sql
-            return conn.execute(stmt, params or {})
-
-    # Attach method if not already present
-    if not hasattr(engine, "execute"):
-        engine.execute = _patched_execute.__get__(engine, type(engine))
-
-    with engine.connect() as conn:
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
         # Set some speed optimizations
         # "NORMAL" is the optimization sweet spot for WAL mode: fast writes
         # without risking DB corruption
-        conn.execute(text("PRAGMA synchronous = NORMAL"))
+        cursor.execute("PRAGMA synchronous = NORMAL")
         # Each page is ~1K; allow ~50MB
-        conn.execute(text("PRAGMA cache_size = 50000"))
+        cursor.execute("PRAGMA cache_size = 50000")
         # Store temp tables in memory
-        conn.execute(text("PRAGMA temp_store = 2"))
+        cursor.execute("PRAGMA temp_store = 2")
         # Wait up to 10 seconds rather than instantly failing on SQLITE_BUSY
-        conn.execute(text("PRAGMA busy_timeout = 10000"))
-        conn.commit()  # commit pragma settings if needed
+        cursor.execute("PRAGMA busy_timeout = 10000")
+        cursor.close()
 
     return engine
 
