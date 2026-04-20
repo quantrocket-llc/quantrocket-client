@@ -402,9 +402,7 @@ def connect_sqlite(
         # without risking DB corruption
         cursor.execute("PRAGMA synchronous = NORMAL")
         # Each page is ~1K; allow ~50MB
-        cursor.execute("PRAGMA cache_size = 50000")
-        # Store temp tables in memory
-        cursor.execute("PRAGMA temp_store = 2")
+        cursor.execute("PRAGMA cache_size = -50000")
         # Wait up to 10 seconds rather than instantly failing on SQLITE_BUSY
         cursor.execute("PRAGMA busy_timeout = 10000")
         cursor.close()

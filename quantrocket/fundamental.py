@@ -1765,7 +1765,7 @@ def get_reuters_estimates_reindexed_like(reindex_like, codes, fields=["Actual"],
     >>> estimates = get_reuters_estimates_reindexed_like(
                         closes, codes="EPS", fields="UpdatedDate", ffill=False, shift=False)
     >>> announce_dates = estimates.loc["EPS"].loc["UpdatedDate"]
-    >>> announce_hours = announce_dates.stack(dropna=False).dt.tz_localize("UTC").dt.tz_convert("America/New_York").dt.hour.unstack()
+    >>> announce_hours = announce_dates.stack().dt.tz_localize("UTC").dt.tz_convert("America/New_York").dt.hour.unstack()
     >>> announced_before_market_opens = announce_hours < 9
     >>> announced_after_market_closes = announce_hours >= 16
     """
