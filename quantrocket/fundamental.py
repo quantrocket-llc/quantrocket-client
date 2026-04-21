@@ -358,7 +358,7 @@ def get_alpaca_etb_reindexed_like(
     return etb.fillna(0).astype(bool)
 
 def collect_ibkr_shortable_shares(
-    countries: Union[list[str], str] = None
+    countries: Union[list[str], str]
     ) -> dict[str, str]:
     """
     Collect Interactive Brokers shortable shares data and save to database.
@@ -369,8 +369,8 @@ def collect_ibkr_shortable_shares(
 
     Parameters
     ----------
-    countries : list of str, optional
-        limit to these countries (pass '?' or any invalid country to see
+    countries : list of str, required
+        countries to collect shortable shares data for (pass '?' or any invalid country to see
         available countries)
 
     Returns
@@ -396,7 +396,7 @@ def _cli_collect_ibkr_shortable_shares(*args, **kwargs):
     return json_to_cli(collect_ibkr_shortable_shares, *args, **kwargs)
 
 def collect_ibkr_borrow_fees(
-    countries: Union[list[str], str] = None
+    countries: Union[list[str], str]
     ) -> dict[str, str]:
     """
     Collect Interactive Brokers borrow fees data and save to database.
@@ -406,8 +406,8 @@ def collect_ibkr_borrow_fees(
 
     Parameters
     ----------
-    countries : list of str, optional
-        limit to these countries (pass '?' or any invalid country to see
+    countries : list of str, required
+        countries to collect borrow fees data for (pass '?' or any invalid country to see
         available countries)
 
     Returns

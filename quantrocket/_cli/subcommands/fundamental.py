@@ -206,12 +206,6 @@ Collect shortable shares data for US stocks:
 .. code-block:: bash
 
     quantrocket fundamental collect-ibkr-shortshares --countries usa
-
-Collect shortable shares data for all stocks:
-
-.. code-block:: bash
-
-    quantrocket fundamental collect-ibkr-shortshares
     """
     parser = _subparsers.add_parser(
         "collect-ibkr-shortshares",
@@ -220,9 +214,10 @@ Collect shortable shares data for all stocks:
         formatter_class=HelpFormatter)
     parser.add_argument(
         "-c", "--countries",
-        nargs="*",
+        nargs="+",
+        required=True,
         metavar="COUNTRY",
-        help="limit to these countries (pass '?' or any invalid country to see "
+        help="countries to collect shortable shares data for (pass '?' or any invalid country to see "
         "available countries)").completer = completers.completer_from_dict(IBKR_STOCKLOAN_COUNTRIES)
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_ibkr_shortable_shares")
 
@@ -247,11 +242,6 @@ Collect borrow fees for US stocks:
 
     quantrocket fundamental collect-ibkr-borrowfees --countries usa
 
-Collect borrow fees for all stocks:
-
-.. code-block:: bash
-
-    quantrocket fundamental collect-ibkr-borrowfees
     """
     parser = _subparsers.add_parser(
         "collect-ibkr-borrowfees",
@@ -260,9 +250,10 @@ Collect borrow fees for all stocks:
         formatter_class=HelpFormatter)
     parser.add_argument(
         "-c", "--countries",
-        nargs="*",
+        nargs="+",
+        required=True,
         metavar="COUNTRY",
-        help="limit to these countries (pass '?' or any invalid country to see "
+        help="countries to collect borrow fees data for (pass '?' or any invalid country to see "
         "available countries)").completer = completers.completer_from_dict(IBKR_STOCKLOAN_COUNTRIES)
     parser.set_defaults(func="quantrocket.fundamental._cli_collect_ibkr_borrow_fees")
 
