@@ -20,8 +20,8 @@ create_ibkr_tick_db
     Create a new database for collecting real-time tick data from Interactive
     Brokers.
 
-create_polygon_tick_db
-    Create a new database for collecting real-time tick data from Polygon.
+create_massive_tick_db
+    Create a new database for collecting real-time tick data from Massive.
 
 create_alpaca_tick_db
     Create a new database for collecting real-time tick data from Alpaca.
@@ -75,7 +75,7 @@ from quantrocket._cli.utils.parse import dict_strs_to_dict, dict_to_dict_strs
 
 __all__ = [
     "create_ibkr_tick_db",
-    "create_polygon_tick_db",
+    "create_massive_tick_db",
     "create_alpaca_tick_db",
     "create_agg_db",
     "get_db_config",
@@ -222,7 +222,7 @@ def create_ibkr_tick_db(
 def _cli_create_ibkr_tick_db(*args, **kwargs):
     return json_to_cli(create_ibkr_tick_db, *args, **kwargs)
 
-polygon_RealtimeField = Literal[
+massive_RealtimeField = Literal[
     'AskExchangeId',
     'AskPrice',
     'AskSize',
@@ -255,14 +255,14 @@ polygon_RealtimeField = Literal[
     'TradeConditions',
     'TradeId']
 
-def create_polygon_tick_db(
+def create_massive_tick_db(
     code: str,
     universes: Union[list[str], str] = None,
     sids: Union[list[str], str] = None,
-    fields: Union[polygon_RealtimeField, list[str]] = None
+    fields: Union[massive_RealtimeField, list[str]] = None
     ) -> dict[str, str]:
     """
-    Create a new database for collecting real-time tick data from Polygon.
+    Create a new database for collecting real-time tick data from Massive.
 
     The market data requirements you specify when you create a new database are
     applied each time you collect data for that database.
@@ -291,13 +291,13 @@ def create_polygon_tick_db(
     -----
     Usage Guide:
 
-    * Polygon.io Real-time Data: https://qrok.it/dl/qr/realtime-polygon
+    * Massive Real-time Data: https://qrok.it/dl/qr/realtime-massive
 
     Examples
     --------
     Create a database for collecting real-time trade prices and sizes for US stocks:
 
-    >>> create_polygon_tick_db("usa-stk-trades", universes="usa-stk", fields=["LastPrice", "LastSize"])
+    >>> create_massive_tick_db("usa-stk-trades", universes="usa-stk", fields=["LastPrice", "LastSize"])
 
     """
     params = {}
@@ -308,15 +308,15 @@ def create_polygon_tick_db(
     if fields:
         params["fields"] = fields
 
-    params["vendor"] = "polygon"
+    params["vendor"] = "massive"
 
     response = houston.put("/realtime/databases/{0}".format(code), params=params)
 
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_create_polygon_tick_db(*args, **kwargs):
-    return json_to_cli(create_polygon_tick_db, *args, **kwargs)
+def _cli_create_massive_tick_db(*args, **kwargs):
+    return json_to_cli(create_massive_tick_db, *args, **kwargs)
 
 alpaca_RealtimeField = Literal[
     'AskExchangeId',

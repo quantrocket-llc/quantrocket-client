@@ -414,9 +414,9 @@ def ibkr_realtime_fields_completer(prefix, parsed_args, **kwargs):
     from quantrocket.realtime import create_ibkr_tick_db
     return get_choices_from_type_hint(create_ibkr_tick_db, "fields")
 
-def polygon_realtime_fields_completer(prefix, parsed_args, **kwargs):
-    from quantrocket.realtime import create_polygon_tick_db
-    return get_choices_from_type_hint(create_polygon_tick_db, "fields")
+def massive_realtime_fields_completer(prefix, parsed_args, **kwargs):
+    from quantrocket.realtime import create_massive_tick_db
+    return get_choices_from_type_hint(create_massive_tick_db, "fields")
 
 def alpaca_realtime_fields_completer(prefix, parsed_args, **kwargs):
     from quantrocket.realtime import create_alpaca_tick_db

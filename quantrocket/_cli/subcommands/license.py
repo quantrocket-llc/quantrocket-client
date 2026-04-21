@@ -147,7 +147,7 @@ Set Alpaca paper API key (will prompt for secret key):
     parser.set_defaults(func="quantrocket.license._cli_get_or_set_alpaca_key")
 
     examples = """
-Set Polygon API key, or view the current API key.
+Set Massive API key, or view the current API key.
 
 Your credentials are encrypted at rest and never leave
 your deployment.
@@ -165,25 +165,25 @@ View current API key:
 
 .. code-block:: bash
 
-    quantrocket license polygon-key
+    quantrocket license massive-key
 
-Set Polygon API key:
+Set Massive API key:
 
 .. code-block:: bash
 
-    quantrocket license polygon-key K123
+    quantrocket license massive-key K123
     """
     parser = _subparsers.add_parser(
-        "polygon-key",
-        help="set Polygon API key, or view the current API key",
+        "massive-key",
+        help="set Massive API key, or view the current API key",
         epilog=examples,
         formatter_class=HelpFormatter)
     parser.add_argument(
         "api_key",
         nargs="?",
         metavar="API_KEY",
-        help="Polygon API key").completer = completers.example_completer(["YOUR_API_KEY"])
-    parser.set_defaults(func="quantrocket.license._cli_get_or_set_polygon_key")
+        help="Massive API key").completer = completers.example_completer(["YOUR_API_KEY"])
+    parser.set_defaults(func="quantrocket.license._cli_get_or_set_massive_key")
 
     examples = """
 Set Nasdaq Data Link API key, or view the current API key.

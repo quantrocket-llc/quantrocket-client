@@ -29,11 +29,11 @@ get_alpaca_key
 set_alpaca_key
     Set Alpaca API key.
 
-get_polygon_key
-    Returns the current API key for Polygon.
+get_massive_key
+    Returns the current API key for Massive.
 
-set_polygon_key
-    Set Polygon API key.
+set_massive_key
+    Set Massive API key.
 
 get_nasdaq_key
     Returns the current API key for Nasdaq Data Link.
@@ -58,8 +58,8 @@ __all__ = [
     "set_license",
     "get_alpaca_key",
     "set_alpaca_key",
-    "get_polygon_key",
-    "set_polygon_key",
+    "get_massive_key",
+    "set_massive_key",
     "get_nasdaq_key",
     "set_nasdaq_key",
 ]
@@ -202,9 +202,9 @@ def _cli_get_or_set_alpaca_key(*args, **kwargs):
     else:
         return json_to_cli(get_alpaca_key)
 
-def get_polygon_key() -> dict[str, str]:
+def get_massive_key() -> dict[str, str]:
     """
-    Returns the current API key for Polygon.
+    Returns the current API key for Massive.
 
     Returns
     -------
@@ -217,16 +217,16 @@ def get_polygon_key() -> dict[str, str]:
 
     * Broker and Data Connections: https://qrok.it/dl/qr/connect
     """
-    response = houston.get("/license-service/credentials/polygon")
+    response = houston.get("/license-service/credentials/massive")
     houston.raise_for_status_with_json(response)
     # It's possible to get a 204 empty response
     if not response.content:
         return {}
     return response.json()
 
-def set_polygon_key(api_key: str) -> dict[str, str]:
+def set_massive_key(api_key: str) -> dict[str, str]:
     """
-    Set Polygon API key.
+    Set Massive API key.
 
     Your credentials are encrypted at rest and never leave
     your deployment.
@@ -234,7 +234,7 @@ def set_polygon_key(api_key: str) -> dict[str, str]:
     Parameters
     ----------
     api_key : str, required
-        Polygon API key
+        Massive API key
 
     Returns
     -------
@@ -250,15 +250,15 @@ def set_polygon_key(api_key: str) -> dict[str, str]:
     data = {}
     data["api_key"] = api_key
 
-    response = houston.put("/license-service/credentials/polygon", data=data)
+    response = houston.put("/license-service/credentials/massive", data=data)
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_get_or_set_polygon_key(*args, **kwargs):
+def _cli_get_or_set_massive_key(*args, **kwargs):
     if any(kwargs.values()):
-        return json_to_cli(set_polygon_key, *args, **kwargs)
+        return json_to_cli(set_massive_key, *args, **kwargs)
     else:
-        return json_to_cli(get_polygon_key)
+        return json_to_cli(get_massive_key)
 
 def get_nasdaq_key() -> dict[str, str]:
     """

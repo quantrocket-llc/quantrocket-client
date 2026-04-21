@@ -81,7 +81,7 @@ Create a database for collecting trades and quotes for a universe of futures:
     parser.set_defaults(func="quantrocket.realtime._cli_create_ibkr_tick_db")
 
     examples = """
-Create a new database for collecting real-time tick data from Polygon.
+Create a new database for collecting real-time tick data from Massive.
 
 The market data requirements you specify when you create a new database are
 applied each time you collect data for that database.
@@ -90,7 +90,7 @@ Notes
 -----
 Usage Guide:
 
-* Polygon.io Real-time Data: https://qrok.it/dl/qr/realtime-polygon
+* Massive Real-time Data: https://qrok.it/dl/qr/realtime-massive
 
 Examples
 --------
@@ -99,11 +99,11 @@ Create a database for collecting real-time trade prices and sizes for US stocks:
 
 .. code-block:: bash
 
-    quantrocket realtime create-polygon-tick-db usa-stk-trades -u usa-stk --fields LastPrice LastSize
+    quantrocket realtime create-massive-tick-db usa-stk-trades -u usa-stk --fields LastPrice LastSize
     """
     parser = _subparsers.add_parser(
-        "create-polygon-tick-db",
-        help="create a new database for collecting real-time tick data from Polygon",
+        "create-massive-tick-db",
+        help="create a new database for collecting real-time tick data from Massive",
         epilog=examples,
         formatter_class=HelpFormatter)
     parser.add_argument(
@@ -127,8 +127,8 @@ Create a database for collecting real-time trade prices and sizes for US stocks:
         nargs="*",
         help="collect these fields (pass '?' or any invalid fieldname to see "
         "available fields, default fields are 'LastPrice' and 'LastSize')"
-        ).completer = completers.polygon_realtime_fields_completer
-    parser.set_defaults(func="quantrocket.realtime._cli_create_polygon_tick_db")
+        ).completer = completers.massive_realtime_fields_completer
+    parser.set_defaults(func="quantrocket.realtime._cli_create_massive_tick_db")
 
     examples = """
 Create a new database for collecting real-time tick data from Alpaca.
