@@ -3034,10 +3034,12 @@ def get_sharadar_fundamentals_reindexed_like(
         for _ in range(abs(period_offset)):
             # to get the previous period, we forward-fill, shift, then keep
             # only the shifted values falling on report dates
-            field = field.ffill().shift().where(are_report_dates)
+            with pd.option_context("future.no_silent_downcasting", True):
+                field = field.ffill().infer_objects(copy=False).shift().where(are_report_dates)
 
         # forward-fill values
-        field = field.ffill()
+        with pd.option_context("future.no_silent_downcasting", True):
+            field = field.ffill().infer_objects(copy=False)
 
         # Shift to avoid lookahead bias
         field = field.shift()
