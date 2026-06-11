@@ -147,6 +147,56 @@ Set Alpaca paper API key (will prompt for secret key):
     parser.set_defaults(func="quantrocket.license._cli_get_or_set_alpaca_key")
 
     examples = """
+Set SnapTrade credentials, or view the current credentials.
+
+Your credentials are encrypted at rest and never leave
+your deployment.
+
+Notes
+-----
+Usage Guide:
+
+* Broker and Data Connections: https://qrok.it/dl/qr/connect
+
+Examples
+--------
+
+View current credentials:
+
+.. code-block:: bash
+
+    quantrocket license snaptrade-credentials
+
+Set SnapTrade credentials (will prompt for consumer key and user secret key):
+
+.. code-block:: bash
+
+    quantrocket license snaptrade-credentials --client-id CID123 --user-id UI123
+    """
+    parser = _subparsers.add_parser(
+        "snaptrade-credentials",
+        help="set SnapTrade credentials, or view the current credentials",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    parser.add_argument(
+        "-i", "--client-id",
+        metavar="CLIENT_ID",
+        help="SnapTrade client ID").completer = completers.example_completer(["YOUR_CLIENT_ID"])
+    parser.add_argument(
+        "-c", "--consumer-key",
+        metavar="CONSUMER_KEY",
+        help="SnapTrade consumer key (if omitted, will be prompted for consumer key)").completer = completers.example_completer(["YOUR_CONSUMER_KEY"])
+    parser.add_argument(
+        "-u", "--user-id",
+        metavar="USER_ID",
+        help="SnapTrade user ID").completer = completers.example_completer(["YOUR_USER_ID"])
+    parser.add_argument(
+        "-s", "--user-secret-key",
+        metavar="USER_SECRET_KEY",
+        help="SnapTrade user secret key (if omitted, will be prompted for user secret key)")
+    parser.set_defaults(func="quantrocket.license._cli_get_or_set_snaptrade_credentials")
+
+    examples = """
 Set Massive API key, or view the current API key.
 
 Your credentials are encrypted at rest and never leave

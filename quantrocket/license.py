@@ -29,6 +29,12 @@ get_alpaca_key
 set_alpaca_key
     Set Alpaca API key.
 
+get_snaptrade_credentials
+    Returns the current credentials for SnapTrade.
+
+set_snaptrade_credentials
+    Set SnapTrade credentials.
+
 get_massive_key
     Returns the current API key for Massive.
 
@@ -58,6 +64,8 @@ __all__ = [
     "set_license",
     "get_alpaca_key",
     "set_alpaca_key",
+    "get_snaptrade_credentials",
+    "set_snaptrade_credentials",
     "get_massive_key",
     "set_massive_key",
     "get_nasdaq_key",
@@ -201,6 +209,87 @@ def _cli_get_or_set_alpaca_key(*args, **kwargs):
         return json_to_cli(set_alpaca_key, *args, **kwargs)
     else:
         return json_to_cli(get_alpaca_key)
+
+def get_snaptrade_credentials() -> dict[str, str]:
+    """
+    Returns the current credentials for SnapTrade.
+
+    Returns
+    -------
+    dict
+        credentials
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Broker and Data Connections: https://qrok.it/dl/qr/connect
+    """
+    response = houston.get("/license-service/credentials/snaptrade")
+    houston.raise_for_status_with_json(response)
+    # It's possible to get a 204 empty response
+    if not response.content:
+        return {}
+    return response.json()
+
+def set_snaptrade_credentials(
+    client_id: str,
+    consumer_key: str,
+    user_id: str,
+    user_secret_key: str
+) -> dict[str, str]:
+    """
+    Set SnapTrade credentials.
+
+    Your credentials are encrypted at rest and never leave
+    your deployment.
+
+    Parameters
+    ----------
+    client_id : str, required
+        SnapTrade client ID
+
+    consumer_key : str, required
+        SnapTrade consumer key (if omitted, will be prompted for consumer key)
+
+    user_id : str, required
+        SnapTrade user ID
+
+    user_secret_key : str, required
+        SnapTrade user secret key (if omitted, will be prompted for user secret key)
+
+    Returns
+    -------
+    dict
+        status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Broker and Data Connections: https://qrok.it/dl/qr/connect
+    """
+    if not consumer_key:
+        consumer_key = getpass.getpass(prompt="Enter SnapTrade consumer key: ")
+
+    if not user_secret_key:
+        user_secret_key = getpass.getpass(prompt="Enter SnapTrade user secret key: ")
+
+    data = {}
+    data["client_id"] = client_id
+    data["consumer_key"] = consumer_key
+    data["api_key"] = user_id
+    data["secret_key"] = user_secret_key
+
+    response = houston.put("/license-service/credentials/snaptrade", data=data)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_get_or_set_snaptrade_credentials(*args, **kwargs):
+    if any(kwargs.values()):
+        return json_to_cli(set_snaptrade_credentials, *args, **kwargs)
+    else:
+        return json_to_cli(get_snaptrade_credentials)
 
 def get_massive_key() -> dict[str, str]:
     """
