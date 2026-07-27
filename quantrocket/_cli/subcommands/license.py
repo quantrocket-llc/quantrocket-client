@@ -167,11 +167,11 @@ View current credentials:
 
     quantrocket license snaptrade-credentials
 
-Set SnapTrade credentials (will prompt for consumer key and user secret key):
+Set SnapTrade credentials (will prompt for consumer key):
 
 .. code-block:: bash
 
-    quantrocket license snaptrade-credentials --client-id CID123 --user-id UI123
+    quantrocket license snaptrade-credentials --client-id CID123
     """
     parser = _subparsers.add_parser(
         "snaptrade-credentials",
@@ -186,14 +186,6 @@ Set SnapTrade credentials (will prompt for consumer key and user secret key):
         "-c", "--consumer-key",
         metavar="CONSUMER_KEY",
         help="SnapTrade consumer key (if omitted, will be prompted for consumer key)").completer = completers.example_completer(["YOUR_CONSUMER_KEY"])
-    parser.add_argument(
-        "-u", "--user-id",
-        metavar="USER_ID",
-        help="SnapTrade user ID").completer = completers.example_completer(["YOUR_USER_ID"])
-    parser.add_argument(
-        "-s", "--user-secret-key",
-        metavar="USER_SECRET_KEY",
-        help="SnapTrade user secret key (if omitted, will be prompted for user secret key)")
     parser.set_defaults(func="quantrocket.license._cli_get_or_set_snaptrade_credentials")
 
     examples = """

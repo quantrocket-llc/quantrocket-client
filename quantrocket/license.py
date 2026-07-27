@@ -234,9 +234,7 @@ def get_snaptrade_credentials() -> dict[str, str]:
 
 def set_snaptrade_credentials(
     client_id: str,
-    consumer_key: str,
-    user_id: str,
-    user_secret_key: str
+    consumer_key: str
 ) -> dict[str, str]:
     """
     Set SnapTrade credentials.
@@ -252,12 +250,6 @@ def set_snaptrade_credentials(
     consumer_key : str, required
         SnapTrade consumer key (if omitted, will be prompted for consumer key)
 
-    user_id : str, required
-        SnapTrade user ID
-
-    user_secret_key : str, required
-        SnapTrade user secret key (if omitted, will be prompted for user secret key)
-
     Returns
     -------
     dict
@@ -272,14 +264,9 @@ def set_snaptrade_credentials(
     if not consumer_key:
         consumer_key = getpass.getpass(prompt="Enter SnapTrade consumer key: ")
 
-    if not user_secret_key:
-        user_secret_key = getpass.getpass(prompt="Enter SnapTrade user secret key: ")
-
     data = {}
-    data["client_id"] = client_id
-    data["consumer_key"] = consumer_key
-    data["api_key"] = user_id
-    data["secret_key"] = user_secret_key
+    data["api_key"] = client_id
+    data["secret_key"] = consumer_key
 
     response = houston.put("/license-service/credentials/snaptrade", data=data)
     houston.raise_for_status_with_json(response)

@@ -228,7 +228,7 @@ PortfolioField = Literal[
 def download_account_portfolio(
     filepath_or_buffer: FilepathOrBuffer = None,
     output: Literal["csv", "json"] = "csv",
-    brokers: Union[Literal["alpaca", "ibkr"], list[str]] = None,
+    brokers: Union[Literal["alpaca", "ibkr", "snaptrade"], list[str]] = None,
     accounts: Union[list[str], str] = None,
     sec_types: Union[list[str], str] = None,
     exchanges: Union[list[str], str] = None,

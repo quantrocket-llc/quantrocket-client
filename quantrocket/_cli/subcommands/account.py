@@ -155,8 +155,8 @@ Download current portfolio for a particular account and save to file:
         "-b", "--brokers",
         nargs="*",
         metavar="BROKER",
-        choices=["ibkr", "alpaca"],
-        help="limit to these brokers. Possible choices: ibkr, alpaca")
+        choices=["ibkr", "alpaca", "snaptrade"],
+        help="limit to these brokers. Possible choices: ibkr, alpaca, snaptrade")
     filters.add_argument(
         "-a", "--accounts",
         nargs="*",
