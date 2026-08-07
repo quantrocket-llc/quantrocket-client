@@ -29,10 +29,10 @@ get_alpaca_key
 set_alpaca_key
     Set Alpaca API key.
 
-get_snaptrade_credentials
+get_snaptrade_key
     Returns the current credentials for SnapTrade.
 
-set_snaptrade_credentials
+set_snaptrade_key
     Set SnapTrade credentials.
 
 get_massive_key
@@ -64,8 +64,8 @@ __all__ = [
     "set_license",
     "get_alpaca_key",
     "set_alpaca_key",
-    "get_snaptrade_credentials",
-    "set_snaptrade_credentials",
+    "get_snaptrade_key",
+    "set_snaptrade_key",
     "get_massive_key",
     "set_massive_key",
     "get_nasdaq_key",
@@ -210,7 +210,7 @@ def _cli_get_or_set_alpaca_key(*args, **kwargs):
     else:
         return json_to_cli(get_alpaca_key)
 
-def get_snaptrade_credentials() -> dict[str, str]:
+def get_snaptrade_key() -> dict[str, str]:
     """
     Returns the current credentials for SnapTrade.
 
@@ -232,9 +232,9 @@ def get_snaptrade_credentials() -> dict[str, str]:
         return {}
     return response.json()
 
-def set_snaptrade_credentials(
+def set_snaptrade_key(
     client_id: str,
-    consumer_key: str
+    consumer_key: str = None
 ) -> dict[str, str]:
     """
     Set SnapTrade credentials.
@@ -272,11 +272,11 @@ def set_snaptrade_credentials(
     houston.raise_for_status_with_json(response)
     return response.json()
 
-def _cli_get_or_set_snaptrade_credentials(*args, **kwargs):
+def _cli_get_or_set_snaptrade_key(*args, **kwargs):
     if any(kwargs.values()):
-        return json_to_cli(set_snaptrade_credentials, *args, **kwargs)
+        return json_to_cli(set_snaptrade_key, *args, **kwargs)
     else:
-        return json_to_cli(get_snaptrade_credentials)
+        return json_to_cli(get_snaptrade_key)
 
 def get_massive_key() -> dict[str, str]:
     """

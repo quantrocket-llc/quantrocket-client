@@ -165,16 +165,16 @@ View current credentials:
 
 .. code-block:: bash
 
-    quantrocket license snaptrade-credentials
+    quantrocket license snaptrade-key
 
 Set SnapTrade credentials (will prompt for consumer key):
 
 .. code-block:: bash
 
-    quantrocket license snaptrade-credentials --client-id CID123
+    quantrocket license snaptrade-key --client-id CID123
     """
     parser = _subparsers.add_parser(
-        "snaptrade-credentials",
+        "snaptrade-key",
         help="set SnapTrade credentials, or view the current credentials",
         epilog=examples,
         formatter_class=HelpFormatter)
@@ -186,7 +186,7 @@ Set SnapTrade credentials (will prompt for consumer key):
         "-c", "--consumer-key",
         metavar="CONSUMER_KEY",
         help="SnapTrade consumer key (if omitted, will be prompted for consumer key)").completer = completers.example_completer(["YOUR_CONSUMER_KEY"])
-    parser.set_defaults(func="quantrocket.license._cli_get_or_set_snaptrade_credentials")
+    parser.set_defaults(func="quantrocket.license._cli_get_or_set_snaptrade_key")
 
     examples = """
 Set Massive API key, or view the current API key.
