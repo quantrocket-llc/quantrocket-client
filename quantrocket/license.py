@@ -47,6 +47,12 @@ get_nasdaq_key
 set_nasdaq_key
     Set Nasdaq Data Link API key.
 
+get_sharadar_key
+    Returns the current API key for Sharadar.
+
+set_sharadar_key
+    Set Sharadar API key.
+
 Notes
 -----
 Usage Guide:
@@ -70,6 +76,8 @@ __all__ = [
     "set_massive_key",
     "get_nasdaq_key",
     "set_nasdaq_key",
+    "get_sharadar_key",
+    "set_sharadar_key"
 ]
 
 def get_license_profile(force_refresh: bool = False) -> dict[str, str]:
@@ -393,3 +401,61 @@ def _cli_get_or_set_nasdaq_key(*args, **kwargs):
         return json_to_cli(set_nasdaq_key, *args, **kwargs)
     else:
         return json_to_cli(get_nasdaq_key)
+
+def get_sharadar_key() -> dict[str, str]:
+    """
+    Returns the current API key for Sharadar.
+
+    Returns
+    -------
+    dict
+        credentials
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Broker and Data Connections: https://qrok.it/dl/qr/connect
+    """
+    response = houston.get("/license-service/credentials/sharadar")
+    houston.raise_for_status_with_json(response)
+    # It's possible to get a 204 empty response
+    if not response.content:
+        return {}
+    return response.json()
+
+def set_sharadar_key(api_key: str) -> dict[str, str]:
+    """
+    Set Sharadar API key.
+
+    Your credentials are encrypted at rest and never leave
+    your deployment.
+
+    Parameters
+    ----------
+    api_key : str, required
+        Sharadar API key
+
+    Returns
+    -------
+    dict
+        status message
+
+    Notes
+    -----
+    Usage Guide:
+
+    * Broker and Data Connections: https://qrok.it/dl/qr/connect
+    """
+    data = {}
+    data["api_key"] = api_key
+
+    response = houston.put("/license-service/credentials/sharadar", data=data)
+    houston.raise_for_status_with_json(response)
+    return response.json()
+
+def _cli_get_or_set_sharadar_key(*args, **kwargs):
+    if any(kwargs.values()):
+        return json_to_cli(set_sharadar_key, *args, **kwargs)
+    else:
+        return json_to_cli(get_sharadar_key)

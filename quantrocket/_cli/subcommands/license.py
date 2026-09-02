@@ -265,3 +265,42 @@ Set Nasdaq Data Link API key:
         metavar="API_KEY",
         help="Nasdaq Data Link API key").completer = completers.example_completer(["YOUR_API_KEY"])
     parser.set_defaults(func="quantrocket.license._cli_get_or_set_nasdaq_key")
+
+    examples = """
+Set Sharadar API key, or view the current API key.
+
+Your credentials are encrypted at rest and never leave
+your deployment.
+
+Notes
+-----
+Usage Guide:
+
+* Broker and Data Connections: https://qrok.it/dl/qr/connect
+
+Examples
+--------
+
+View current API key:
+
+.. code-block:: bash
+
+    quantrocket license sharadar-key
+
+Set Sharadar API key:
+
+.. code-block:: bash
+
+    quantrocket license sharadar-key K123
+    """
+    parser = _subparsers.add_parser(
+        "sharadar-key",
+        help="set Sharadar API key, or view the current API key",
+        epilog=examples,
+        formatter_class=HelpFormatter)
+    parser.add_argument(
+        "api_key",
+        nargs="?",
+        metavar="API_KEY",
+        help="Sharadar API key").completer = completers.example_completer(["YOUR_API_KEY"])
+    parser.set_defaults(func="quantrocket.license._cli_get_or_set_sharadar_key")
