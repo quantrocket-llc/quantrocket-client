@@ -296,7 +296,7 @@ segment, the model will be trained with the data, then the trained model will
 be backtested on the following segment.
 
 By default, uses scikit-learn's StandardScaler+SGDRegressor. Also supports other
-scikit-learn models/pipelines and Keras models. To customize model, instantiate
+scikit-learn models/pipelines. To customize model, instantiate
 the model locally, serialize it to disk, and pass the filename of the serialized
 model as `--model`.
 

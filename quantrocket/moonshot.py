@@ -449,7 +449,7 @@ def ml_walkforward(
     be backtested on the following segment.
 
     By default, uses scikit-learn's StandardScaler+SGDRegressor. Also supports other
-    scikit-learn models/pipelines and Keras models. To customize model, instantiate
+    scikit-learn models/pipelines. To customize model, instantiate
     the model locally, serialize it to disk, and pass the path of the serialized
     model as `model_filepath`.
 
@@ -582,27 +582,6 @@ def ml_walkforward(
             min_train="5Y",
             segment="Q",
             filepath_or_buffer="demo_ml*")
-
-    Create a Keras model, serialize it, and use it to run the walkforward backtest:
-
-    >>> from keras.models import Sequential
-    >>> from keras.layers import Dense
-    >>> model = Sequential()
-    >>> # input_dim should match number of features in training data
-    >>> model.add(Dense(units=4, activation='relu', input_dim=5))
-    >>> # last layer should have a single unit
-    >>> model.add(Dense(units=1, activation='softmax'))
-    >>> model.compile(loss='sparse_categorical_crossentropy',
-                      optimizer='sgd',
-                      metrics=['accuracy'])
-    >>> model.save('my_model.keras.h5')
-    >>> ml_walkforward(
-            "neuralnet-ml",
-            "2007-01-01",
-            "2018-12-31",
-            train="Y",
-            model_filepath="my_model.keras.h5",
-            filepath_or_buffer="neuralnet_ml*")
     """
     _params = {}
 
