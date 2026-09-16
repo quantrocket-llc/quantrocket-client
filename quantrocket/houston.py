@@ -172,7 +172,7 @@ To set the environment variable on Linux, run:
                 kwargs["timeout"] = self.DEFAULT_TIMEOUT
 
         # Move params to data if too long
-        for param_name, param_vals in kwargs.get("params", {}).copy().items():
+        for param_name, param_vals in (kwargs.get("params") or {}).copy().items():
             if isinstance(param_vals, list) and len(param_vals) > 50:
                 data = kwargs.get("data", {}) or {}
                 data[param_name] = param_vals
