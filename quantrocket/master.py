@@ -1562,19 +1562,38 @@ def _cli_in_status_since(status, since=None, in_=None, ago=None):
 
     dt = dt.tz_localize(None)
 
-    offset = pd.tseries.frequencies.to_offset(since)
+    required_since = pd.date_range(
+        periods=5, end=dt, freq=since, normalize=False
+    )
 
-    # Decide whether "since" is daily or lower (Tick offsets like Day/Hour/Minute/Second)
-    is_daily_or_subdaily = not isinstance(offset, pd.tseries.offsets.Tick)  # Tick = fixed-duration offsets
-    is_superdaily = not is_daily_or_subdaily
+    offset = required_since.freq
 
-    # For calendar frequencies >= 1 day (e.g. d, W, ME, QE, YE, etc.), normalize to midnight
-    # For sub-daily, do NOT normalize.
-    if is_superdaily or offset.rule_code == "D":
-        required_since = pd.date_range(periods=5, end=dt, freq=offset, normalize=True)[-1]
+    # Identify a single calendar-based period, such as one business day,
+    # week, or month, rather than a fixed-duration tick or multiple periods.
+    is_calendar_unit = (
+        not isinstance(offset, pd.tseries.offsets.Tick)
+        and offset.n == 1
+    )
+
+    # A weekly calendar period must align with a specific weekday.
+    if isinstance(offset, pd.tseries.offsets.Week):
+        is_calendar_unit = is_calendar_unit and offset.weekday is not None
+
+    # Normalize single calendar periods and all day-based frequencies.
+    # Examples: 1ME and 2D normalize; 2ME and 48h retain the time of day.
+    normalize_to_midnight = (
+        is_calendar_unit or offset.rule_code == "D"
+    )
+
+    if normalize_to_midnight:
+        # Generate the range ending at today's midnight and select its
+        # latest timestamp, rolling back to an eligible date if necessary.
+        required_since = pd.date_range(
+            periods=5, end=dt, freq=since, normalize=True
+        )[-1]
     else:
-        required_since = pd.date_range(periods=5, end=dt, freq=offset, normalize=False)
-        # If not normalized, the last value is dt, so use the penultimate value
+        # Select the timestamp before the range's final timestamp.
+        # For fixed-duration ticks, this is one interval before dt.
         required_since = required_since[-2]
 
     actual_since = pd.Timestamp(status["since"])
@@ -1595,25 +1614,40 @@ def _cli_in_status_until(status, until=None, in_=None, ago=None):
 
     dt = dt.tz_localize(None)
 
-    offset = pd.tseries.frequencies.to_offset(until)
+    required_until = pd.date_range(
+        start=dt, periods=5, freq=until, normalize=False
+    )
 
-    # Decide whether "until" is daily or lower (Tick offsets like Day/Hour/Minute/Second)
-    is_daily_or_subdaily = not isinstance(offset, pd.tseries.offsets.Tick)  # Tick = fixed-duration offsets
-    is_superdaily = not is_daily_or_subdaily
+    offset = required_until.freq
 
-    # For calendar frequencies >= 1 day (e.g. d, W, ME, QE, YE, etc.), normalize to midnight
-    # For sub-daily, do NOT normalize.
-    if is_superdaily or offset.rule_code == "D":
-        required_until = pd.date_range(start=dt, periods=5,
-                                   freq=offset, normalize=True)
-        # due to normalize=True, the date range might include a time before the
-        # start dt; filter it out
+    # Identify a single calendar-based period, such as one business day,
+    # week, or month, rather than a fixed-duration tick or multiple periods.
+    is_calendar_unit = (
+        not isinstance(offset, pd.tseries.offsets.Tick)
+        and offset.n == 1
+    )
+
+    # A weekly calendar period must align with a specific weekday.
+    if isinstance(offset, pd.tseries.offsets.Week):
+        is_calendar_unit = is_calendar_unit and offset.weekday is not None
+
+    # Normalize single calendar periods and all day-based frequencies.
+    # Examples: 1ME and 2D normalize; 2ME and 48h retain the time of day.
+    normalize_to_midnight = (
+        is_calendar_unit or offset.rule_code == "D"
+    )
+
+    if normalize_to_midnight:
+        required_until = pd.date_range(
+            start=dt, periods=5, freq=until, normalize=True
+        )
+        # Starting at midnight can include a timestamp at or before dt.
+        # Select the first generated timestamp strictly after dt.
         required_until = required_until[required_until > dt]
         required_until = required_until[0]
     else:
-        required_until = pd.date_range(start=dt, periods=5,
-                                       freq=until, normalize=False)
-        # If not normalized, the first value is dt, so use the second value
+        # Select the timestamp after the range's first timestamp.
+        # For fixed-duration ticks, this is one interval after dt.
         required_until = required_until[1]
 
     actual_until = pd.Timestamp(status["until"])
