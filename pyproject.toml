@@ -29,8 +29,12 @@ dependencies = [
 quantrocket = "quantrocket._cli.commands:main"
 
 [tool.setuptools]
-packages = ["quantrocket"]
 zip-safe = false
+include-package-data = false
+
+[tool.setuptools.packages.find]
+include = ["quantrocket*"]
+exclude = ["quantrocket._tests*"]
 
 [tool.setuptools.package-data]
 quantrocket = ["py.typed"]
