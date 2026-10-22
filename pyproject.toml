@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools>=64",
+    "setuptools>=77",
     "wheel",
     "setuptools_scm[toml]>=6.2",
 ]
@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 name = "quantrocket-client"
 description = "QuantRocket client"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 requires-python = ">=3.9"
 dynamic = ["version"]
 
